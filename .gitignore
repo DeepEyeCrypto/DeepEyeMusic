@@ -1,0 +1,37 @@
+# Built output
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Gradle
+.gradle/
+build/
+local.properties
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+
+# Keystore
+*.jks
+*.keystore
+
+# Kotlin
+*.kotlin_module
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Room schema exports (keep tracked for migration verification)
+# app/schemas/
+
+# LeakCanary
+leakcanary-deobfuscation-mapping/
