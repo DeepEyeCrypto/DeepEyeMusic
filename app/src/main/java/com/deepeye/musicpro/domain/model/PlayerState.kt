@@ -1,35 +1,26 @@
 package com.deepeye.musicpro.domain.model
 
 /**
- * Domain model representing the current player state.
- *
- * Emitted by the player layer and observed by UI ViewModels.
+ * State representing the current playback status.
  */
 data class PlayerState(
-    val currentSong: Song? = null,
-    val queue: List<Song> = emptyList(),
-    val currentIndex: Int = -1,
     val isPlaying: Boolean = false,
-    val position: Long = 0L,          // current playback position in ms
-    val duration: Long = 0L,          // total duration of current track in ms
-    val repeatMode: RepeatMode = RepeatMode.OFF,
+    val currentItem: MediaItem? = null,
+    val position: Long = 0,
+    val duration: Long = 0,
+    val queue: List<MediaItem> = emptyList(),
+    val currentIndex: Int = -1,
+    val repeatMode: RepeatMode = RepeatMode.NONE,
     val shuffleMode: ShuffleMode = ShuffleMode.OFF,
-    val playbackSpeed: Float = 1.0f
+    val playbackSpeed: Float = 1.0f,
+    // Keep legacy field for backward compatibility during migration
+    val currentSong: Song? = null 
 )
 
-/**
- * Repeat mode for the player queue.
- */
 enum class RepeatMode {
-    OFF,      // No repeat — stop after last track
-    ONE,      // Repeat current track
-    ALL       // Repeat entire queue
+    NONE, ONE, ALL
 }
 
-/**
- * Shuffle mode for the player queue.
- */
 enum class ShuffleMode {
-    OFF,      // Play in order
-    ON        // Shuffled order
+    OFF, ON
 }

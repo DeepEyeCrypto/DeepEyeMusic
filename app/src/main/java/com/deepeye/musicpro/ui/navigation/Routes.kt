@@ -7,6 +7,8 @@ package com.deepeye.musicpro.ui.navigation
  */
 sealed class Routes(val route: String) {
     data object Home     : Routes("home")
+    data object YouTube  : Routes("youtube")
+    data object Music    : Routes("music")
     data object Library  : Routes("library")
     data object Search   : Routes("search")
     data object Settings : Routes("settings")

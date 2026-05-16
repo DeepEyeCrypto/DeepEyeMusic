@@ -22,4 +22,19 @@ object NetworkModule {
             .setLenient()
             .create()
     }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): okhttp3.OkHttpClient =
+        okhttp3.OkHttpClient.Builder()
+            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideNewPipeDownloader(
+        client: okhttp3.OkHttpClient
+    ): com.deepeye.musicpro.data.source.remote.youtube.NewPipeDownloader = 
+        com.deepeye.musicpro.data.source.remote.youtube.NewPipeDownloader(client)
 }

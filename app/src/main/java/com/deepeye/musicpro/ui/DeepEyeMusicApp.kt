@@ -11,10 +11,16 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Subscriptions
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Subscriptions
+import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -52,9 +58,11 @@ fun DeepEyeMusicApp() {
     val bottomNavItems = remember {
         listOf(
             BottomNavItem(Routes.Home.route, "Home", Icons.Filled.Home, Icons.Outlined.Home),
+            BottomNavItem(Routes.YouTube.route, "YouTube", Icons.Filled.Subscriptions, Icons.Outlined.Subscriptions),
+            BottomNavItem(Routes.Music.route, "Music", Icons.Filled.MusicNote, Icons.Outlined.MusicNote),
             BottomNavItem(Routes.Library.route, "Library", Icons.Filled.LibraryMusic, Icons.Outlined.LibraryMusic),
             BottomNavItem(Routes.Search.route, "Search", Icons.Filled.Search, Icons.Outlined.Search),
-            BottomNavItem(Routes.Settings.route, "Settings", Icons.Filled.Settings, Icons.Outlined.Settings)
+            BottomNavItem(Routes.V4A.route, "DSP", Icons.Filled.GraphicEq, Icons.Outlined.GraphicEq)
         )
     }
 

@@ -1,7 +1,6 @@
 package com.deepeye.musicpro.dsp.session
-
+ 
 import android.util.Log
-import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.deepeye.musicpro.dsp.engine.V4AEngine
 import kotlinx.coroutines.CoroutineScope
@@ -10,6 +9,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
+import androidx.media3.exoplayer.analytics.AnalyticsListener
+import androidx.media3.exoplayer.analytics.AnalyticsListener.EventTime
 
 /**
  * Manages the audio session lifecycle between ExoPlayer and the V4A DSP engine.
@@ -19,8 +20,10 @@ import javax.inject.Singleton
  */
 @Singleton
 class AudioSessionManager @Inject constructor(
-    private val v4aEngine: V4AEngine
-) {
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
+    private val v4aEngine: V4AEngine,
+    private val visualizerEngine: com.deepeye.musicpro.player.visualizer.VisualizerEngine
+) : AnalyticsListener {
     companion object {
         private const val TAG = "AudioSessionManager"
     }
@@ -32,19 +35,46 @@ class AudioSessionManager @Inject constructor(
      * Registers a listener on the ExoPlayer to track audio session ID changes.
      */
     fun attachToPlayer(player: ExoPlayer) {
-        // Get initial session ID
+        Log.e(TAG, "attachToPlayer called with player: $player")
+        
+        // Register as AnalyticsListener for more robust session tracking
+        player.addAnalyticsListener(this)
+        
+        // Initial check
         val sessionId = player.audioSessionId
         if (sessionId != 0) {
-            onSessionIdChanged(sessionId)
+            handleSessionChange(sessionId)
         }
+        
+        Log.i(TAG, "Attached to ExoPlayer as AnalyticsListener, initial session: $sessionId")
+    }
 
-        player.addListener(object : Player.Listener {
-            override fun onAudioSessionIdChanged(audioSessionId: Int) {
-                onSessionIdChanged(audioSessionId)
-            }
-        })
+    override fun onAudioSessionIdChanged(eventTime: EventTime, audioSessionId: Int) {
+        Log.e(TAG, "onAudioSessionIdChanged (Analytics): $audioSessionId")
+        handleSessionChange(audioSessionId)
+    }
 
-        Log.i(TAG, "Attached to ExoPlayer, initial session: $sessionId")
+    private fun handleSessionChange(newSessionId: Int) {
+        if (newSessionId == 0 || newSessionId == currentSessionId) return
+        
+        Log.e(TAG, "Handling session change: $currentSessionId -> $newSessionId")
+        currentSessionId = newSessionId
+        
+        // Broadcast session open to the system
+        val intent = android.content.Intent(android.media.audiofx.AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION).apply {
+            putExtra(android.media.audiofx.AudioEffect.EXTRA_AUDIO_SESSION, newSessionId)
+            putExtra(android.media.audiofx.AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
+            putExtra(android.media.audiofx.AudioEffect.EXTRA_CONTENT_TYPE, android.media.audiofx.AudioEffect.CONTENT_TYPE_MUSIC)
+        }
+        context.sendBroadcast(intent)
+
+        scope.launch {
+            v4aEngine.releaseSession()
+            visualizerEngine.release()
+            
+            v4aEngine.attachSession(newSessionId)
+            visualizerEngine.start(newSessionId)
+        }
     }
 
     /**
@@ -53,17 +83,8 @@ class AudioSessionManager @Inject constructor(
     fun detach() {
         scope.launch {
             v4aEngine.releaseSession()
+            visualizerEngine.release()
             currentSessionId = 0
-        }
-    }
-
-    private fun onSessionIdChanged(newSessionId: Int) {
-        if (newSessionId == currentSessionId || newSessionId == 0) return
-
-        currentSessionId = newSessionId
-        scope.launch {
-            Log.i(TAG, "Audio session changed to $newSessionId — re-attaching DSP")
-            v4aEngine.attachSession(newSessionId)
         }
     }
 }

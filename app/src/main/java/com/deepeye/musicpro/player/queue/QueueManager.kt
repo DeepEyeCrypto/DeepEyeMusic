@@ -21,7 +21,7 @@ class QueueManager @Inject constructor() {
     private val _currentIndex = MutableStateFlow(-1)
     val currentIndex: StateFlow<Int> = _currentIndex.asStateFlow()
 
-    private val _repeatMode = MutableStateFlow(RepeatMode.OFF)
+    private val _repeatMode = MutableStateFlow(RepeatMode.NONE)
     val repeatMode: StateFlow<RepeatMode> = _repeatMode.asStateFlow()
 
     private val _shuffleMode = MutableStateFlow(ShuffleMode.OFF)
@@ -76,7 +76,7 @@ class QueueManager @Inject constructor() {
                 _currentIndex.value = nextIndex
                 q[nextIndex]
             }
-            RepeatMode.OFF -> {
+            RepeatMode.NONE -> {
                 val nextIndex = _currentIndex.value + 1
                 if (nextIndex < q.size) {
                     _currentIndex.value = nextIndex
@@ -112,9 +112,9 @@ class QueueManager @Inject constructor() {
      */
     fun toggleRepeatMode() {
         _repeatMode.value = when (_repeatMode.value) {
-            RepeatMode.OFF -> RepeatMode.ALL
+            RepeatMode.NONE -> RepeatMode.ALL
             RepeatMode.ALL -> RepeatMode.ONE
-            RepeatMode.ONE -> RepeatMode.OFF
+            RepeatMode.ONE -> RepeatMode.NONE
         }
     }
 

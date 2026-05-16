@@ -1,56 +1,31 @@
 package com.deepeye.musicpro.ui.player
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
-import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.RepeatOne
-import androidx.compose.material.icons.filled.Shuffle
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.deepeye.musicpro.core.utils.TimeFormatter
-import com.deepeye.musicpro.domain.model.RepeatMode
-import com.deepeye.musicpro.domain.model.ShuffleMode
-import com.deepeye.musicpro.ui.components.AudioVisualizer
-import com.deepeye.musicpro.ui.components.MarqueeText
+import com.deepeye.musicpro.domain.model.MediaItem
+import com.deepeye.musicpro.domain.model.PlayerState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NowPlayingScreen(
     onNavigateBack: () -> Unit,
@@ -59,31 +34,17 @@ fun NowPlayingScreen(
     viewModel: PlayerViewModel = hiltViewModel()
 ) {
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
-    val fftData by viewModel.fftData.collectAsStateWithLifecycle()
-    val song = playerState.currentSong
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // ── Background: blurred album art ──
-        song?.artUri?.let { artUri ->
-            AsyncImage(
-                model = artUri,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .blur(50.dp),
-                contentScale = ContentScale.Crop
-            )
-        }
-
-        // Dark overlay gradient
+        // Dynamic Background Gradient based on current item
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.4f),
-                            Color.Black.copy(alpha = 0.85f)
+                            MaterialTheme.colorScheme.primaryContainer,
+                            MaterialTheme.colorScheme.background
                         )
                     )
                 )
@@ -92,196 +53,145 @@ fun NowPlayingScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .statusBarsPadding()
+                .padding(24.dp)
         ) {
-            // ── Top bar ──
+            // Top Bar
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(
-                        Icons.Filled.KeyboardArrowDown,
-                        contentDescription = "Close",
-                        tint = Color.White,
-                        modifier = Modifier.size(32.dp)
-                    )
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Close", modifier = Modifier.size(32.dp))
                 }
-
                 Text(
-                    text = "Now Playing",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White
+                    text = "NOW PLAYING",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 2.sp
                 )
-
-                IconButton(onClick = onNavigateToQueue) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.QueueMusic,
-                        contentDescription = "Queue",
-                        tint = Color.White
-                    )
+                IconButton(onClick = onNavigateToV4A) {
+                    Icon(Icons.Default.Tune, contentDescription = "V4A Settings")
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(Modifier.weight(0.5f))
 
-            // ── Album Art ──
-            AsyncImage(
-                model = song?.artUri,
-                contentDescription = "Album art",
-                modifier = Modifier
-                    .fillMaxWidth(0.75f)
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(20.dp)),
-                contentScale = ContentScale.Crop
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ── Visualizer ──
-            AudioVisualizer(
-                fftData = fftData,
+            // Artwork
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                barCount = 48,
-                barWidth = 3.dp,
-                barSpacing = 2.dp
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // ── Song Info ──
-            MarqueeText(
-                text = song?.title ?: "No song playing",
-                style = MaterialTheme.typography.headlineSmall,
-                color = Color.White
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = song?.artist ?: "",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.White.copy(alpha = 0.7f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // ── Progress Slider ──
-            val progress = if (playerState.duration > 0) {
-                playerState.position.toFloat() / playerState.duration.toFloat()
-            } else 0f
-
-            Slider(
-                value = progress,
-                onValueChange = { newValue ->
-                    viewModel.seekTo((newValue * playerState.duration).toLong())
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = SliderDefaults.colors(
-                    thumbColor = MaterialTheme.colorScheme.primary,
-                    activeTrackColor = MaterialTheme.colorScheme.primary,
-                    inactiveTrackColor = Color.White.copy(alpha = 0.2f)
-                )
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                Text(
-                    text = TimeFormatter.formatDuration(playerState.position),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.6f)
+                AsyncImage(
+                    model = playerState.currentItem?.artworkUri,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
-                Text(
-                    text = TimeFormatter.formatDuration(playerState.duration),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.6f)
+
+                // Visualizer Overlay
+                val fftData by viewModel.fftData.collectAsStateWithLifecycle()
+                val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
+                
+                NowPlayingVisualizerOverlay(
+                    fftData = fftData,
+                    dominantColor = dominantColor,
+                    isPlaying = playerState.isPlaying,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.weight(0.5f))
 
-            // ── Playback Controls ──
+            // Track Info
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = playerState.currentItem?.title ?: "No Track Playing",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+                Text(
+                    text = playerState.currentItem?.artist ?: "Unknown Artist",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+            }
+
+            Spacer(Modifier.height(32.dp))
+
+            // Progress Slider
+            Column {
+                Slider(
+                    value = playerState.position.toFloat(),
+                    onValueChange = { viewModel.seekTo(it.toLong()) },
+                    valueRange = 0f..playerState.duration.toFloat().coerceAtLeast(1f),
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        TimeFormatter.formatDuration(playerState.position),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                    Text(
+                        TimeFormatter.formatDuration(playerState.duration),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(32.dp))
+
+            // Controls
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { viewModel.toggleShuffle() }) {
-                    Icon(
-                        Icons.Filled.Shuffle,
-                        contentDescription = "Shuffle",
-                        tint = if (playerState.shuffleMode == ShuffleMode.ON)
-                            MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.6f),
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Icon(Icons.Default.Shuffle, contentDescription = "Shuffle")
                 }
-
-                IconButton(onClick = { viewModel.previous() }) {
-                    Icon(
-                        Icons.Filled.SkipPrevious,
-                        contentDescription = "Previous",
-                        tint = Color.White,
-                        modifier = Modifier.size(36.dp)
-                    )
+                IconButton(onClick = { viewModel.previous() }, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", modifier = Modifier.size(36.dp))
                 }
-
-                IconButton(
+                Surface(
                     onClick = { viewModel.togglePlayPause() },
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
+                    shape = RoundedCornerShape(28.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(72.dp)
                 ) {
-                    Icon(
-                        imageVector = if (playerState.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                        contentDescription = if (playerState.isPlaying) "Pause" else "Play",
-                        tint = Color.White,
-                        modifier = Modifier.size(36.dp)
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = if (playerState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = "Play/Pause",
+                            modifier = Modifier.size(40.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
-
-                IconButton(onClick = { viewModel.next() }) {
-                    Icon(
-                        Icons.Filled.SkipNext,
-                        contentDescription = "Next",
-                        tint = Color.White,
-                        modifier = Modifier.size(36.dp)
-                    )
+                IconButton(onClick = { viewModel.next() }, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.Default.SkipNext, contentDescription = "Next", modifier = Modifier.size(36.dp))
                 }
-
                 IconButton(onClick = { viewModel.toggleRepeat() }) {
-                    Icon(
-                        imageVector = when (playerState.repeatMode) {
-                            RepeatMode.ONE -> Icons.Filled.RepeatOne
-                            else -> Icons.Filled.Repeat
-                        },
-                        contentDescription = "Repeat",
-                        tint = if (playerState.repeatMode != RepeatMode.OFF)
-                            MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.6f),
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Icon(Icons.Default.Repeat, contentDescription = "Repeat")
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ── V4A DSP Button ──
-            IconButton(onClick = onNavigateToV4A) {
-                Icon(
-                    Icons.Filled.GraphicEq,
-                    contentDescription = "V4A DSP Engine",
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
+            Spacer(Modifier.weight(0.5f))
         }
     }
 }

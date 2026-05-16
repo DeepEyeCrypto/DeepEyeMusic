@@ -72,6 +72,9 @@ interface DspPresetDao {
 
     @Query("SELECT COUNT(*) FROM dsp_presets WHERE is_builtin = 1")
     suspend fun getBuiltinCount(): Int
+
+    @Query("SELECT * FROM dsp_presets WHERE is_builtin = 1")
+    suspend fun getBuiltinPresetsList(): List<DspPresetEntity>
 }
 
 // ═══════════════════════════════════════════════════

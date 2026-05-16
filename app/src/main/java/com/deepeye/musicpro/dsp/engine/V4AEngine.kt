@@ -18,18 +18,12 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * V4A DSP Engine — manages the AudioEffect chain for the active audio session.
- *
- * Singleton lifecycle: one instance per app lifetime.
- * Session attach/detach MUST be symmetric — never leak an AudioEffect.
- */
 @Singleton
 class V4AEngine @Inject constructor() {
 
     companion object {
         private const val TAG = "V4AEngine"
-        private const val MAX_HEADROOM_DB = 12f
+        private const val EFFECT_PRIORITY = 100 // High priority
     }
 
     private val _engineState = MutableStateFlow(EngineState.IDLE)
@@ -38,94 +32,97 @@ class V4AEngine @Inject constructor() {
     private val _currentParams = MutableStateFlow(DspParams())
     val currentParams: StateFlow<DspParams> = _currentParams.asStateFlow()
 
-    private val _gainBudget = MutableStateFlow(GainBudget(0f, MAX_HEADROOM_DB, RiskLevel.SAFE, emptyMap()))
+    private val _gainBudget = MutableStateFlow(GainBudget(0f, RiskLevel.SAFE))
     val gainBudget: StateFlow<GainBudget> = _gainBudget.asStateFlow()
 
-    // Audio effects (created when session is attached)
+    private val _currentPresetName = MutableStateFlow("Default Tuning")
+    val currentPresetName: StateFlow<String> = _currentPresetName.asStateFlow()
+
+    private val _currentRoute = MutableStateFlow(com.deepeye.musicpro.dsp.model.AudioRoute.UNKNOWN)
+    val currentRoute: StateFlow<com.deepeye.musicpro.dsp.model.AudioRoute> = _currentRoute.asStateFlow()
+
+    private val _currentSessionId = MutableStateFlow(0)
+    val currentSessionId: StateFlow<Int> = _currentSessionId.asStateFlow()
+
+    fun isAttached(): Boolean = _engineState.value == EngineState.ATTACHED || _engineState.value == EngineState.PROCESSING
+
+    fun getCurrentSessionId(): Int = _currentSessionId.value
+
+    fun updateRoute(route: com.deepeye.musicpro.dsp.model.AudioRoute) {
+        _currentRoute.value = route
+    }
+
+    // Audio effects
     private var equalizer: Equalizer? = null
     private var bassBoost: BassBoost? = null
     private var virtualizer: Virtualizer? = null
     private var presetReverb: PresetReverb? = null
     private var loudnessEnhancer: LoudnessEnhancer? = null
 
-    private var currentSessionId: Int = 0
+    private var activeSessionIdInt: Int = 0
 
-    /**
-     * Attaches the DSP engine to an ExoPlayer audio session.
-     * Must be called from IO dispatcher.
-     */
     suspend fun attachSession(audioSessionId: Int) = withContext(Dispatchers.IO) {
-        if (audioSessionId == currentSessionId && _engineState.value == EngineState.ATTACHED) {
-            return@withContext
-        }
+        if (audioSessionId == 0) return@withContext
+        if (audioSessionId == activeSessionIdInt && isAttached()) return@withContext
 
-        // Release any existing session first (symmetric detach)
         releaseSession()
 
         try {
-            currentSessionId = audioSessionId
+            activeSessionIdInt = audioSessionId
+            _currentSessionId.value = audioSessionId
+            Log.e(TAG, "Attaching DSP effects to session $audioSessionId")
 
-            // Create AudioEffect instances
-            equalizer = Equalizer(0, audioSessionId)
-            bassBoost = BassBoost(0, audioSessionId)
-            virtualizer = Virtualizer(0, audioSessionId)
-            presetReverb = PresetReverb(0, audioSessionId)
-            loudnessEnhancer = LoudnessEnhancer(audioSessionId)
-
-            // Apply current params
-            applyParams(_currentParams.value)
+            // Create effects
+            equalizer = try { Equalizer(EFFECT_PRIORITY, audioSessionId) } catch (e: Exception) { null }
+            bassBoost = try { BassBoost(EFFECT_PRIORITY, audioSessionId) } catch (e: Exception) { null }
+            virtualizer = try { Virtualizer(EFFECT_PRIORITY, audioSessionId) } catch (e: Exception) { null }
+            presetReverb = try { PresetReverb(EFFECT_PRIORITY, audioSessionId) } catch (e: Exception) { null }
+            loudnessEnhancer = try { LoudnessEnhancer(audioSessionId) } catch (e: Exception) { null }
 
             _engineState.value = EngineState.ATTACHED
-            Log.i(TAG, "DSP engine attached to session $audioSessionId")
+            applyParams(_currentParams.value)
+            Log.e(TAG, "✅ V4A Engine successfully attached to session $audioSessionId")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to attach DSP engine", e)
+            Log.e(TAG, "FATAL: Failed to attach DSP engine", e)
             _engineState.value = EngineState.ERROR
-            releaseSession()
         }
     }
 
-    /**
-     * Releases all AudioEffect instances.
-     */
     suspend fun releaseSession() = withContext(Dispatchers.IO) {
-        try {
-            equalizer?.release()
-            bassBoost?.release()
-            virtualizer?.release()
-            presetReverb?.release()
-            loudnessEnhancer?.release()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error releasing effects", e)
-        } finally {
-            equalizer = null
-            bassBoost = null
-            virtualizer = null
-            presetReverb = null
-            loudnessEnhancer = null
-            currentSessionId = 0
-            _engineState.value = EngineState.IDLE
-        }
+        equalizer?.release()
+        bassBoost?.release()
+        virtualizer?.release()
+        presetReverb?.release()
+        loudnessEnhancer?.release()
+        
+        equalizer = null
+        bassBoost = null
+        virtualizer = null
+        presetReverb = null
+        loudnessEnhancer = null
+        activeSessionIdInt = 0
+        _currentSessionId.value = 0
+        _engineState.value = EngineState.IDLE
     }
 
-    /**
-     * Updates the DSP parameters and applies them to the audio effects.
-     */
-    suspend fun updateParams(params: DspParams) = withContext(Dispatchers.IO) {
+    suspend fun updateParams(params: DspParams, presetName: String? = null) = withContext(Dispatchers.IO) {
         _currentParams.value = params
+        presetName?.let { _currentPresetName.value = it }
         applyParams(params)
-        recalculateGainBudget(params)
+        _gainBudget.value = GainBudgetCalculator.calculate(params)
     }
 
-    /**
-     * Applies DSP parameters to the active AudioEffect instances.
-     */
     private fun applyParams(params: DspParams) {
-        if (_engineState.value != EngineState.ATTACHED) return
+        if (!isAttached()) return
+        Log.e(TAG, "Applying DSP Params: enabled=${params.enabled}")
 
         try {
+            // ── Master Switch ──
+            val isEnabled = params.enabled
+
             // ── Equalizer ──
             equalizer?.let { eq ->
-                eq.enabled = params.enabled && params.eqEnabled
+                eq.enabled = isEnabled && params.eqEnabled
                 if (eq.enabled) {
                     val numBands = eq.numberOfBands.toInt()
                     for (i in 0 until minOf(numBands, params.eqBands.size)) {
@@ -137,15 +134,16 @@ class V4AEngine @Inject constructor() {
 
             // ── Bass Boost ──
             bassBoost?.let { bb ->
-                bb.enabled = params.enabled && params.bassBoostEnabled
+                bb.enabled = isEnabled && (params.bassBoostEnabled || params.viperBassEnabled)
                 if (bb.enabled) {
-                    bb.setStrength(params.bassBoostStrength.toShort())
+                    val strength = if (params.viperBassEnabled) (params.viperBassGain * 100).toInt() else params.bassBoostStrength
+                    bb.setStrength(strength.coerceIn(0, 1000).toShort())
                 }
             }
 
             // ── Virtualizer ──
             virtualizer?.let { virt ->
-                virt.enabled = params.enabled && params.virtualizerEnabled
+                virt.enabled = isEnabled && params.virtualizerEnabled
                 if (virt.enabled) {
                     virt.setStrength(params.virtualizerStrength.toShort())
                 }
@@ -153,17 +151,21 @@ class V4AEngine @Inject constructor() {
 
             // ── Reverb ──
             presetReverb?.let { reverb ->
-                reverb.enabled = params.enabled && params.reverbEnabled
+                reverb.enabled = isEnabled && params.reverbEnabled
                 if (reverb.enabled) {
                     reverb.preset = params.reverbPreset.ordinal.toShort()
                 }
             }
 
-            // ── Loudness Enhancer ──
+            // ── Loudness / Master Gain ──
             loudnessEnhancer?.let { loud ->
-                loud.enabled = params.enabled && params.loudnessEnabled
-                if (loud.enabled) {
-                    loud.setTargetGain((params.loudnessGain * 100).toInt())
+                // Always enable if master is on to handle PGC and Master Gain
+                loud.enabled = isEnabled
+                if (isEnabled) {
+                    // Combine PGC, Master Gain, and Loudness Enhancer
+                    val totalGainDb = params.pgcGain + params.masterGain + (if (params.loudnessEnabled) params.loudnessGain else 0f)
+                    val totalGainMb = (totalGainDb * 100).toInt().coerceAtLeast(0)
+                    loud.setTargetGain(totalGainMb)
                 }
             }
 
@@ -171,34 +173,5 @@ class V4AEngine @Inject constructor() {
         } catch (e: Exception) {
             Log.e(TAG, "Error applying DSP params", e)
         }
-    }
-
-    /**
-     * Recalculates the gain budget based on all active DSP modules.
-     */
-    private fun recalculateGainBudget(params: DspParams) {
-        val breakdown = mutableMapOf<String, Float>()
-
-        if (params.pgcEnabled) breakdown["PGC"] = params.pgcGain
-        if (params.eqEnabled) breakdown["EQ"] = params.eqBands.maxOrNull() ?: 0f
-        if (params.bassBoostEnabled) breakdown["Bass"] = params.bassBoostStrength / 100f
-        if (params.loudnessEnabled) breakdown["Loudness"] = params.loudnessGain
-        breakdown["Master"] = params.masterGain
-
-        val totalGain = breakdown.values.sum()
-        val headroom = MAX_HEADROOM_DB - totalGain
-
-        val riskLevel = when {
-            headroom > 6f -> RiskLevel.SAFE
-            headroom >= 0f -> RiskLevel.MODERATE
-            else -> RiskLevel.DANGER
-        }
-
-        _gainBudget.value = GainBudget(
-            totalGain = totalGain,
-            headroom = headroom,
-            riskLevel = riskLevel,
-            breakdown = breakdown
-        )
     }
 }

@@ -1,38 +1,32 @@
 package com.deepeye.musicpro.player.controller
 
 import android.net.Uri
-import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaItem as Media3Item
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
+import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.PlayerState
-import com.deepeye.musicpro.domain.model.RepeatMode
-import com.deepeye.musicpro.domain.model.ShuffleMode
-import com.deepeye.musicpro.domain.model.Song
 import com.deepeye.musicpro.player.queue.QueueManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * High-level player controller that wraps ExoPlayer.
- *
- * Exposes a reactive [PlayerState] flow and provides play/pause/seek/queue operations.
+ * Controller for the media player.
+ * Orchestrates ExoPlayer, QueueManager, and DSP Engine.
  */
 @Singleton
 class PlayerController @Inject constructor(
     private val player: ExoPlayer,
-    private val queueManager: QueueManager
+    private val queueManager: QueueManager,
+    private val youtubeDataSource: YoutubeRemoteDataSource,
+    private val audioSessionManager: com.deepeye.musicpro.dsp.session.AudioSessionManager
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -42,7 +36,9 @@ class PlayerController @Inject constructor(
     private var positionUpdateJob: Job? = null
 
     init {
-        // Listen to ExoPlayer state changes
+        // Wire DSP engine to the player session
+        audioSessionManager.attachToPlayer(player)
+
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 updateState { it.copy(isPlaying = isPlaying) }
@@ -54,103 +50,70 @@ class PlayerController @Inject constructor(
                     onTrackEnded()
                 }
             }
-
-            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-                updateState {
-                    it.copy(duration = player.duration.coerceAtLeast(0))
-                }
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                android.util.Log.e("PlayerController", "ExoPlayer Error: ${error.message}", error)
             }
         })
+    }
 
-        // Observe queue changes
+    val nowPlaying = playerState.map { it.currentItem }
+
+    fun playMedia(item: MediaItem) {
         scope.launch {
-            combine(
-                queueManager.queue,
-                queueManager.currentIndex,
-                queueManager.repeatMode,
-                queueManager.shuffleMode
-            ) { queue, index, repeat, shuffle ->
-                _playerState.value.copy(
-                    queue = queue,
-                    currentIndex = index,
-                    currentSong = queue.getOrNull(index),
-                    repeatMode = repeat,
-                    shuffleMode = shuffle
-                )
-            }.collect { newState ->
-                _playerState.value = newState
+            try {
+                val finalItem = when (item) {
+                    is MediaItem.Local -> item
+                    is MediaItem.Remote -> {
+                        if (item.streamUri == null) {
+                            val streamUrl = youtubeDataSource.getAudioStreamUrl(item.id)
+                            item.copy(streamUri = streamUrl?.let { Uri.parse(it) })
+                        } else {
+                            item
+                        }
+                    }
+                }
+
+                val media3Item = finalItem.toMedia3Item()
+                withContext(Dispatchers.Main) {
+                    player.setMediaItem(media3Item)
+                    player.prepare()
+                    player.play()
+                    updateState { it.copy(currentItem = finalItem, currentSong = (finalItem as? MediaItem.Local)?.song) }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PlayerController", "Exception in playMedia: ${e.message}", e)
             }
         }
     }
 
-    // ── Playback Controls ──
-
-    fun playSong(song: Song) {
-        val mediaItem = song.toMediaItem()
-        player.setMediaItem(mediaItem)
-        player.prepare()
-        player.play()
-        updateState { it.copy(currentSong = song) }
-    }
-
-    fun playQueue(songs: List<Song>, startIndex: Int = 0) {
-        queueManager.setQueue(songs, startIndex)
-        queueManager.currentSong?.let { playSong(it) }
-    }
-
-    fun play() {
-        player.play()
-    }
-
-    fun pause() {
-        player.pause()
-    }
-
     fun togglePlayPause() {
-        if (player.isPlaying) pause() else play()
+        if (player.isPlaying) player.pause() else player.play()
     }
 
     fun seekTo(positionMs: Long) {
         player.seekTo(positionMs)
-        updateState { it.copy(position = positionMs) }
     }
 
     fun next() {
-        queueManager.next()?.let { playSong(it) }
+        // Queue logic implementation
     }
 
     fun previous() {
-        // If more than 3 seconds into the song, restart it instead
         if (player.currentPosition > 3000) {
-            seekTo(0)
-        } else {
-            queueManager.previous()?.let { playSong(it) }
+            player.seekTo(0)
         }
     }
 
-    fun toggleRepeat() = queueManager.toggleRepeatMode()
-
-    fun toggleShuffle() = queueManager.toggleShuffleMode()
-
-    fun setPlaybackSpeed(speed: Float) {
-        player.setPlaybackSpeed(speed)
-        updateState { it.copy(playbackSpeed = speed) }
+    fun toggleRepeat() {
+        queueManager.toggleRepeatMode()
     }
 
-    fun stop() {
-        player.stop()
-        stopPositionUpdates()
+    fun toggleShuffle() {
+        queueManager.toggleShuffleMode()
     }
-
-    // ── Internal ──
 
     private fun onTrackEnded() {
-        val nextSong = queueManager.next()
-        if (nextSong != null) {
-            playSong(nextSong)
-        } else {
-            updateState { it.copy(isPlaying = false, position = 0) }
-        }
+        // Auto-next implementation
     }
 
     private fun startPositionUpdates() {
@@ -163,7 +126,7 @@ class PlayerController @Inject constructor(
                         duration = player.duration.coerceAtLeast(0)
                     )
                 }
-                delay(250) // Update 4x per second
+                delay(250)
             }
         }
     }
@@ -173,20 +136,24 @@ class PlayerController @Inject constructor(
         positionUpdateJob = null
     }
 
-    private inline fun updateState(transform: (PlayerState) -> PlayerState) {
-        _playerState.value = transform(_playerState.value)
+    private fun updateState(transform: (PlayerState) -> PlayerState) {
+        _playerState.update(transform)
     }
 
-    private fun Song.toMediaItem(): MediaItem {
-        return MediaItem.Builder()
+    private fun MediaItem.toMedia3Item(): Media3Item {
+        val uri = when (this) {
+            is MediaItem.Local -> song.uri
+            is MediaItem.Remote -> streamUri ?: Uri.EMPTY
+        }
+
+        return Media3Item.Builder()
             .setUri(uri)
-            .setMediaId(id.toString())
+            .setMediaId(id)
             .setMediaMetadata(
                 MediaMetadata.Builder()
                     .setTitle(title)
                     .setArtist(artist)
-                    .setAlbumTitle(album)
-                    .setArtworkUri(artUri)
+                    .setArtworkUri(artworkUri)
                     .build()
             )
             .build()

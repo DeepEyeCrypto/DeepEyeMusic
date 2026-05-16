@@ -2,8 +2,11 @@ package com.deepeye.musicpro.ui.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.Song
-import com.deepeye.musicpro.domain.usecase.SearchSongsUseCase
+import com.deepeye.musicpro.domain.model.home.HomeMusicItem
+import com.deepeye.musicpro.domain.usecase.search.SearchHybridUseCase
+import com.deepeye.musicpro.player.controller.PlayerController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -12,17 +15,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.net.Uri
 
 data class SearchUiState(
     val query: String = "",
-    val results: List<Song> = emptyList(),
+    val localResults: List<Song> = emptyList(),
+    val remoteResults: List<HomeMusicItem> = emptyList(),
     val isSearching: Boolean = false,
     val hasSearched: Boolean = false
 )
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val searchSongsUseCase: SearchSongsUseCase
+    private val searchHybridUseCase: SearchHybridUseCase,
+    private val playerController: PlayerController
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -33,15 +39,40 @@ class SearchViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(query = query)
         searchJob?.cancel()
         if (query.isBlank()) {
-            _uiState.value = _uiState.value.copy(results = emptyList(), hasSearched = false)
+            _uiState.value = _uiState.value.copy(
+                localResults = emptyList(), 
+                remoteResults = emptyList(), 
+                hasSearched = false
+            )
             return
         }
         searchJob = viewModelScope.launch {
-            delay(300) // debounce
+            delay(500) // debounce
             _uiState.value = _uiState.value.copy(isSearching = true)
-            searchSongsUseCase(query).collect { results ->
-                _uiState.value = _uiState.value.copy(results = results, isSearching = false, hasSearched = true)
+            searchHybridUseCase(query).collect { response ->
+                _uiState.value = _uiState.value.copy(
+                    localResults = response.localSongs,
+                    remoteResults = response.remoteItems,
+                    isSearching = false,
+                    hasSearched = true
+                )
             }
         }
+    }
+
+    fun playLocal(song: Song) {
+        playerController.playMedia(MediaItem.Local(song))
+    }
+
+    fun playRemote(item: HomeMusicItem) {
+        playerController.playMedia(
+            MediaItem.Remote(
+                id = item.id,
+                title = item.title,
+                artist = item.artist,
+                artworkUri = Uri.parse(item.thumbnailUrl),
+                duration = 0
+            )
+        )
     }
 }

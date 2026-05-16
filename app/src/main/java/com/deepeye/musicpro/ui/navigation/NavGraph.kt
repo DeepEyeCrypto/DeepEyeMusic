@@ -7,7 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.deepeye.musicpro.ui.home.HomeScreen
+import com.deepeye.musicpro.ui.homehub.HomeHubScreen
 import com.deepeye.musicpro.ui.library.AlbumDetailScreen
 import com.deepeye.musicpro.ui.library.ArtistDetailScreen
 import com.deepeye.musicpro.ui.library.LibraryScreen
@@ -17,6 +17,8 @@ import com.deepeye.musicpro.ui.playlist.PlaylistScreen
 import com.deepeye.musicpro.ui.search.SearchScreen
 import com.deepeye.musicpro.ui.settings.SettingsScreen
 import com.deepeye.musicpro.ui.v4a.V4AScreen
+import com.deepeye.musicpro.ui.youtube.YouTubeScreen
+import com.deepeye.musicpro.ui.music.MusicScreen
 
 /**
  * Main NavGraph for DeepEyeMusicPro.
@@ -35,10 +37,30 @@ fun NavGraph(
     ) {
         // ── Bottom Nav Destinations ──
         composable(Routes.Home.route) {
-            HomeScreen(
-                onNavigateToNowPlaying = { navController.navigate(Routes.NowPlaying.route) },
-                onNavigateToAlbum = { albumId ->
-                    navController.navigate(Routes.AlbumDetail.createRoute(albumId))
+            HomeHubScreen(
+                onNavigateToVideo = { videoId -> 
+                    navController.navigate(Routes.NowPlaying.route) 
+                },
+                onNavigateToMusic = { musicId -> 
+                    navController.navigate(Routes.NowPlaying.route) 
+                },
+                onNavigateToLibrary = { navController.navigate(Routes.Library.route) },
+                onOpenV4A = { navController.navigate(Routes.V4A.route) }
+            )
+        }
+
+        composable(Routes.YouTube.route) {
+            YouTubeScreen(
+                onNavigateToVideo = { videoId ->
+                    navController.navigate(Routes.NowPlaying.route)
+                }
+            )
+        }
+
+        composable(Routes.Music.route) {
+            MusicScreen(
+                onNavigateToNowPlaying = { musicId ->
+                    navController.navigate(Routes.NowPlaying.route)
                 }
             )
         }

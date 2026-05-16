@@ -69,6 +69,11 @@ android {
         jvmTarget = "17"
     }
 
+    // Ensure Kotlin uses JDK 21 toolchain to avoid Java version parsing issues
+    kotlin {
+        jvmToolchain(21)
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -128,6 +133,18 @@ dependencies {
 
     // LeakCanary (debug only)
     debugImplementation(libs.leakcanary)
+
+    // Paging
+    implementation(libs.paging.runtime)
+    implementation(libs.paging.compose)
+
+    // NewPipe Extractor & Network
+    implementation(libs.newpipe.extractor.kmp)
+    implementation(libs.okhttp)
+
+    // Palette & Splash
+    implementation(libs.palette)
+    implementation(libs.splashscreen)
 
     // Testing
     testImplementation(libs.junit)

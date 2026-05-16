@@ -8,101 +8,48 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Wraps the Android Visualizer API to capture FFT and waveform data
- * from the active audio session.
- *
- * Requires RECORD_AUDIO permission.
- */
 @Singleton
 class VisualizerEngine @Inject constructor() {
-
-    companion object {
-        private const val TAG = "VisualizerEngine"
-        private const val CAPTURE_SIZE = 256 // Number of FFT data points
-    }
-
-    private val _fftData = MutableStateFlow(FloatArray(CAPTURE_SIZE / 2))
-    val fftData: StateFlow<FloatArray> = _fftData.asStateFlow()
-
-    private val _waveformData = MutableStateFlow(ByteArray(CAPTURE_SIZE))
-    val waveformData: StateFlow<ByteArray> = _waveformData.asStateFlow()
-
-    private val _isActive = MutableStateFlow(false)
-    val isActive: StateFlow<Boolean> = _isActive.asStateFlow()
-
     private var visualizer: Visualizer? = null
+    
+    private val _fftData = MutableStateFlow(ByteArray(0))
+    val fftData: StateFlow<ByteArray> = _fftData.asStateFlow()
 
-    /**
-     * Starts capturing audio data from the given audio session.
-     */
-    fun start(audioSessionId: Int) {
-        release()
+    fun start(sessionId: Int) {
+        release() // Symmetric cleanup first
+        if (sessionId == 0) return
 
         try {
-            visualizer = Visualizer(audioSessionId).apply {
-                captureSize = Visualizer.getCaptureSizeRange()[1].coerceAtMost(CAPTURE_SIZE * 2)
-                setDataCaptureListener(
-                    object : Visualizer.OnDataCaptureListener {
-                        override fun onWaveFormDataCapture(
-                            visualizer: Visualizer,
-                            waveform: ByteArray,
-                            samplingRate: Int
-                        ) {
-                            _waveformData.value = waveform.copyOf()
-                        }
+            visualizer = Visualizer(sessionId).apply {
+                captureSize = Visualizer.getCaptureSizeRange()[1] // Max capture size
+                
+                setDataCaptureListener(object : Visualizer.OnDataCaptureListener {
+                    override fun onWaveFormDataCapture(v: Visualizer, waveform: ByteArray, samplingRate: Int) {
+                        // Not used for now
+                    }
 
-                        override fun onFftDataCapture(
-                            visualizer: Visualizer,
-                            fft: ByteArray,
-                            samplingRate: Int
-                        ) {
-                            _fftData.value = normalizeFFT(fft)
-                        }
-                    },
-                    Visualizer.getMaxCaptureRate() / 2, // 10 FPS capture rate
-                    true,  // waveform
-                    true   // fft
-                )
+                    override fun onFftDataCapture(v: Visualizer, fft: ByteArray, samplingRate: Int) {
+                        _fftData.value = fft
+                    }
+                }, Visualizer.getMaxCaptureRate() / 2, false, true)
+                
                 enabled = true
             }
-            _isActive.value = true
-            Log.i(TAG, "Visualizer started for session $audioSessionId")
+            Log.i("VisualizerEngine", "✅ Visualizer attached to session $sessionId")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to start visualizer", e)
-            _isActive.value = false
+            Log.e("VisualizerEngine", "❌ Failed to attach visualizer: ${e.message}")
         }
     }
 
-    /**
-     * Releases the visualizer.
-     */
     fun release() {
         try {
-            visualizer?.apply {
-                enabled = false
-                release()
-            }
+            visualizer?.enabled = false
+            visualizer?.release()
         } catch (e: Exception) {
-            Log.e(TAG, "Error releasing visualizer", e)
+            Log.e("VisualizerEngine", "Error releasing visualizer", e)
         } finally {
             visualizer = null
-            _isActive.value = false
+            _fftData.value = ByteArray(0)
         }
-    }
-
-    /**
-     * Converts raw FFT byte data to normalized float magnitudes (0..1).
-     */
-    private fun normalizeFFT(fft: ByteArray): FloatArray {
-        val magnitudes = FloatArray(fft.size / 2)
-        for (i in magnitudes.indices) {
-            val real = fft[2 * i].toFloat()
-            val imaginary = fft[2 * i + 1].toFloat()
-            val magnitude = kotlin.math.sqrt(real * real + imaginary * imaginary)
-            // Normalize to 0..1 range (128 is theoretical max for byte-based FFT)
-            magnitudes[i] = (magnitude / 128f).coerceIn(0f, 1f)
-        }
-        return magnitudes
     }
 }

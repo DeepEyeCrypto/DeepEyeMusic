@@ -19,10 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.musicpro.dsp.engine.V4AViewModel
-import com.deepeye.musicpro.dsp.model.RiskLevel
-import com.deepeye.musicpro.ui.theme.GainDanger
-import com.deepeye.musicpro.ui.theme.GainModerate
-import com.deepeye.musicpro.ui.theme.GainSafe
+import com.deepeye.musicpro.ui.v4a.components.DspDebugCard
+import com.deepeye.musicpro.ui.v4a.components.GainBudgetCard
 
 @Composable
 fun V4AScreen(
@@ -50,12 +48,12 @@ fun V4AScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                    colors = CardDefaults.cardColors(containerColor = GainDanger.copy(alpha = 0.15f))
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f))
                 ) {
                     Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.Warning, "Warning", tint = GainDanger)
+                        Icon(Icons.Filled.Warning, "Warning", tint = MaterialTheme.colorScheme.error)
                         Spacer(Modifier.width(8.dp))
-                        Text("Field Surround + Convolver may cause phase conflicts", style = MaterialTheme.typography.bodySmall, color = GainDanger)
+                        Text("Field Surround + Convolver may cause phase conflicts", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -79,23 +77,21 @@ fun V4AScreen(
         // ── Gain Budget Card ──
         item {
             GainBudgetCard(
-                totalGain = uiState.gainBudget.totalGain,
-                headroom = uiState.gainBudget.headroom,
-                riskLevel = uiState.gainBudget.riskLevel,
-                breakdown = uiState.gainBudget.breakdown
+                gainBudget = uiState.gainBudget,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
 
         // ── Equalizer Card ──
         item {
-            DspModuleCard(title = "10-Band Equalizer", enabled = params.eqEnabled, onToggle = { viewModel.updateParams { it.copy(eqEnabled = !it.eqEnabled) } }) {
+            DspModuleCard(title = "10-Band Equalizer", enabled = params.eqEnabled, onToggle = { viewModel.updateParams { p -> p.copy(eqEnabled = !p.eqEnabled) } }) {
                 val bands = listOf("31", "62", "125", "250", "500", "1k", "2k", "4k", "8k", "16k")
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     params.eqBands.forEachIndexed { i, value ->
                         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(32.dp)) {
                             Text("${value.toInt()}", style = MaterialTheme.typography.labelSmall)
                             Slider(
-                                value = value, onValueChange = { viewModel.updateEqBand(i, it) },
+                                value = value, onValueChange = { v -> viewModel.updateEqBand(i, v) },
                                 valueRange = -12f..12f,
                                 modifier = Modifier.height(100.dp).width(28.dp)
                             )
@@ -108,94 +104,105 @@ fun V4AScreen(
 
         // ── Bass Boost ──
         item {
-            DspModuleCard(title = "Bass Boost", enabled = params.bassBoostEnabled, onToggle = { viewModel.updateParams { it.copy(bassBoostEnabled = !it.bassBoostEnabled) } }) {
-                SliderRow("Strength", params.bassBoostStrength.toFloat(), 0f, 1000f) { viewModel.updateParams { p -> p.copy(bassBoostStrength = it.toInt()) } }
+            DspModuleCard(title = "Bass Boost", enabled = params.bassBoostEnabled, onToggle = { viewModel.updateParams { p -> p.copy(bassBoostEnabled = !p.bassBoostEnabled) } }) {
+                SliderRow("Strength", params.bassBoostStrength.toFloat(), 0f, 1000f) { v -> viewModel.updateParams { p -> p.copy(bassBoostStrength = v.toInt()) } }
             }
         }
 
         // ── Virtualizer ──
         item {
-            DspModuleCard(title = "Virtualizer", enabled = params.virtualizerEnabled, onToggle = { viewModel.updateParams { it.copy(virtualizerEnabled = !it.virtualizerEnabled) } }) {
-                SliderRow("Strength", params.virtualizerStrength.toFloat(), 0f, 1000f) { viewModel.updateParams { p -> p.copy(virtualizerStrength = it.toInt()) } }
+            DspModuleCard(title = "Virtualizer", enabled = params.virtualizerEnabled, onToggle = { viewModel.updateParams { p -> p.copy(virtualizerEnabled = !p.virtualizerEnabled) } }) {
+                SliderRow("Strength", params.virtualizerStrength.toFloat(), 0f, 1000f) { v -> viewModel.updateParams { p -> p.copy(virtualizerStrength = v.toInt()) } }
             }
         }
 
         // ── Reverb ──
         item {
-            DspModuleCard(title = "Reverb", enabled = params.reverbEnabled, onToggle = { viewModel.updateParams { it.copy(reverbEnabled = !it.reverbEnabled) } }) {
+            DspModuleCard(title = "Reverb", enabled = params.reverbEnabled, onToggle = { viewModel.updateParams { p -> p.copy(reverbEnabled = !p.reverbEnabled) } }) {
                 Text("Preset: ${params.reverbPreset.name}", style = MaterialTheme.typography.bodySmall)
             }
         }
 
         // ── Loudness Enhancer ──
         item {
-            DspModuleCard(title = "Loudness Enhancer", enabled = params.loudnessEnabled, onToggle = { viewModel.updateParams { it.copy(loudnessEnabled = !it.loudnessEnabled) } }) {
-                SliderRow("Gain", params.loudnessGain, 0f, 15f) { viewModel.updateParams { p -> p.copy(loudnessGain = it) } }
+            DspModuleCard(title = "Loudness Enhancer", enabled = params.loudnessEnabled, onToggle = { viewModel.updateParams { p -> p.copy(loudnessEnabled = !p.loudnessEnabled) } }) {
+                SliderRow("Gain", params.loudnessGain, 0f, 15f) { v -> viewModel.updateParams { p -> p.copy(loudnessGain = v) } }
             }
         }
 
         // ── Dynamics Processing ──
         item {
-            DspModuleCard(title = "Dynamics Processing", enabled = params.dynamicsEnabled, onToggle = { viewModel.updateParams { it.copy(dynamicsEnabled = !it.dynamicsEnabled) } }) {
-                SliderRow("Threshold", params.compressorThreshold, -60f, 0f) { viewModel.updateParams { p -> p.copy(compressorThreshold = it) } }
-                SliderRow("Ratio", params.compressorRatio, 1f, 20f) { viewModel.updateParams { p -> p.copy(compressorRatio = it) } }
+            DspModuleCard(title = "Dynamics Processing", enabled = params.dynamicsEnabled, onToggle = { viewModel.updateParams { p -> p.copy(dynamicsEnabled = !p.dynamicsEnabled) } }) {
+                SliderRow("Threshold", params.compressorThreshold, -60f, 0f) { v -> viewModel.updateParams { p -> p.copy(compressorThreshold = v) } }
+                SliderRow("Ratio", params.compressorRatio, 1f, 20f) { v -> viewModel.updateParams { p -> p.copy(compressorRatio = v) } }
             }
         }
 
         // ── Field Surround ──
         item {
-            DspModuleCard(title = "Field Surround", enabled = params.surroundEnabled, onToggle = { viewModel.updateParams { it.copy(surroundEnabled = !it.surroundEnabled) } }) {
-                SliderRow("Strength", params.surroundStrength.toFloat(), 0f, 1000f) { viewModel.updateParams { p -> p.copy(surroundStrength = it.toInt()) } }
+            DspModuleCard(title = "Field Surround", enabled = params.surroundEnabled, onToggle = { viewModel.updateParams { p -> p.copy(surroundEnabled = !p.surroundEnabled) } }) {
+                SliderRow("Strength", params.surroundStrength.toFloat(), 0f, 1000f) { v -> viewModel.updateParams { p -> p.copy(surroundStrength = v.toInt()) } }
             }
         }
 
         // ── Convolver ──
         item {
-            DspModuleCard(title = "Convolver (IRS)", enabled = params.convolverEnabled, onToggle = { viewModel.updateParams { it.copy(convolverEnabled = !it.convolverEnabled) } }) {
-                SliderRow("Mix", params.convolverMix, 0f, 1f) { viewModel.updateParams { p -> p.copy(convolverMix = it) } }
+            DspModuleCard(title = "Convolver (IRS)", enabled = params.convolverEnabled, onToggle = { viewModel.updateParams { p -> p.copy(convolverEnabled = !p.convolverEnabled) } }) {
+                SliderRow("Mix", params.convolverMix, 0f, 1f) { v -> viewModel.updateParams { p -> p.copy(convolverMix = v) } }
             }
         }
 
         // ── Tube Simulator ──
         item {
-            DspModuleCard(title = "Tube Simulator", enabled = params.tubeEnabled, onToggle = { viewModel.updateParams { it.copy(tubeEnabled = !it.tubeEnabled) } }) {
-                SliderRow("Drive", params.tubeDrive, 0f, 1f) { viewModel.updateParams { p -> p.copy(tubeDrive = it) } }
+            DspModuleCard(title = "Tube Simulator", enabled = params.tubeEnabled, onToggle = { viewModel.updateParams { p -> p.copy(tubeEnabled = !p.tubeEnabled) } }) {
+                SliderRow("Drive", params.tubeDrive.toFloat(), 0f, 100f) { v -> viewModel.updateParams { p -> p.copy(tubeDrive = v.toInt()) } }
             }
         }
 
         // ── Clarity ──
         item {
-            DspModuleCard(title = "Clarity / Exciter", enabled = params.clarityEnabled, onToggle = { viewModel.updateParams { it.copy(clarityEnabled = !it.clarityEnabled) } }) {
-                SliderRow("Strength", params.clarityStrength, 0f, 1f) { viewModel.updateParams { p -> p.copy(clarityStrength = it) } }
+            DspModuleCard(title = "Clarity / Exciter", enabled = params.clarityEnabled, onToggle = { viewModel.updateParams { p -> p.copy(clarityEnabled = !p.clarityEnabled) } }) {
+                SliderRow("Strength", params.clarityStrength, 0f, 1f) { v -> viewModel.updateParams { p -> p.copy(clarityStrength = v) } }
             }
         }
 
         // ── HRTF ──
         item {
-            DspModuleCard(title = "HRTF", enabled = params.hrtfEnabled, onToggle = { viewModel.updateParams { it.copy(hrtfEnabled = !it.hrtfEnabled) } }) {
+            DspModuleCard(title = "HRTF", enabled = params.hrtfEnabled, onToggle = { viewModel.updateParams { p -> p.copy(hrtfEnabled = !p.hrtfEnabled) } }) {
                 Text("Preset: ${params.hrtfPreset.name}", style = MaterialTheme.typography.bodySmall)
             }
         }
 
         // ── Speaker Protection ──
         item {
-            DspModuleCard(title = "Speaker Protection", enabled = params.speakerProtectionEnabled, onToggle = { viewModel.updateParams { it.copy(speakerProtectionEnabled = !it.speakerProtectionEnabled) } }) {
-                SliderRow("Max dB", params.speakerMaxDb, -12f, 0f) { viewModel.updateParams { p -> p.copy(speakerMaxDb = it) } }
+            DspModuleCard(title = "Speaker Protection", enabled = params.speakerProtectionEnabled, onToggle = { viewModel.updateParams { p -> p.copy(speakerProtectionEnabled = !p.speakerProtectionEnabled) } }) {
+                SliderRow("Max dB", params.speakerMaxDb, -12f, 0f) { v -> viewModel.updateParams { p -> p.copy(speakerMaxDb = v) } }
             }
         }
 
         // ── Noise Gate ──
         item {
-            DspModuleCard(title = "Noise Gate", enabled = params.noiseGateEnabled, onToggle = { viewModel.updateParams { it.copy(noiseGateEnabled = !it.noiseGateEnabled) } }) {
-                SliderRow("Threshold", params.noiseGateThreshold, -80f, -20f) { viewModel.updateParams { p -> p.copy(noiseGateThreshold = it) } }
+            DspModuleCard(title = "Noise Gate", enabled = params.noiseGateEnabled, onToggle = { viewModel.updateParams { p -> p.copy(noiseGateEnabled = !p.noiseGateEnabled) } }) {
+                SliderRow("Threshold", params.noiseGateThreshold, -80f, -20f) { v -> viewModel.updateParams { p -> p.copy(noiseGateThreshold = v) } }
             }
         }
 
         // ── PGC ──
         item {
-            DspModuleCard(title = "Pre-Gain Control", enabled = params.pgcEnabled, onToggle = { viewModel.updateParams { it.copy(pgcEnabled = !it.pgcEnabled) } }) {
-                SliderRow("Gain", params.pgcGain, -12f, 12f) { viewModel.updateParams { p -> p.copy(pgcGain = it) } }
+            DspModuleCard(title = "Pre-Gain Control", enabled = params.pgcEnabled, onToggle = { viewModel.updateParams { p -> p.copy(pgcEnabled = !p.pgcEnabled) } }) {
+                SliderRow("Gain", params.pgcGain, -12f, 12f) { v -> viewModel.updateParams { p -> p.copy(pgcGain = v) } }
             }
+        }
+
+        // ── DSP Debug Card ──
+        item {
+            DspDebugCard(
+                sessionId = uiState.sessionId,
+                gainBudget = uiState.gainBudget,
+                activeModules = viewModel.activeModuleNames(),
+                currentRoute = uiState.currentRoute,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+            )
         }
     }
 }
@@ -232,27 +239,5 @@ private fun SliderRow(label: String, value: Float, min: Float, max: Float, onVal
         Text(label, style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(72.dp))
         Slider(value = value, onValueChange = onValueChange, valueRange = min..max, modifier = Modifier.weight(1f))
         Text("%.1f".format(value), style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(40.dp))
-    }
-}
-
-@Composable
-private fun GainBudgetCard(totalGain: Float, headroom: Float, riskLevel: RiskLevel, breakdown: Map<String, Float>) {
-    val riskColor = when (riskLevel) { RiskLevel.SAFE -> GainSafe; RiskLevel.MODERATE -> GainModerate; RiskLevel.DANGER -> GainDanger }
-    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), shape = RoundedCornerShape(16.dp)) {
-        Column(Modifier.padding(16.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Gain Budget", style = MaterialTheme.typography.titleSmall)
-                Text(riskLevel.name, style = MaterialTheme.typography.labelMedium, color = riskColor)
-            }
-            Spacer(Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { (totalGain / 12f).coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
-                color = riskColor,
-                trackColor = MaterialTheme.colorScheme.outline
-            )
-            Spacer(Modifier.height(4.dp))
-            Text("Total: %.1f dB | Headroom: %.1f dB".format(totalGain, headroom), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
     }
 }

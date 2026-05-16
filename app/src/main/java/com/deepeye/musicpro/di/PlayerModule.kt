@@ -33,7 +33,12 @@ object PlayerModule {
         @ApplicationContext context: Context,
         audioAttributes: AudioAttributes
     ): ExoPlayer {
+        val renderersFactory = androidx.media3.exoplayer.DefaultRenderersFactory(context)
+            .setExtensionRendererMode(androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF)
+            .setEnableDecoderFallback(true) // Force software path if hardware fails
+            
         return ExoPlayer.Builder(context)
+            .setRenderersFactory(renderersFactory)
             .setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true)
             .setHandleAudioBecomingNoisy(true)
             .build()
