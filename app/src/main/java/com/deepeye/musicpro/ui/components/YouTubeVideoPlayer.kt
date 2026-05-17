@@ -80,15 +80,45 @@ fun YouTubeVideoPlayer(
                                 height: 100%;
                                 background-color: #000000;
                                 overflow: hidden;
+                                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
                             }
                             iframe {
                                 width: 100%;
                                 height: 100%;
                                 border: none;
                             }
+                            /* Premium SmartTube HUD skip banner */
+                            #skip-hud {
+                                position: absolute;
+                                top: 12px;
+                                left: 50%;
+                                transform: translateX(-50%) translateY(-60px);
+                                background: rgba(0, 0, 0, 0.88);
+                                border: 1.5px solid #00E676;
+                                color: #FFFFFF;
+                                padding: 8px 16px;
+                                border-radius: 20px;
+                                font-size: 11px;
+                                font-weight: bold;
+                                display: flex;
+                                align-items: center;
+                                gap: 6px;
+                                transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+                                opacity: 0;
+                                z-index: 99999;
+                                box-shadow: 0 4px 20px rgba(0, 230, 118, 0.4);
+                                white-space: nowrap;
+                            }
+                            #skip-hud.visible {
+                                transform: translateX(-50%) translateY(0);
+                                opacity: 1;
+                            }
                         </style>
                     </head>
                     <body>
+                        <div id="skip-hud">
+                            <span style="color: #00E676; font-size: 13px;">🛡️</span> SmartTube Shield: Sponsor/Intro skipped!
+                        </div>
                         <iframe 
                             id="player"
                             src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&mute=0&controls=0&playsinline=1&enablejsapi=1&origin=https://www.youtube-nocookie.com" 
@@ -98,15 +128,73 @@ fun YouTubeVideoPlayer(
                         </iframe>
                         <script>
                             var currentTime = 0;
+                            var skipSegments = [];
+                            var currentVideoId = "$videoId";
+                            
+                            function fetchSponsorSegments(vid) {
+                                var url = 'https://sponsor.ajay.app/api/skipSegments?videoID=' + vid + '&categories=["sponsor","selfpromo","interaction","intro","outro","preview"]';
+                                fetch(url)
+                                    .then(function(res) {
+                                        if (res.status === 200) {
+                                            return res.json();
+                                        }
+                                        return [];
+                                    })
+                                    .then(function(data) {
+                                        skipSegments = data.map(function(item) {
+                                            return {
+                                                start: item.segment[0],
+                                                end: item.segment[1],
+                                                category: item.category
+                                            };
+                                        });
+                                    })
+                                    .catch(function(e) {
+                                        skipSegments = [];
+                                    });
+                            }
+                            
+                            // Initialize segments
+                            fetchSponsorSegments(currentVideoId);
                             
                             window.addEventListener('message', function(event) {
                                 try {
                                     var data = JSON.parse(event.data);
                                     if (data.event === 'infoDelivery' && data.info && data.info.currentTime !== undefined) {
                                         currentTime = data.info.currentTime;
+                                        checkAndSkipSegments(currentTime);
                                     }
                                 } catch(e) {}
                             });
+                            
+                            function checkAndSkipSegments(time) {
+                                for (var i = 0; i < skipSegments.length; i++) {
+                                    var seg = skipSegments[i];
+                                    if (time >= seg.start && time < seg.end) {
+                                        currentTime = seg.end;
+                                        var iframe = document.getElementById('player');
+                                        if (iframe && iframe.contentWindow) {
+                                            iframe.contentWindow.postMessage(JSON.stringify({
+                                                "event": "command",
+                                                "func": "seekTo",
+                                                "args": [seg.end, true]
+                                            }), "*");
+                                        }
+                                        showSkipNotification();
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            function showSkipNotification() {
+                                var hud = document.getElementById('skip-hud');
+                                if (hud) {
+                                    hud.classList.add('visible');
+                                    setTimeout(function() {
+                                        hud.classList.remove('visible');
+                                    }, 3000);
+                                }
+                            }
                             
                             function playVideo() {
                                 var iframe = document.getElementById('player');
@@ -121,6 +209,9 @@ fun YouTubeVideoPlayer(
                                 }
                             }
                             function loadVideo(newVideoId) {
+                                currentVideoId = newVideoId;
+                                skipSegments = [];
+                                fetchSponsorSegments(newVideoId);
                                 var iframe = document.getElementById('player');
                                 if (iframe && iframe.contentWindow) {
                                     iframe.contentWindow.postMessage(JSON.stringify({
