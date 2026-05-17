@@ -105,13 +105,20 @@ fun HybridPlayerCard(
         ) {
         if (isVideo) {
             Box(modifier = Modifier.fillMaxSize()) {
-                // Actual Video Playback view using our custom WebView YouTube player
-                YouTubeVideoPlayer(
-                    videoId = item.id,
-                    isPlaying = isPlaying,
-                    playbackSpeed = playbackSpeed,
-                    isMuted = isMuted,
-                    seekTrigger = seekTrigger,
+                // SmartTube-style: Native ExoPlayer PlayerView for direct video rendering
+                // Single player = perfect audio-video sync, no iframe needed
+                AndroidView(
+                    factory = { context ->
+                        PlayerView(context).apply {
+                            this.player = player
+                            useController = false  // We use our own premium controls
+                            layoutParams = android.view.ViewGroup.LayoutParams(
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+                            setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
+                        }
+                    },
                     modifier = Modifier.fillMaxSize()
                 )
 
@@ -125,7 +132,7 @@ fun HybridPlayerCard(
                             .pointerInput(Unit) {
                                 detectTapGestures(
                                     onDoubleTap = {
-                                        seekTrigger -= 1
+                                        player.seekTo(maxOf(0, player.currentPosition - 10_000))
                                         showLeftRipple = true
                                         scope.launch {
                                             delay(650)
@@ -169,7 +176,7 @@ fun HybridPlayerCard(
                             .pointerInput(Unit) {
                                 detectTapGestures(
                                     onDoubleTap = {
-                                        seekTrigger += 1
+                                        player.seekTo(player.currentPosition + 10_000)
                                         showRightRipple = true
                                         scope.launch {
                                             delay(650)
@@ -263,7 +270,10 @@ fun HybridPlayerCard(
 
                         // 2. Interactive Mute/Unmute Indicator Button
                         IconButton(
-                            onClick = { isMuted = !isMuted },
+                            onClick = {
+                                isMuted = !isMuted
+                                player.volume = if (!isMuted) 0f else 1f
+                            },
                             modifier = Modifier
                                 .size(32.dp)
                                 .background(Color.White.copy(alpha = 0.15f), CircleShape)
@@ -287,6 +297,7 @@ fun HybridPlayerCard(
                                         1.5f -> 2.0f
                                         else -> 1.0f
                                     }
+                                    player.setPlaybackSpeed(playbackSpeed)
                                 }
                                 .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
                         ) {
