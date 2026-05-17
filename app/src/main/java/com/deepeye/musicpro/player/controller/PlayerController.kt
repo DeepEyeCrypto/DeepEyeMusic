@@ -85,7 +85,7 @@ class PlayerController @Inject constructor(
                     is MediaItem.Local -> item
                     is MediaItem.Remote -> {
                         if (item.streamUri == null) {
-                            val result = youtubeDataSource.getStreamUrl(item.id, preferVideo = false)
+                            val result = youtubeDataSource.getStreamUrl(item.id, preferVideo = item.isVideo)
                             if (result != null) {
                                 item.copy(
                                     streamUri = Uri.parse(result.url),
