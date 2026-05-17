@@ -117,7 +117,7 @@ fun HybridPlayerCard(
 
                 // GESTURE SKIP ZONES: Left/Right double-tap detection transparent columns
                 Row(modifier = Modifier.fillMaxSize()) {
-                    // Left Column Zone: Skip Backward
+                    // Left Column Zone: Skip Backward / Single Tap Play-Pause
                     Box(
                         modifier = Modifier
                             .fillMaxHeight()
@@ -131,6 +131,9 @@ fun HybridPlayerCard(
                                             delay(650)
                                             showLeftRipple = false
                                         }
+                                    },
+                                    onTap = {
+                                        if (player.isPlaying) player.pause() else player.play()
                                     }
                                 )
                             },
@@ -158,7 +161,7 @@ fun HybridPlayerCard(
                         }
                     }
 
-                    // Right Column Zone: Skip Forward
+                    // Right Column Zone: Skip Forward / Single Tap Play-Pause
                     Box(
                         modifier = Modifier
                             .fillMaxHeight()
@@ -172,6 +175,9 @@ fun HybridPlayerCard(
                                             delay(650)
                                             showRightRipple = false
                                         }
+                                    },
+                                    onTap = {
+                                        if (player.isPlaying) player.pause() else player.play()
                                     }
                                 )
                             },
@@ -200,6 +206,26 @@ fun HybridPlayerCard(
                     }
                 }
 
+                // CENTER PLAY OVERLAY when player is paused
+                if (!isPlaying) {
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.55f))
+                            .clickable { player.play() }
+                            .border(1.5.dp, Color.White.copy(alpha = 0.35f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Play",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+
                 // BOTTOM GLASSMORPHIC QUICK MEDIA CONTROL PANEL OVERLAY
                 Box(
                     modifier = Modifier
@@ -220,7 +246,22 @@ fun HybridPlayerCard(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // 1. Interactive Mute/Unmute Indicator Button
+                        // 1. Interactive Play/Pause Button
+                        IconButton(
+                            onClick = { if (isPlaying) player.pause() else player.play() },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(Color.White.copy(alpha = 0.15f), CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = "Play/Pause",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        // 2. Interactive Mute/Unmute Indicator Button
                         IconButton(
                             onClick = { isMuted = !isMuted },
                             modifier = Modifier
@@ -235,7 +276,7 @@ fun HybridPlayerCard(
                             )
                         }
 
-                        // 2. Playback Speed Selector (Cycles: 1.0x -> 1.5x -> 2.0x -> 1.0x)
+                        // 3. Playback Speed Selector (Cycles: 1.0x -> 1.5x -> 2.0x -> 1.0x)
                         Surface(
                             shape = RoundedCornerShape(14.dp),
                             color = Color.White.copy(alpha = 0.15f),
