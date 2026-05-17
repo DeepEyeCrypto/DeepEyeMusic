@@ -38,31 +38,46 @@ fun YouTubeScreen(
             )
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            when {
-                uiState.isLoading -> {
-                    LazyColumn(contentPadding = PaddingValues(16.dp)) {
-                        items(5) {
-                            ShimmerBox(Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(12.dp)))
-                            Spacer(Modifier.height(16.dp))
+        val playerState by viewModel.playerState.collectAsStateWithLifecycle()
+        
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            // Show Hybrid Player Card if a remote YouTube track is playing
+            playerState.currentItem?.let { currentItem ->
+                if (currentItem is com.deepeye.musicpro.domain.model.MediaItem.Remote) {
+                    com.deepeye.musicpro.ui.components.HybridPlayerCard(
+                        item = currentItem,
+                        player = viewModel.player,
+                        isVideo = playerState.isVideo,
+                        isLoading = playerState.isLoading
+                    )
+                }
+            }
+
+            Box(modifier = Modifier.weight(1f)) {
+                when {
+                    uiState.isLoading -> {
+                        LazyColumn(contentPadding = PaddingValues(16.dp)) {
+                            items(5) {
+                                ShimmerBox(Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(12.dp)))
+                                Spacer(Modifier.height(16.dp))
+                            }
                         }
                     }
-                }
-                uiState.error != null -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Error: ${uiState.error}", color = MaterialTheme.colorScheme.error)
+                    uiState.error != null -> {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Error: ${uiState.error}", color = MaterialTheme.colorScheme.error)
+                        }
                     }
-                }
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 80.dp)
-                    ) {
-                        items(uiState.trendingVideos, key = { it.id }) { video ->
-                            VideoItem(video, onClick = { 
-                                viewModel.playVideo(video)
-                                onNavigateToVideo(video.id) 
-                            })
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 80.dp)
+                        ) {
+                            items(uiState.trendingVideos, key = { it.id }) { video ->
+                                VideoItem(video, onClick = { 
+                                    viewModel.playVideo(video)
+                                })
+                            }
                         }
                     }
                 }
