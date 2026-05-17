@@ -107,6 +107,12 @@ class PlayerController @Inject constructor(
                 }
 
                 withContext(Dispatchers.Main) {
+                    if (finalItem is MediaItem.Remote && finalItem.isVideo) {
+                        player.volume = 0f  // Mute ExoPlayer for perfect audio-video sync!
+                    } else {
+                        player.volume = 1f  // Restore volume for audio-only mode
+                    }
+
                     player.setMediaItem(media3Item)
                     player.prepare()
                     player.play()
@@ -155,6 +161,7 @@ class PlayerController @Inject constructor(
         if (playerState.value.isVideo) {
             val currentlyPlaying = playerState.value.isPlaying
             updateState { it.copy(isPlaying = !currentlyPlaying) }
+            if (currentlyPlaying) player.pause() else player.play()
         } else {
             if (player.isPlaying) player.pause() else player.play()
         }

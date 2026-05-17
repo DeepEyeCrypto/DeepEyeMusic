@@ -52,7 +52,7 @@ fun HybridPlayerCard(
     modifier: Modifier = Modifier
 ) {
     var playbackSpeed by remember { mutableStateOf(1.0f) }
-    var isMuted by remember { mutableStateOf(true) }
+    var isMuted by remember { mutableStateOf(false) }
     var seekTrigger by remember { mutableStateOf(0) }
     
     // Tap-seeking animated indicator visual triggers

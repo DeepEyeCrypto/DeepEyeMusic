@@ -20,7 +20,7 @@ fun YouTubeVideoPlayer(
     videoId: String,
     isPlaying: Boolean,
     playbackSpeed: Float = 1.0f,
-    isMuted: Boolean = true,
+    isMuted: Boolean = false,
     seekTrigger: Int = 0,
     modifier: Modifier = Modifier
 ) {
@@ -91,7 +91,7 @@ fun YouTubeVideoPlayer(
                     <body>
                         <iframe 
                             id="player"
-                            src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&mute=1&controls=0&playsinline=1&enablejsapi=1&origin=https://www.youtube-nocookie.com" 
+                            src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&mute=0&controls=0&playsinline=1&enablejsapi=1&origin=https://www.youtube-nocookie.com" 
                             referrerpolicy="strict-origin-when-cross-origin"
                             allow="autoplay; encrypted-media" 
                             allowfullscreen>
