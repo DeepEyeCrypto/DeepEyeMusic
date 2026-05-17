@@ -44,6 +44,9 @@ fun YouTubeVideoPlayer(
                     }
                 }
                 
+                // Allow third-party cookies so that YouTube's verification scripts can validate embedding
+                android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                
                 settings.apply {
                     javaScriptEnabled = true
                     mediaPlaybackRequiresUserGesture = false
@@ -51,9 +54,7 @@ fun YouTubeVideoPlayer(
                     useWideViewPort = true
                     loadWithOverviewMode = true
                     cacheMode = WebSettings.LOAD_DEFAULT
-                    
-                    // Set a modern mobile Chrome User-Agent matching the Motorola device
-                    userAgentString = "Mozilla/5.0 (Linux; Android 14; motorola edge 30 pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+                    mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 }
             }
         },
@@ -76,57 +77,32 @@ fun YouTubeVideoPlayer(
                                 background-color: #000000;
                                 overflow: hidden;
                             }
-                            #player {
+                            iframe {
                                 width: 100%;
                                 height: 100%;
+                                border: none;
                             }
                         </style>
                     </head>
                     <body>
-                        <div id="player"></div>
+                        <iframe 
+                            id="player"
+                            src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&mute=1&controls=0&playsinline=1&enablejsapi=1&origin=https://www.youtube-nocookie.com" 
+                            referrerpolicy="strict-origin-when-cross-origin"
+                            allow="autoplay; encrypted-media" 
+                            allowfullscreen>
+                        </iframe>
                         <script>
-                            var tag = document.createElement('script');
-                            tag.src = "https://www.youtube.com/iframe_api";
-                            var firstScriptTag = document.getElementsByTagName('script')[0];
-                            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-                            var player;
-                            function onYouTubeIframeAPIReady() {
-                                player = new YT.Player('player', {
-                                    videoId: '$videoId',
-                                    playerVars: {
-                                        'autoplay': 1,
-                                        'mute': 1,
-                                        'controls': 0,
-                                        'playsinline': 1,
-                                        'rel': 0,
-                                        'showinfo': 0,
-                                        'modestbranding': 1,
-                                        'origin': 'https://www.youtube.com'
-                                    },
-                                    events: {
-                                        'onReady': function(event) {
-                                            event.target.playVideo();
-                                            // Sync initial play state
-                                            if (${isPlaying}) {
-                                                event.target.playVideo();
-                                            } else {
-                                                event.target.pauseVideo();
-                                            }
-                                        }
-                                    }
-                                });
-                            }
-
                             function playVideo() {
-                                if (player && typeof player.playVideo === 'function') {
-                                    player.playVideo();
+                                var iframe = document.getElementById('player');
+                                if (iframe && iframe.contentWindow) {
+                                    iframe.contentWindow.postMessage(JSON.stringify({"event": "command", "func": "playVideo", "args": ""}), "*");
                                 }
                             }
-
                             function pauseVideo() {
-                                if (player && typeof player.pauseVideo === 'function') {
-                                    player.pauseVideo();
+                                var iframe = document.getElementById('player');
+                                if (iframe && iframe.contentWindow) {
+                                    iframe.contentWindow.postMessage(JSON.stringify({"event": "command", "func": "pauseVideo", "args": ""}), "*");
                                 }
                             }
                         </script>
@@ -134,7 +110,7 @@ fun YouTubeVideoPlayer(
                     </html>
                 """.trimIndent()
                 
-                webView.loadDataWithBaseURL("https://www.youtube.com", htmlContent, "text/html", "UTF-8", null)
+                webView.loadDataWithBaseURL("https://www.youtube-nocookie.com", htmlContent, "text/html", "UTF-8", null)
             } else {
                 // Sync play/pause state
                 if (isPlaying) {
