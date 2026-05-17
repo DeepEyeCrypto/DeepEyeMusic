@@ -102,9 +102,8 @@ class YoutubeRemoteDataSource @Inject constructor(
                         audioFallback?.let { StreamResult(it, isVideo = false) }
                     }
                 } else {
-                    val audio = info.audioStreams
-                        .filter { it.content != null && it.bitrate > 0 }
-                        .maxByOrNull { it.bitrate }
+                    val audio = info.audioStreams.maxByOrNull { it.bitrate }
+                        ?: info.audioStreams.firstOrNull()
                     audio?.content?.let { StreamResult(it, isVideo = false) }
                 }
             } catch (e: Exception) {
