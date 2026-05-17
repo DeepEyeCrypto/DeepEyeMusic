@@ -46,11 +46,15 @@ class PlayerController @Inject constructor(
 
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
-                updateState { it.copy(isPlaying = isPlaying) }
+                if (!playerState.value.isVideo) {
+                    updateState { it.copy(isPlaying = isPlaying) }
+                }
                 if (isPlaying) startPositionUpdates() else stopPositionUpdates()
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playerState.value.isVideo) return
+                
                 when (playbackState) {
                     Player.STATE_BUFFERING -> {
                         updateState { it.copy(isLoading = true) }
@@ -64,6 +68,7 @@ class PlayerController @Inject constructor(
                 }
             }
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                if (playerState.value.isVideo) return
                 android.util.Log.e("PlayerController", "ExoPlayer Error: ${error.message}", error)
                 updateState { it.copy(isLoading = false) }
             }
@@ -102,8 +107,11 @@ class PlayerController @Inject constructor(
                 }
 
                 withContext(Dispatchers.Main) {
-                    // SmartTube approach: ExoPlayer is the SINGLE player for both audio & video
-                    player.volume = 1f
+                    if (finalItem is MediaItem.Remote && finalItem.isVideo) {
+                        player.volume = 0f  // Mute ExoPlayer for perfect audio-video sync!
+                    } else {
+                        player.volume = 1f  // Restore volume for audio-only mode
+                    }
 
                     player.setMediaItem(media3Item)
                     player.prepare()
@@ -150,7 +158,13 @@ class PlayerController @Inject constructor(
     }
 
     fun togglePlayPause() {
-        if (player.isPlaying) player.pause() else player.play()
+        if (playerState.value.isVideo) {
+            val currentlyPlaying = playerState.value.isPlaying
+            updateState { it.copy(isPlaying = !currentlyPlaying) }
+            if (currentlyPlaying) player.pause() else player.play()
+        } else {
+            if (player.isPlaying) player.pause() else player.play()
+        }
     }
 
     fun seekTo(positionMs: Long) {
