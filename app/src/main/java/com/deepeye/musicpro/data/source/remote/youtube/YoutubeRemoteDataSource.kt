@@ -75,15 +75,65 @@ class YoutubeRemoteDataSource @Inject constructor(
 
     // ▶️ Get stream URL (audio only — best bitrate)
     suspend fun getAudioStreamUrl(videoId: String): String? =
+        getStreamUrl(videoId, preferVideo = false)?.url
+
+    suspend fun getVideoStreamUrl(videoId: String): String? =
+        getStreamUrl(videoId, preferVideo = true)?.url
+
+    // Unified helper that extracts the media stream and dynamically computes whether it contains video
+    suspend fun getStreamUrl(videoId: String, preferVideo: Boolean): StreamResult? =
         withContext(ioDispatcher) {
             try {
-                val url = if (videoId.startsWith("http")) videoId else "https://www.youtube.com/watch?v=$videoId"
+                val cleanId = videoId.trim().take(11)
+                val url = "https://www.youtube.com/watch?v=$cleanId"
                 val info = StreamInfo.getInfo(yt, url)
-                val audio = info.audioStreams.maxByOrNull { it.bitrate }
-                audio?.content
+                
+                if (preferVideo) {
+                    val streamUrl = info.dashMpdUrl?.takeIf { it.isNotEmpty() } 
+                        ?: info.hlsUrl?.takeIf { it.isNotEmpty() }
+                    
+                    Log.d("YoutubeDS", "Video stream extraction for $videoId: DASH=${info.dashMpdUrl?.isNotEmpty()}, HLS=${info.hlsUrl?.isNotEmpty()}")
+                    
+                    if (streamUrl != null) {
+                        StreamResult(streamUrl, isVideo = true)
+                    } else {
+                        Log.w("YoutubeDS", "getStreamUrl: No valid DASH/HLS URL found for $videoId. Falling back to audio stream.")
+                        val audioFallback = info.audioStreams.maxByOrNull { it.bitrate }?.content
+                        audioFallback?.let { StreamResult(it, isVideo = false) }
+                    }
+                } else {
+                    val audio = info.audioStreams
+                        .filter { it.content != null && it.bitrate > 0 }
+                        .maxByOrNull { it.bitrate }
+                    audio?.content?.let { StreamResult(it, isVideo = false) }
+                }
             } catch (e: Exception) {
-                Log.e("YoutubeDS", "getStreamUrl failed: ${e.message}")
+                Log.e("YoutubeDS", "getStreamUrl failed for $videoId: ${e.message}", e)
                 null
+            }
+        }
+
+    // 🔗 Get related music (for autoplay)
+    suspend fun getRelatedMusic(title: String, artist: String, isVideo: Boolean = false): List<com.deepeye.musicpro.domain.model.MediaItem.Remote> =
+        withContext(ioDispatcher) {
+            try {
+                // Search for related music using title and artist
+                val query = "related to $title $artist"
+                val relatedItems = searchMusic(query)
+                
+                relatedItems.map { item ->
+                    com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                        id = item.id,
+                        title = item.title,
+                        artist = item.artist,
+                        artworkUri = android.net.Uri.parse(item.thumbnailUrl),
+                        duration = item.duration * 1000L, // Seconds to ms
+                        isVideo = isVideo
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("YoutubeDS", "getRelatedMusic failed: ${e.message}")
+                emptyList()
             }
         }
 
@@ -128,11 +178,19 @@ class YoutubeRemoteDataSource @Inject constructor(
     )
 
     private fun String.extractVideoId(): String {
-        return when {
+        val id = when {
             contains("v=") -> substringAfter("v=").substringBefore("&")
             contains("youtu.be/") -> substringAfterLast("/")
             contains("/shorts/") -> substringAfterLast("/")
             else -> this
         }.take(11)
+        Log.d("YoutubeDS", "Extracted Video ID: $id from $this")
+        return id
     }
 }
+
+// Data class representing the YouTube stream extraction result
+data class StreamResult(
+    val url: String,
+    val isVideo: Boolean
+)

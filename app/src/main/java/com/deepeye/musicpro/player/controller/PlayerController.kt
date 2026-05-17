@@ -173,7 +173,7 @@ class PlayerController @Inject constructor(
             val current = playerState.value.currentItem
             if (current is MediaItem.Remote) {
                 scope.launch {
-                    val related = youtubeDataSource.getRelatedMusic(current.title, current.artist)
+                    val related = youtubeDataSource.getRelatedMusic(current.title, current.artist, isVideo = current.isVideo)
                     // Exclude current song from related if it appears
                     val nextTrack = related.firstOrNull { it.id != current.id } ?: related.firstOrNull()
                     nextTrack?.let { playMedia(it) }

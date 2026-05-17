@@ -59,8 +59,9 @@ fun YouTubeVideoPlayer(
             }
         },
         update = { webView ->
-            // Check if we need to load a new video
-            if (webView.tag != videoId) {
+            val prevVideoId = webView.tag as? String
+            if (prevVideoId == null) {
+                // First load: load the HTML containing the iframe player
                 webView.tag = videoId
                 
                 val htmlContent = """
@@ -105,19 +106,33 @@ fun YouTubeVideoPlayer(
                                     iframe.contentWindow.postMessage(JSON.stringify({"event": "command", "func": "pauseVideo", "args": ""}), "*");
                                 }
                             }
+                            function loadVideo(newVideoId) {
+                                var iframe = document.getElementById('player');
+                                if (iframe && iframe.contentWindow) {
+                                    iframe.contentWindow.postMessage(JSON.stringify({
+                                        "event": "command",
+                                        "func": "loadVideoById",
+                                        "args": [newVideoId, 0]
+                                    }), "*");
+                                }
+                            }
                         </script>
                     </body>
                     </html>
                 """.trimIndent()
                 
                 webView.loadDataWithBaseURL("https://www.youtube-nocookie.com", htmlContent, "text/html", "UTF-8", null)
+            } else if (prevVideoId != videoId) {
+                // Subsequent load: transition video instantly via postMessage instead of reloading page!
+                webView.tag = videoId
+                webView.evaluateJavascript("if (typeof loadVideo === 'function') loadVideo('$videoId');", null)
+            }
+            
+            // Sync play/pause state
+            if (isPlaying) {
+                webView.evaluateJavascript("if (typeof playVideo === 'function') playVideo();", null)
             } else {
-                // Sync play/pause state
-                if (isPlaying) {
-                    webView.evaluateJavascript("if (typeof playVideo === 'function') playVideo();", null)
-                } else {
-                    webView.evaluateJavascript("if (typeof pauseVideo === 'function') pauseVideo();", null)
-                }
+                webView.evaluateJavascript("if (typeof pauseVideo === 'function') pauseVideo();", null)
             }
         },
         modifier = modifier
