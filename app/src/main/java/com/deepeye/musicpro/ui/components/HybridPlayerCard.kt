@@ -33,6 +33,7 @@ fun HybridPlayerCard(
     player: ExoPlayer,
     isVideo: Boolean,
     isLoading: Boolean,
+    isPlaying: Boolean,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -45,14 +46,10 @@ fun HybridPlayerCard(
         contentAlignment = Alignment.Center
     ) {
         if (isVideo) {
-            // Actual Video Playback view
-            AndroidView(
-                factory = { context ->
-                    PlayerView(context).apply {
-                        this.player = player
-                        useController = true
-                    }
-                },
+            // Actual Video Playback view using our custom WebView YouTube player
+            YouTubeVideoPlayer(
+                videoId = item.id,
+                isPlaying = isPlaying,
                 modifier = Modifier.fillMaxSize()
             )
         } else {

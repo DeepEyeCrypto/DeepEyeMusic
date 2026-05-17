@@ -48,7 +48,8 @@ fun YouTubeScreen(
                         item = currentItem,
                         player = viewModel.player,
                         isVideo = playerState.isVideo,
-                        isLoading = playerState.isLoading
+                        isLoading = playerState.isLoading,
+                        isPlaying = playerState.isPlaying
                     )
                 }
             }
@@ -76,6 +77,7 @@ fun YouTubeScreen(
                             items(uiState.trendingVideos, key = { it.id }) { video ->
                                 VideoItem(video, onClick = { 
                                     viewModel.playVideo(video)
+                                    onNavigateToVideo(video.id)
                                 })
                             }
                         }

@@ -78,52 +78,98 @@ fun NowPlayingScreen(
 
             Spacer(Modifier.weight(0.5f))
 
-            // Artwork
+            val isVideoMode = playerState.currentItem is com.deepeye.musicpro.domain.model.MediaItem.Remote && playerState.isVideo
+            
+            // Artwork / Video Player
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f)
+                    .aspectRatio(if (isVideoMode) 16 / 9f else 1f)
                     .clip(RoundedCornerShape(24.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                AsyncImage(
-                    model = playerState.currentItem?.artworkUri,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+                val currentItem = playerState.currentItem
+                if (isVideoMode && currentItem != null) {
+                    com.deepeye.musicpro.ui.components.YouTubeVideoPlayer(
+                        videoId = currentItem.id,
+                        isPlaying = playerState.isPlaying,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    AsyncImage(
+                        model = currentItem?.artworkUri,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
 
-                // Visualizer Overlay
-                val fftData by viewModel.fftData.collectAsStateWithLifecycle()
-                val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
-                
-                NowPlayingVisualizerOverlay(
-                    fftData = fftData,
-                    dominantColor = dominantColor,
-                    isPlaying = playerState.isPlaying,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                )
+                if (!isVideoMode) {
+                    // Visualizer Overlay only for audio music playback
+                    val fftData by viewModel.fftData.collectAsStateWithLifecycle()
+                    val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
+                    
+                    NowPlayingVisualizerOverlay(
+                        fftData = fftData,
+                        dominantColor = dominantColor,
+                        isPlaying = playerState.isPlaying,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter)
+                    )
+                }
             }
 
             Spacer(Modifier.weight(0.5f))
 
             // Track Info
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = playerState.currentItem?.title ?: "No Track Playing",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1
-                )
-                Text(
-                    text = playerState.currentItem?.artist ?: "Unknown Artist",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = playerState.currentItem?.title ?: "No Track Playing",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1
+                    )
+                    Text(
+                        text = playerState.currentItem?.artist ?: "Unknown Artist",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+                
+                IconButton(
+                    onClick = { viewModel.downloadCurrentTrack() },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            RoundedCornerShape(12.dp)
+                        )
+                ) {
+                    Icon(
+                        Icons.Default.Download,
+                        contentDescription = "Download",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Gain Budget Meter
+            val gainBudget by viewModel.gainBudget.collectAsStateWithLifecycle()
+            com.deepeye.musicpro.ui.components.GainBudgetMeter(
+                budget = gainBudget,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+
+            Spacer(Modifier.height(16.dp))
 
             Spacer(Modifier.height(32.dp))
 
