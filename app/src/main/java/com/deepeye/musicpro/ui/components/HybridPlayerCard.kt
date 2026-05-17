@@ -9,8 +9,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.automirrored.filled.VolumeMute
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.FastForward
+import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -29,6 +34,13 @@ import com.deepeye.musicpro.domain.model.MediaItem
 
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 
 @Composable
 fun HybridPlayerCard(
@@ -39,6 +51,16 @@ fun HybridPlayerCard(
     isPlaying: Boolean,
     modifier: Modifier = Modifier
 ) {
+    var playbackSpeed by remember { mutableStateOf(1.0f) }
+    var isMuted by remember { mutableStateOf(true) }
+    var seekTrigger by remember { mutableStateOf(0) }
+    
+    // Tap-seeking animated indicator visual triggers
+    var showLeftRipple by remember { mutableStateOf(false) }
+    var showRightRipple by remember { mutableStateOf(false) }
+    
+    val scope = rememberCoroutineScope()
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -82,12 +104,173 @@ fun HybridPlayerCard(
             contentAlignment = Alignment.Center
         ) {
         if (isVideo) {
-            // Actual Video Playback view using our custom WebView YouTube player
-            YouTubeVideoPlayer(
-                videoId = item.id,
-                isPlaying = isPlaying,
-                modifier = Modifier.fillMaxSize()
-            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Actual Video Playback view using our custom WebView YouTube player
+                YouTubeVideoPlayer(
+                    videoId = item.id,
+                    isPlaying = isPlaying,
+                    playbackSpeed = playbackSpeed,
+                    isMuted = isMuted,
+                    seekTrigger = seekTrigger,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                // GESTURE SKIP ZONES: Left/Right double-tap detection transparent columns
+                Row(modifier = Modifier.fillMaxSize()) {
+                    // Left Column Zone: Skip Backward
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onDoubleTap = {
+                                        seekTrigger -= 1
+                                        showLeftRipple = true
+                                        scope.launch {
+                                            delay(650)
+                                            showLeftRipple = false
+                                        }
+                                    }
+                                )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (showLeftRipple) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color.Black.copy(alpha = 0.75f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.FastRewind,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("-10s", color = Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+
+                    // Right Column Zone: Skip Forward
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onDoubleTap = {
+                                        seekTrigger += 1
+                                        showRightRipple = true
+                                        scope.launch {
+                                            delay(650)
+                                            showRightRipple = false
+                                        }
+                                    }
+                                )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (showRightRipple) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color.Black.copy(alpha = 0.75f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("+10s", color = Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                    Spacer(Modifier.width(4.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.FastForward,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // BOTTOM GLASSMORPHIC QUICK MEDIA CONTROL PANEL OVERLAY
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
+                                ),
+                                shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                            )
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // 1. Interactive Mute/Unmute Indicator Button
+                        IconButton(
+                            onClick = { isMuted = !isMuted },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(Color.White.copy(alpha = 0.15f), CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = if (isMuted) Icons.AutoMirrored.Filled.VolumeMute else Icons.AutoMirrored.Filled.VolumeUp,
+                                contentDescription = "Mute",
+                                tint = if (isMuted) Color.White.copy(alpha = 0.6f) else Color(0xFFFFB300),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        // 2. Playback Speed Selector (Cycles: 1.0x -> 1.5x -> 2.0x -> 1.0x)
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = Color.White.copy(alpha = 0.15f),
+                            modifier = Modifier
+                                .clickable {
+                                    playbackSpeed = when (playbackSpeed) {
+                                        1.0f -> 1.5f
+                                        1.5f -> 2.0f
+                                        else -> 1.0f
+                                    }
+                                }
+                                .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Speed,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    text = "${playbackSpeed}x",
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         } else {
             // Premium Fallback Audio card
             Box(modifier = Modifier.fillMaxSize()) {

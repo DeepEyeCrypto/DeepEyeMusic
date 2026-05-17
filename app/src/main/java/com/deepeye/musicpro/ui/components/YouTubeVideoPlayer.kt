@@ -19,6 +19,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 fun YouTubeVideoPlayer(
     videoId: String,
     isPlaying: Boolean,
+    playbackSpeed: Float = 1.0f,
+    isMuted: Boolean = true,
+    seekTrigger: Int = 0,
     modifier: Modifier = Modifier
 ) {
     AndroidView(
@@ -94,6 +97,17 @@ fun YouTubeVideoPlayer(
                             allowfullscreen>
                         </iframe>
                         <script>
+                            var currentTime = 0;
+                            
+                            window.addEventListener('message', function(event) {
+                                try {
+                                    var data = JSON.parse(event.data);
+                                    if (data.event === 'infoDelivery' && data.info && data.info.currentTime !== undefined) {
+                                        currentTime = data.info.currentTime;
+                                    }
+                                } catch(e) {}
+                            });
+                            
                             function playVideo() {
                                 var iframe = document.getElementById('player');
                                 if (iframe && iframe.contentWindow) {
@@ -116,6 +130,49 @@ fun YouTubeVideoPlayer(
                                     }), "*");
                                 }
                             }
+                            function seekForward() {
+                                var iframe = document.getElementById('player');
+                                if (iframe && iframe.contentWindow) {
+                                    currentTime += 10;
+                                    iframe.contentWindow.postMessage(JSON.stringify({
+                                        "event": "command",
+                                        "func": "seekTo",
+                                        "args": [currentTime, true]
+                                    }), "*");
+                                }
+                            }
+                            function seekBackward() {
+                                var iframe = document.getElementById('player');
+                                if (iframe && iframe.contentWindow) {
+                                    currentTime = Math.max(0, currentTime - 10);
+                                    iframe.contentWindow.postMessage(JSON.stringify({
+                                        "event": "command",
+                                        "func": "seekTo",
+                                        "args": [currentTime, true]
+                                    }), "*");
+                                }
+                            }
+                            function setSpeed(rate) {
+                                var iframe = document.getElementById('player');
+                                if (iframe && iframe.contentWindow) {
+                                    iframe.contentWindow.postMessage(JSON.stringify({
+                                        "event": "command",
+                                        "func": "setPlaybackRate",
+                                        "args": [rate]
+                                    }), "*");
+                                }
+                            }
+                            function setMute(isMuted) {
+                                var iframe = document.getElementById('player');
+                                if (iframe && iframe.contentWindow) {
+                                    var funcName = isMuted ? "mute" : "unMute";
+                                    iframe.contentWindow.postMessage(JSON.stringify({
+                                        "event": "command",
+                                        "func": funcName,
+                                        "args": ""
+                                    }), "*");
+                                }
+                            }
                         </script>
                     </body>
                     </html>
@@ -133,6 +190,23 @@ fun YouTubeVideoPlayer(
                 webView.evaluateJavascript("if (typeof playVideo === 'function') playVideo();", null)
             } else {
                 webView.evaluateJavascript("if (typeof pauseVideo === 'function') pauseVideo();", null)
+            }
+            
+            // Sync speed state
+            webView.evaluateJavascript("if (typeof setSpeed === 'function') setSpeed($playbackSpeed);", null)
+            
+            // Sync mute state
+            webView.evaluateJavascript("if (typeof setMute === 'function') setMute($isMuted);", null)
+            
+            // Sync seek triggers
+            val prevSeekTrigger = webView.getTag(1001) as? Int ?: 0
+            if (seekTrigger != 0 && seekTrigger != prevSeekTrigger) {
+                webView.setTag(1001, seekTrigger)
+                if (seekTrigger > prevSeekTrigger) {
+                    webView.evaluateJavascript("if (typeof seekForward === 'function') seekForward();", null)
+                } else if (seekTrigger < prevSeekTrigger) {
+                    webView.evaluateJavascript("if (typeof seekBackward === 'function') seekBackward();", null)
+                }
             }
         },
         modifier = modifier
