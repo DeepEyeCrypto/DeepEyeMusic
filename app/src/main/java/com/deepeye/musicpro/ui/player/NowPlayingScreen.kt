@@ -21,6 +21,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.border
 import com.deepeye.musicpro.core.utils.TimeFormatter
 import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.PlayerState
@@ -79,30 +83,66 @@ fun NowPlayingScreen(
             Spacer(Modifier.weight(0.5f))
 
             val isVideoMode = playerState.currentItem is com.deepeye.musicpro.domain.model.MediaItem.Remote && playerState.isVideo
+            val currentItem = playerState.currentItem
             
-            // Artwork / Video Player
+            // Parent Container Box supporting Ambilight Backlight
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(if (isVideoMode) 16 / 9f else 1f)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center
             ) {
-                val currentItem = playerState.currentItem
-                if (isVideoMode && currentItem != null) {
-                    com.deepeye.musicpro.ui.components.YouTubeVideoPlayer(
-                        videoId = currentItem.id,
-                        isPlaying = playerState.isPlaying,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
+                if (currentItem != null) {
+                    // PREMIUM AMBILIGHT DYNAMIC GLOW (Breathing ambient aura matching video colors)
                     AsyncImage(
-                        model = currentItem?.artworkUri,
+                        model = currentItem.artworkUri,
                         contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxWidth(0.92f)
+                            .aspectRatio(if (isVideoMode) 16 / 9f else 1f)
+                            .blur(36.dp)
+                            .alpha(0.65f)
+                            .graphicsLayer {
+                                translationY = 15f
+                            },
                         contentScale = ContentScale.Crop
                     )
                 }
+
+                // MAIN ARTWORK / VIDEO CARD
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(if (isVideoMode) 16 / 9f else 1f)
+                        .border(
+                            width = 1.5.dp,
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(24.dp)
+                        )
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    if (isVideoMode && currentItem != null) {
+                        com.deepeye.musicpro.ui.components.YouTubeVideoPlayer(
+                            videoId = currentItem.id,
+                            isPlaying = playerState.isPlaying,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        AsyncImage(
+                            model = currentItem?.artworkUri,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
 
                 if (!isVideoMode) {
                     // Visualizer Overlay only for audio music playback
@@ -119,6 +159,7 @@ fun NowPlayingScreen(
                     )
                 }
             }
+        }
 
             Spacer(Modifier.weight(0.5f))
 

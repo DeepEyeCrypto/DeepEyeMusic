@@ -27,6 +27,9 @@ import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.MediaItem
 
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
+
 @Composable
 fun HybridPlayerCard(
     item: MediaItem,
@@ -39,12 +42,45 @@ fun HybridPlayerCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(16 / 9f)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {
+        // PREMIUM AMBILIGHT DYNAMIC GLOW (Breathing ambient aura matching video colors)
+        AsyncImage(
+            model = item.artworkUri,
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .aspectRatio(16 / 9f)
+                .blur(36.dp)
+                .alpha(0.65f)
+                .graphicsLayer {
+                    translationY = 15f
+                },
+            contentScale = ContentScale.Crop
+        )
+
+        // MAIN HIGH-FIDELITY MEDIA CONTAINER CARD
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16 / 9f)
+                .border(
+                    width = 1.5.dp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+            contentAlignment = Alignment.Center
+        ) {
         if (isVideo) {
             // Actual Video Playback view using our custom WebView YouTube player
             YouTubeVideoPlayer(
@@ -184,4 +220,5 @@ fun HybridPlayerCard(
             }
         }
     }
+}
 }
