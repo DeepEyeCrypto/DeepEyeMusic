@@ -3,6 +3,8 @@ package com.deepeye.musicpro.ui.settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,6 +14,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.musicpro.data.prefs.ThemeMode
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
@@ -45,6 +48,100 @@ fun SettingsScreen(
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("Dynamic Color (Material You)", style = MaterialTheme.typography.bodyMedium)
                     Switch(checked = settings.dynamicColor, onCheckedChange = { viewModel.setDynamicColor(it) })
+                }
+            }
+        }
+
+        // ── Music Taste & Autoplay ──
+        item { SectionHeader("Music Taste & Autoplay") }
+        item {
+            SettingsCard {
+                Text("Preferred Languages", style = MaterialTheme.typography.titleSmall)
+                Spacer(Modifier.height(8.dp))
+                val languagesList = listOf(
+                    "Hindi", "English", "Punjabi", "Bhojpuri", "Tamil", "Telugu", 
+                    "Haryanvi", "Bengali", "Malayalam", "Kannada", "Marathi", "Gujarati"
+                )
+                val currentLangs = uiState.tasteProfile.preferredLanguages
+                
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    languagesList.forEach { lang ->
+                        val isSelected = currentLangs.contains(lang)
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                val updated = if (isSelected) currentLangs - lang else currentLangs + lang
+                                viewModel.setPreferredLanguages(updated)
+                            },
+                            label = { Text(lang) }
+                        )
+                    }
+                }
+                
+                Spacer(Modifier.height(16.dp))
+                
+                Text("Favorite Artists", style = MaterialTheme.typography.titleSmall)
+                Spacer(Modifier.height(8.dp))
+                val currentArtists = uiState.tasteProfile.favoriteArtists
+                
+                if (currentArtists.isEmpty()) {
+                    Text("No favorite artists selected.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        currentArtists.forEach { artist ->
+                            InputChip(
+                                selected = true,
+                                onClick = {
+                                    viewModel.setFavoriteArtists(currentArtists - artist)
+                                },
+                                label = { Text(artist) },
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Remove",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(Modifier.height(12.dp))
+                
+                var newArtistName by remember { mutableStateOf("") }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = newArtistName,
+                        onValueChange = { newArtistName = it },
+                        placeholder = { Text("Add artist name...") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            if (newArtistName.isNotBlank()) {
+                                viewModel.setFavoriteArtists(currentArtists + newArtistName.trim())
+                                newArtistName = ""
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Add")
+                    }
                 }
             }
         }

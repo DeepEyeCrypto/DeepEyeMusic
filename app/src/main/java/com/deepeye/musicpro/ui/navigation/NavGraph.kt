@@ -1,12 +1,26 @@
 package com.deepeye.musicpro.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.blur
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.musicpro.ui.homehub.HomeHubScreen
 import com.deepeye.musicpro.ui.library.AlbumDetailScreen
 import com.deepeye.musicpro.ui.library.ArtistDetailScreen
@@ -19,6 +33,7 @@ import com.deepeye.musicpro.ui.settings.SettingsScreen
 import com.deepeye.musicpro.ui.v4a.V4AScreen
 import com.deepeye.musicpro.ui.youtube.YouTubeScreen
 import com.deepeye.musicpro.ui.music.MusicScreen
+import com.deepeye.musicpro.ui.onboarding.OnboardingScreen
 
 /**
  * Main NavGraph for DeepEyeMusicPro.
@@ -28,13 +43,76 @@ import com.deepeye.musicpro.ui.music.MusicScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    gateViewModel: OnboardingGateViewModel = hiltViewModel()
 ) {
+    val onboardingState by gateViewModel.onboardingState.collectAsStateWithLifecycle()
+
+    if (onboardingState == null) {
+        // High-Fidelity Premium Splash Loading Gate Screen
+        Box(
+            modifier = androidx.compose.ui.Modifier
+                .fillMaxSize()
+                .background(Color(0xFF030307)),
+            contentAlignment = androidx.compose.ui.Alignment.Center
+        ) {
+            // Ambient neon backlights
+            Box(
+                modifier = androidx.compose.ui.Modifier
+                    .size(250.dp)
+                    .blur(80.dp)
+                    .background(Color(0xFF7C4DFF).copy(alpha = 0.15f), CircleShape)
+            )
+            Box(
+                modifier = androidx.compose.ui.Modifier
+                    .size(250.dp)
+                    .blur(80.dp)
+                    .background(Color(0xFF00D2FF).copy(alpha = 0.15f), CircleShape)
+            )
+
+            Column(
+                horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(
+                    color = Color(0xFF00D2FF),
+                    strokeWidth = 3.dp,
+                    modifier = androidx.compose.ui.Modifier.size(48.dp)
+                )
+                Spacer(Modifier.height(20.dp))
+                Text(
+                    text = "DEEPEYE MUSIC PRO",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                    color = Color(0xFF00D2FF),
+                    letterSpacing = 3.sp
+                )
+            }
+        }
+        return
+    }
+
+    val startDestination = remember(onboardingState) {
+        if (onboardingState == true) Routes.Home.route else Routes.Onboarding.route
+    }
+
     NavHost(
         navController = navController,
-        startDestination = Routes.Home.route,
+        startDestination = startDestination,
         modifier = modifier
     ) {
+        // Onboarding Screen
+        composable(Routes.Onboarding.route) {
+            OnboardingScreen(
+                onOnboardingComplete = {
+                    navController.navigate(Routes.Home.route) {
+                        popUpTo(Routes.Onboarding.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         // ── Bottom Nav Destinations ──
         composable(Routes.Home.route) {
             HomeHubScreen(
@@ -91,7 +169,8 @@ fun NavGraph(
             NowPlayingScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToV4A = { navController.navigate(Routes.V4A.route) },
-                onNavigateToQueue = { /* queue bottom sheet handled internally */ }
+                onNavigateToQueue = { /* queue bottom sheet handled internally */ },
+                onNavigateToSettings = { navController.navigate(Routes.Settings.route) }
             )
         }
 

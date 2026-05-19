@@ -19,6 +19,7 @@ local.properties
 # Keystore
 *.jks
 *.keystore
+keystore.properties
 
 # Kotlin
 *.kotlin_module

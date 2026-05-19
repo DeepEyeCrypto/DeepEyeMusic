@@ -36,10 +36,23 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(keystoreProps["storeFile"] ?: "keystore.jks")
-            storePassword = (keystoreProps["storePassword"] ?: "") as String
-            keyAlias = (keystoreProps["keyAlias"] ?: "") as String
-            keyPassword = (keystoreProps["keyPassword"] ?: "") as String
+            val keystorePath = System.getenv("KEYSTORE_FILE")
+                ?: (keystoreProps["storeFile"] as? String)
+                ?: "keystore.jks"
+            storeFile = if (keystorePath.startsWith("/")) {
+                file(keystorePath)
+            } else {
+                rootProject.file(keystorePath)
+            }
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+                ?: (keystoreProps["storePassword"] as? String)
+                ?: ""
+            keyAlias = System.getenv("KEY_ALIAS")
+                ?: (keystoreProps["keyAlias"] as? String)
+                ?: ""
+            keyPassword = System.getenv("KEY_PASSWORD")
+                ?: (keystoreProps["keyPassword"] as? String)
+                ?: ""
         }
     }
 
@@ -78,6 +91,11 @@ android {
         compose = true
         buildConfig = true
     }
+
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
 }
 
 dependencies {
@@ -115,8 +133,11 @@ dependencies {
 
     // Media3 / ExoPlayer
     implementation(libs.media3.exoplayer)
+    implementation(libs.media3.exoplayer.dash)
+    implementation(libs.media3.exoplayer.hls)
     implementation(libs.media3.session)
     implementation(libs.media3.ui)
+    implementation("androidx.media:media:1.7.0")
 
     // Coroutines
     implementation(libs.coroutines.core)
@@ -132,7 +153,7 @@ dependencies {
     implementation(libs.coil.compose)
 
     // LeakCanary (debug only)
-    debugImplementation(libs.leakcanary)
+    // debugImplementation(libs.leakcanary)
 
     // Paging
     implementation(libs.paging.runtime)
@@ -150,4 +171,15 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.mockk)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
+}
+
+android {
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
 }

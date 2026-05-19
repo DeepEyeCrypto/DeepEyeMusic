@@ -17,13 +17,33 @@ import javax.inject.Inject
 class PlayerViewModel @Inject constructor(
     private val playerController: PlayerController,
     private val visualizerEngine: VisualizerEngine,
-    private val colorExtractor: ColorExtractor
+    private val colorExtractor: ColorExtractor,
+    private val downloadManager: com.deepeye.musicpro.player.download.MusicDownloadManager,
+    private val tasteProfileRepository: com.deepeye.musicpro.domain.repository.TasteProfileRepository
 ) : ViewModel() {
 
     val playerState: StateFlow<PlayerState> = playerController.playerState
+    val player = playerController.player
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val currentSongFeedback: StateFlow<com.deepeye.musicpro.data.db.UserFeedback?> = playerController.playerState
+        .map { it.currentItem?.id }
+        .flatMapLatest { songId ->
+            if (songId != null) {
+                tasteProfileRepository.getFeedbackFlow(songId)
+            } else {
+                flowOf(null)
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
     
+    val tasteProfile: StateFlow<com.deepeye.musicpro.data.prefs.TasteProfile> = tasteProfileRepository.getTasteProfile()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.deepeye.musicpro.data.prefs.TasteProfile())
+
     private val _dominantColor = MutableStateFlow(Color(0xFF7B3FE4))
     val dominantColor: StateFlow<Color> = _dominantColor.asStateFlow()
+
+    val gainBudget = playerController.gainBudget
 
     val fftData = visualizerEngine.fftData.map { bytes ->
         if (bytes.isEmpty()) FloatArray(0)
@@ -58,4 +78,36 @@ class PlayerViewModel @Inject constructor(
     fun seekTo(positionMs: Long) = playerController.seekTo(positionMs)
     fun toggleRepeat() = playerController.toggleRepeat()
     fun toggleShuffle() = playerController.toggleShuffle()
+    fun toggleAutoplay() = playerController.toggleAutoplay()
+
+    fun playMedia(item: com.deepeye.musicpro.domain.model.MediaItem) {
+        playerController.playMedia(item)
+    }
+
+    fun setQueue(items: List<com.deepeye.musicpro.domain.model.MediaItem>, startIndex: Int = 0) {
+        playerController.setQueue(items, startIndex)
+    }
+
+    fun downloadCurrentTrack() {
+        playerState.value.currentItem?.let {
+            downloadManager.downloadTrack(it)
+        }
+    }
+
+    fun likeTrack(liked: Boolean) {
+        val currentId = playerState.value.currentItem?.id ?: return
+        viewModelScope.launch {
+            tasteProfileRepository.recordFeedback(currentId, liked = liked, dontPlayAgain = false)
+        }
+    }
+
+    fun blockTrack() {
+        val currentId = playerState.value.currentItem?.id ?: return
+        viewModelScope.launch {
+            // Block is dislike + dontPlayAgain
+            tasteProfileRepository.recordFeedback(currentId, liked = false, dontPlayAgain = true)
+            // Automatically advance to the next track!
+            next()
+        }
+    }
 }

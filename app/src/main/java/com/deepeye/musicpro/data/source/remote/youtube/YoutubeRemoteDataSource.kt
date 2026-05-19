@@ -11,6 +11,7 @@ import com.yushosei.newpipe.extractor.localization.Localization
 import com.yushosei.newpipe.extractor.localization.ContentCountry
 import com.yushosei.newpipe.extractor.InfoItem
 import com.yushosei.newpipe.extractor.StreamingService
+import com.yushosei.newpipe.extractor.Page
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -19,7 +20,8 @@ import javax.inject.Singleton
 
 @Singleton
 class YoutubeRemoteDataSource @Inject constructor(
-    private val downloader: NewPipeDownloader
+    private val downloader: NewPipeDownloader,
+    private val client: okhttp3.OkHttpClient
 ) {
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
@@ -30,16 +32,37 @@ class YoutubeRemoteDataSource @Inject constructor(
 
     // 🔍 Search videos
     suspend fun searchVideos(query: String): List<HomeVideoItem> =
+        searchVideosFirstPage(query).items
+
+    suspend fun searchVideosFirstPage(query: String): SearchResultPage =
         withContext(ioDispatcher) {
             try {
                 val extractor = yt.getSearchExtractor(query)
                 extractor.fetchPage()
-                val infoItems: List<InfoItem> = extractor.initialPage.items
-                infoItems.filterIsInstance<StreamInfoItem>()
+                val page = extractor.initialPage
+                val infoItems: List<InfoItem> = page.items
+                val videos = infoItems.filterIsInstance<StreamInfoItem>()
                      .map { item: StreamInfoItem -> item.toHomeVideoItem() }
+                SearchResultPage(videos, page.nextPage)
             } catch (e: Exception) {
-                Log.e("YoutubeDS", "searchVideos failed: ${e.message}")
-                emptyList()
+                Log.e("YoutubeDS", "searchVideosFirstPage failed: ${e.message}")
+                SearchResultPage(emptyList(), null)
+            }
+        }
+
+    suspend fun searchVideosNextPage(query: String, nextPageToken: Page): SearchResultPage =
+        withContext(ioDispatcher) {
+            try {
+                val extractor = yt.getSearchExtractor(query)
+                extractor.fetchPage() // fetchPage initialization
+                val page = extractor.getPage(nextPageToken)
+                val infoItems: List<InfoItem> = page.items
+                val videos = infoItems.filterIsInstance<StreamInfoItem>()
+                     .map { item: StreamInfoItem -> item.toHomeVideoItem() }
+                SearchResultPage(videos, page.nextPage)
+            } catch (e: Exception) {
+                Log.e("YoutubeDS", "searchVideosNextPage failed: ${e.message}")
+                SearchResultPage(emptyList(), null)
             }
         }
 
@@ -152,6 +175,36 @@ class YoutubeRemoteDataSource @Inject constructor(
             }
         }
 
+    // 💡 Search Suggestions
+    suspend fun getSearchSuggestions(query: String): List<String> =
+        withContext(ioDispatcher) {
+            if (query.trim().isEmpty()) return@withContext emptyList()
+            try {
+                val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
+                val request = okhttp3.Request.Builder()
+                    .url("https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=$encodedQuery")
+                    .build()
+                val response = client.newCall(request).execute()
+                val body = response.body?.string() ?: ""
+                
+                // Parse the response: ["query", ["suggestion1", "suggestion2", ...]]
+                // Regex matches: ["query",["s1","s2",...]] or ["query",["s1","s2",...],...]
+                val regex = """\["([^"]+)"\s*,\s*\[([^\]]+)\]""".toRegex()
+                val match = regex.find(body)
+                if (match != null) {
+                    val arrayPart = match.groupValues[2]
+                    arrayPart.split(",")
+                        .map { it.replace("\"", "").trim() }
+                        .filter { it.isNotEmpty() }
+                } else {
+                    emptyList()
+                }
+            } catch (e: Exception) {
+                Log.e("YoutubeDS", "getSearchSuggestions failed: ${e.message}")
+                emptyList()
+            }
+        }
+
     // Mappers
     private fun StreamInfoItem.toHomeVideoItem(
         isShort: Boolean = false
@@ -192,4 +245,9 @@ class YoutubeRemoteDataSource @Inject constructor(
 data class StreamResult(
     val url: String,
     val isVideo: Boolean
+)
+
+data class SearchResultPage(
+    val items: List<HomeVideoItem>,
+    val nextPage: Page?
 )

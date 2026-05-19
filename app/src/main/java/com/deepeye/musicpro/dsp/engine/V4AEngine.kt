@@ -1,6 +1,8 @@
 package com.deepeye.musicpro.dsp.engine
 
 import android.media.audiofx.BassBoost
+import android.os.Build
+import android.media.audiofx.DynamicsProcessing
 import android.media.audiofx.Equalizer
 import android.media.audiofx.LoudnessEnhancer
 import android.media.audiofx.PresetReverb
@@ -58,6 +60,7 @@ class V4AEngine @Inject constructor() {
     private var virtualizer: Virtualizer? = null
     private var presetReverb: PresetReverb? = null
     private var loudnessEnhancer: LoudnessEnhancer? = null
+    private var dynamicsProcessing: DynamicsProcessing? = null
 
     private var activeSessionIdInt: Int = 0
 
@@ -78,10 +81,27 @@ class V4AEngine @Inject constructor() {
             virtualizer = try { Virtualizer(EFFECT_PRIORITY, audioSessionId) } catch (e: Exception) { null }
             presetReverb = try { PresetReverb(EFFECT_PRIORITY, audioSessionId) } catch (e: Exception) { null }
             loudnessEnhancer = try { LoudnessEnhancer(audioSessionId) } catch (e: Exception) { null }
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                dynamicsProcessing = try {
+                    val builder = DynamicsProcessing.Config.Builder(
+                        DynamicsProcessing.VARIANT_FAVOR_FREQUENCY_RESOLUTION,
+                        1, // Channels
+                        true, 0, // PreEQ
+                        true, 0, // MultiBandCompressor
+                        true, 0, // PostEQ
+                        true // Limiter
+                    )
+                    DynamicsProcessing(EFFECT_PRIORITY, audioSessionId, builder.build())
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to create DynamicsProcessing", e)
+                    null
+                }
+            }
 
             _engineState.value = EngineState.ATTACHED
             applyParams(_currentParams.value)
-            Log.e(TAG, "✅ V4A Engine successfully attached to session $audioSessionId")
+            Log.d(TAG, "✅ V4A Engine successfully attached to session $audioSessionId")
         } catch (e: Exception) {
             Log.e(TAG, "FATAL: Failed to attach DSP engine", e)
             _engineState.value = EngineState.ERROR
@@ -94,12 +114,14 @@ class V4AEngine @Inject constructor() {
         virtualizer?.release()
         presetReverb?.release()
         loudnessEnhancer?.release()
+        dynamicsProcessing?.release()
         
         equalizer = null
         bassBoost = null
         virtualizer = null
         presetReverb = null
         loudnessEnhancer = null
+        dynamicsProcessing = null
         activeSessionIdInt = 0
         _currentSessionId.value = 0
         _engineState.value = EngineState.IDLE
@@ -114,7 +136,7 @@ class V4AEngine @Inject constructor() {
 
     private fun applyParams(params: DspParams) {
         if (!isAttached()) return
-        Log.e(TAG, "Applying DSP Params: enabled=${params.enabled}")
+        Log.d(TAG, "Applying DSP Params: enabled=${params.enabled}")
 
         try {
             // ── Master Switch ──
@@ -125,6 +147,7 @@ class V4AEngine @Inject constructor() {
                 eq.enabled = isEnabled && params.eqEnabled
                 if (eq.enabled) {
                     val numBands = eq.numberOfBands.toInt()
+                    Log.d(TAG, "EQ Status: ${eq.enabled}, Bands: $numBands")
                     for (i in 0 until minOf(numBands, params.eqBands.size)) {
                         val millibels = (params.eqBands[i] * 100).toInt().toShort()
                         eq.setBandLevel(i.toShort(), millibels)
@@ -137,6 +160,7 @@ class V4AEngine @Inject constructor() {
                 bb.enabled = isEnabled && (params.bassBoostEnabled || params.viperBassEnabled)
                 if (bb.enabled) {
                     val strength = if (params.viperBassEnabled) (params.viperBassGain * 100).toInt() else params.bassBoostStrength
+                    Log.d(TAG, "Bass Status: ${bb.enabled}, Strength: $strength")
                     bb.setStrength(strength.coerceIn(0, 1000).toShort())
                 }
             }
@@ -165,7 +189,29 @@ class V4AEngine @Inject constructor() {
                     // Combine PGC, Master Gain, and Loudness Enhancer
                     val totalGainDb = params.pgcGain + params.masterGain + (if (params.loudnessEnabled) params.loudnessGain else 0f)
                     val totalGainMb = (totalGainDb * 100).toInt().coerceAtLeast(0)
+                    Log.d(TAG, "Loudness Target: $totalGainMb mB")
                     loud.setTargetGain(totalGainMb)
+                }
+            }
+
+            // ── Dynamics Processing (API 28+) ──
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                dynamicsProcessing?.let { dp ->
+                    dp.enabled = isEnabled && params.dynamicsEnabled
+                    if (dp.enabled) {
+                        // For simplicity, we just configure the Limiter part as a start
+                        val limiter = DynamicsProcessing.Limiter(
+                            true, // inUse
+                            params.limiterEnabled, // enabled
+                            0, // linkGroup
+                            params.compressorAttack, // attackTime
+                            params.compressorRelease, // releaseTime
+                            10f, // ratio (placeholder)
+                            params.limiterThreshold, // threshold
+                            0f // postGain
+                        )
+                        dp.setLimiterAllChannelsTo(limiter)
+                    }
                 }
             }
 

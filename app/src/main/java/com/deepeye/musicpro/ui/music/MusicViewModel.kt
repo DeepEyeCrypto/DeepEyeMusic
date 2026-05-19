@@ -72,19 +72,23 @@ class MusicViewModel @Inject constructor(
     }
 
     fun playMusic(music: HomeMusicItem) {
-        val mediaItem = MediaItem.Remote(
-            id = music.id,
-            title = music.title,
-            artist = music.artist,
-            artworkUri = Uri.parse(music.thumbnailUrl),
-            duration = music.duration * 1000L,
-            isVideo = false
-        )
-        playerController.playMedia(mediaItem)
+        val mediaItems = _uiState.value.recommendedMusic.map { item ->
+            MediaItem.Remote(
+                id = item.id,
+                title = item.title,
+                artist = item.artist,
+                artworkUri = Uri.parse(item.thumbnailUrl),
+                duration = item.duration * 1000L,
+                isVideo = false
+            )
+        }
+        val index = _uiState.value.recommendedMusic.indexOf(music)
+        playerController.setQueue(mediaItems, index)
     }
 
     fun playMusicLocal(song: Song) {
-        val mediaItem = MediaItem.Local(song = song)
-        playerController.playMedia(mediaItem)
+        val mediaItems = _uiState.value.localSongs.map { MediaItem.Local(it) }
+        val index = _uiState.value.localSongs.indexOf(song)
+        playerController.setQueue(mediaItems, index)
     }
 }

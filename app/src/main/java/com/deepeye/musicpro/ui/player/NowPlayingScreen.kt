@@ -2,10 +2,16 @@ package com.deepeye.musicpro.ui.player
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.ThumbUp
+import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -24,10 +31,11 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.foundation.border
+import androidx.compose.ui.platform.LocalConfiguration
 import com.deepeye.musicpro.core.utils.TimeFormatter
 import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.PlayerState
+import com.deepeye.musicpro.ui.LocalPipMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,9 +43,39 @@ fun NowPlayingScreen(
     onNavigateBack: () -> Unit,
     onNavigateToV4A: () -> Unit,
     onNavigateToQueue: () -> Unit,
+    onNavigateToSettings: () -> Unit = {},
     viewModel: PlayerViewModel = hiltViewModel()
 ) {
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
+    val configuration = LocalConfiguration.current
+    var showTasteDetailDialog by remember { mutableStateOf(false) }
+    
+    // Fully responsive threshold mapping (Widescreen, Landscape, or Tablet)
+    val isWideScreen = configuration.screenWidthDp >= 600 || 
+                      (configuration.screenWidthDp >= 480 && configuration.screenHeightDp < 500)
+
+    val isInPipMode = LocalPipMode.current
+    val isVideoMode = playerState.currentItem is MediaItem.Remote && playerState.isVideo
+
+    // PiP mode: show ONLY the video player filling the screen
+    if (isInPipMode && isVideoMode && playerState.currentItem != null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            com.deepeye.musicpro.ui.components.HybridPlayerCard(
+                item = playerState.currentItem!!,
+                player = viewModel.player,
+                isVideo = true,
+                isLoading = playerState.isLoading,
+                isPlaying = playerState.isPlaying,
+                playbackPosition = playerState.position,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        return
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Dynamic Background Gradient based on current item
@@ -58,9 +96,9 @@ fun NowPlayingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .padding(24.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-            // Top Bar
+            // Top Navigation Bar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -80,96 +118,95 @@ fun NowPlayingScreen(
                 }
             }
 
-            Spacer(Modifier.weight(0.5f))
+            Spacer(Modifier.height(16.dp))
 
             val isVideoMode = playerState.currentItem is com.deepeye.musicpro.domain.model.MediaItem.Remote && playerState.isVideo
             val currentItem = playerState.currentItem
-            
-            // Parent Container Box supporting Ambilight Backlight
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                if (currentItem != null) {
-                    // PREMIUM AMBILIGHT DYNAMIC GLOW (Breathing ambient aura matching video colors)
-                    AsyncImage(
-                        model = currentItem.artworkUri,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth(0.92f)
-                            .aspectRatio(if (isVideoMode) 16 / 9f else 1f)
-                            .blur(36.dp)
-                            .alpha(0.65f)
-                            .graphicsLayer {
-                                translationY = 15f
-                            },
-                        contentScale = ContentScale.Crop
-                    )
-                }
 
-                // MAIN ARTWORK / VIDEO CARD
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(if (isVideoMode) 16 / 9f else 1f)
-                        .border(
-                            width = 1.5.dp,
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
-                                )
-                            ),
-                            shape = RoundedCornerShape(24.dp)
-                        )
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                ) {
-                    if (isVideoMode && currentItem != null) {
-                        com.deepeye.musicpro.ui.components.YouTubeVideoPlayer(
-                            videoId = currentItem.id,
-                            isPlaying = playerState.isPlaying,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        AsyncImage(
-                            model = currentItem?.artworkUri,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-
-                if (!isVideoMode) {
-                    // Visualizer Overlay only for audio music playback
-                    val fftData by viewModel.fftData.collectAsStateWithLifecycle()
-                    val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
-                    
-                    NowPlayingVisualizerOverlay(
-                        fftData = fftData,
-                        dominantColor = dominantColor,
+            // Modular Composable elements mapped internally for responsive rendering
+            @Composable
+            fun ArtworkOrVideoSection(modifier: Modifier = Modifier) {
+                if (isVideoMode && currentItem != null) {
+                    com.deepeye.musicpro.ui.components.HybridPlayerCard(
+                        item = currentItem,
+                        player = viewModel.player,
+                        isVideo = true,
+                        isLoading = playerState.isLoading,
                         isPlaying = playerState.isPlaying,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.BottomCenter)
+                        playbackPosition = playerState.position,
+                        modifier = modifier.fillMaxWidth()
                     )
+                } else {
+                    Box(
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (currentItem != null) {
+                            AsyncImage(
+                                model = currentItem.artworkUri,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .fillMaxWidth(0.92f)
+                                    .aspectRatio(1f)
+                                    .blur(36.dp)
+                                    .alpha(0.65f)
+                                    .graphicsLayer {
+                                        translationY = 15f
+                                    },
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.95f)
+                                .aspectRatio(1f)
+                                .border(
+                                    width = 1.5.dp,
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
+                                        )
+                                    ),
+                                    shape = RoundedCornerShape(24.dp)
+                                )
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            AsyncImage(
+                                model = currentItem?.artworkUri,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+
+                            val fftData by viewModel.fftData.collectAsStateWithLifecycle()
+                            val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
+                            
+                            NowPlayingVisualizerOverlay(
+                                fftData = fftData,
+                                dominantColor = dominantColor,
+                                isPlaying = playerState.isPlaying,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(Alignment.BottomCenter)
+                            )
+                        }
+                    }
                 }
             }
-        }
 
-            Spacer(Modifier.weight(0.5f))
-
-            // Track Info
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
+            @Composable
+            fun TrackMetadataSection() {
+                val feedback by viewModel.currentSongFeedback.collectAsStateWithLifecycle()
+                val tasteProfile by viewModel.tasteProfile.collectAsStateWithLifecycle()
+                
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = playerState.currentItem?.title ?: "No Track Playing",
                         style = MaterialTheme.typography.headlineMedium,
@@ -182,103 +219,468 @@ fun NowPlayingScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
                     )
-                }
-                
-                IconButton(
-                    onClick = { viewModel.downloadCurrentTrack() },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            RoundedCornerShape(12.dp)
-                        )
-                ) {
-                    Icon(
-                        Icons.Default.Download,
-                        contentDescription = "Download",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    
+                    Spacer(Modifier.height(8.dp))
+                    
+                    val item = playerState.currentItem
+                    if (item != null) {
+                        val tags = remember(item, feedback, tasteProfile) {
+                            val list = mutableListOf<String>()
+                            if (feedback?.liked == true) {
+                                list.add("Liked Song")
+                            }
+                            
+                            val isFavArtist = tasteProfile.favoriteArtists.any { it.equals(item.artist, ignoreCase = true) }
+                            if (isFavArtist) {
+                                list.add("Favorite Artist")
+                            }
+                            
+                            val titleLower = item.title.lowercase()
+                            val detectedLanguage = when {
+                                titleLower.contains("hindi") -> "Hindi"
+                                titleLower.contains("punjabi") -> "Punjabi"
+                                titleLower.contains("bhojpuri") -> "Bhojpuri"
+                                titleLower.contains("tamil") -> "Tamil"
+                                titleLower.contains("telugu") -> "Telugu"
+                                titleLower.contains("english") -> "English"
+                                titleLower.contains("haryanvi") -> "Haryanvi"
+                                titleLower.contains("bengali") -> "Bengali"
+                                titleLower.contains("korean") -> "Korean"
+                                else -> ""
+                            }
+                            if (detectedLanguage.isNotEmpty() && tasteProfile.preferredLanguages.contains(detectedLanguage)) {
+                                list.add(detectedLanguage)
+                            }
+                            
+                            if (list.isEmpty()) {
+                                list.add("Personalized Mix")
+                            }
+                            list
+                        }
+                        
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { showTasteDetailDialog = true }
+                        ) {
+                            tags.forEach { tag ->
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                                        .border(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Star,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(10.dp)
+                                        )
+                                        Spacer(Modifier.width(4.dp))
+                                        Text(
+                                            text = tag.uppercase(),
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+            @Composable
+            fun FeedbackSection() {
+                val feedback by viewModel.currentSongFeedback.collectAsStateWithLifecycle()
+                val isLiked = feedback?.liked == true
+                val isBlocked = feedback?.dontPlayAgain == true
 
-            // Gain Budget Meter
-            val gainBudget by viewModel.gainBudget.collectAsStateWithLifecycle()
-            com.deepeye.musicpro.ui.components.GainBudgetMeter(
-                budget = gainBudget,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            Spacer(Modifier.height(32.dp))
-
-            // Progress Slider
-            Column {
-                Slider(
-                    value = playerState.position.toFloat(),
-                    onValueChange = { viewModel.seekTo(it.toLong()) },
-                    valueRange = 0f..playerState.duration.toFloat().coerceAtLeast(1f),
-                    colors = SliderDefaults.colors(
-                        thumbColor = MaterialTheme.colorScheme.primary,
-                        activeTrackColor = MaterialTheme.colorScheme.primary,
-                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        TimeFormatter.formatDuration(playerState.position),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                    Text(
-                        TimeFormatter.formatDuration(playerState.duration),
-                        style = MaterialTheme.typography.labelSmall
-                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        IconButton(
+                            onClick = { viewModel.likeTrack(!isLiked) },
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(
+                                    if (isLiked) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    RoundedCornerShape(12.dp)
+                                )
+                        ) {
+                            Icon(
+                                imageVector = if (isLiked) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
+                                contentDescription = "Like Track",
+                                tint = if (isLiked) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.6f)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { viewModel.blockTrack() },
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(
+                                    if (isBlocked) MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
+                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    RoundedCornerShape(12.dp)
+                                )
+                        ) {
+                            Icon(
+                                imageVector = if (isBlocked) Icons.Filled.ThumbDown else Icons.Outlined.ThumbDown,
+                                contentDescription = "Block Track",
+                                tint = if (isBlocked) MaterialTheme.colorScheme.error else Color.White.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (playerState.autoplayEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    brush = if (playerState.autoplayEnabled) Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
+                                            else SolidColor(Color.Transparent),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .combinedClickable(
+                                    onClick = { viewModel.toggleAutoplay() },
+                                    onLongClick = {
+                                        if (playerState.autoplayEnabled) {
+                                            showTasteDetailDialog = true
+                                        }
+                                    }
+                                )
+                                .padding(horizontal = 14.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Autorenew,
+                                    contentDescription = "Autoplay Mode",
+                                    tint = if (playerState.autoplayEnabled) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.6f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    text = if (playerState.autoplayEnabled) "AUTOPLAY: TASTE" else "AUTOPLAY OFF",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (playerState.autoplayEnabled) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+
+                        IconButton(
+                            onClick = { viewModel.downloadCurrentTrack() },
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    RoundedCornerShape(12.dp)
+                                )
+                        ) {
+                            Icon(
+                                Icons.Default.Download,
+                                contentDescription = "Download",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(Modifier.height(32.dp))
+            @Composable
+            fun GainBudgetSection() {
+                val gainBudget by viewModel.gainBudget.collectAsStateWithLifecycle()
+                com.deepeye.musicpro.ui.components.GainBudgetMeter(
+                    budget = gainBudget,
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                )
+            }
 
-            // Controls
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = { viewModel.toggleShuffle() }) {
-                    Icon(Icons.Default.Shuffle, contentDescription = "Shuffle")
-                }
-                IconButton(onClick = { viewModel.previous() }, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", modifier = Modifier.size(36.dp))
-                }
-                Surface(
-                    onClick = { viewModel.togglePlayPause() },
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(72.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = if (playerState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = "Play/Pause",
-                            modifier = Modifier.size(40.dp),
-                            tint = MaterialTheme.colorScheme.onPrimary
+            @Composable
+            fun ProgressSliderSection() {
+                Column {
+                    Slider(
+                        value = playerState.position.toFloat(),
+                        onValueChange = { viewModel.seekTo(it.toLong()) },
+                        valueRange = 0f..playerState.duration.toFloat().coerceAtLeast(1f),
+                        colors = SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            TimeFormatter.formatDuration(playerState.position),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                        Text(
+                            TimeFormatter.formatDuration(playerState.duration),
+                            style = MaterialTheme.typography.labelSmall
                         )
                     }
                 }
-                IconButton(onClick = { viewModel.next() }, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.Default.SkipNext, contentDescription = "Next", modifier = Modifier.size(36.dp))
-                }
-                IconButton(onClick = { viewModel.toggleRepeat() }) {
-                    Icon(Icons.Default.Repeat, contentDescription = "Repeat")
+            }
+
+            @Composable
+            fun ControlsSection() {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { viewModel.toggleShuffle() }) {
+                        Icon(Icons.Default.Shuffle, contentDescription = "Shuffle")
+                    }
+                    IconButton(onClick = { viewModel.previous() }, modifier = Modifier.size(48.dp)) {
+                        Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", modifier = Modifier.size(36.dp))
+                    }
+                    Surface(
+                        onClick = { viewModel.togglePlayPause() },
+                        shape = RoundedCornerShape(28.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(72.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (playerState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = "Play/Pause",
+                                modifier = Modifier.size(40.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+                    IconButton(onClick = { viewModel.next() }, modifier = Modifier.size(48.dp)) {
+                        Icon(Icons.Default.SkipNext, contentDescription = "Next", modifier = Modifier.size(36.dp))
+                    }
+                    IconButton(onClick = { viewModel.toggleRepeat() }) {
+                        Icon(Icons.Default.Repeat, contentDescription = "Repeat")
+                    }
                 }
             }
 
-            Spacer(Modifier.weight(0.5f))
+            // Adaptive UI rendering branch based on screen size
+            if (isWideScreen) {
+                // ==========================================
+                // 1. TWO-COLUMN RESPONSIVE LAYOUT (TABLETS / LANDSCAPE)
+                // ==========================================
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                        .padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(32.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Left Column: Artwork / Video Card
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        ArtworkOrVideoSection(modifier = Modifier.fillMaxHeight(0.85f))
+                    }
+
+                    // Right Column: Details, Slider, and Action Controls
+                    Column(
+                        modifier = Modifier
+                            .weight(1.1f)
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        TrackMetadataSection()
+                        FeedbackSection()
+                        GainBudgetSection()
+                        ProgressSliderSection()
+                        ControlsSection()
+                    }
+                }
+            } else {
+                // ==========================================
+                // 2. STANDARD SCALED COLUMN LAYOUT (MOBILE PORTRAIT)
+                // ==========================================
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Spacer(Modifier.weight(0.2f))
+                    ArtworkOrVideoSection(modifier = Modifier.weight(3.5f, fill = false))
+                    Spacer(Modifier.weight(0.2f))
+                    
+                    Column(
+                        modifier = Modifier.weight(4f, fill = false),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        TrackMetadataSection()
+                        FeedbackSection()
+                        GainBudgetSection()
+                        ProgressSliderSection()
+                        ControlsSection()
+                    }
+                    Spacer(Modifier.weight(0.2f))
+                }
+            }
         }
+
+        val item = playerState.currentItem
+        val feedback by viewModel.currentSongFeedback.collectAsStateWithLifecycle()
+        val tasteProfile by viewModel.tasteProfile.collectAsStateWithLifecycle()
+
+        if (showTasteDetailDialog && item != null) {
+            AlertDialog(
+                onDismissRequest = { showTasteDetailDialog = false },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Personalization Details",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(
+                            text = "Here is how our taste algorithm scored this track for you:",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        val isFavArtist = tasteProfile.favoriteArtists.any { it.equals(item.artist, ignoreCase = true) }
+                        val titleLower = item.title.lowercase()
+                        val detectedLanguage = when {
+                            titleLower.contains("hindi") -> "Hindi"
+                            titleLower.contains("punjabi") -> "Punjabi"
+                            titleLower.contains("bhojpuri") -> "Bhojpuri"
+                            titleLower.contains("tamil") -> "Tamil"
+                            titleLower.contains("telugu") -> "Telugu"
+                            titleLower.contains("english") -> "English"
+                            titleLower.contains("haryanvi") -> "Haryanvi"
+                            titleLower.contains("bengali") -> "Bengali"
+                            titleLower.contains("korean") -> "Korean"
+                            else -> "English"
+                        }
+                        val isPrefLang = tasteProfile.preferredLanguages.contains(detectedLanguage)
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
+
+                        ScoringRow(
+                            title = "Preferred Language ($detectedLanguage)",
+                            score = if (isPrefLang) "+3" else "0",
+                            matched = isPrefLang,
+                            icon = Icons.Default.Language
+                        )
+                        ScoringRow(
+                            title = "Favorite Artist (${item.artist})",
+                            score = if (isFavArtist) "+4" else "0",
+                            matched = isFavArtist,
+                            icon = Icons.Default.Person
+                        )
+                        ScoringRow(
+                            title = "User Feedback (Like)",
+                            score = if (feedback?.liked == true) "+5" else "0",
+                            matched = feedback?.liked == true,
+                            icon = Icons.Default.ThumbUp
+                        )
+                        ScoringRow(
+                            title = "User Feedback (Quick Skip)",
+                            score = if (feedback?.skippedQuickly == true) "-6" else "0",
+                            matched = feedback?.skippedQuickly == true,
+                            icon = Icons.Default.ThumbDown
+                        )
+                    }
+                },
+                confirmButton = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(
+                            onClick = {
+                                showTasteDetailDialog = false
+                                onNavigateToSettings()
+                            }
+                        ) {
+                            Text("Train Taste")
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        TextButton(onClick = { showTasteDetailDialog = false }) {
+                            Text("Close")
+                        }
+                    }
+                },
+                shape = RoundedCornerShape(20.dp),
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun ScoringRow(
+    title: String,
+    score: String,
+    matched: Boolean,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (matched) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (matched) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            )
+        }
+        Text(
+            text = score,
+            fontWeight = FontWeight.Bold,
+            color = if (score.startsWith("+")) MaterialTheme.colorScheme.primary else if (score.startsWith("-")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

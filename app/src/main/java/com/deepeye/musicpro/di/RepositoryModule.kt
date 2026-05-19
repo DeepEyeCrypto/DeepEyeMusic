@@ -25,4 +25,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindPlaylistRepository(impl: PlaylistRepositoryImpl): PlaylistRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTasteProfileRepository(
+        impl: com.deepeye.musicpro.data.repository.TasteProfileRepositoryImpl
+    ): com.deepeye.musicpro.domain.repository.TasteProfileRepository
 }

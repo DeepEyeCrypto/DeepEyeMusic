@@ -36,4 +36,7 @@ object DatabaseModule {
 
     @Provides
     fun providePlaylistDao(database: AppDatabase): PlaylistDao = database.playlistDao()
+
+    @Provides
+    fun provideTasteDao(database: AppDatabase): com.deepeye.musicpro.data.db.TasteDao = database.tasteDao()
 }

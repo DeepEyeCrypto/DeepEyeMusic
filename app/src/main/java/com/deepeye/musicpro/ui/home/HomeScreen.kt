@@ -39,7 +39,8 @@ import com.deepeye.musicpro.ui.components.ShimmerBox
 fun HomeScreen(
     onNavigateToNowPlaying: () -> Unit,
     onNavigateToAlbum: (Long) -> Unit,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -122,7 +123,12 @@ fun HomeScreen(
             items(uiState.recentlyAdded, key = { it.id }) { song ->
                 SongListItem(
                     song = song,
-                    onClick = { onNavigateToNowPlaying() }
+                    onClick = { 
+                        val mediaItems = uiState.recentlyAdded.map { com.deepeye.musicpro.domain.model.MediaItem.Local(it) }
+                        val index = uiState.recentlyAdded.indexOf(song)
+                        playerViewModel.setQueue(mediaItems, index)
+                        onNavigateToNowPlaying() 
+                    }
                 )
             }
         }

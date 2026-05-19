@@ -61,18 +61,22 @@ class SearchViewModel @Inject constructor(
     }
 
     fun playLocal(song: Song) {
-        playerController.playMedia(MediaItem.Local(song))
+        val mediaItems = _uiState.value.localResults.map { MediaItem.Local(it) }
+        val index = _uiState.value.localResults.indexOf(song)
+        playerController.setQueue(mediaItems, index)
     }
 
     fun playRemote(item: HomeMusicItem) {
-        playerController.playMedia(
+        val mediaItems = _uiState.value.remoteResults.map { remote ->
             MediaItem.Remote(
-                id = item.id,
-                title = item.title,
-                artist = item.artist,
-                artworkUri = Uri.parse(item.thumbnailUrl),
-                duration = 0
+                id = remote.id,
+                title = remote.title,
+                artist = remote.artist,
+                artworkUri = Uri.parse(remote.thumbnailUrl),
+                duration = 0 // Search results might not have duration
             )
-        )
+        }
+        val index = _uiState.value.remoteResults.indexOf(item)
+        playerController.setQueue(mediaItems, index)
     }
 }

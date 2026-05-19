@@ -1,6 +1,7 @@
 package com.deepeye.musicpro.ui.homehub
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,16 +15,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.ui.components.ShimmerBox
+import com.deepeye.musicpro.ui.components.premium.SplitMediaHero
+import com.deepeye.musicpro.ui.components.premium.PremiumHeroCard
+import com.deepeye.musicpro.ui.theme.GlassBorder
+import com.deepeye.musicpro.ui.theme.GlassWhite
 
 @Composable
 fun HomeHubScreen(
@@ -49,6 +57,40 @@ fun HomeHubScreen(
         // 1. Greeting
         item {
             HomeGreetingHeader()
+        }
+
+        // 1b. Featured Split Hero (AEOS Premium Feature)
+        val featuredVideo = feedState.featuredVideo
+        val featuredMusic = feedState.featuredMusic
+        if (featuredVideo != null && featuredMusic != null) {
+            item {
+                SplitMediaHero(
+                    video = featuredVideo,
+                    music = featuredMusic,
+                    onVideoClick = {
+                        viewModel.playVideo(featuredVideo)
+                        onNavigateToVideo(featuredVideo.id)
+                    },
+                    onMusicClick = {
+                        viewModel.playMusic(featuredMusic)
+                        onNavigateToMusic(featuredMusic.id)
+                    }
+                )
+            }
+        } else if (featuredVideo != null) {
+            item {
+                PremiumHeroCard(
+                    title = featuredVideo.title,
+                    subtitle = featuredVideo.channelName,
+                    imageUrl = featuredVideo.thumbnailUrl,
+                    badge = "Featured Video",
+                    onClick = {
+                        viewModel.playVideo(featuredVideo)
+                        onNavigateToVideo(featuredVideo.id)
+                    },
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+            }
         }
 
         // 2. DSP Quick Panel (always visible)
@@ -212,23 +254,53 @@ private fun HomeMusicRail(
             contentPadding = PaddingValues(horizontal = 16.dp)
         ) {
             items(items, key = { it.id }) { music ->
-                // Use a simple music card or VideoCard for now
-                Card(
-                    modifier = Modifier.width(160.dp).clickable { onClick(music) },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E))
+                Box(
+                    modifier = Modifier
+                        .width(160.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(GlassWhite)
+                        .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
+                        .clickable { onClick(music) }
+                        .padding(8.dp)
                 ) {
-                    Column(Modifier.padding(8.dp)) {
-                        Box(Modifier.fillMaxWidth().aspectRatio(1f).background(Color.DarkGray))
-                        Spacer(Modifier.height(8.dp))
-                        Text(music.title, style = MaterialTheme.typography.bodySmall, color = Color.White, maxLines = 1)
-                        Text(music.artist, style = MaterialTheme.typography.labelSmall, color = Color.Gray, maxLines = 1)
+                    Column {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                        ) {
+                            AsyncImage(
+                                model = music.thumbnailUrl,
+                                contentDescription = music.title,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            text = music.title,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = music.artist,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.LightGray.copy(alpha = 0.7f),
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
                     }
                 }
             }
         }
     }
 }
+
 
 @Composable
 private fun HomeRailShimmer(title: String) {

@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,6 +32,8 @@ class PlayerController @Inject constructor(
     private val youtubeDataSource: YoutubeRemoteDataSource,
     private val audioSessionManager: com.deepeye.musicpro.dsp.session.AudioSessionManager,
     private val v4aEngine: com.deepeye.musicpro.dsp.engine.V4AEngine,
+    private val tasteProfileRepository: com.deepeye.musicpro.domain.repository.TasteProfileRepository,
+    private val musicRepository: com.deepeye.musicpro.domain.repository.MusicRepository,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -39,22 +44,55 @@ class PlayerController @Inject constructor(
     val gainBudget = v4aEngine.gainBudget
 
     private var positionUpdateJob: Job? = null
+    private var playJob: Job? = null
+    private val playMutex = Mutex()
+
+    // Taste profile analytics tracking variables
+    private var currentTrackId: String? = null
+    private var totalPlayTimeCurrentTrack: Long = 0L
+    private var lastPlaybackStateTime: Long = 0L
+    private val recentAutoplayTrackIds = mutableListOf<String>()
 
     init {
         // Wire DSP engine to the player session
         audioSessionManager.attachToPlayer(player)
+
+        // VLC-style: Language-aware audio track selection
+        scope.launch {
+            tasteProfileRepository.getTasteProfile().collect { profile ->
+                val languages = profile.preferredLanguages
+                if (languages.isNotEmpty()) {
+                    val lang = languages.first() // Pick the first preferred language
+                    player.trackSelectionParameters = player.trackSelectionParameters
+                        .buildUpon()
+                        .setPreferredAudioLanguage(lang)
+                        .setPreferredTextLanguage(lang)
+                        .build()
+                }
+            }
+        }
 
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 if (!playerState.value.isVideo) {
                     updateState { it.copy(isPlaying = isPlaying) }
                 }
-                if (isPlaying) startPositionUpdates() else stopPositionUpdates()
+                if (isPlaying) {
+                    startPositionUpdates()
+                    lastPlaybackStateTime = System.currentTimeMillis()
+                } else {
+                    stopPositionUpdates()
+                    if (currentTrackId != null) {
+                        totalPlayTimeCurrentTrack += System.currentTimeMillis() - lastPlaybackStateTime
+                    }
+                }
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
-                if (playerState.value.isVideo) return
-                
+                if (playerState.value.isVideo) {
+                    if (playbackState == Player.STATE_ENDED) onTrackEnded()
+                    return
+                }
                 when (playbackState) {
                     Player.STATE_BUFFERING -> {
                         updateState { it.copy(isLoading = true) }
@@ -78,21 +116,41 @@ class PlayerController @Inject constructor(
     val nowPlaying = playerState.map { it.currentItem }
 
     fun playMedia(item: MediaItem) {
-        scope.launch {
-            updateState { it.copy(isLoading = true) }
+        android.util.Log.d("PlayerController", "playMedia called with item: $item")
+        
+        playJob?.cancel()
+        playJob = scope.launch {
             try {
+                // Check if song is blocked in the database
+                val feedback = tasteProfileRepository.getFeedback(item.id)
+                if (feedback != null && feedback.dontPlayAgain) {
+                    android.util.Log.d("PlayerController", "Track ${item.title} (${item.id}) is blocked. Auto-skipping!")
+                    next()
+                    return@launch
+                }
+
+                updateState { it.copy(isLoading = true) }
+
                 val finalItem = when (item) {
                     is MediaItem.Local -> item
                     is MediaItem.Remote -> {
-                        if (item.streamUri == null) {
+                        android.util.Log.d("PlayerController", "Remote item: ${item.title}, id: ${item.id}, streamUri: ${item.streamUri}")
+                        if (item.streamUri == null || item.streamUri == Uri.EMPTY) {
+                            android.util.Log.d("PlayerController", "streamUri is null or empty, fetching getStreamUrl...")
                             val result = youtubeDataSource.getStreamUrl(item.id, preferVideo = item.isVideo)
+                            ensureActive()
+                            android.util.Log.d("PlayerController", "getStreamUrl fetched: $result")
                             if (result != null) {
                                 item.copy(
                                     streamUri = Uri.parse(result.url),
-                                    isVideo = item.isVideo
+                                    isVideo = result.isVideo
                                 )
                             } else {
-                                item
+                                android.util.Log.w("PlayerController", "getStreamUrl returned null! Creating a fallback stream URL to prevent crash.")
+                                item.copy(
+                                    streamUri = Uri.parse("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"),
+                                    isVideo = false
+                                )
                             }
                         } else {
                             item
@@ -100,17 +158,58 @@ class PlayerController @Inject constructor(
                     }
                 }
 
-                val media3Item = finalItem.toMedia3Item()
-                if (media3Item.localConfiguration?.uri == Uri.EMPTY) {
-                    android.util.Log.e("PlayerController", "Cannot play: Stream URI is empty")
-                    return@launch
+                ensureActive()
+
+                // Fetch SponsorBlock segments
+                var fetchedSegments: List<com.deepeye.musicpro.domain.model.SponsorSegment> = emptyList()
+                if (finalItem is MediaItem.Remote && finalItem.isVideo) {
+                    try {
+                        val url = java.net.URL("https://sponsor.ajay.app/api/skipSegments?videoID=${finalItem.id}&categories=[\"sponsor\",\"selfpromo\",\"interaction\",\"intro\",\"outro\",\"preview\"]")
+                        val connection = url.openConnection() as java.net.HttpURLConnection
+                        connection.requestMethod = "GET"
+                        connection.connectTimeout = 3000
+                        connection.readTimeout = 3000
+                        if (connection.responseCode == 200) {
+                            val jsonStr = connection.inputStream.bufferedReader().use { it.readText() }
+                            val jsonArray = org.json.JSONArray(jsonStr)
+                            val list = mutableListOf<com.deepeye.musicpro.domain.model.SponsorSegment>()
+                            for (i in 0 until jsonArray.length()) {
+                                val obj = jsonArray.getJSONObject(i)
+                                val segmentArray = obj.getJSONArray("segment")
+                                val startMs = (segmentArray.getDouble(0) * 1000).toLong()
+                                val endMs = (segmentArray.getDouble(1) * 1000).toLong()
+                                val category = obj.getString("category")
+                                list.add(com.deepeye.musicpro.domain.model.SponsorSegment(startMs, endMs, category))
+                            }
+                            fetchedSegments = list
+                            android.util.Log.d("SponsorBlock", "Found ${list.size} segments for ${finalItem.id}")
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("SponsorBlock", "Failed to fetch segments", e)
+                    }
                 }
 
-                withContext(Dispatchers.Main) {
+                ensureActive()
+
+                playMutex.withLock {
+                    if (currentTrackId != null) {
+                        recordCurrentTrackPlayStatsLocked(finishedSuccessfully = false)
+                    }
+                    currentTrackId = finalItem.id
+                    totalPlayTimeCurrentTrack = 0L
+                    lastPlaybackStateTime = System.currentTimeMillis()
+                    lastSkippedSegment = null // Reset SponsorBlock state for new track
+
                     if (finalItem is MediaItem.Remote && finalItem.isVideo) {
                         player.volume = 0f  // Mute ExoPlayer for perfect audio-video sync!
                     } else {
                         player.volume = 1f  // Restore volume for audio-only mode
+                    }
+
+                    val media3Item = finalItem.toMedia3Item()
+                    if (media3Item.localConfiguration?.uri == Uri.EMPTY) {
+                        android.util.Log.e("PlayerController", "Cannot play: Stream URI is empty")
+                        return@withLock
                     }
 
                     player.setMediaItem(media3Item)
@@ -128,7 +227,8 @@ class PlayerController @Inject constructor(
                                 currentSong = null,
                                 isVideo = true,
                                 isLoading = false,
-                                isPlaying = true
+                                isPlaying = true,
+                                sponsorSegments = fetchedSegments
                             ) 
                         }
                     } else {
@@ -137,11 +237,14 @@ class PlayerController @Inject constructor(
                                 currentItem = finalItem, 
                                 currentSong = (finalItem as? MediaItem.Local)?.song,
                                 isVideo = false,
-                                isLoading = false
+                                isLoading = false,
+                                sponsorSegments = fetchedSegments
                             ) 
                         }
                     }
                 }
+            } catch (e: CancellationException) {
+                android.util.Log.d("PlayerController", "playMedia cancelled for item: ${item.title}")
             } catch (e: Exception) {
                 android.util.Log.e("PlayerController", "Exception in playMedia: ${e.message}", e)
                 updateState { it.copy(isLoading = false) }
@@ -167,6 +270,11 @@ class PlayerController @Inject constructor(
         }
     }
 
+    fun setPlaybackSpeed(speed: Float) {
+        player.setPlaybackSpeed(speed)
+        updateState { it.copy(playbackSpeed = speed) }
+    }
+
     fun seekTo(positionMs: Long) {
         player.seekTo(positionMs)
     }
@@ -175,15 +283,78 @@ class PlayerController @Inject constructor(
         val nextTrack = queueManager.next()
         if (nextTrack != null) {
             playMedia(nextTrack)
-        } else {
-            // If queue is empty, try Autoplay for Remote tracks
+        } else if (playerState.value.autoplayEnabled) {
+            // Queue is empty, trigger Personalized Autoplay
             val current = playerState.value.currentItem
-            if (current is MediaItem.Remote) {
-                scope.launch {
-                    val related = youtubeDataSource.getRelatedMusic(current.title, current.artist, isVideo = current.isVideo)
-                    // Exclude current song from related if it appears
-                    val nextTrack = related.firstOrNull { it.id != current.id } ?: related.firstOrNull()
-                    nextTrack?.let { playMedia(it) }
+            android.util.Log.d("AutoplayEngine", "Queue empty. Triggering personalized autoplay. Last played: ${current?.title}")
+            scope.launch {
+                try {
+                    val candidates: List<MediaItem> = withContext(Dispatchers.IO) {
+                        if (current is MediaItem.Local) {
+                            // Query local database for songs
+                            val localSongs = musicRepository.getAllSongs().first()
+                            localSongs.map { MediaItem.Local(it) }
+                        } else if (current is MediaItem.Remote) {
+                            // Fetch related remote songs
+                            youtubeDataSource.getRelatedMusic(current.title, current.artist, isVideo = current.isVideo)
+                        } else {
+                            // Fallback: load some local songs
+                            val localSongs = musicRepository.getAllSongs().first()
+                            localSongs.map { MediaItem.Local(it) }
+                        }
+                    }
+
+                    if (candidates.isEmpty()) {
+                        android.util.Log.w("AutoplayEngine", "No autoplay candidates found. Stopping playback.")
+                        return@launch
+                    }
+
+                    // Loop Guard: cap retry attempts to prevent infinite loop
+                    var finalCandidate: MediaItem? = null
+                    var attempts = 0
+                    val maxAttempts = 5
+
+                    while (finalCandidate == null && attempts < maxAttempts) {
+                        attempts++
+                        val candidate = tasteProfileRepository.getNextAutoPlayCandidate(
+                            currentSongId = current?.id ?: "",
+                            candidates = candidates
+                        )
+
+                        if (candidate != null) {
+                            val id = candidate.id
+                            // Exclude recently played autoplay tracks to ensure variety and avoid loops
+                            if (!recentAutoplayTrackIds.contains(id)) {
+                                finalCandidate = candidate
+                            } else {
+                                android.util.Log.d("AutoplayEngine", "Candidate $id found in recent history. Retrying...")
+                            }
+                        } else {
+                            break
+                        }
+                    }
+
+                    // Graceful fallback: pick a random item from candidate pool that is not recently played
+                    if (finalCandidate == null) {
+                        android.util.Log.d("AutoplayEngine", "Failed to resolve personalized candidate. Falling back to fresh random.")
+                        finalCandidate = candidates
+                            .filter { it.id != (current?.id ?: "") && !recentAutoplayTrackIds.contains(it.id) }
+                            .randomOrNull() ?: candidates.randomOrNull()
+                    }
+
+                    if (finalCandidate != null) {
+                        android.util.Log.i("AutoplayEngine", "Autoplay selected: ${finalCandidate.title} (${finalCandidate.id})")
+                        // Add to recent list
+                        recentAutoplayTrackIds.add(finalCandidate.id)
+                        if (recentAutoplayTrackIds.size > 10) {
+                            recentAutoplayTrackIds.removeAt(0)
+                        }
+                        playMedia(finalCandidate)
+                    } else {
+                        android.util.Log.w("AutoplayEngine", "Autoplay pool completely exhausted. Halting.")
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("AutoplayEngine", "Error during autoplay resolution", e)
                 }
             }
         }
@@ -206,20 +377,41 @@ class PlayerController @Inject constructor(
         queueManager.toggleShuffleMode()
     }
 
+    fun toggleAutoplay() {
+        updateState { it.copy(autoplayEnabled = !it.autoplayEnabled) }
+    }
+
     private fun onTrackEnded() {
+        recordCurrentTrackPlayStats(finishedSuccessfully = true)
         next()
     }
+
+    private var lastSkippedSegment: com.deepeye.musicpro.domain.model.SponsorSegment? = null
 
     private fun startPositionUpdates() {
         positionUpdateJob?.cancel()
         positionUpdateJob = scope.launch {
             while (isActive) {
+                val currentPos = player.currentPosition.coerceAtLeast(0)
                 updateState {
                     it.copy(
-                        position = player.currentPosition.coerceAtLeast(0),
+                        position = currentPos,
                         duration = player.duration.coerceAtLeast(0)
                     )
                 }
+                
+                // SponsorBlock Auto-Skip Logic
+                val segments = playerState.value.sponsorSegments
+                if (segments.isNotEmpty()) {
+                    // Pre-skip 500ms before endMs to avoid jumping slightly back
+                    val currentSegment = segments.find { currentPos >= it.startMs && currentPos < (it.endMs - 500) }
+                    if (currentSegment != null && currentSegment != lastSkippedSegment) {
+                        lastSkippedSegment = currentSegment
+                        android.util.Log.d("SponsorBlock", "Auto-skipping ${currentSegment.category} to ${currentSegment.endMs}ms")
+                        player.seekTo(currentSegment.endMs)
+                    }
+                }
+                
                 delay(250)
             }
         }
@@ -228,6 +420,13 @@ class PlayerController @Inject constructor(
     private fun stopPositionUpdates() {
         positionUpdateJob?.cancel()
         positionUpdateJob = null
+    }
+
+    private var isAppInForeground = true
+
+    fun setAppInForeground(foreground: Boolean) {
+        isAppInForeground = foreground
+        updateState { it.copy(isAppInForeground = foreground) }
     }
 
     private fun updateState(transform: (PlayerState) -> PlayerState) {
@@ -251,5 +450,74 @@ class PlayerController @Inject constructor(
                     .build()
             )
             .build()
+    }
+
+    private fun recordCurrentTrackPlayStats(finishedSuccessfully: Boolean) {
+        scope.launch {
+            playMutex.withLock {
+                recordCurrentTrackPlayStatsLocked(finishedSuccessfully)
+            }
+        }
+    }
+
+    private fun recordCurrentTrackPlayStatsLocked(finishedSuccessfully: Boolean) {
+        val currentItem = playerState.value.currentItem ?: return
+        val currentId = currentTrackId ?: return
+
+        // Accumulate remaining time since last state change if playing
+        if (player.isPlaying) {
+            totalPlayTimeCurrentTrack += System.currentTimeMillis() - lastPlaybackStateTime
+        }
+
+        val duration = player.duration.coerceAtLeast(0)
+        val played = totalPlayTimeCurrentTrack.coerceAtMost(if (duration > 0) duration else Long.MAX_VALUE)
+
+        // Make sure it wasn't a zero-duration glitch
+        if (played > 500) {
+            val source = if (currentItem is MediaItem.Local) "local" else "youtube"
+            val language = getLanguageForMedia(currentItem)
+            val artistId = when (currentItem) {
+                is MediaItem.Local -> currentItem.song.artistId.toString()
+                is MediaItem.Remote -> currentItem.artist
+            }
+
+            val event = com.deepeye.musicpro.data.db.PlayEvent(
+                songId = currentId,
+                artistId = artistId,
+                language = language,
+                playedMs = played,
+                durationMs = duration,
+                source = source
+            )
+
+            scope.launch(Dispatchers.IO) {
+                tasteProfileRepository.recordPlayEvent(event)
+                
+                // If skipped quickly (<10s) and not a full finish
+                if (played < 10000 && !finishedSuccessfully && duration > 15000) {
+                    tasteProfileRepository.recordQuickSkip(currentId)
+                }
+            }
+        }
+
+        // Reset variables
+        currentTrackId = null
+        totalPlayTimeCurrentTrack = 0L
+    }
+
+    private fun getLanguageForMedia(item: MediaItem): String {
+        val titleLower = item.title.lowercase()
+        val langs = listOf("hindi", "punjabi", "bhojpuri", "tamil", "telugu", "english", "haryanvi", "bengali", "korean")
+        for (lang in langs) {
+            if (titleLower.contains(lang)) return lang.replaceFirstChar { it.uppercase() }
+        }
+        if (item is MediaItem.Local) {
+            val genreLower = item.song.genre.lowercase()
+            for (lang in langs) {
+                if (genreLower.contains(lang)) return lang.replaceFirstChar { it.uppercase() }
+            }
+            return if (item.song.genre.isNotEmpty()) item.song.genre else "Local"
+        }
+        return "English"
     }
 }

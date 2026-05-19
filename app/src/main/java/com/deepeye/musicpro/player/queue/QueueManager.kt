@@ -1,5 +1,6 @@
 package com.deepeye.musicpro.player.queue
 
+import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.RepeatMode
 import com.deepeye.musicpro.domain.model.ShuffleMode
 import com.deepeye.musicpro.domain.model.Song
@@ -15,8 +16,8 @@ import javax.inject.Singleton
 @Singleton
 class QueueManager @Inject constructor() {
 
-    private val _queue = MutableStateFlow<List<Song>>(emptyList())
-    val queue: StateFlow<List<Song>> = _queue.asStateFlow()
+    private val _queue = MutableStateFlow<List<MediaItem>>(emptyList())
+    val queue: StateFlow<List<MediaItem>> = _queue.asStateFlow()
 
     private val _currentIndex = MutableStateFlow(-1)
     val currentIndex: StateFlow<Int> = _currentIndex.asStateFlow()
@@ -27,9 +28,9 @@ class QueueManager @Inject constructor() {
     private val _shuffleMode = MutableStateFlow(ShuffleMode.OFF)
     val shuffleMode: StateFlow<ShuffleMode> = _shuffleMode.asStateFlow()
 
-    private var originalQueue: List<Song> = emptyList()
+    private var originalQueue: List<MediaItem> = emptyList()
 
-    val currentSong: Song?
+    val currentItem: MediaItem?
         get() {
             val idx = _currentIndex.value
             val q = _queue.value
@@ -39,37 +40,37 @@ class QueueManager @Inject constructor() {
     /**
      * Sets a new queue and starts playing from the given index.
      */
-    fun setQueue(songs: List<Song>, startIndex: Int = 0) {
-        originalQueue = songs
+    fun setQueue(items: List<MediaItem>, startIndex: Int = 0) {
+        originalQueue = items
         if (_shuffleMode.value == ShuffleMode.ON) {
-            val shuffled = songs.toMutableList()
-            val startSong = songs.getOrNull(startIndex)
+            val shuffled = items.toMutableList()
+            val startItem = items.getOrNull(startIndex)
             shuffled.shuffle()
-            // Move the start song to the front
-            startSong?.let {
+            // Move the start item to the front
+            startItem?.let {
                 shuffled.remove(it)
                 shuffled.add(0, it)
             }
             _queue.value = shuffled
             _currentIndex.value = 0
         } else {
-            _queue.value = songs
-            _currentIndex.value = startIndex.coerceIn(0, songs.size - 1)
+            _queue.value = items
+            _currentIndex.value = startIndex.coerceIn(0, items.size - 1)
         }
     }
 
     /**
      * Moves to the next track in the queue.
-     * Returns the next Song, or null if at end of queue with repeat off.
+     * Returns the next MediaItem, or null if at end of queue with repeat off.
      */
-    fun next(): Song? {
+    fun next(): MediaItem? {
         val q = _queue.value
         if (q.isEmpty()) return null
 
         return when (_repeatMode.value) {
             RepeatMode.ONE -> {
                 // Stay on same song
-                currentSong
+                currentItem
             }
             RepeatMode.ALL -> {
                 val nextIndex = (_currentIndex.value + 1) % q.size
@@ -91,7 +92,7 @@ class QueueManager @Inject constructor() {
     /**
      * Moves to the previous track in the queue.
      */
-    fun previous(): Song? {
+    fun previous(): MediaItem? {
         val q = _queue.value
         if (q.isEmpty()) return null
 
@@ -124,8 +125,8 @@ class QueueManager @Inject constructor() {
     fun toggleShuffleMode() {
         _shuffleMode.value = when (_shuffleMode.value) {
             ShuffleMode.OFF -> {
-                // Shuffle the queue, keeping current song at current position
-                val current = currentSong
+                // Shuffle the queue, keeping current item at current position
+                val current = currentItem
                 val shuffled = _queue.value.toMutableList()
                 shuffled.shuffle()
                 current?.let {
@@ -138,7 +139,7 @@ class QueueManager @Inject constructor() {
             }
             ShuffleMode.ON -> {
                 // Restore original order
-                val current = currentSong
+                val current = currentItem
                 _queue.value = originalQueue
                 current?.let {
                     val idx = originalQueue.indexOf(it)
@@ -150,13 +151,13 @@ class QueueManager @Inject constructor() {
     }
 
     /**
-     * Moves a song in the queue from one position to another (drag-to-reorder).
+     * Moves an item in the queue from one position to another (drag-to-reorder).
      */
-    fun moveSong(fromIndex: Int, toIndex: Int) {
+    fun moveItem(fromIndex: Int, toIndex: Int) {
         val mutable = _queue.value.toMutableList()
         if (fromIndex in mutable.indices && toIndex in mutable.indices) {
-            val song = mutable.removeAt(fromIndex)
-            mutable.add(toIndex, song)
+            val item = mutable.removeAt(fromIndex)
+            mutable.add(toIndex, item)
             _queue.value = mutable
 
             // Adjust current index if needed
@@ -171,9 +172,9 @@ class QueueManager @Inject constructor() {
     }
 
     /**
-     * Removes a song from the queue.
+     * Removes an item from the queue.
      */
-    fun removeSong(index: Int) {
+    fun removeItem(index: Int) {
         val mutable = _queue.value.toMutableList()
         if (index in mutable.indices) {
             mutable.removeAt(index)

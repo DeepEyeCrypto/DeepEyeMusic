@@ -29,7 +29,8 @@ import com.deepeye.musicpro.domain.model.Song
 fun LibraryScreen(
     onNavigateToAlbum: (Long) -> Unit,
     onNavigateToArtist: (Long) -> Unit,
-    viewModel: LibraryViewModel = hiltViewModel()
+    viewModel: LibraryViewModel = hiltViewModel(),
+    playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val tabs = listOf("Songs", "Albums", "Artists", "Genres")
@@ -52,7 +53,11 @@ fun LibraryScreen(
         }
 
         when (uiState.selectedTab) {
-            0 -> SongsTab(uiState.songs)
+            0 -> SongsTab(uiState.songs) { song ->
+                val mediaItems = uiState.songs.map { com.deepeye.musicpro.domain.model.MediaItem.Local(it) }
+                val index = uiState.songs.indexOf(song)
+                playerViewModel.setQueue(mediaItems, index)
+            }
             1 -> AlbumsTab(uiState.albums, onNavigateToAlbum)
             2 -> ArtistsTab(uiState.artists, onNavigateToArtist)
             3 -> GenresTab()
@@ -61,11 +66,14 @@ fun LibraryScreen(
 }
 
 @Composable
-private fun SongsTab(songs: List<Song>) {
+private fun SongsTab(songs: List<Song>, onSongClick: (Song) -> Unit) {
     LazyColumn(contentPadding = PaddingValues(vertical = 8.dp)) {
         items(songs, key = { it.id }) { song ->
             Row(
-                modifier = Modifier.fillMaxWidth().clickable { }.padding(horizontal = 20.dp, vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onSongClick(song) }
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AsyncImage(

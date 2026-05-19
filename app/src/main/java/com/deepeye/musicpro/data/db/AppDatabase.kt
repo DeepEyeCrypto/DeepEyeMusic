@@ -13,13 +13,16 @@ import androidx.room.RoomDatabase
     entities = [
         SongEntity::class,
         PlaylistEntity::class,
-        PlaylistSongCrossRef::class
+        PlaylistSongCrossRef::class,
+        PlayEvent::class,
+        UserFeedback::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun songDao(): SongDao
     abstract fun playlistDao(): PlaylistDao
+    abstract fun tasteDao(): TasteDao
 }

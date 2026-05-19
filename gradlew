@@ -53,6 +53,59 @@ case "$(uname)" in
   NonStop* )        nonstop=true;;
 esac
 
+# -------------------------------------------------------------------------
+# DeepEye Music Pro: Auto-detect compatible JDK
+# Gradle 8.x bundled Kotlin cannot parse Java version strings from JDK 25+.
+# Prefer JDK 21 or 17 if the default Java version is too new.
+# -------------------------------------------------------------------------
+resolve_java_home() {
+    # If JAVA_HOME is already explicitly set and valid, use it
+    if [ -n "$JAVA_HOME" ] ; then
+        if [ -x "$JAVA_HOME/bin/java" ] ; then
+            return 0
+        fi
+    fi
+
+    # Check what the default java version is
+    DEFAULT_JAVA_VER=$(java -version 2>&1 | head -1 | sed 's/.*version "\([0-9]*\)\..*/\1/')
+    
+    # If not a number (e.g., "1.8" style), extract properly
+    case "$DEFAULT_JAVA_VER" in
+        ''|*[!0-9]*) DEFAULT_JAVA_VER="" ;;
+    esac
+
+    # If default Java is fine (<= 22), use it
+    if [ -n "$DEFAULT_JAVA_VER" ] && [ "$DEFAULT_JAVA_VER" -le 22 ] 2>/dev/null; then
+        return 0
+    fi
+
+    # Default Java is too new (23+) or unavailable — look for JDK 21
+    for CANDIDATE in \
+        "/usr/local/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home" \
+        "/usr/local/Cellar/openjdk@21"/*/libexec/openjdk.jdk/Contents/Home \
+        "/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home" \
+        "/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home" \
+        "/Library/Java/JavaVirtualMachines/zulu-21.jdk/Contents/Home" \
+        "/usr/lib/jvm/java-21-openjdk" \
+        "/usr/lib/jvm/java-21-oracle" \
+        "/usr/lib/jvm/java-21" \
+        ; do
+        if [ -x "$CANDIDATE/bin/java" ]; then
+            echo "Auto-detected JDK 21 at: $CANDIDATE" >&2
+            JAVA_HOME="$CANDIDATE"
+            export JAVA_HOME
+            return 0
+        fi
+    done
+
+    # No compatible JDK found; proceed with default (will likely fail)
+    warn "WARNING: Your default Java version ($(java -version 2>&1 | head -1)) may be incompatible with Gradle. Install JDK 21 if builds fail."
+    return 0
+}
+
+resolve_java_home
+# -------------------------------------------------------------------------
+
 # Determine the Java command to use to start the JVM.
 if [ -n "$JAVA_HOME" ] ; then
     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then

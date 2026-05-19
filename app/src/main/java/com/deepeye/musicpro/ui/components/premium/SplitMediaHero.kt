@@ -27,6 +27,7 @@ fun SplitMediaHero(
             subtitle = video.channelName,
             imageUrl = video.thumbnailUrl,
             badge = "Featured Video",
+            onClick = onVideoClick,
             modifier = Modifier.weight(1f)
         )
         
@@ -35,7 +36,9 @@ fun SplitMediaHero(
             subtitle = music.artist,
             imageUrl = music.thumbnailUrl,
             badge = "Featured Artist",
+            onClick = onMusicClick,
             modifier = Modifier.weight(1f)
         )
     }
 }
+

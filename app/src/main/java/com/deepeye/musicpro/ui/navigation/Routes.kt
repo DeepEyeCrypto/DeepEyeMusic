@@ -14,6 +14,7 @@ sealed class Routes(val route: String) {
     data object Settings : Routes("settings")
     data object NowPlaying : Routes("now_playing")
     data object V4A      : Routes("v4a")
+    data object Onboarding : Routes("onboarding")
 
     // Parameterized routes
     data object AlbumDetail  : Routes("album/{albumId}") {

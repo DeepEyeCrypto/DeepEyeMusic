@@ -34,12 +34,19 @@ object PlayerModule {
         audioAttributes: AudioAttributes
     ): ExoPlayer {
         val renderersFactory = androidx.media3.exoplayer.DefaultRenderersFactory(context)
-            .setExtensionRendererMode(androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF)
-            .setEnableDecoderFallback(true) // Force software path if hardware fails
-            
+            .setExtensionRendererMode(androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+            .setEnableDecoderFallback(true) // VLC-style hw->sw fallback
+
+        val trackSelector = androidx.media3.exoplayer.trackselection.DefaultTrackSelector(context)
+        trackSelector.setParameters(
+            trackSelector.buildUponParameters()
+                .setPreferredVideoMimeTypes("video/av01", "video/vp9") // Prefer AV1 via dav1d
+        )
+
         return ExoPlayer.Builder(context)
             .setRenderersFactory(renderersFactory)
-            .setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true)
+            .setTrackSelector(trackSelector)
+            .setAudioAttributes(audioAttributes, /* handleAudioFocus= */ false)
             .setHandleAudioBecomingNoisy(true)
             .build()
     }

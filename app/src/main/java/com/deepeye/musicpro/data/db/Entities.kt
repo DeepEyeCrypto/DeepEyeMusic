@@ -99,3 +99,53 @@ data class PlaylistSongCrossRef(
     @ColumnInfo(name = "added_at")
     val addedAt: Long = System.currentTimeMillis()
 )
+
+/**
+ * Room entity representing a song playback event.
+ */
+@Entity(tableName = "play_events")
+data class PlayEvent(
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Long = 0,
+
+    @ColumnInfo(name = "song_id")
+    val songId: String,
+
+    @ColumnInfo(name = "artist_id")
+    val artistId: String,
+
+    @ColumnInfo(name = "language")
+    val language: String,
+
+    @ColumnInfo(name = "played_ms")
+    val playedMs: Long,
+
+    @ColumnInfo(name = "duration_ms")
+    val durationMs: Long,
+
+    @ColumnInfo(name = "timestamp")
+    val timestamp: Long = System.currentTimeMillis(),
+
+    @ColumnInfo(name = "source")
+    val source: String // "local" or "youtube"
+)
+
+/**
+ * Room entity representing user feedback (like/dislike/skip) for a song.
+ */
+@Entity(tableName = "user_feedback")
+data class UserFeedback(
+    @PrimaryKey
+    @ColumnInfo(name = "song_id")
+    val songId: String,
+
+    @ColumnInfo(name = "liked")
+    val liked: Boolean = false,
+
+    @ColumnInfo(name = "skipped_quickly")
+    val skippedQuickly: Boolean = false,
+
+    @ColumnInfo(name = "dont_play_again")
+    val dontPlayAgain: Boolean = false
+)

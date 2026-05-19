@@ -6,19 +6,13 @@ import com.deepeye.musicpro.dsp.data.PresetRepository
 import com.deepeye.musicpro.dsp.model.DspParams
 import com.deepeye.musicpro.dsp.model.EngineState
 import com.deepeye.musicpro.dsp.model.GainBudget
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import android.util.Log
-import javax.inject.Inject
-
 import com.deepeye.musicpro.dsp.model.AudioRoute
 import com.deepeye.musicpro.dsp.model.RiskLevel
+import com.deepeye.musicpro.player.visualizer.VisualizerEngine
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * UI state for the V4A DSP screen.
@@ -34,26 +28,15 @@ data class V4AUiState(
     val showConflictWarning: Boolean = false
 )
 
-/**
- * ViewModel for the V4A DSP screen.
- * Bridges UI actions to V4AEngine and PresetRepository.
- */
 @HiltViewModel
 class V4AViewModel @Inject constructor(
     private val engine: V4AEngine,
     private val presetRepository: PresetRepository,
-    private val visualizerEngine: com.deepeye.musicpro.player.visualizer.VisualizerEngine
+    private val visualizerEngine: VisualizerEngine
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(V4AUiState())
     val uiState: StateFlow<V4AUiState> = _uiState.asStateFlow()
-
-    private val _pendingParams = MutableStateFlow<DspParams?>(null)
-
-    // Expose flows for HomeHub/NowPlaying
-    val gainBudget = engine.gainBudget
-    val currentRoute = engine.currentRoute
-    val currentPresetName = engine.currentPresetName
 
     val fftData = visualizerEngine.fftData.map { bytes ->
         if (bytes.isEmpty()) FloatArray(0)
@@ -69,90 +52,51 @@ class V4AViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FloatArray(0))
 
     init {
-        // Observe engine state
-        viewModelScope.launch {
-            engine.engineState.collect { state ->
-                _uiState.value = _uiState.value.copy(engineState = state)
-            }
-        }
+        observeEngineState()
+    }
 
-        // Observe current params from engine (e.g. on preset load)
+    private fun observeEngineState() {
+        // 1. Sync engine flows into UI State
         viewModelScope.launch {
-            engine.currentParams.collect { params ->
-                val showConflict = params.surroundEnabled && params.convolverEnabled
-                _uiState.value = _uiState.value.copy(
+            combine(
+                engine.engineState,
+                engine.currentParams,
+                engine.gainBudget,
+                engine.currentRoute,
+                engine.currentSessionId
+            ) { state, params, budget, route, sid ->
+                _uiState.value.copy(
+                    engineState = state,
                     params = params,
-                    showConflictWarning = showConflict
+                    gainBudget = budget,
+                    currentRoute = route,
+                    sessionId = sid,
+                    showConflictWarning = params.surroundEnabled && params.convolverEnabled
                 )
+            }.collect { newState ->
+                _uiState.value = newState
             }
         }
 
-        // Observe gain budget
-        viewModelScope.launch {
-            engine.gainBudget.collect { budget ->
-                _uiState.value = _uiState.value.copy(gainBudget = budget)
-            }
-        }
-
-        // Load presets
+        // 2. Load Presets
         viewModelScope.launch {
             presetRepository.getAllPresets().collect { presets ->
                 _uiState.value = _uiState.value.copy(presets = presets)
             }
         }
-
-        // Observe current route
-        viewModelScope.launch {
-            engine.currentRoute.collect { route ->
-                _uiState.value = _uiState.value.copy(currentRoute = route)
-            }
-        }
-
-        // Observe current session ID
-        viewModelScope.launch {
-            engine.currentSessionId.collect { id ->
-                _uiState.value = _uiState.value.copy(sessionId = id)
-            }
-        }
-
-        // Debounced param updates
-        viewModelScope.launch {
-            _pendingParams.collect { params ->
-                params?.let {
-                    kotlinx.coroutines.delay(100) // Debounce for HAL stability
-                    engine.updateParams(it, "Custom Tuning")
-                    
-                    val budget = GainBudgetCalculator.calculate(it)
-                    if (budget.risk == RiskLevel.DANGER) {
-                        val corrected = GainBudgetCalculator.autoCorrect(it)
-                        engine.updateParams(corrected, "Custom Tuning (Safe)")
-                    }
-                }
-            }
-        }
     }
 
     fun updateParams(transform: (DspParams) -> DspParams) {
-        val next = transform(_uiState.value.params)
-        // Update UI immediately for responsiveness
+        val current = _uiState.value.params
+        val next = transform(current)
+        
+        // 🚀 Instant visual feedback
         _uiState.value = _uiState.value.copy(params = next)
-        // Schedule engine update
-        _pendingParams.value = next
-    }
-
-    fun activeModuleNames(): List<String> {
-        val p = _uiState.value.params
-        val active = mutableListOf<String>()
-        if (p.pgcEnabled) active.add("PGC")
-        if (p.eqEnabled) active.add("EQ")
-        if (p.bassBoostEnabled) active.add("Bass")
-        if (p.virtualizerEnabled) active.add("Virtualizer")
-        if (p.reverbEnabled) active.add("Reverb")
-        if (p.loudnessEnabled) active.add("Loudness")
-        if (p.viperBassEnabled) active.add("ViperBass")
-        if (p.viperClarityEnabled) active.add("Clarity")
-        if (p.tubeEnabled) active.add("Tube")
-        return active
+        
+        // 🛠️ Async push to engine
+        viewModelScope.launch {
+            engine.updateParams(next)
+        }
     }
 
     fun toggleMasterEnabled() {
@@ -169,26 +113,29 @@ class V4AViewModel @Inject constructor(
         }
     }
 
+    fun activeModuleNames(): List<String> {
+        val p = _uiState.value.params
+        return listOfNotNull(
+            if (p.pgcEnabled) "PGC" else null,
+            if (p.eqEnabled) "EQ" else null,
+            if (p.bassBoostEnabled) "Bass" else null,
+            if (p.virtualizerEnabled) "Virtualizer" else null,
+            if (p.reverbEnabled) "Reverb" else null,
+            if (p.loudnessEnabled) "Loudness" else null
+        )
+    }
+
     fun loadPreset(presetId: Long) {
         viewModelScope.launch {
             val preset = _uiState.value.presets.find { it.first == presetId }
             presetRepository.getPresetParams(presetId).collect { params ->
                 params?.let {
                     engine.updateParams(it, preset?.second)
-                    _uiState.value = _uiState.value.copy(selectedPresetId = presetId)
+                    _uiState.value = _uiState.value.copy(
+                        selectedPresetId = presetId,
+                        params = it
+                    )
                 }
-            }
-        }
-    }
-
-    fun loadPresetByName(name: String) {
-        viewModelScope.launch {
-            val presets = _uiState.value.presets
-            val preset = presets.find { it.second == name }
-            val params = presetRepository.findByName(name)
-            params?.let {
-                engine.updateParams(it, name)
-                _uiState.value = _uiState.value.copy(selectedPresetId = preset?.first)
             }
         }
     }
@@ -197,15 +144,6 @@ class V4AViewModel @Inject constructor(
         viewModelScope.launch {
             val id = presetRepository.savePreset(name, _uiState.value.params)
             _uiState.value = _uiState.value.copy(selectedPresetId = id)
-        }
-    }
-
-    fun deletePreset(presetId: Long) {
-        viewModelScope.launch {
-            presetRepository.deletePreset(presetId)
-            if (_uiState.value.selectedPresetId == presetId) {
-                _uiState.value = _uiState.value.copy(selectedPresetId = null)
-            }
         }
     }
 }

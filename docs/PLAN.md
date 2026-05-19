@@ -12,7 +12,7 @@
 | 3     | Core UI Screens               | ✅ Complete |
 | 4     | V4A DSP Screen                | ✅ Complete |
 | 5     | Settings & Configuration      | ✅ Complete |
-| 6     | Polish, Testing & Release     | ⬜ Pending |
+| 6     | Polish, Testing & Release     | 🚧 In Progress |
 
 ## Stage-Gate Results
 
@@ -23,7 +23,7 @@ Phase 2 → ✅ V4AEngine, AudioSessionManager, PlayerController, VisualizerEngi
 Phase 3 → ✅ Home, Library, NowPlaying, Search, Playlist screens
 Phase 4 → ✅ V4AScreen with all 14 module cards, presets, gain budget
 Phase 5 → ✅ SettingsScreen with DataStore persistence
-Phase 6 → ⬜ Awaiting: unit tests, UI tests, signed release build
+Phase 6 → 🚧 Unit tests fixed, UI test infra added, Home playback linked
 ```
 
 ## Next Steps (Phase 6)

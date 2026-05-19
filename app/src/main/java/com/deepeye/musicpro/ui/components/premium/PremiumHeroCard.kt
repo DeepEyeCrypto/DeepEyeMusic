@@ -1,6 +1,7 @@
 package com.deepeye.musicpro.ui.components.premium
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -23,13 +24,16 @@ fun PremiumHeroCard(
     subtitle: String,
     imageUrl: String,
     modifier: Modifier = Modifier,
-    badge: String? = null
+    badge: String? = null,
+    onClick: (() -> Unit)? = null
 ) {
+    val clickModifier = if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(220.dp)
             .clip(RoundedCornerShape(24.dp))
+            .then(clickModifier)
     ) {
         AsyncImage(
             model = imageUrl,
@@ -87,3 +91,4 @@ fun PremiumHeroCard(
         }
     }
 }
+

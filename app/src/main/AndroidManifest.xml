@@ -30,11 +30,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.DeepEyeMusicPro"
+        android:usesCleartextTraffic="true"
         tools:targetApi="35">
 
         <activity
             android:name="com.deepeye.musicpro.MainActivity"
             android:exported="true"
+            android:supportsPictureInPicture="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.DeepEyeMusicPro">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -15,30 +15,50 @@ class VisualizerEngine @Inject constructor() {
     private val _fftData = MutableStateFlow(ByteArray(0))
     val fftData: StateFlow<ByteArray> = _fftData.asStateFlow()
 
-    fun start(sessionId: Int) {
+    /**
+     * Returns true if the visualizer was successfully started.
+     */
+    fun start(sessionId: Int): Boolean {
         release() // Symmetric cleanup first
-        if (sessionId == 0) return
+        if (sessionId == 0) return false
 
-        try {
-            visualizer = Visualizer(sessionId).apply {
-                captureSize = Visualizer.getCaptureSizeRange()[1] // Max capture size
-                
-                setDataCaptureListener(object : Visualizer.OnDataCaptureListener {
-                    override fun onWaveFormDataCapture(v: Visualizer, waveform: ByteArray, samplingRate: Int) {
-                        // Not used for now
-                    }
+        // Try progressively smaller capture sizes if max fails
+        val sizeRange = Visualizer.getCaptureSizeRange() // [min, max]
+        val candidateSizes = listOf(
+            sizeRange[1],       // max (usually 8192 or 4096)
+            2048,
+            1024,
+            sizeRange[0]        // min (usually 128)
+        ).distinct().filter { it <= sizeRange[1] && it >= sizeRange[0] }
 
-                    override fun onFftDataCapture(v: Visualizer, fft: ByteArray, samplingRate: Int) {
-                        _fftData.value = fft
-                    }
-                }, Visualizer.getMaxCaptureRate() / 2, false, true)
-                
-                enabled = true
+        for (size in candidateSizes) {
+            try {
+                val viz = Visualizer(sessionId)
+                viz.captureSize = size
+                viz.setDataCaptureListener(
+                    object : Visualizer.OnDataCaptureListener {
+                        override fun onWaveFormDataCapture(v: Visualizer, waveform: ByteArray, samplingRate: Int) {
+                            // Not used for now
+                        }
+                        override fun onFftDataCapture(v: Visualizer, fft: ByteArray, samplingRate: Int) {
+                            _fftData.value = fft
+                        }
+                    },
+                    Visualizer.getMaxCaptureRate() / 2,
+                    false,
+                    true
+                )
+                viz.enabled = true
+                visualizer = viz
+                Log.i("VisualizerEngine", "✅ Visualizer attached to session $sessionId (captureSize=$size)")
+                return true
+            } catch (e: Exception) {
+                Log.w("VisualizerEngine", "⚠️ Failed with captureSize=$size for session $sessionId: ${e.message}")
             }
-            Log.i("VisualizerEngine", "✅ Visualizer attached to session $sessionId")
-        } catch (e: Exception) {
-            Log.e("VisualizerEngine", "❌ Failed to attach visualizer: ${e.message}")
         }
+
+        Log.e("VisualizerEngine", "❌ All capture sizes failed for session $sessionId")
+        return false
     }
 
     fun release() {

@@ -20,6 +20,8 @@
 - **Queue management** with shuffle, repeat (off/all/one), drag-to-reorder
 - **Media notification** with playback controls
 - **Background playback** via foreground service
+- **YouTube Streaming Integration** — Sequential playback of trending music videos
+- **NewPipe Extractor** — High-quality audio/video stream resolution with DASH support
 
 ### 🔊 V4A DSP Engine (14 Modules)
 | Module | Description |
@@ -84,7 +86,7 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for details.
 
 ### Prerequisites
 - Android Studio Ladybug (2024.2+)
-- JDK 17
+- JDK 21 (Recommended)
 - Android SDK 35
 
 ### Steps

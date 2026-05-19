@@ -13,8 +13,19 @@ data class PlayerState(
     val repeatMode: RepeatMode = RepeatMode.NONE,
     val shuffleMode: ShuffleMode = ShuffleMode.OFF,
     val playbackSpeed: Float = 1.0f,
+    val isVideo: Boolean = false,
+    val isLoading: Boolean = false,
+    val isAppInForeground: Boolean = true,
+    val sponsorSegments: List<SponsorSegment> = emptyList(),
+    val autoplayEnabled: Boolean = true,
     // Keep legacy field for backward compatibility during migration
     val currentSong: Song? = null 
+)
+
+data class SponsorSegment(
+    val startMs: Long,
+    val endMs: Long,
+    val category: String
 )
 
 enum class RepeatMode {
