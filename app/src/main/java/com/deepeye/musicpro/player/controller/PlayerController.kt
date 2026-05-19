@@ -116,7 +116,7 @@ class PlayerController @Inject constructor(
     val nowPlaying = playerState.map { it.currentItem }
 
     fun playMedia(item: MediaItem) {
-        android.util.Log.d("PlayerController", "playMedia called with item: $item")
+        android.util.Log.e("PlayerController", "playMedia called with item: $item")
         
         playJob?.cancel()
         playJob = scope.launch {
@@ -124,32 +124,32 @@ class PlayerController @Inject constructor(
                 // Check if song is blocked in the database
                 val feedback = tasteProfileRepository.getFeedback(item.id)
                 if (feedback != null && feedback.dontPlayAgain) {
-                    android.util.Log.d("PlayerController", "Track ${item.title} (${item.id}) is blocked. Auto-skipping!")
+                    android.util.Log.e("PlayerController", "Track ${item.title} (${item.id}) is blocked. Auto-skipping!")
                     next()
                     return@launch
                 }
-
+ 
                 updateState { it.copy(isLoading = true) }
-
+ 
                 val finalItem = when (item) {
                     is MediaItem.Local -> item
                     is MediaItem.Remote -> {
-                        android.util.Log.d("PlayerController", "Remote item: ${item.title}, id: ${item.id}, streamUri: ${item.streamUri}")
+                        android.util.Log.e("PlayerController", "Remote item: ${item.title}, id: ${item.id}, streamUri: ${item.streamUri}")
                         if (item.streamUri == null || item.streamUri == Uri.EMPTY) {
-                            android.util.Log.d("PlayerController", "streamUri is null or empty, fetching getStreamUrl...")
+                            android.util.Log.e("PlayerController", "streamUri is null or empty, fetching getStreamUrl...")
                             val result = youtubeDataSource.getStreamUrl(item.id, preferVideo = item.isVideo)
                             ensureActive()
-                            android.util.Log.d("PlayerController", "getStreamUrl fetched: $result")
+                            android.util.Log.e("PlayerController", "getStreamUrl fetched: $result")
                             if (result != null) {
                                 item.copy(
                                     streamUri = Uri.parse(result.url),
-                                    isVideo = result.isVideo
+                                    isVideo = item.isVideo || result.isVideo
                                 )
                             } else {
-                                android.util.Log.w("PlayerController", "getStreamUrl returned null! Creating a fallback stream URL to prevent crash.")
+                                android.util.Log.e("PlayerController", "getStreamUrl returned null! Creating a fallback stream URL to prevent crash.")
                                 item.copy(
                                     streamUri = Uri.parse("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"),
-                                    isVideo = false
+                                    isVideo = item.isVideo
                                 )
                             }
                         } else {
@@ -163,29 +163,34 @@ class PlayerController @Inject constructor(
                 // Fetch SponsorBlock segments
                 var fetchedSegments: List<com.deepeye.musicpro.domain.model.SponsorSegment> = emptyList()
                 if (finalItem is MediaItem.Remote && finalItem.isVideo) {
-                    try {
-                        val url = java.net.URL("https://sponsor.ajay.app/api/skipSegments?videoID=${finalItem.id}&categories=[\"sponsor\",\"selfpromo\",\"interaction\",\"intro\",\"outro\",\"preview\"]")
-                        val connection = url.openConnection() as java.net.HttpURLConnection
-                        connection.requestMethod = "GET"
-                        connection.connectTimeout = 3000
-                        connection.readTimeout = 3000
-                        if (connection.responseCode == 200) {
-                            val jsonStr = connection.inputStream.bufferedReader().use { it.readText() }
-                            val jsonArray = org.json.JSONArray(jsonStr)
-                            val list = mutableListOf<com.deepeye.musicpro.domain.model.SponsorSegment>()
-                            for (i in 0 until jsonArray.length()) {
-                                val obj = jsonArray.getJSONObject(i)
-                                val segmentArray = obj.getJSONArray("segment")
-                                val startMs = (segmentArray.getDouble(0) * 1000).toLong()
-                                val endMs = (segmentArray.getDouble(1) * 1000).toLong()
-                                val category = obj.getString("category")
-                                list.add(com.deepeye.musicpro.domain.model.SponsorSegment(startMs, endMs, category))
+                    fetchedSegments = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        try {
+                            val url = java.net.URL("https://sponsor.ajay.app/api/skipSegments?videoID=${finalItem.id}&categories=[\"sponsor\",\"selfpromo\",\"interaction\",\"intro\",\"outro\",\"preview\"]")
+                            val connection = url.openConnection() as java.net.HttpURLConnection
+                            connection.requestMethod = "GET"
+                            connection.connectTimeout = 3000
+                            connection.readTimeout = 3000
+                            if (connection.responseCode == 200) {
+                                val jsonStr = connection.inputStream.bufferedReader().use { it.readText() }
+                                val jsonArray = org.json.JSONArray(jsonStr)
+                                val list = mutableListOf<com.deepeye.musicpro.domain.model.SponsorSegment>()
+                                for (i in 0 until jsonArray.length()) {
+                                    val obj = jsonArray.getJSONObject(i)
+                                    val segmentArray = obj.getJSONArray("segment")
+                                    val startMs = (segmentArray.getDouble(0) * 1000).toLong()
+                                    val endMs = (segmentArray.getDouble(1) * 1000).toLong()
+                                    val category = obj.getString("category")
+                                    list.add(com.deepeye.musicpro.domain.model.SponsorSegment(startMs, endMs, category))
+                                }
+                                android.util.Log.d("SponsorBlock", "Found ${list.size} segments for ${finalItem.id}")
+                                list
+                            } else {
+                                emptyList()
                             }
-                            fetchedSegments = list
-                            android.util.Log.d("SponsorBlock", "Found ${list.size} segments for ${finalItem.id}")
+                        } catch (e: Exception) {
+                            android.util.Log.e("SponsorBlock", "Failed to fetch segments", e)
+                            emptyList()
                         }
-                    } catch (e: Exception) {
-                        android.util.Log.e("SponsorBlock", "Failed to fetch segments", e)
                     }
                 }
 

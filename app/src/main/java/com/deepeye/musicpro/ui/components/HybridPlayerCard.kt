@@ -88,6 +88,11 @@ fun HybridPlayerCard(
     var isMuted by remember { mutableStateOf(false) }
     var seekTrigger by remember { mutableStateOf(0) }
 
+    LaunchedEffect(item.id, isVideo) {
+        val uri = if (item is MediaItem.Remote) item.streamUri else null
+        android.util.Log.e("HybridPlayerCard", "State update - Item: ${item.title} (ID: ${item.id}), isVideo: $isVideo, isPlaying: $isPlaying, url: $uri")
+    }
+
     LaunchedEffect(playbackSpeed) {
         player.setPlaybackSpeed(playbackSpeed)
     }

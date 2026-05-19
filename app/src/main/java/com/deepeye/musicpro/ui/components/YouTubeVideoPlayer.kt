@@ -32,6 +32,10 @@ fun YouTubeVideoPlayer(
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val isAppInForegroundState = remember { androidx.compose.runtime.mutableStateOf(true) }
     
+    androidx.compose.runtime.LaunchedEffect(videoId) {
+        android.util.Log.e("YouTubeVideoPlayer", "LaunchedEffect triggered - videoId: $videoId, isPlaying: $isPlaying")
+    }
+    
     DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             if (event == androidx.lifecycle.Lifecycle.Event.ON_START) {
