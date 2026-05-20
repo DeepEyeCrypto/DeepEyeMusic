@@ -43,6 +43,9 @@ import com.deepeye.musicpro.ui.navigation.Routes
 /** CompositionLocal for PiP state — accessible anywhere in the Compose tree */
 val LocalPipMode = compositionLocalOf { false }
 
+/** CompositionLocal for the hoisted YouTube WebView */
+val LocalSharedWebView = androidx.compose.runtime.staticCompositionLocalOf<android.webkit.WebView?> { null }
+
 /**
  * Root composable for the DeepEyeMusicPro app.
  * Hosts the Scaffold with bottom navigation and the NavGraph.
@@ -60,9 +63,13 @@ fun DeepEyeMusicApp(
     isInPipMode: Boolean = false,
     fullscreenMode: FullscreenMode = FullscreenMode()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val sharedWebView = remember { com.deepeye.musicpro.ui.components.createYouTubeWebView(context) }
+
     CompositionLocalProvider(
         LocalPipMode provides isInPipMode,
-        LocalFullscreenMode provides fullscreenMode
+        LocalFullscreenMode provides fullscreenMode,
+        LocalSharedWebView provides sharedWebView
     ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()

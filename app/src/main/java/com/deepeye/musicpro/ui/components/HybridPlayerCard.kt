@@ -117,20 +117,8 @@ fun HybridPlayerCard(
     val isInPipMode = LocalPipMode.current
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    val webView = remember {
+    val webView = com.deepeye.musicpro.ui.LocalSharedWebView.current ?: remember {
         createYouTubeWebView(context)
-    }
-
-    DisposableEffect(webView) {
-        onDispose {
-            try {
-                webView.stopLoading()
-                webView.loadUrl("about:blank")
-                webView.destroy()
-            } catch (e: Exception) {
-                android.util.Log.e("HybridPlayerCard", "Error destroying WebView", e)
-            }
-        }
     }
 
     // ── Fullscreen Dialog Overlay Removed ──
