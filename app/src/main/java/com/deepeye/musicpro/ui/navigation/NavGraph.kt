@@ -123,7 +123,8 @@ fun NavGraph(
                     navController.navigate(Routes.NowPlaying.route) 
                 },
                 onNavigateToLibrary = { navController.navigate(Routes.Library.route) },
-                onOpenV4A = { navController.navigate(Routes.V4A.route) }
+                onOpenV4A = { navController.navigate(Routes.V4A.route) },
+                onNavigateToSettings = { navController.navigate(Routes.Settings.route) }
             )
         }
 

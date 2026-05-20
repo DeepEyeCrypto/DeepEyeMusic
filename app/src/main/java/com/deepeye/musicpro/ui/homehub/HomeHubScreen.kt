@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.WifiOff
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,6 +40,7 @@ fun HomeHubScreen(
     onNavigateToMusic: (String) -> Unit,
     onNavigateToLibrary: () -> Unit,
     onOpenV4A: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     viewModel: HomeHubViewModel = hiltViewModel()
 ) {
     val feedState     by viewModel.feedState.collectAsStateWithLifecycle()
@@ -56,7 +58,7 @@ fun HomeHubScreen(
     ) {
         // 1. Greeting
         item {
-            HomeGreetingHeader()
+            HomeGreetingHeader(onNavigateToSettings = onNavigateToSettings)
         }
 
         // 1b. Featured Split Hero (AEOS Premium Feature)
@@ -166,19 +168,34 @@ fun HomeHubScreen(
 }
 
 @Composable
-private fun HomeGreetingHeader() {
-    Column(Modifier.padding(horizontal = 20.dp, vertical = 24.dp)) {
-        Text(
-            text = "Good Morning",
-            style = MaterialTheme.typography.headlineLarge,
-            color = Color.White,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = "Ready for some premium sound?",
-            style = MaterialTheme.typography.bodyLarge,
-            color = Color.Gray
-        )
+private fun HomeGreetingHeader(onNavigateToSettings: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 24.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = "Good Morning",
+                style = MaterialTheme.typography.headlineLarge,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Ready for some premium sound?",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.Gray
+            )
+        }
+        IconButton(onClick = onNavigateToSettings) {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "App Settings",
+                tint = Color.White
+            )
+        }
     }
 }
 

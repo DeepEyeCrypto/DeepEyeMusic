@@ -118,8 +118,13 @@ fun NowPlayingScreen(
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 2.sp
                 )
-                IconButton(onClick = onNavigateToV4A) {
-                    Icon(Icons.Default.Tune, contentDescription = "V4A Settings")
+                Row {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(Icons.Default.Settings, contentDescription = "App Settings")
+                    }
+                    IconButton(onClick = onNavigateToV4A) {
+                        Icon(Icons.Default.Tune, contentDescription = "V4A Settings")
+                    }
                 }
             }
 
