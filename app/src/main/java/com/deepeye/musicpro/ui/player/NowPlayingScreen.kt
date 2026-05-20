@@ -37,6 +37,11 @@ import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.PlayerState
 import com.deepeye.musicpro.ui.LocalPipMode
 import com.deepeye.musicpro.ui.LocalFullscreenMode
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.unit.IntOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,96 +68,21 @@ fun NowPlayingScreen(
     val isVideoMode = playerState.currentItem is MediaItem.Remote && playerState.isVideo
     val currentItem = playerState.currentItem
 
-    val playerCard = remember {
-        androidx.compose.runtime.movableContentOf { modifier: Modifier ->
-            val innerItem = playerState.currentItem
-            val innerIsVideo = innerItem is MediaItem.Remote && playerState.isVideo
-            if (innerIsVideo) {
-                com.deepeye.musicpro.ui.components.HybridPlayerCard(
-                    item = innerItem,
-                    player = viewModel.player,
-                    isVideo = true,
-                    isLoading = playerState.isLoading,
-                    isPlaying = playerState.isPlaying,
-                    playbackPosition = playerState.position,
-                    modifier = modifier
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    var rootRect by remember { mutableStateOf(Rect.Zero) }
+    var spacerRect by remember { mutableStateOf(Rect.Zero) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .onGloballyPositioned {
+                rootRect = Rect(
+                    offset = it.positionInWindow(),
+                    size = Size(it.size.width.toFloat(), it.size.height.toFloat())
                 )
-            } else {
-                Box(
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (innerItem != null) {
-                        AsyncImage(
-                            model = innerItem.artworkUri,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxWidth(0.92f)
-                                .aspectRatio(1f)
-                                .blur(36.dp)
-                                .alpha(0.65f)
-                                .graphicsLayer {
-                                    translationY = 15f
-                                },
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.95f)
-                            .aspectRatio(1f)
-                            .border(
-                                width = 1.5.dp,
-                                brush = Brush.linearGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
-                                    )
-                                ),
-                                shape = RoundedCornerShape(24.dp)
-                            )
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                    ) {
-                        AsyncImage(
-                            model = innerItem?.artworkUri,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-
-                        NowPlayingVisualizerOverlay(
-                            fftData = fftData,
-                            dominantColor = dominantColor,
-                            isPlaying = playerState.isPlaying,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.BottomCenter)
-                        )
-                    }
-                }
             }
-        }
-    }
-
-    // PiP or Fullscreen mode: show ONLY the video player filling the screen
-    if ((isFullscreen || isInPipMode) && isVideoMode && playerState.currentItem != null) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black)
-        ) {
-            playerCard(Modifier.fillMaxSize())
-        }
-        return
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
+    ) {
+        if (!isFullscreen && !isInPipMode) {
         // Dynamic Background Gradient based on current item
         Box(
             modifier = Modifier
@@ -201,7 +131,14 @@ fun NowPlayingScreen(
             // Modular Composable elements mapped internally for responsive rendering
             @Composable
             fun ArtworkOrVideoSection(modifier: Modifier = Modifier) {
-                playerCard(modifier)
+                Spacer(
+                    modifier = modifier.onGloballyPositioned {
+                        spacerRect = Rect(
+                            offset = it.positionInWindow(),
+                            size = Size(it.size.width.toFloat(), it.size.height.toFloat())
+                        )
+                    }
+                )
             }
 
             @Composable
@@ -546,6 +483,100 @@ fun NowPlayingScreen(
                         ControlsSection()
                     }
                     Spacer(Modifier.weight(0.2f))
+                }
+            }
+        }
+        } else {
+            // Fullscreen or PiP mode background
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black))
+        }
+
+        // --- THE PLAYER CARD OVERLAY ---
+        val playerModifier = if (isFullscreen || isInPipMode) {
+            Modifier.fillMaxSize()
+        } else {
+            if (spacerRect != Rect.Zero && rootRect != Rect.Zero) {
+                val offsetX = spacerRect.left - rootRect.left
+                val offsetY = spacerRect.top - rootRect.top
+                with(density) {
+                    Modifier
+                        .offset { IntOffset(offsetX.toInt(), offsetY.toInt()) }
+                        .size(spacerRect.width.toDp(), spacerRect.height.toDp())
+                }
+            } else {
+                Modifier.size(0.dp) // Hide until bounds are measured
+            }
+        }
+
+        Box(modifier = playerModifier) {
+            val innerItem = playerState.currentItem
+            val innerIsVideo = innerItem is MediaItem.Remote && playerState.isVideo
+            if (innerIsVideo) {
+                com.deepeye.musicpro.ui.components.HybridPlayerCard(
+                    item = innerItem,
+                    player = viewModel.player,
+                    isVideo = true,
+                    isLoading = playerState.isLoading,
+                    isPlaying = playerState.isPlaying,
+                    playbackPosition = playerState.position,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (innerItem != null) {
+                        AsyncImage(
+                            model = innerItem.artworkUri,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxWidth(0.92f)
+                                .aspectRatio(1f)
+                                .blur(36.dp)
+                                .alpha(0.65f)
+                                .graphicsLayer { translationY = 15f },
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.95f)
+                            .aspectRatio(1f)
+                            .border(
+                                width = 1.5.dp,
+                                brush = Brush.linearGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(24.dp)
+                            )
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        AsyncImage(
+                            model = innerItem?.artworkUri,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        NowPlayingVisualizerOverlay(
+                            fftData = fftData,
+                            dominantColor = dominantColor,
+                            isPlaying = playerState.isPlaying,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.BottomCenter)
+                        )
+                    }
                 }
             }
         }
