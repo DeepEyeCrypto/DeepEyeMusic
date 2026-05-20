@@ -56,8 +56,14 @@ data class BottomNavItem(
 )
 
 @Composable
-fun DeepEyeMusicApp(isInPipMode: Boolean = false) {
-    CompositionLocalProvider(LocalPipMode provides isInPipMode) {
+fun DeepEyeMusicApp(
+    isInPipMode: Boolean = false,
+    fullscreenMode: FullscreenMode = FullscreenMode()
+) {
+    CompositionLocalProvider(
+        LocalPipMode provides isInPipMode,
+        LocalFullscreenMode provides fullscreenMode
+    ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination

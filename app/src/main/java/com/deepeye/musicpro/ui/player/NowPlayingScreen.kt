@@ -36,6 +36,7 @@ import com.deepeye.musicpro.core.utils.TimeFormatter
 import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.PlayerState
 import com.deepeye.musicpro.ui.LocalPipMode
+import com.deepeye.musicpro.ui.LocalFullscreenMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +48,8 @@ fun NowPlayingScreen(
     viewModel: PlayerViewModel = hiltViewModel()
 ) {
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
+    val fftData by viewModel.fftData.collectAsStateWithLifecycle()
+    val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
     val configuration = LocalConfiguration.current
     var showTasteDetailDialog by remember { mutableStateOf(false) }
     
@@ -55,24 +58,96 @@ fun NowPlayingScreen(
                       (configuration.screenWidthDp >= 480 && configuration.screenHeightDp < 500)
 
     val isInPipMode = LocalPipMode.current
+    val fullscreenMode = LocalFullscreenMode.current
+    val isFullscreen = fullscreenMode.isFullscreen
     val isVideoMode = playerState.currentItem is MediaItem.Remote && playerState.isVideo
+    val currentItem = playerState.currentItem
 
-    // PiP mode: show ONLY the video player filling the screen
-    if (isInPipMode && isVideoMode && playerState.currentItem != null) {
+    val playerCard = remember {
+        androidx.compose.runtime.movableContentOf { modifier: Modifier ->
+            val innerItem = playerState.currentItem
+            val innerIsVideo = innerItem is MediaItem.Remote && playerState.isVideo
+            if (innerIsVideo) {
+                com.deepeye.musicpro.ui.components.HybridPlayerCard(
+                    item = innerItem,
+                    player = viewModel.player,
+                    isVideo = true,
+                    isLoading = playerState.isLoading,
+                    isPlaying = playerState.isPlaying,
+                    playbackPosition = playerState.position,
+                    modifier = modifier
+                )
+            } else {
+                Box(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (innerItem != null) {
+                        AsyncImage(
+                            model = innerItem.artworkUri,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxWidth(0.92f)
+                                .aspectRatio(1f)
+                                .blur(36.dp)
+                                .alpha(0.65f)
+                                .graphicsLayer {
+                                    translationY = 15f
+                                },
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.95f)
+                            .aspectRatio(1f)
+                            .border(
+                                width = 1.5.dp,
+                                brush = Brush.linearGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(24.dp)
+                            )
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        AsyncImage(
+                            model = innerItem?.artworkUri,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+
+                        NowPlayingVisualizerOverlay(
+                            fftData = fftData,
+                            dominantColor = dominantColor,
+                            isPlaying = playerState.isPlaying,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.BottomCenter)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    // PiP or Fullscreen mode: show ONLY the video player filling the screen
+    if ((isFullscreen || isInPipMode) && isVideoMode && playerState.currentItem != null) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black)
         ) {
-            com.deepeye.musicpro.ui.components.HybridPlayerCard(
-                item = playerState.currentItem!!,
-                player = viewModel.player,
-                isVideo = true,
-                isLoading = playerState.isLoading,
-                isPlaying = playerState.isPlaying,
-                playbackPosition = playerState.position,
-                modifier = Modifier.fillMaxSize()
-            )
+            playerCard(Modifier.fillMaxSize())
         }
         return
     }
@@ -126,79 +201,7 @@ fun NowPlayingScreen(
             // Modular Composable elements mapped internally for responsive rendering
             @Composable
             fun ArtworkOrVideoSection(modifier: Modifier = Modifier) {
-                if (isVideoMode && currentItem != null) {
-                    com.deepeye.musicpro.ui.components.HybridPlayerCard(
-                        item = currentItem,
-                        player = viewModel.player,
-                        isVideo = true,
-                        isLoading = playerState.isLoading,
-                        isPlaying = playerState.isPlaying,
-                        playbackPosition = playerState.position,
-                        modifier = modifier.fillMaxWidth()
-                    )
-                } else {
-                    Box(
-                        modifier = modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (currentItem != null) {
-                            AsyncImage(
-                                model = currentItem.artworkUri,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxWidth(0.92f)
-                                    .aspectRatio(1f)
-                                    .blur(36.dp)
-                                    .alpha(0.65f)
-                                    .graphicsLayer {
-                                        translationY = 15f
-                                    },
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.95f)
-                                .aspectRatio(1f)
-                                .border(
-                                    width = 1.5.dp,
-                                    brush = Brush.linearGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
-                                        )
-                                    ),
-                                    shape = RoundedCornerShape(24.dp)
-                                )
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                        ) {
-                            AsyncImage(
-                                model = currentItem?.artworkUri,
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-
-                            val fftData by viewModel.fftData.collectAsStateWithLifecycle()
-                            val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
-                            
-                            NowPlayingVisualizerOverlay(
-                                fftData = fftData,
-                                dominantColor = dominantColor,
-                                isPlaying = playerState.isPlaying,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.BottomCenter)
-                            )
-                        }
-                    }
-                }
+                playerCard(modifier)
             }
 
             @Composable
@@ -269,15 +272,15 @@ fun NowPlayingScreen(
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                                        .border(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                        .background(Color.White.copy(alpha = 0.12f))
+                                        .border(0.5.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(8.dp))
                                         .padding(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
                                             imageVector = Icons.Default.Star,
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
+                                            tint = Color.White,
                                             modifier = Modifier.size(10.dp)
                                         )
                                         Spacer(Modifier.width(4.dp))
@@ -285,7 +288,7 @@ fun NowPlayingScreen(
                                             text = tag.uppercase(),
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
+                                            color = Color.White
                                         )
                                     }
                                 }
@@ -313,15 +316,15 @@ fun NowPlayingScreen(
                             modifier = Modifier
                                 .size(48.dp)
                                 .background(
-                                    if (isLiked) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    if (isLiked) Color.White.copy(alpha = 0.25f)
+                                    else Color.White.copy(alpha = 0.08f),
                                     RoundedCornerShape(12.dp)
                                 )
                         ) {
                             Icon(
                                 imageVector = if (isLiked) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
                                 contentDescription = "Like Track",
-                                tint = if (isLiked) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.6f)
+                                tint = if (isLiked) Color.White else Color.White.copy(alpha = 0.5f)
                             )
                         }
 
@@ -330,15 +333,15 @@ fun NowPlayingScreen(
                             modifier = Modifier
                                 .size(48.dp)
                                 .background(
-                                    if (isBlocked) MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
-                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    if (isBlocked) MaterialTheme.colorScheme.error
+                                    else Color.White.copy(alpha = 0.08f),
                                     RoundedCornerShape(12.dp)
                                 )
                         ) {
                             Icon(
                                 imageVector = if (isBlocked) Icons.Filled.ThumbDown else Icons.Outlined.ThumbDown,
                                 contentDescription = "Block Track",
-                                tint = if (isBlocked) MaterialTheme.colorScheme.error else Color.White.copy(alpha = 0.6f)
+                                tint = if (isBlocked) Color.White else Color.White.copy(alpha = 0.5f)
                             )
                         }
                     }
@@ -349,13 +352,13 @@ fun NowPlayingScreen(
                                 .height(48.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
-                                    if (playerState.autoplayEnabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                    if (playerState.autoplayEnabled) Color.White.copy(alpha = 0.15f)
+                                    else Color.White.copy(alpha = 0.05f)
                                 )
                                 .border(
                                     width = 1.dp,
-                                    brush = if (playerState.autoplayEnabled) Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
-                                            else SolidColor(Color.Transparent),
+                                    brush = if (playerState.autoplayEnabled) Brush.linearGradient(listOf(Color.White, Color.White.copy(alpha = 0.4f)))
+                                            else SolidColor(Color.White.copy(alpha = 0.15f)),
                                     shape = RoundedCornerShape(12.dp)
                                 )
                                 .combinedClickable(
@@ -373,7 +376,7 @@ fun NowPlayingScreen(
                                 Icon(
                                     imageVector = Icons.Default.Autorenew,
                                     contentDescription = "Autoplay Mode",
-                                    tint = if (playerState.autoplayEnabled) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.6f),
+                                    tint = if (playerState.autoplayEnabled) Color.White else Color.White.copy(alpha = 0.5f),
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(Modifier.width(6.dp))
@@ -381,7 +384,7 @@ fun NowPlayingScreen(
                                     text = if (playerState.autoplayEnabled) "AUTOPLAY: TASTE" else "AUTOPLAY OFF",
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (playerState.autoplayEnabled) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.6f)
+                                    color = if (playerState.autoplayEnabled) Color.White else Color.White.copy(alpha = 0.5f)
                                 )
                             }
                         }
@@ -391,14 +394,14 @@ fun NowPlayingScreen(
                             modifier = Modifier
                                 .size(48.dp)
                                 .background(
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    Color.White.copy(alpha = 0.08f),
                                     RoundedCornerShape(12.dp)
                                 )
                         ) {
                             Icon(
                                 Icons.Default.Download,
                                 contentDescription = "Download",
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = Color.White
                             )
                         }
                     }
@@ -422,9 +425,9 @@ fun NowPlayingScreen(
                         onValueChange = { viewModel.seekTo(it.toLong()) },
                         valueRange = 0f..playerState.duration.toFloat().coerceAtLeast(1f),
                         colors = SliderDefaults.colors(
-                            thumbColor = MaterialTheme.colorScheme.primary,
-                            activeTrackColor = MaterialTheme.colorScheme.primary,
-                            inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                            thumbColor = Color.White,
+                            activeTrackColor = Color.White,
+                            inactiveTrackColor = Color.White.copy(alpha = 0.24f)
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -460,7 +463,7 @@ fun NowPlayingScreen(
                     Surface(
                         onClick = { viewModel.togglePlayPause() },
                         shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.primary,
+                        color = Color.White,
                         modifier = Modifier.size(72.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -468,7 +471,7 @@ fun NowPlayingScreen(
                                 imageVector = if (playerState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                                 contentDescription = "Play/Pause",
                                 modifier = Modifier.size(40.dp),
-                                tint = MaterialTheme.colorScheme.onPrimary
+                                tint = Color.Black
                             )
                         }
                     }

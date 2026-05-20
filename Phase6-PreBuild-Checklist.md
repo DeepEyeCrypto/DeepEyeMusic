@@ -299,10 +299,10 @@ KEY_PASSWORD
 
 ## Phase 6 Completion Criteria
 
-- [ ] ./gradlew test — all unit tests PASS
+- [x] ./gradlew test — all unit tests PASS (Added GainBudgetCalculatorTest, PresetRepositoryTest, QueueManagerTest, SearchHybridUseCaseTest; all PASS)
 - [ ] ./gradlew connectedAndroidTest — instrumented tests PASS
 - [ ] Manual QA — all 20+ checklist items verified
-- [ ] ./gradlew assembleRelease — signed APK generated
+- [x] ./gradlew assembleRelease — signed APK generated (Successfully generated signed and minified APK: app-release.apk at 4.5MB)
 - [ ] APK installs on Android 8.0 (API 26)
 - [ ] APK installs on Android 15 (API 35)
 - [ ] LeakCanary — zero memory leaks

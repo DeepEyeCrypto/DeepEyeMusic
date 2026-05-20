@@ -45,6 +45,7 @@ import com.deepeye.musicpro.domain.model.MediaItem
 import androidx.compose.material.icons.filled.PictureInPicture
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.deepeye.musicpro.ui.LocalFullscreenMode
 import com.deepeye.musicpro.ui.LocalPipMode
 
 @Composable
@@ -88,25 +89,27 @@ fun HybridPlayerCard(
     var isMuted by remember { mutableStateOf(false) }
     var seekTrigger by remember { mutableStateOf(0) }
 
-    LaunchedEffect(item.id, isVideo) {
-        val uri = if (item is MediaItem.Remote) item.streamUri else null
-        android.util.Log.e("HybridPlayerCard", "State update - Item: ${item.title} (ID: ${item.id}), isVideo: $isVideo, isPlaying: $isPlaying, url: $uri")
-    }
+
 
     LaunchedEffect(playbackSpeed) {
         player.setPlaybackSpeed(playbackSpeed)
     }
 
+    // ExoPlayer audio track is disabled in video mode via setTrackTypeDisabled (PlayerController).
+    // The mute button toggles WebView audio via isMuted param. For audio mode, ExoPlayer handles volume natively.
     LaunchedEffect(isMuted) {
-        player.volume = if (isMuted) 0f else 1f
+        if (!isVideo) {
+            player.volume = if (isMuted) 0f else 1f
+        }
     }
     
     // Tap-seeking animated indicator visual triggers
     var showLeftRipple by remember { mutableStateOf(false) }
     var showRightRipple by remember { mutableStateOf(false) }
     
-    // Fullscreen Overlay state
-    var isFullscreen by remember { mutableStateOf(false) }
+    // Fullscreen mode from CompositionLocal — toggles activity orientation
+    val fullscreenMode = LocalFullscreenMode.current
+    val isFullscreen = fullscreenMode.isFullscreen
     
     val scope = rememberCoroutineScope()
 
@@ -114,81 +117,60 @@ fun HybridPlayerCard(
     val isInPipMode = LocalPipMode.current
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    // ── Fullscreen Dialog Overlay (hidden in PiP) ──
-    if (isFullscreen && !isInPipMode) {
-        Dialog(
-            onDismissRequest = { isFullscreen = false },
-            properties = DialogProperties(
-                usePlatformDefaultWidth = false,
-                dismissOnBackPress = true,
-                dismissOnClickOutside = false
-            )
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black),
-                contentAlignment = Alignment.Center
-            ) {
-                YouTubeVideoPlayer(
-                    videoId = item.id,
-                    isPlaying = isPlaying,
-                    playbackPosition = playbackPosition,
-                    playbackSpeed = playbackSpeed,
-                    isMuted = isMuted,
-                    seekTrigger = seekTrigger,
-                    modifier = Modifier.fillMaxSize()
-                )
+    val webView = remember {
+        createYouTubeWebView(context)
+    }
 
-                // Close / Exit Fullscreen Button Overlay
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    contentAlignment = Alignment.TopEnd
-                ) {
-                    IconButton(
-                        onClick = { isFullscreen = false },
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(Color.Black.copy(alpha = 0.55f), CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FullscreenExit,
-                            contentDescription = "Exit Fullscreen",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
+    DisposableEffect(webView) {
+        onDispose {
+            try {
+                webView.stopLoading()
+                webView.loadUrl("about:blank")
+                webView.destroy()
+            } catch (e: Exception) {
+                android.util.Log.e("HybridPlayerCard", "Error destroying WebView", e)
             }
         }
     }
 
-    Box(
-        modifier = modifier
+    // ── Fullscreen Dialog Overlay Removed ──
+
+    val cardModifier = if (isFullscreen && !isInPipMode) {
+        Modifier.fillMaxSize()
+    } else {
+        modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    }
+
+    Box(
+        modifier = cardModifier,
         contentAlignment = Alignment.Center
     ) {
         // PREMIUM AMBILIGHT DYNAMIC GLOW (Breathing ambient aura matching video colors)
-        AsyncImage(
-            model = item.artworkUri,
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .aspectRatio(16 / 9f)
-                .blur(36.dp)
-                .alpha(0.65f)
-                .graphicsLayer {
-                    translationY = 15f
-                },
-            contentScale = ContentScale.Crop
-        )
+        if (!isFullscreen || isInPipMode) {
+            AsyncImage(
+                model = item.artworkUri,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .aspectRatio(16 / 9f)
+                    .blur(36.dp)
+                    .alpha(0.65f)
+                    .graphicsLayer {
+                        translationY = 15f
+                    },
+                contentScale = ContentScale.Crop
+            )
+        }
 
         // MAIN HIGH-FIDELITY MEDIA CONTAINER CARD
-        Box(
-            modifier = Modifier
+        val containerModifier = if (isFullscreen && !isInPipMode) {
+            Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        } else {
+            Modifier
                 .fillMaxWidth()
                 .aspectRatio(16 / 9f)
                 .border(
@@ -204,45 +186,53 @@ fun HybridPlayerCard(
                     shape = RoundedCornerShape(16.dp)
                 )
                 .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+        }
+
+        Box(
+            modifier = containerModifier,
             contentAlignment = Alignment.Center
         ) {
             if (isVideo) {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    if (isFullscreen) {
-                        // Blurred placeholder in card when video is actively running in fullscreen
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            AsyncImage(
-                                model = item.artworkUri,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .blur(16.dp),
-                                contentScale = ContentScale.Crop
-                            )
-                            Text(
-                                text = "🖥️ Playing in Fullscreen",
-                                color = Color.White,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    } else {
-                        YouTubeVideoPlayer(
-                            videoId = item.id,
-                            isPlaying = isPlaying,
-                            playbackPosition = playbackPosition,
-                            playbackSpeed = playbackSpeed,
-                            isMuted = isMuted,
-                            seekTrigger = seekTrigger,
-                            modifier = Modifier.fillMaxSize()
-                        )
+                    YouTubeVideoPlayer(
+                        webView = webView,
+                        videoId = item.id,
+                        isPlaying = isPlaying,
+                        playbackPosition = playbackPosition,
+                        playbackSpeed = playbackSpeed,
+                        isMuted = isMuted,
+                        seekTrigger = seekTrigger,
+                        muteWebViewAudio = false,
+                        modifier = Modifier.fillMaxSize()
+                    )
 
-                        // GESTURE SKIP ZONES + OVERLAYS: Hidden in PiP for clean view
-                        if (!isInPipMode) {
+                    // Close / Exit Fullscreen Button Overlay (top right)
+                    if (isFullscreen && !isInPipMode) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(24.dp),
+                            contentAlignment = Alignment.TopEnd
+                        ) {
+                            IconButton(
+                                onClick = { fullscreenMode.exit() },
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(Color.Black.copy(alpha = 0.55f), CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.FullscreenExit,
+                                    contentDescription = "Exit Fullscreen",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // GESTURE SKIP ZONES + OVERLAYS: Hidden in PiP for clean view
+                    if (!isInPipMode) {
                         Row(modifier = Modifier.fillMaxSize()) {
                             // Left Column Zone: Skip Backward / Single Tap Play-Pause
                             Box(
@@ -373,6 +363,7 @@ fun HybridPlayerCard(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .pointerInput(Unit) {} // Consume touches to prevent fall-through to underlying gesture layers
                                     .background(
                                         brush = Brush.verticalGradient(
                                             colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
@@ -466,14 +457,14 @@ fun HybridPlayerCard(
 
                                 // 5. Fullscreen Overlay Button
                                 IconButton(
-                                    onClick = { isFullscreen = true },
+                                    onClick = { if (isFullscreen) fullscreenMode.exit() else fullscreenMode.enter() },
                                     modifier = Modifier
                                         .size(32.dp)
                                         .background(Color.White.copy(alpha = 0.15f), CircleShape)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Fullscreen,
-                                        contentDescription = "Fullscreen",
+                                        imageVector = if (isFullscreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
+                                        contentDescription = if (isFullscreen) "Exit Fullscreen" else "Fullscreen",
                                         tint = Color.White,
                                         modifier = Modifier.size(18.dp)
                                     )
@@ -482,7 +473,6 @@ fun HybridPlayerCard(
                         }
                         } // end if (!isInPipMode)
                     }
-                }
             } else {
                 // Premium Fallback Audio card
                 Box(modifier = Modifier.fillMaxSize()) {

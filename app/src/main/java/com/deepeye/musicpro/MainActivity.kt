@@ -2,6 +2,7 @@ package com.deepeye.musicpro
 
 import android.Manifest
 import android.app.PictureInPictureParams
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Rect
@@ -26,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.deepeye.musicpro.ui.DeepEyeMusicApp
+import com.deepeye.musicpro.ui.FullscreenMode
 import com.deepeye.musicpro.ui.theme.DeepEyeTheme
 import com.deepeye.musicpro.ui.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -48,6 +50,18 @@ class MainActivity : ComponentActivity() {
     lateinit var playerController: com.deepeye.musicpro.player.controller.PlayerController
 
     private val themeViewModel: ThemeViewModel by viewModels()
+
+    /** Fullscreen mode controller for auto-rotate to landscape on fullscreen */
+    val fullscreenMode = FullscreenMode().apply {
+        onEnterFullscreen = {
+            // Lock to sensor landscape for fullscreen video
+            this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        }
+        onExitFullscreen = {
+            // Restore to unspecified so the user can freely rotate again
+            this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
 
     /** Observable PiP state for Compose UI */
     var isInPipMode by mutableStateOf(false)
@@ -107,7 +121,10 @@ class MainActivity : ComponentActivity() {
 
             DeepEyeTheme(overrideColors = dynamicColors) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    DeepEyeMusicApp(isInPipMode = isInPipMode)
+                    DeepEyeMusicApp(
+                        isInPipMode = isInPipMode,
+                        fullscreenMode = fullscreenMode
+                    )
                 }
             }
         }

@@ -1,6 +1,8 @@
 package com.deepeye.musicpro.player.controller
 
 import android.net.Uri
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem as Media3Item
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -205,10 +207,15 @@ class PlayerController @Inject constructor(
                     lastPlaybackStateTime = System.currentTimeMillis()
                     lastSkippedSegment = null // Reset SponsorBlock state for new track
 
+                    // ── LAYER 3: isVideo state → audio track + focus management ──
+                    // When video plays: WebView handles audio, ExoPlayer audio track disabled + focus released
+                    // When audio plays: ExoPlayer audio track restored + focus reclaimed
                     if (finalItem is MediaItem.Remote && finalItem.isVideo) {
-                        player.volume = 0f  // Mute ExoPlayer for perfect audio-video sync!
+                        mutePlayerForVideoMode()        // Disable audio renderer completely
+                        abandonAudioFocusForWebViewMode() // Release audio focus for WebView
                     } else {
-                        player.volume = 1f  // Restore volume for audio-only mode
+                        restorePlayerAudio()             // Enable audio renderer
+                        restoreAudioFocusHandling()      // Reclaim audio focus
                     }
 
                     val media3Item = finalItem.toMedia3Item()
@@ -425,6 +432,49 @@ class PlayerController @Inject constructor(
     private fun stopPositionUpdates() {
         positionUpdateJob?.cancel()
         positionUpdateJob = null
+    }
+
+    // ── LAYER 1: ExoPlayer audio track disable/enable ──
+    // Disables the audio renderer completely — more reliable than setVolume(0f)
+    // because the renderer itself is removed, preventing any audio from playing.
+    private fun mutePlayerForVideoMode() {
+        val params = player.trackSelectionParameters
+            .buildUpon()
+            .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, true)
+            .build()
+        player.trackSelectionParameters = params
+    }
+
+    // Restores the audio renderer for normal audio-only playback
+    private fun restorePlayerAudio() {
+        val params = player.trackSelectionParameters
+            .buildUpon()
+            .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false)
+            .build()
+        player.trackSelectionParameters = params
+    }
+
+    // ── LAYER 2: Audio focus abandon/restore ──
+    // Releases ExoPlayer's audio focus claim so WebView can handle audio naturally
+    private fun abandonAudioFocusForWebViewMode() {
+        player.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                .build(),
+            /* handleAudioFocus = */ false
+        )
+    }
+
+    // Restores ExoPlayer's audio focus handling for audio-only mode
+    private fun restoreAudioFocusHandling() {
+        player.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                .build(),
+            /* handleAudioFocus = */ true
+        )
     }
 
     private var isAppInForeground = true

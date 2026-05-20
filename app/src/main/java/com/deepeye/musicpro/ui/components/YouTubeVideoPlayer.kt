@@ -15,16 +15,22 @@ import androidx.compose.ui.viewinterop.AndroidView
 /**
  * A highly robust, compatible YouTube Video Player using the official
  * YouTube Nocookie Embed API loaded directly inside an Android WebView.
+ *
+ * @param muteWebViewAudio When true, forces the WebView/iframe audio to be muted.
+ *        Use this when ExoPlayer is handling audio playback and the WebView
+ *        should only render video output. This prevents dual-audio conflicts.
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun YouTubeVideoPlayer(
+    webView: WebView,
     videoId: String,
     isPlaying: Boolean,
     playbackPosition: Long = 0L,
     playbackSpeed: Float = 1.0f,
     isMuted: Boolean = false,
     seekTrigger: Int = 0,
+    muteWebViewAudio: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current.applicationContext
@@ -33,7 +39,7 @@ fun YouTubeVideoPlayer(
     val isAppInForegroundState = remember { androidx.compose.runtime.mutableStateOf(true) }
     
     androidx.compose.runtime.LaunchedEffect(videoId) {
-        android.util.Log.e("YouTubeVideoPlayer", "LaunchedEffect triggered - videoId: $videoId, isPlaying: $isPlaying")
+        android.util.Log.e("YouTubeVideoPlayer", "LaunchedEffect triggered - videoId: $videoId, isPlaying: $isPlaying, muteWebViewAudio: $muteWebViewAudio")
     }
     
     DisposableEffect(lifecycleOwner) {
@@ -50,143 +56,27 @@ fun YouTubeVideoPlayer(
         }
     }
 
-    val webView = remember {
-        BackgroundPlayWebView(context).apply {
-            // EXPLICIT LAYOUT PARAMS: Prevents Compose from measuring this native view as 0x0
-            layoutParams = android.view.ViewGroup.LayoutParams(
+    AndroidView(
+        factory = {
+            (webView.parent as? android.view.ViewGroup)?.removeView(webView)
+            webView.layoutParams = android.view.ViewGroup.LayoutParams(
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT
             )
-
-            // Enable hardware acceleration for smooth video rendering
-            setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
-            
-            webChromeClient = object : WebChromeClient() {
-                override fun onConsoleMessage(consoleMessage: android.webkit.ConsoleMessage?): Boolean {
-                    android.util.Log.d("YouTubeWebViewConsole", "${consoleMessage?.message()} -- From line ${consoleMessage?.lineNumber()} of ${consoleMessage?.sourceId()}")
-                    return true
-                }
-            }
-            
-            webViewClient = object : WebViewClient() {
-                // Brave-style Aggressive Ad & Tracker Filter List
-                private val braveShieldsBlocklist = listOf(
-                    "doubleclick.net",
-                    "googleadservices.com",
-                    "google-analytics.com",
-                    "/api/stats/ads",
-                    "/pagead/",
-                    "youtubei/v1/log_event",
-                    "youtube.com/api/stats/qoe",
-                    "youtube.com/ptracking",
-                    "youtube.com/error_204",
-                    "play.google.com/log"
-                )
-
-                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                    return false
-                }
-
-                override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): android.webkit.WebResourceResponse? {
-                    val url = request?.url?.toString() ?: return null
-                    
-                    // Brave Network-Level Shield: Block Ads, Telemetry, and Fingerprinting
-                    if (braveShieldsBlocklist.any { url.contains(it) }) {
-                        android.util.Log.d("BraveShields", "Shields UP: Blocked $url")
-                        // Return empty response to kill the ad/tracker instantly
-                        return android.webkit.WebResourceResponse("text/plain", "UTF-8", java.io.ByteArrayInputStream(ByteArray(0)))
-                    }
-                    return super.shouldInterceptRequest(view, request)
-                }
-
-                override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
-                    super.onReceivedError(view, request, error)
-                    android.util.Log.e("YouTubeVideoPlayer", "WebView Error for ${request?.url}: ${error?.description} (code: ${error?.errorCode})")
-                }
-
-                override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: android.webkit.WebResourceResponse?) {
-                    super.onReceivedHttpError(view, request, errorResponse)
-                    android.util.Log.e("YouTubeVideoPlayer", "WebView HTTP Error for ${request?.url}: ${errorResponse?.statusCode} ${errorResponse?.reasonPhrase}")
-                }
-
-                override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
-                    android.util.Log.e("YouTubeVideoPlayer", "WebView SSL Error: $error")
-                    handler?.proceed() // Proceed to bypass local proxy issues if they exist
-                }
-
-                override fun onPageFinished(view: WebView?, url: String?) {
-                    super.onPageFinished(view, url)
-                    // Brave Cosmetic Filter Engine: Inject CSS/JS to vaporize remaining ad containers
-                    val braveCosmeticJS = """
-                        javascript:(function() {
-                            const style = document.createElement('style');
-                            style.innerHTML = `
-                                .ytp-ad-module, .ytp-ad-overlay, .yt-ad-slot, .ytd-ad-slot-renderer,
-                                .ytd-in-feed-ad-layout-renderer, .ytd-banner-promo-renderer,
-                                .ad-showing, .ad-interrupting {
-                                    display: none !important;
-                                    opacity: 0 !important;
-                                    pointer-events: none !important;
-                                }
-                            `;
-                            document.head.appendChild(style);
-                            
-                            // Auto-skip logic for unkillable in-stream ads
-                            setInterval(() => {
-                                const skipBtn = document.querySelector('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-skip-ad-button');
-                                if (skipBtn) skipBtn.click();
-                                
-                                const adOverlay = document.querySelector('.ytp-ad-overlay-close-button');
-                                if (adOverlay) adOverlay.click();
-                            }, 500);
-                        })();
-                    """.trimIndent()
-                    view?.evaluateJavascript(braveCosmeticJS, null)
-                }
-            }
-            
-            // Allow third-party cookies for player core, but restrict privacy settings
-            android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-            
-            settings.apply {
-                javaScriptEnabled = true
-                mediaPlaybackRequiresUserGesture = false
-                domStorageEnabled = true
-                useWideViewPort = true
-                loadWithOverviewMode = true
-                cacheMode = WebSettings.LOAD_DEFAULT
-                
-                // Brave Privacy Enhancements
-                allowFileAccess = false
-                allowContentAccess = false
-                setGeolocationEnabled(false)
-                mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW // Force HTTPS
-                // Appending Brave to User Agent for potential server-side ad drops
-                userAgentString = userAgentString + " Brave/1.61.109"
-            }
-        }
-    }
-
-    DisposableEffect(webView) {
-        onDispose {
-            try {
-                webView.stopLoading()
-                webView.loadUrl("about:blank")
-                webView.destroy()
-            } catch (e: Exception) {
-                android.util.Log.e("YouTubeVideoPlayer", "Error destroying WebView", e)
-            }
-        }
-    }
-
-    AndroidView(
-        factory = { webView },
+            webView
+        },
         update = { webView ->
+            webView.layoutParams = android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+            )
             val state = webView.tag as? YouTubePlayerState ?: YouTubePlayerState().also { webView.tag = it }
             
             if (state.videoId == null) {
                 // First load: load the HTML containing the iframe player
                 state.videoId = videoId
+                // Compute start position so fullscreen/new WebView resumes at correct timestamp
+                val startSec = (playbackPosition / 1000).toInt()
                 
                 val htmlContent = """
                     <!DOCTYPE html>
@@ -204,6 +94,9 @@ fun YouTubeVideoPlayer(
                                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
                             }
                             iframe {
+                                position: absolute;
+                                top: 0;
+                                left: 0;
                                 width: 100%;
                                 height: 100%;
                                 border: none;
@@ -242,7 +135,9 @@ fun YouTubeVideoPlayer(
                         </div>
                         <iframe 
                             id="player"
-                            src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&mute=1&controls=0&playsinline=1&enablejsapi=1&origin=https://www.youtube-nocookie.com" 
+                            width="100%"
+                            height="100%"
+                            src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&controls=0&playsinline=1&enablejsapi=1&start=$startSec&origin=https://www.youtube-nocookie.com" 
                             referrerpolicy="strict-origin-when-cross-origin"
                             allow="autoplay; encrypted-media" 
                             allowfullscreen>
@@ -255,9 +150,11 @@ fun YouTubeVideoPlayer(
                                 e.stopImmediatePropagation();
                             }, true);
 
-                            var currentTime = 0;
+                            var currentTime = $startSec;
                             var skipSegments = [];
                             var currentVideoId = "$videoId";
+                            
+                            var IS_WEBVIEW_MUTED = MUTED_TOKEN_PLACEHOLDER;
                             
                             function fetchSponsorSegments(vid) {
                                 var url = 'https://sponsor.ajay.app/api/skipSegments?videoID=' + vid + '&categories=["sponsor","selfpromo","interaction","intro","outro","preview"]';
@@ -288,6 +185,37 @@ fun YouTubeVideoPlayer(
                             var isUserMuted = false;
                             var unmuteAttempts = 0;
                             var unmuteInterval = null;
+                            var isWebViewMuted = false;
+
+                            function setWebViewMuted(muted) {
+                                isWebViewMuted = muted;
+                                var iframe = document.getElementById('player');
+                                if (iframe && iframe.contentWindow) {
+                                    if (muted) {
+                                        iframe.contentWindow.postMessage(JSON.stringify({
+                                            "event": "command",
+                                            "func": "mute",
+                                            "args": ""
+                                        }), "*");
+                                        iframe.contentWindow.postMessage(JSON.stringify({
+                                            "event": "command",
+                                            "func": "setVolume",
+                                            "args": [0]
+                                        }), "*");
+                                    } else {
+                                        iframe.contentWindow.postMessage(JSON.stringify({
+                                            "event": "command",
+                                            "func": "unMute",
+                                            "args": ""
+                                        }), "*");
+                                        iframe.contentWindow.postMessage(JSON.stringify({
+                                            "event": "command",
+                                            "func": "setVolume",
+                                            "args": [100]
+                                        }), "*");
+                                    }
+                                }
+                            }
 
                             function startUnmuteDaemon() {
                                 if (unmuteInterval) {
@@ -296,6 +224,10 @@ fun YouTubeVideoPlayer(
                                 unmuteAttempts = 0;
                                 unmuteInterval = setInterval(function() {
                                     if (isUserMuted) {
+                                        clearInterval(unmuteInterval);
+                                        return;
+                                    }
+                                    if (isWebViewMuted) {
                                         clearInterval(unmuteInterval);
                                         return;
                                     }
@@ -314,8 +246,34 @@ fun YouTubeVideoPlayer(
                                 }, 500);
                             }
 
+                            // If this WebView should only render video (audio handled by ExoPlayer), mute immediately!
+                            if (IS_WEBVIEW_MUTED) {
+                                setWebViewMuted(true);
+                            }
+
                             // Start unmuting loop immediately on page load
                             startUnmuteDaemon();
+
+                            // Zoom to fit video in same-origin iframe
+                            function applyZoomToFit() {
+                                try {
+                                    var iframe = document.getElementById('player');
+                                    if (iframe) {
+                                        var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                                        if (iframeDoc) {
+                                            var styleId = 'deepeye-zoom-fit';
+                                            var style = iframeDoc.getElementById(styleId);
+                                            if (!style) {
+                                                style = iframeDoc.createElement('style');
+                                                style.id = styleId;
+                                                style.textContent = 'video, .html5-main-video { width: 100% !important; height: 100% !important; left: 0px !important; top: 0px !important; object-fit: cover !important; }';
+                                                iframeDoc.head.appendChild(style);
+                                            }
+                                        }
+                                    }
+                                } catch(e) {}
+                            }
+                            setInterval(applyZoomToFit, 500);
 
                             window.addEventListener('message', function(event) {
                                 try {
@@ -436,12 +394,23 @@ fun YouTubeVideoPlayer(
                                             "func": "mute",
                                             "args": ""
                                         }), "*");
+                                        iframe.contentWindow.postMessage(JSON.stringify({
+                                            "event": "command",
+                                            "func": "setVolume",
+                                            "args": [0]
+                                        }), "*");
                                     } else {
                                         iframe.contentWindow.postMessage(JSON.stringify({
                                             "event": "command",
                                             "func": "unMute",
                                             "args": ""
                                         }), "*");
+                                        iframe.contentWindow.postMessage(JSON.stringify({
+                                            "event": "command",
+                                            "func": "setVolume",
+                                            "args": [100]
+                                        }), "*");
+                                        startUnmuteDaemon();
                                     }
                                 }
                             }
@@ -450,7 +419,13 @@ fun YouTubeVideoPlayer(
                     </html>
                 """.trimIndent()
                 
-                webView.loadDataWithBaseURL("https://www.youtube-nocookie.com", htmlContent, "text/html", "UTF-8", null)
+                // Replace the mute token with actual boolean value
+                val finalHtml = if (muteWebViewAudio) {
+                    htmlContent.replace("MUTED_TOKEN_PLACEHOLDER", "true")
+                } else {
+                    htmlContent.replace("MUTED_TOKEN_PLACEHOLDER", "false")
+                }
+                webView.loadDataWithBaseURL("https://www.youtube-nocookie.com", finalHtml, "text/html", "UTF-8", null)
             } else if (state.videoId != videoId) {
                 // Subsequent load: transition video instantly via postMessage instead of reloading page!
                 state.videoId = videoId
@@ -496,8 +471,126 @@ fun YouTubeVideoPlayer(
     )
 }
 
+@SuppressLint("SetJavaScriptEnabled")
+fun createYouTubeWebView(context: android.content.Context): WebView {
+    return BackgroundPlayWebView(context).apply {
+        // EXPLICIT LAYOUT PARAMS: Prevents Compose from measuring this native view as 0x0
+        layoutParams = android.view.ViewGroup.LayoutParams(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT
+        )
+
+        // Enable hardware acceleration for smooth video rendering
+        setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+        
+        webChromeClient = object : WebChromeClient() {
+            override fun onConsoleMessage(consoleMessage: android.webkit.ConsoleMessage?): Boolean {
+                android.util.Log.d("YouTubeWebViewConsole", "${consoleMessage?.message()} -- From line ${consoleMessage?.lineNumber()} of ${consoleMessage?.sourceId()}")
+                return true
+            }
+        }
+        
+        webViewClient = object : WebViewClient() {
+            // Brave-style Aggressive Ad & Tracker Filter List
+            private val braveShieldsBlocklist = listOf(
+                "doubleclick.net",
+                "googleadservices.com",
+                "google-analytics.com",
+                "/api/stats/ads",
+                "/pagead/",
+                "youtubei/v1/log_event",
+                "youtube.com/api/stats/qoe",
+                "youtube.com/ptracking",
+                "youtube.com/error_204",
+                "play.google.com/log"
+            )
+
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                return false
+            }
+
+            override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): android.webkit.WebResourceResponse? {
+                val url = request?.url?.toString() ?: return null
+                
+                // Brave Network-Level Shield: Block Ads, Telemetry, and Fingerprinting
+                if (braveShieldsBlocklist.any { url.contains(it) }) {
+                    android.util.Log.d("BraveShields", "Shields UP: Blocked $url")
+                    // Return empty response to kill the ad/tracker instantly
+                    return android.webkit.WebResourceResponse("text/plain", "UTF-8", java.io.ByteArrayInputStream(ByteArray(0)))
+                }
+                return super.shouldInterceptRequest(view, request)
+            }
+
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
+                super.onReceivedError(view, request, error)
+                android.util.Log.e("YouTubeVideoPlayer", "WebView Error for ${request?.url}: ${error?.description} (code: ${error?.errorCode})")
+            }
+
+            override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: android.webkit.WebResourceResponse?) {
+                super.onReceivedHttpError(view, request, errorResponse)
+                android.util.Log.e("YouTubeVideoPlayer", "WebView HTTP Error for ${request?.url}: ${errorResponse?.statusCode} ${errorResponse?.reasonPhrase}")
+            }
+
+            override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
+                android.util.Log.e("YouTubeVideoPlayer", "WebView SSL Error: $error")
+                handler?.proceed() // Proceed to bypass local proxy issues if they exist
+            }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                // Brave Cosmetic Filter Engine: Inject CSS/JS to vaporize remaining ad containers
+                val braveCosmeticJS = """
+                    javascript:(function() {
+                        const style = document.createElement('style');
+                        style.textContent = `
+                            .ytp-ad-module, .ytp-ad-overlay, .yt-ad-slot, .ytd-ad-slot-renderer,
+                            .ytd-in-feed-ad-layout-renderer, .ytd-banner-promo-renderer,
+                            .ad-showing, .ad-interrupting {
+                                display: none !important;
+                                opacity: 0 !important;
+                                pointer-events: none !important;
+                            }
+                        `;
+                        document.head.appendChild(style);
+                        
+                        // Auto-skip logic for unkillable in-stream ads
+                        setInterval(() => {
+                            const skipBtn = document.querySelector('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-skip-ad-button');
+                            if (skipBtn) skipBtn.click();
+                            
+                            const adOverlay = document.querySelector('.ytp-ad-overlay-close-button');
+                            if (adOverlay) adOverlay.click();
+                        }, 500);
+                    })();
+                """.trimIndent()
+                view?.evaluateJavascript(braveCosmeticJS, null)
+            }
+        }
+        
+        // Allow third-party cookies for player core, but restrict privacy settings
+        android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+        
+        settings.apply {
+            javaScriptEnabled = true
+            mediaPlaybackRequiresUserGesture = false
+            domStorageEnabled = true
+            useWideViewPort = true
+            loadWithOverviewMode = true
+            cacheMode = WebSettings.LOAD_DEFAULT
+            
+            // Brave Privacy Enhancements
+            allowFileAccess = false
+            allowContentAccess = false
+            setGeolocationEnabled(false)
+            mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW // Force HTTPS
+            // Appending Brave to User Agent for potential server-side ad drops
+            userAgentString = userAgentString + " Brave/1.61.109"
+        }
+    }
+}
+
 @SuppressLint("ViewConstructor")
-private class BackgroundPlayWebView(context: android.content.Context) : android.webkit.WebView(context) {
+internal class BackgroundPlayWebView(context: android.content.Context) : android.webkit.WebView(context) {
     override fun onWindowVisibilityChanged(visibility: Int) {
         // Keep the WebView thinking it is always visible unless it is completely GONE (which indicates destruction)
         if (visibility != android.view.View.GONE) {
@@ -508,7 +601,7 @@ private class BackgroundPlayWebView(context: android.content.Context) : android.
     }
 }
 
-private class YouTubePlayerState(
+internal class YouTubePlayerState(
     var videoId: String? = null,
     var prevSeekTrigger: Int = 0,
     var lastSentPosition: Long = -1L
