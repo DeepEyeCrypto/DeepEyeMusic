@@ -7,7 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
 import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.Song
-import com.deepeye.musicpro.dsp.engine.V4AEngine
+import com.deepeye.musicpro.dsp.engine.DSPEngine
 import com.deepeye.musicpro.player.controller.PlayerController
 import com.deepeye.musicpro.player.queue.QueueManager
 import io.mockk.*
@@ -29,7 +29,7 @@ class PlayerControllerTest {
     private val queueManager = QueueManager()
     private val youtubeDataSource = mockk<YoutubeRemoteDataSource>(relaxed = true)
     private val audioSessionManager = mockk<com.deepeye.musicpro.dsp.session.AudioSessionManager>(relaxed = true)
-    private val v4aEngine = V4AEngine()
+    private val dspEngine = mockk<DSPEngine>(relaxed = true)
     private val tasteProfileRepository = mockk<com.deepeye.musicpro.domain.repository.TasteProfileRepository>(relaxed = true)
     private val musicRepository = mockk<com.deepeye.musicpro.domain.repository.MusicRepository>(relaxed = true)
     private lateinit var context: Context
@@ -55,7 +55,7 @@ class PlayerControllerTest {
             queueManager = queueManager,
             youtubeDataSource = youtubeDataSource,
             audioSessionManager = audioSessionManager,
-            v4aEngine = v4aEngine,
+            dspEngine = dspEngine,
             tasteProfileRepository = tasteProfileRepository,
             musicRepository = musicRepository,
             context = context
@@ -70,7 +70,7 @@ class PlayerControllerTest {
             queueManager = queueManager,
             youtubeDataSource = youtubeDataSource,
             audioSessionManager = audioSessionManager,
-            v4aEngine = v4aEngine,
+            dspEngine = dspEngine,
             tasteProfileRepository = tasteProfileRepository,
             musicRepository = musicRepository,
             context = context
