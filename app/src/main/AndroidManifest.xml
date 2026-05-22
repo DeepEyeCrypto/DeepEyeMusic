@@ -22,6 +22,9 @@
     <!-- Post-notification (API 33+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- APK Auto-Update Installation -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <application
         android:name=".DeepEyeApp"
         android:allowBackup="true"
@@ -62,6 +65,16 @@
                 <action android:name="android.bluetooth.a2dp.profile.action.CONNECTION_STATE_CHANGED"/>
             </intent-filter>
         </receiver>
+        <!-- FileProvider for secure APK update installation sharing -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

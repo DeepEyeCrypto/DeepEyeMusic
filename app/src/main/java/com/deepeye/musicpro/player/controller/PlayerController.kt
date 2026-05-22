@@ -148,11 +148,23 @@ class PlayerController @Inject constructor(
                                     isVideo = item.isVideo || result.isVideo
                                 )
                             } else {
-                                android.util.Log.e("PlayerController", "getStreamUrl returned null! Creating a fallback stream URL to prevent crash.")
-                                item.copy(
-                                    streamUri = Uri.parse("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"),
-                                    isVideo = item.isVideo
-                                )
+                                android.util.Log.e("PlayerController", "getStreamUrl returned null!")
+                                if (item.isVideo) {
+                                    // For video items: use the YouTube watch URL so the WebView iframe
+                                    // can still render the video by videoId, preserving video mode
+                                    android.util.Log.e("PlayerController", "Video item fallback: using YouTube watch URL for iframe playback")
+                                    item.copy(
+                                        streamUri = Uri.parse("https://www.youtube.com/watch?v=${item.id}"),
+                                        isVideo = true
+                                    )
+                                } else {
+                                    // For audio items: fall back to a placeholder audio stream
+                                    android.util.Log.e("PlayerController", "Audio item fallback: using placeholder stream")
+                                    item.copy(
+                                        streamUri = Uri.parse("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"),
+                                        isVideo = false
+                                    )
+                                }
                             }
                         } else {
                             item

@@ -127,8 +127,7 @@ fun HybridPlayerCard(
         Modifier.fillMaxSize()
     } else {
         modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .fillMaxSize()
     }
 
     Box(
@@ -159,8 +158,7 @@ fun HybridPlayerCard(
                 .background(Color.Black)
         } else {
             Modifier
-                .fillMaxWidth()
-                .aspectRatio(16 / 9f)
+                .fillMaxSize()
                 .border(
                     width = 1.5.dp,
                     brush = Brush.linearGradient(

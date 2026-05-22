@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -64,11 +67,14 @@ class AlbumDetailViewModel @Inject constructor(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AlbumDetailScreen(
     albumId: Long,
     onNavigateBack: () -> Unit,
     onNavigateToNowPlaying: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     viewModel: AlbumDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -85,11 +91,21 @@ fun AlbumDetailScreen(
 
         item {
             uiState.album?.let { album ->
-                AsyncImage(
-                    model = album.artUri, contentDescription = album.title,
-                    modifier = Modifier.fillMaxWidth().aspectRatio(1f).padding(horizontal = 40.dp).clip(RoundedCornerShape(20.dp)),
-                    contentScale = ContentScale.Crop
-                )
+                with(sharedTransitionScope) {
+                    AsyncImage(
+                        model = album.artUri, contentDescription = album.title,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .padding(horizontal = 40.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .sharedElement(
+                                state = rememberSharedContentState(key = "album_art_${albumId}"),
+                                animatedVisibilityScope = animatedVisibilityScope
+                            ),
+                        contentScale = ContentScale.Crop
+                    )
+                }
                 Text(album.artist, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
                 Text("${album.songCount} songs · ${TimeFormatter.formatTotalDuration(album.totalDuration)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
                 Spacer(Modifier.height(16.dp))

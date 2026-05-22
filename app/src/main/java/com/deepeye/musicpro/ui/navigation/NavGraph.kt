@@ -40,6 +40,13 @@ import com.deepeye.musicpro.ui.onboarding.OnboardingScreen
  *
  * Defines all screen destinations and navigation transitions.
  */
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
+import com.deepeye.musicpro.ui.downloads.DownloadsScreen
+
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun NavGraph(
     navController: NavHostController,
@@ -97,11 +104,12 @@ fun NavGraph(
         if (onboardingState == true) Routes.Home.route else Routes.Onboarding.route
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = startDestination,
-        modifier = modifier
-    ) {
+    SharedTransitionLayout(modifier = modifier) {
+        NavHost(
+            navController = navController,
+            startDestination = startDestination,
+            modifier = Modifier.fillMaxSize()
+        ) {
         // Onboarding Screen
         composable(Routes.Onboarding.route) {
             OnboardingScreen(
@@ -151,7 +159,12 @@ fun NavGraph(
                 },
                 onNavigateToArtist = { artistId ->
                     navController.navigate(Routes.ArtistDetail.createRoute(artistId))
-                }
+                },
+                onNavigateToDownloads = {
+                    navController.navigate(Routes.Downloads.route)
+                },
+                sharedTransitionScope = this@SharedTransitionLayout,
+                animatedVisibilityScope = this@composable
             )
         }
 
@@ -190,7 +203,9 @@ fun NavGraph(
             AlbumDetailScreen(
                 albumId = albumId,
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToNowPlaying = { navController.navigate(Routes.NowPlaying.route) }
+                onNavigateToNowPlaying = { navController.navigate(Routes.NowPlaying.route) },
+                sharedTransitionScope = this@SharedTransitionLayout,
+                animatedVisibilityScope = this@composable
             )
         }
 
@@ -215,5 +230,11 @@ fun NavGraph(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
+        composable(Routes.Downloads.route) {
+            DownloadsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+    }
     }
 }

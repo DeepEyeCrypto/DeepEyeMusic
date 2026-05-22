@@ -8,6 +8,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,10 +30,14 @@ import com.deepeye.musicpro.domain.model.Album
 import com.deepeye.musicpro.domain.model.Artist
 import com.deepeye.musicpro.domain.model.Song
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun LibraryScreen(
     onNavigateToAlbum: (Long) -> Unit,
     onNavigateToArtist: (Long) -> Unit,
+    onNavigateToDownloads: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     viewModel: LibraryViewModel = hiltViewModel(),
     playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel()
 ) {
@@ -36,11 +45,25 @@ fun LibraryScreen(
     val tabs = listOf("Songs", "Albums", "Artists", "Genres")
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = "Library",
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(20.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Library",
+                style = MaterialTheme.typography.headlineLarge
+            )
+            IconButton(onClick = onNavigateToDownloads) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.Check,
+                    contentDescription = "Downloads",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
 
         TabRow(selectedTabIndex = uiState.selectedTab) {
             tabs.forEachIndexed { index, title ->
@@ -58,7 +81,7 @@ fun LibraryScreen(
                 val index = uiState.songs.indexOf(song)
                 playerViewModel.setQueue(mediaItems, index)
             }
-            1 -> AlbumsTab(uiState.albums, onNavigateToAlbum)
+            1 -> AlbumsTab(uiState.albums, onNavigateToAlbum, sharedTransitionScope, animatedVisibilityScope)
             2 -> ArtistsTab(uiState.artists, onNavigateToArtist)
             3 -> GenresTab()
         }
@@ -91,15 +114,40 @@ private fun SongsTab(songs: List<Song>, onSongClick: (Song) -> Unit) {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun AlbumsTab(albums: List<Album>, onAlbumClick: (Long) -> Unit) {
-    LazyVerticalGrid(columns = GridCells.Fixed(2), contentPadding = PaddingValues(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        items(albums, key = { it.id }) { album ->
-            Column(Modifier.clickable { onAlbumClick(album.id) }) {
-                AsyncImage(model = album.artUri, contentDescription = album.title, modifier = Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(12.dp)), contentScale = ContentScale.Crop)
-                Spacer(Modifier.height(4.dp))
-                Text(album.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(album.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun AlbumsTab(
+    albums: List<Album>,
+    onAlbumClick: (Long) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
+) {
+    with(sharedTransitionScope) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(albums, key = { it.id }) { album ->
+                Column(Modifier.clickable { onAlbumClick(album.id) }) {
+                    AsyncImage(
+                        model = album.artUri,
+                        contentDescription = album.title,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .sharedElement(
+                                state = rememberSharedContentState(key = "album_art_${album.id}"),
+                                animatedVisibilityScope = animatedVisibilityScope
+                            ),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(album.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(album.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }

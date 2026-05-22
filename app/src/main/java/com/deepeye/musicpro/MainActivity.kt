@@ -56,10 +56,15 @@ class MainActivity : ComponentActivity() {
         onEnterFullscreen = {
             // Lock to sensor landscape for fullscreen video
             this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            val windowInsetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+            windowInsetsController.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            windowInsetsController.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
         }
         onExitFullscreen = {
             // Restore to unspecified so the user can freely rotate again
             this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            val windowInsetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+            windowInsetsController.show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
         }
     }
 
@@ -123,7 +128,8 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     DeepEyeMusicApp(
                         isInPipMode = isInPipMode,
-                        fullscreenMode = fullscreenMode
+                        fullscreenMode = fullscreenMode,
+                        playerController = playerController
                     )
                 }
             }

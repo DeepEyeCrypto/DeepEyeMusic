@@ -32,6 +32,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -60,11 +62,76 @@ data class BottomNavItem(
 
 @Composable
 fun DeepEyeMusicApp(
+    playerController: com.deepeye.musicpro.player.controller.PlayerController,
     isInPipMode: Boolean = false,
     fullscreenMode: FullscreenMode = FullscreenMode()
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val sharedWebView = remember { com.deepeye.musicpro.ui.components.createYouTubeWebView(context) }
+
+    val playerState by playerController.playerState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(playerState.currentItem, playerState.isPlaying, playerState.playbackSpeed, playerState.isVideo) {
+        val currentItem = playerState.currentItem
+        val isVideo = currentItem is com.deepeye.musicpro.domain.model.MediaItem.Remote && playerState.isVideo
+        
+        if (isVideo && sharedWebView != null) {
+            val videoId = currentItem.id
+            val updateState = sharedWebView.tag as? com.deepeye.musicpro.ui.components.YouTubePlayerState 
+                ?: com.deepeye.musicpro.ui.components.YouTubePlayerState().also { sharedWebView.tag = it }
+            
+            // 1. Initial html load vs subsequent loadVideo
+            if (updateState.videoId == null) {
+                updateState.videoId = videoId
+                updateState.networkError.value = false
+                val startSec = (playerState.position / 1000).toInt()
+                
+                val htmlContent = com.deepeye.musicpro.ui.components.getYouTubeHtmlTemplate(videoId, startSec)
+                sharedWebView.loadDataWithBaseURL("https://www.youtube-nocookie.com", htmlContent, "text/html", "UTF-8", null)
+            } else if (updateState.videoId != videoId) {
+                updateState.videoId = videoId
+                updateState.networkError.value = false
+                sharedWebView.evaluateJavascript("if (typeof loadVideo === 'function') loadVideo('$videoId');", null)
+            }
+            
+            // 2. Sync play/pause
+            if (playerState.isPlaying) {
+                sharedWebView.evaluateJavascript("if (typeof playVideo === 'function') playVideo();", null)
+            } else {
+                sharedWebView.evaluateJavascript("if (typeof pauseVideo === 'function') pauseVideo();", null)
+            }
+            
+            // 3. Sync playback speed
+            sharedWebView.evaluateJavascript("if (typeof setSpeed === 'function') setSpeed(${playerState.playbackSpeed});", null)
+        } else if (sharedWebView != null) {
+            // When track changes to audio or pauses, call pauseVideo to guarantee no background media execution
+            sharedWebView.evaluateJavascript("if (typeof pauseVideo === 'function') pauseVideo();", null)
+        }
+    }
+
+    LaunchedEffect(playerState.position) {
+        val currentItem = playerState.currentItem
+        val isVideo = currentItem is com.deepeye.musicpro.domain.model.MediaItem.Remote && playerState.isVideo
+        
+        if (isVideo && sharedWebView != null) {
+            val updateState = sharedWebView.tag as? com.deepeye.musicpro.ui.components.YouTubePlayerState 
+                ?: com.deepeye.musicpro.ui.components.YouTubePlayerState().also { sharedWebView.tag = it }
+            
+            // Sync position (only when user has seeked significantly, e.g. via lock screen or Bluetooth)
+            val diff = playerState.position - updateState.lastSentPosition
+            if (updateState.lastSentPosition == -1L || diff > 2500L || diff < -2500L) {
+                updateState.lastSentPosition = playerState.position
+                val seconds = playerState.position / 1000f
+                sharedWebView.evaluateJavascript(
+                    "if (document.getElementById('player') && document.getElementById('player').contentWindow) { " +
+                    "document.getElementById('player').contentWindow.postMessage(JSON.stringify({\"event\": \"command\", \"func\": \"seekTo\", \"args\": [$seconds, true]}), \"*\"); }", 
+                    null
+                )
+            } else {
+                updateState.lastSentPosition = playerState.position
+            }
+        }
+    }
 
     CompositionLocalProvider(
         LocalPipMode provides isInPipMode,

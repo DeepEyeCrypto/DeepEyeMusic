@@ -48,6 +48,7 @@ object PlayerModule {
             .setTrackSelector(trackSelector)
             .setAudioAttributes(audioAttributes, /* handleAudioFocus= */ false)
             .setHandleAudioBecomingNoisy(true)
+            .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
     }
 }

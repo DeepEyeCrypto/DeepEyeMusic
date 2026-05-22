@@ -14,18 +14,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.deepeye.musicpro.data.source.remote.update.AutoUpdateManager
+import com.deepeye.musicpro.data.source.remote.update.UpdateState
+import java.io.File
 
 data class SettingsUiState(
     val settings: AppSettings = AppSettings(),
     val isRescanningLibrary: Boolean = false,
-    val tasteProfile: TasteProfile = TasteProfile()
+    val tasteProfile: TasteProfile = TasteProfile(),
+    val updateState: UpdateState = UpdateState.Idle
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsDataStore: SettingsDataStore,
     private val syncLibraryUseCase: SyncLibraryUseCase,
-    private val tasteProfileRepository: TasteProfileRepository
+    private val tasteProfileRepository: TasteProfileRepository,
+    private val autoUpdateManager: AutoUpdateManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -42,7 +47,29 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(tasteProfile = profile)
             }
         }
+        viewModelScope.launch {
+            autoUpdateManager.updateState.collect { updateState ->
+                _uiState.value = _uiState.value.copy(updateState = updateState)
+            }
+        }
     }
+
+    fun checkForUpdate() {
+        autoUpdateManager.checkForUpdate()
+    }
+
+    fun downloadUpdate(apkUrl: String, version: String) {
+        autoUpdateManager.downloadUpdate(apkUrl, version)
+    }
+
+    fun installApk(file: File) {
+        autoUpdateManager.installApk(file)
+    }
+
+    fun resetUpdateState() {
+        autoUpdateManager.resetState()
+    }
+
 
     fun setThemeMode(mode: ThemeMode) { viewModelScope.launch { settingsDataStore.setThemeMode(mode) } }
     fun setDynamicColor(enabled: Boolean) { viewModelScope.launch { settingsDataStore.setDynamicColor(enabled) } }

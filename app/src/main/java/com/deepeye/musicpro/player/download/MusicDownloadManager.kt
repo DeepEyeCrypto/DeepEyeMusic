@@ -8,6 +8,10 @@ import android.os.Environment
 import android.widget.Toast
 import com.deepeye.musicpro.domain.model.MediaItem
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,6 +20,9 @@ class MusicDownloadManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    
+    private val _activeDownloads = kotlinx.coroutines.flow.MutableStateFlow<Map<Long, com.deepeye.musicpro.domain.model.MediaItem>>(emptyMap())
+    val activeDownloads: kotlinx.coroutines.flow.StateFlow<Map<Long, com.deepeye.musicpro.domain.model.MediaItem>> = _activeDownloads.asStateFlow()
 
     init {
         // Register receiver for download completion to scan the file into MediaStore
@@ -37,6 +44,8 @@ class MusicDownloadManager @Inject constructor(
                         }
                     }
                     cursor.close()
+                    // Remove from active downloads
+                    _activeDownloads.value = _activeDownloads.value.toMutableMap().apply { remove(id) }
                 }
             }
         }, filter, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Context.RECEIVER_EXPORTED else 0)
@@ -57,13 +66,14 @@ class MusicDownloadManager @Inject constructor(
                 .setTitle(item.title)
                 .setDescription("Downloading ${item.artist}")
                 .setMimeType("audio/mpeg")
-                .addRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                .addRequestHeader("User-Agent", "Mozilla/5.0")
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .setDestinationInExternalPublicDir(Environment.DIRECTORY_MUSIC, "DeepEyeMusic/$sanitizedTitle.mp3")
                 .setAllowedOverMetered(true)
                 .setAllowedOverRoaming(true)
 
-            downloadManager.enqueue(request)
+            val downloadId = downloadManager.enqueue(request)
+            _activeDownloads.value = _activeDownloads.value.toMutableMap().apply { put(downloadId, item) }
             Toast.makeText(context, "Download started: ${item.title}", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Toast.makeText(context, "Download failed: ${e.message}", Toast.LENGTH_LONG).show()

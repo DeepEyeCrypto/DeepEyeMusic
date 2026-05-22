@@ -68,6 +68,20 @@ fun NowPlayingScreen(
     val isVideoMode = playerState.currentItem is MediaItem.Remote && playerState.isVideo
     val currentItem = playerState.currentItem
 
+    LaunchedEffect(configuration.orientation, isVideoMode) {
+        if (isVideoMode) {
+            if (configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+                if (!fullscreenMode.isFullscreen) {
+                    fullscreenMode.enter()
+                }
+            } else if (configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT) {
+                if (fullscreenMode.isFullscreen) {
+                    fullscreenMode.exit()
+                }
+            }
+        }
+    }
+
     val density = androidx.compose.ui.platform.LocalDensity.current
     var rootRect by remember { mutableStateOf(Rect.Zero) }
     var spacerRect by remember { mutableStateOf(Rect.Zero) }
@@ -446,7 +460,11 @@ fun NowPlayingScreen(
                             .fillMaxHeight(),
                         contentAlignment = Alignment.Center
                     ) {
-                        ArtworkOrVideoSection(modifier = Modifier.fillMaxHeight(0.85f))
+                        ArtworkOrVideoSection(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .aspectRatio(if (isVideoMode) 16 / 9f else 1f)
+                        )
                     }
 
                     // Right Column: Details, Slider, and Action Controls
@@ -473,12 +491,23 @@ fun NowPlayingScreen(
                         .weight(1f),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Spacer(Modifier.weight(0.2f))
-                    ArtworkOrVideoSection(modifier = Modifier.weight(3.5f, fill = false))
-                    Spacer(Modifier.weight(0.2f))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        ArtworkOrVideoSection(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(if (isVideoMode) 16 / 9f else 1f)
+                        )
+                    }
                     
                     Column(
-                        modifier = Modifier.weight(4f, fill = false),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 24.dp, bottom = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         TrackMetadataSection()
@@ -487,7 +516,6 @@ fun NowPlayingScreen(
                         ProgressSliderSection()
                         ControlsSection()
                     }
-                    Spacer(Modifier.weight(0.2f))
                 }
             }
         }
