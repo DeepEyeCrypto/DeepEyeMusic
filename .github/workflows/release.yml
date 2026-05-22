@@ -27,10 +27,39 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Decode keystore
+      - name: Verify and Decode Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: echo "$KEYSTORE_BASE64" | base64 --decode > app/release-keystore.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::GitHub Secret 'KEYSTORE_BASE64' is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          if [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "::error::GitHub Secret 'KEYSTORE_PASSWORD' is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          if [ -z "$KEY_ALIAS" ]; then
+            echo "::error::GitHub Secret 'KEY_ALIAS' is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          if [ -z "$KEY_PASSWORD" ]; then
+            echo "::error::GitHub Secret 'KEY_PASSWORD' is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          
+          # Decode keystore safely
+          echo -n "$KEYSTORE_BASE64" | base64 --decode > app/release-keystore.jks
+          
+          # Verify keystore size and type
+          if [ ! -s app/release-keystore.jks ]; then
+            echo "::error::Decoded keystore file is empty! Please verify that KEYSTORE_BASE64 is a valid base64-encoded string."
+            exit 1
+          fi
+          echo "Keystore successfully decoded: $(ls -lh app/release-keystore.jks)"
 
       - name: Build release APK
         env:
