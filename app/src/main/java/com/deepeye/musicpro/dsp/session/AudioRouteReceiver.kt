@@ -11,7 +11,7 @@ import android.content.Intent
 import android.media.AudioManager
 import android.util.Log
 import com.deepeye.musicpro.dsp.engine.DSPEngine
-import com.deepeye.musicpro.dsp.model.AudioRoute
+import com.deepeye.musicpro.dsp.engine.DSPEngine
 import com.deepeye.musicpro.dsp.model.DSPPreset
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -22,6 +22,13 @@ import kotlinx.coroutines.launch
 import androidx.datastore.preferences.core.edit
 import com.deepeye.musicpro.data.prefs.DSPKeys
 import com.deepeye.musicpro.data.prefs.dspDataStore
+
+enum class AudioRoute {
+    WIRED_HEADSET,
+    BLUETOOTH_A2DP,
+    SPEAKER,
+    UNKNOWN
+}
 
 /**
  * Automatically switches DSP presets based on audio routing (Headphones, Bluetooth, Speaker).
