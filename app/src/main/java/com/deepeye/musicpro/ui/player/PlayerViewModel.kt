@@ -46,7 +46,7 @@ class PlayerViewModel @Inject constructor(
     private val _dominantColor = MutableStateFlow(Color(0xFF7B3FE4))
     val dominantColor: StateFlow<Color> = _dominantColor.asStateFlow()
 
-    val gainBudget = playerController.gainBudget
+
 
     val fftData = visualizerEngine.fftData.map { bytes ->
         if (bytes.isEmpty()) FloatArray(0)

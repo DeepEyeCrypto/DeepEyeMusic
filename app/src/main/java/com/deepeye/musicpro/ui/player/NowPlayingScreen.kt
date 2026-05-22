@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.IntOffset
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NowPlayingScreen(
+    windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
     onNavigateBack: () -> Unit,
     onNavigateToV4A: () -> Unit,
     onNavigateToQueue: () -> Unit,
@@ -62,8 +63,8 @@ fun NowPlayingScreen(
     var showTasteDetailDialog by remember { mutableStateOf(false) }
     
     // Fully responsive threshold mapping (Widescreen, Landscape, or Tablet)
-    val isWideScreen = configuration.screenWidthDp >= 600 || 
-                      (configuration.screenWidthDp >= 480 && configuration.screenHeightDp < 500)
+    val isWideScreen = windowSizeClass.widthSizeClass != androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact ||
+                      configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
     val isInPipMode = LocalPipMode.current
     val fullscreenMode = LocalFullscreenMode.current
@@ -367,14 +368,7 @@ fun NowPlayingScreen(
                 }
             }
 
-            @Composable
-            fun GainBudgetSection() {
-                val gainBudget by viewModel.gainBudget.collectAsStateWithLifecycle()
-                com.deepeye.musicpro.ui.components.GainBudgetMeter(
-                    budget = gainBudget,
-                    modifier = Modifier.fillMaxWidth(0.9f)
-                )
-            }
+
 
             @Composable
             fun ProgressSliderSection() {
@@ -479,7 +473,7 @@ fun NowPlayingScreen(
                     ) {
                         TrackMetadataSection()
                         FeedbackSection()
-                        GainBudgetSection()
+
                         ProgressSliderSection()
                         ControlsSection()
                     }
@@ -515,7 +509,7 @@ fun NowPlayingScreen(
                     ) {
                         TrackMetadataSection()
                         FeedbackSection()
-                        GainBudgetSection()
+
                         ProgressSliderSection()
                         ControlsSection()
                     }

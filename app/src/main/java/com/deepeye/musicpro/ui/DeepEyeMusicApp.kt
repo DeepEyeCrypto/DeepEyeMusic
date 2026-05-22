@@ -67,7 +67,8 @@ data class BottomNavItem(
 fun DeepEyeMusicApp(
     playerController: com.deepeye.musicpro.player.controller.PlayerController,
     isInPipMode: Boolean = false,
-    fullscreenMode: FullscreenMode = FullscreenMode()
+    fullscreenMode: FullscreenMode = FullscreenMode(),
+    windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val sharedWebView = remember { com.deepeye.musicpro.ui.components.createYouTubeWebView(context) }
@@ -107,8 +108,14 @@ fun DeepEyeMusicApp(
             // 3. Sync playback speed
             sharedWebView.evaluateJavascript("if (typeof setSpeed === 'function') setSpeed(${playerState.playbackSpeed});", null)
         } else if (sharedWebView != null) {
-            // When track changes to audio or pauses, call pauseVideo to guarantee no background media execution
-            sharedWebView.evaluateJavascript("if (typeof pauseVideo === 'function') pauseVideo();", null)
+            // Only pause WebView when explicitly switching AWAY from a video track.
+            // Don't pause during navigation/recomposition transients — prevents the
+            // "video stops when navigating to Settings" bug.
+            val updateState = sharedWebView.tag as? com.deepeye.musicpro.ui.components.YouTubePlayerState
+            if (updateState?.videoId != null) {
+                sharedWebView.evaluateJavascript("if (typeof pauseVideo === 'function') pauseVideo();", null)
+                updateState.videoId = null
+            }
         }
     }
 
@@ -152,7 +159,7 @@ fun DeepEyeMusicApp(
             BottomNavItem(Routes.Music.route, "Music", Icons.Filled.MusicNote, Icons.Outlined.MusicNote),
             BottomNavItem(Routes.Library.route, "Library", Icons.Filled.LibraryMusic, Icons.Outlined.LibraryMusic),
             BottomNavItem(Routes.Search.route, "Search", Icons.Filled.Search, Icons.Outlined.Search),
-            BottomNavItem(Routes.V4A.route, "DSP", Icons.Filled.GraphicEq, Icons.Outlined.GraphicEq)
+            BottomNavItem(Routes.DSP.route, "DSP", Icons.Filled.GraphicEq, Icons.Outlined.GraphicEq)
         )
     }
 
@@ -161,10 +168,48 @@ fun DeepEyeMusicApp(
         bottomNavItems.any { it.route == dest.route }
     } == true
 
-    Scaffold(
-        bottomBar = {
-            Column {
-                // Mini Player
+    @OptIn(androidx.compose.material3.adaptive.navigationsuite.ExperimentalMaterial3AdaptiveNavigationSuiteApi::class)
+    val adaptiveInfo = androidx.compose.material3.adaptive.currentWindowAdaptiveInfo()
+    val navLayoutType = if (showBottomBar) {
+        androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(adaptiveInfo)
+    } else {
+        androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType.None
+    }
+
+    @OptIn(androidx.compose.material3.adaptive.navigationsuite.ExperimentalMaterial3AdaptiveNavigationSuiteApi::class)
+    androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold(
+        layoutType = navLayoutType,
+        navigationSuiteItems = {
+            bottomNavItems.forEach { item ->
+                val selected = currentDestination?.hierarchy?.any {
+                    it.route == item.route
+                } == true
+
+                item(
+                    icon = {
+                        Icon(
+                            imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                            contentDescription = item.label
+                        )
+                    },
+                    label = { Text(item.label) },
+                    selected = selected,
+                    onClick = {
+                        if (!selected) {
+                            navController.navigate(item.route) {
+                                popUpTo(Routes.Home.route) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    }
+                )
+            }
+        }
+    ) {
+        Scaffold(
+            bottomBar = {
+                // Mini Player inside responsive space
                 AnimatedVisibility(
                     visible = showBottomBar,
                     enter = slideInVertically { it },
@@ -176,52 +221,18 @@ fun DeepEyeMusicApp(
                         }
                     )
                 }
-
-                // Bottom Navigation
-                AnimatedVisibility(
-                    visible = showBottomBar,
-                    enter = slideInVertically { it },
-                    exit = slideOutVertically { it }
-                ) {
-                    NavigationBar {
-                        bottomNavItems.forEach { item ->
-                            val selected = currentDestination?.hierarchy?.any {
-                                it.route == item.route
-                            } == true
-
-                            NavigationBarItem(
-                                icon = {
-                                    Icon(
-                                        imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                                        contentDescription = item.label
-                                    )
-                                },
-                                label = { Text(item.label) },
-                                selected = selected,
-                                onClick = {
-                                    if (!selected) {
-                                        navController.navigate(item.route) {
-                                            popUpTo(Routes.Home.route) { saveState = true }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
             }
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            NavGraph(
-                navController = navController
-            )
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                NavGraph(
+                    navController = navController,
+                    windowSizeClass = windowSizeClass
+                )
+            }
         }
     }
     } // end CompositionLocalProvider

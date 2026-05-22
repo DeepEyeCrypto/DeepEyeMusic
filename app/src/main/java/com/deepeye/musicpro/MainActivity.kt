@@ -46,6 +46,7 @@ import kotlinx.coroutines.launch
  * - Disable auto-enter when leaving video screen or pausing
  * - Hide all overlays/controls in PiP mode for a clean video-only view
  */
+@OptIn(androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi::class)
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -126,13 +127,15 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val dynamicColors by themeViewModel.dynamicColors.collectAsStateWithLifecycle()
+            val windowSizeClass = androidx.compose.material3.windowsizeclass.calculateWindowSizeClass(this)
 
             DeepEyeTheme(overrideColors = dynamicColors) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     DeepEyeMusicApp(
                         isInPipMode = isInPipMode,
                         fullscreenMode = fullscreenMode,
-                        playerController = playerController
+                        playerController = playerController,
+                        windowSizeClass = windowSizeClass
                     )
                 }
             }

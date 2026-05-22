@@ -5,7 +5,7 @@ package com.deepeye.musicpro.dsp.session
  
 import android.util.Log
 import androidx.media3.exoplayer.ExoPlayer
-import com.deepeye.musicpro.dsp.engine.V4AEngine
+import com.deepeye.musicpro.dsp.engine.DSPEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -16,7 +16,7 @@ import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.analytics.AnalyticsListener.EventTime
 
 /**
- * Manages the audio session lifecycle between ExoPlayer and the V4A DSP engine.
+ * Manages the audio session lifecycle between ExoPlayer and the DSP engine.
  *
  * Re-attaches the DSP engine whenever the audio session ID changes
  * (e.g., on format switch, output device change).
@@ -24,7 +24,7 @@ import androidx.media3.exoplayer.analytics.AnalyticsListener.EventTime
 @Singleton
 class AudioSessionManager @Inject constructor(
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
-    private val v4aEngine: V4AEngine,
+    private val dspEngine: DSPEngine,
     private val visualizerEngine: com.deepeye.musicpro.player.visualizer.VisualizerEngine
 ) : AnalyticsListener {
     companion object {
@@ -72,10 +72,10 @@ class AudioSessionManager @Inject constructor(
         context.sendBroadcast(intent)
 
         scope.launch {
-            v4aEngine.releaseSession()
+            dspEngine.releaseSession()
             visualizerEngine.release()
             
-            v4aEngine.attachSession(newSessionId)
+            dspEngine.attachSession(newSessionId)
             visualizerEngine.start(newSessionId)
         }
     }
@@ -85,7 +85,7 @@ class AudioSessionManager @Inject constructor(
      */
     fun detach() {
         scope.launch {
-            v4aEngine.releaseSession()
+            dspEngine.releaseSession()
             visualizerEngine.release()
             currentSessionId = 0
         }

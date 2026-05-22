@@ -37,10 +37,15 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
+    windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
     onNavigateToNowPlaying: () -> Unit,
     viewModel: SearchViewModel = hiltViewModel()
 ) {
@@ -63,11 +68,28 @@ fun SearchScreen(
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
-                SearchBar(
-                    query = uiState.query,
-                    onQueryChange = { viewModel.onQueryChanged(it) },
-                    onClear = { viewModel.onQueryChanged("") }
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(
+                                when (windowSizeClass.widthSizeClass) {
+                                    androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Medium -> Modifier.widthIn(max = 600.dp)
+                                    androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded -> Modifier.widthIn(max = 800.dp)
+                                    else -> Modifier
+                                }
+                            )
+                    ) {
+                        SearchBar(
+                            query = uiState.query,
+                            onQueryChange = { viewModel.onQueryChanged(it) },
+                            onClear = { viewModel.onQueryChanged("") }
+                        )
+                    }
+                }
             }
         }
     ) { paddingValues ->
@@ -90,12 +112,18 @@ fun SearchScreen(
                     EmptySearchState(uiState.query)
                 }
                 else -> {
-                    LazyColumn(
+                    val columns = when (windowSizeClass.widthSizeClass) {
+                        androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact -> 1
+                        androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Medium -> 2
+                        else -> 3
+                    }
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(columns),
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(bottom = 80.dp)
                     ) {
                         if (uiState.localResults.isNotEmpty()) {
-                            item {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
                                 SearchSectionHeader("Library")
                             }
                             items(uiState.localResults, key = { "local_${it.id}" }) { song ->
@@ -107,7 +135,7 @@ fun SearchScreen(
                         }
 
                         if (uiState.remoteResults.isNotEmpty()) {
-                            item {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
                                 SearchSectionHeader("YouTube Music")
                             }
                             items(uiState.remoteResults, key = { "remote_${it.id}" }) { item ->

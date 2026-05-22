@@ -23,11 +23,10 @@ import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 fun VideoCard(
     item: HomeVideoItem,
     onClick: (HomeVideoItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.width(220.dp)
 ) {
     Card(
-        modifier = modifier
-            .width(220.dp),
+        modifier = modifier,
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF1A1A2E)

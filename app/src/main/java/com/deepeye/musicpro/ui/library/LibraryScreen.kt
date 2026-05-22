@@ -36,6 +36,7 @@ import com.deepeye.musicpro.domain.model.Song
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun LibraryScreen(
+    windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
     onNavigateToAlbum: (Long) -> Unit,
     onNavigateToArtist: (Long) -> Unit,
     onNavigateToDownloads: () -> Unit,
@@ -84,7 +85,7 @@ fun LibraryScreen(
                 val index = uiState.songs.indexOf(song)
                 playerViewModel.setQueue(mediaItems, index)
             }
-            1 -> AlbumsTab(uiState.albums, onNavigateToAlbum, sharedTransitionScope, animatedVisibilityScope)
+            1 -> AlbumsTab(uiState.albums, onNavigateToAlbum, sharedTransitionScope, animatedVisibilityScope, windowSizeClass)
             2 -> ArtistsTab(uiState.artists, onNavigateToArtist)
             3 -> GenresTab()
         }
@@ -123,11 +124,17 @@ private fun AlbumsTab(
     albums: List<Album>,
     onAlbumClick: (Long) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass
 ) {
+    val columns = when (windowSizeClass.widthSizeClass) {
+        androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact -> 2
+        androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Medium -> 3
+        else -> 4
+    }
     with(sharedTransitionScope) {
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
+            columns = GridCells.Fixed(columns),
             contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)

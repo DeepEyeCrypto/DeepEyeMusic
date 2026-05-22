@@ -9,7 +9,7 @@ import com.deepeye.musicpro.data.repository.HomeFeedRepository
 import com.deepeye.musicpro.domain.model.home.HomeFeedState
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
-import com.deepeye.musicpro.dsp.engine.V4AEngine
+import com.deepeye.musicpro.dsp.engine.DSPEngine
 import com.deepeye.musicpro.dsp.model.DspParams
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +31,7 @@ import android.net.Uri
 @HiltViewModel
 class HomeHubViewModel @Inject constructor(
     private val feedRepo: HomeFeedRepository,
-    private val v4aEngine: V4AEngine,
+    private val dspEngine: DSPEngine,
     private val visualizerEngine: VisualizerEngine,
     private val playerController: PlayerController
 ) : ViewModel() {
@@ -80,7 +80,7 @@ class HomeHubViewModel @Inject constructor(
     }
 
     val dspParams: StateFlow<DspParams> = v4aEngine.currentParams
-    val gainBudget = v4aEngine.gainBudget
+
     val audioRoute = v4aEngine.currentRoute
     val currentPresetName = v4aEngine.currentPresetName
 

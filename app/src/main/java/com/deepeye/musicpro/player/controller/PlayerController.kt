@@ -36,7 +36,7 @@ class PlayerController @Inject constructor(
     private val queueManager: QueueManager,
     private val youtubeDataSource: YoutubeRemoteDataSource,
     private val audioSessionManager: com.deepeye.musicpro.dsp.session.AudioSessionManager,
-    private val v4aEngine: com.deepeye.musicpro.dsp.engine.V4AEngine,
+    private val dspEngine: com.deepeye.musicpro.dsp.engine.DSPEngine,
     private val tasteProfileRepository: com.deepeye.musicpro.domain.repository.TasteProfileRepository,
     private val musicRepository: com.deepeye.musicpro.domain.repository.MusicRepository,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
@@ -45,8 +45,6 @@ class PlayerController @Inject constructor(
 
     private val _playerState = MutableStateFlow(PlayerState())
     val playerState: StateFlow<PlayerState> = _playerState.asStateFlow()
-    
-    val gainBudget = v4aEngine.gainBudget
 
     private var positionUpdateJob: Job? = null
     private var playJob: Job? = null

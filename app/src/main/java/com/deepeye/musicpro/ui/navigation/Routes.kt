@@ -16,7 +16,7 @@ sealed class Routes(val route: String) {
     data object Search   : Routes("search")
     data object Settings : Routes("settings")
     data object NowPlaying : Routes("now_playing")
-    data object V4A      : Routes("v4a")
+    data object DSP      : Routes("dsp")
     data object Onboarding : Routes("onboarding")
     data object Downloads : Routes("downloads")
 

@@ -121,6 +121,13 @@ dependencies {
     // Navigation
     implementation(libs.navigation.compose)
 
+    // Adaptive Layouts
+    implementation(libs.compose.m3.adaptive)
+    implementation(libs.compose.adaptive.navigation.suite)
+    implementation(libs.androidx.window)
+    implementation(libs.compose.material3.window.size)
+
+
     // Hilt DI
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

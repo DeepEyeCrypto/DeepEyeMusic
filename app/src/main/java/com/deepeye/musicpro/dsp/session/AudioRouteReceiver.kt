@@ -10,15 +10,18 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.util.Log
-import com.deepeye.musicpro.dsp.data.PresetRepository
-import com.deepeye.musicpro.dsp.engine.V4AEngine
+import com.deepeye.musicpro.dsp.engine.DSPEngine
 import com.deepeye.musicpro.dsp.model.AudioRoute
+import com.deepeye.musicpro.dsp.model.DSPPreset
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import androidx.datastore.preferences.core.edit
+import com.deepeye.musicpro.data.prefs.DSPKeys
+import com.deepeye.musicpro.data.prefs.dspDataStore
 
 /**
  * Automatically switches DSP presets based on audio routing (Headphones, Bluetooth, Speaker).
@@ -26,9 +29,8 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class AudioRouteReceiver : BroadcastReceiver() {
 
-    @Inject lateinit var engine: V4AEngine
-    @Inject lateinit var presetRepository: PresetRepository
-
+    @Inject lateinit var engine: DSPEngine
+    
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -44,23 +46,25 @@ class AudioRouteReceiver : BroadcastReceiver() {
             else -> AudioRoute.UNKNOWN
         }
 
-        val presetName = when (route) {
-            AudioRoute.WIRED_HEADSET -> "Premium Headphone Bass"
-            AudioRoute.BLUETOOTH_A2DP -> "Bluetooth Optimized"
-            AudioRoute.SPEAKER -> "Speaker Safe"
+        val preset = when (route) {
+            AudioRoute.WIRED_HEADSET -> DSPPreset.HIFI_HEADPHONES
+            AudioRoute.BLUETOOTH_A2DP -> DSPPreset.PREMIUM_BASS
+            AudioRoute.SPEAKER -> DSPPreset.LOUDNESS_MAX
             else -> null
         }
 
-        engine.updateRoute(route)
-
-        presetName?.let { name ->
+        preset?.let {
+            Log.i("AudioRoute", "✅ Route changed → applied preset: ${it.name}")
+            // Apply immediately to engine
+            engine.applyPreset(it)
+            
+            // Save to DataStore so UI updates
             scope.launch {
-                val params = presetRepository.findByName(name)
-                params?.let {
-                    engine.updateParams(it)
-                    Log.i("AudioRoute", "✅ Route changed → applied preset: $name")
+                context.dspDataStore.edit { prefs ->
+                    prefs[DSPKeys.PRESET] = it.name
                 }
             }
         }
     }
 }
+

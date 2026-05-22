@@ -39,6 +39,7 @@ import com.deepeye.musicpro.ui.theme.GlassWhite
 
 @Composable
 fun HomeHubScreen(
+    windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
     onNavigateToVideo: (String) -> Unit,
     onNavigateToMusic: (String) -> Unit,
     onNavigateToLibrary: () -> Unit,
@@ -47,18 +48,29 @@ fun HomeHubScreen(
     viewModel: HomeHubViewModel = hiltViewModel()
 ) {
     val feedState     by viewModel.feedState.collectAsStateWithLifecycle()
-    val gainBudget    by viewModel.gainBudget.collectAsStateWithLifecycle()
-    val currentPreset by viewModel.currentPresetName.collectAsStateWithLifecycle()
-    val audioRoute    by viewModel.audioRoute.collectAsStateWithLifecycle()
-    val fftData       by viewModel.fftData.collectAsStateWithLifecycle()
 
-    LazyColumn(
+
+    val isExpanded = windowSizeClass.widthSizeClass == androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0A0A14)),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
-        contentPadding = PaddingValues(bottom = 100.dp)
+        contentAlignment = Alignment.TopCenter
     ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(
+                    if (isExpanded) Modifier.widthIn(max = 1200.dp) else Modifier
+                ),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+            contentPadding = PaddingValues(
+                start = if (isExpanded) 32.dp else 0.dp,
+                end = if (isExpanded) 32.dp else 0.dp,
+                bottom = 100.dp
+            )
+        ) {
         // 1. Greeting
         item {
             HomeGreetingHeader(onNavigateToSettings = onNavigateToSettings)
@@ -98,18 +110,7 @@ fun HomeHubScreen(
             }
         }
 
-        // 2. DSP Quick Panel (always visible)
-        item {
-            DspQuickPanel(
-                currentPreset = currentPreset,
-                gainBudget    = gainBudget,
-                audioRoute    = audioRoute,
-                fftData       = fftData,
-                onPresetClick = onOpenV4A,
-                onV4AOpen     = onOpenV4A,
-                modifier      = Modifier.padding(horizontal = 16.dp)
-            )
-        }
+
 
         // 3. Trending Videos Rail
         if (feedState.isLoading) {
@@ -167,6 +168,7 @@ fun HomeHubScreen(
                 )
             }
         }
+    }
     }
 }
 

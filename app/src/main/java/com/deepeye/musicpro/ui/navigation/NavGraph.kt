@@ -33,7 +33,7 @@ import com.deepeye.musicpro.ui.playlist.PlaylistDetailScreen
 import com.deepeye.musicpro.ui.playlist.PlaylistScreen
 import com.deepeye.musicpro.ui.search.SearchScreen
 import com.deepeye.musicpro.ui.settings.SettingsScreen
-import com.deepeye.musicpro.ui.v4a.V4AScreen
+import com.deepeye.musicpro.ui.dsp.DSPScreen
 import com.deepeye.musicpro.ui.youtube.YouTubeScreen
 import com.deepeye.musicpro.ui.music.MusicScreen
 import com.deepeye.musicpro.ui.onboarding.OnboardingScreen
@@ -54,7 +54,8 @@ import com.deepeye.musicpro.ui.downloads.DownloadsScreen
 fun NavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    gateViewModel: OnboardingGateViewModel = hiltViewModel()
+    gateViewModel: OnboardingGateViewModel = hiltViewModel(),
+    windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass
 ) {
     val onboardingState by gateViewModel.onboardingState.collectAsStateWithLifecycle()
 
@@ -127,6 +128,7 @@ fun NavGraph(
         // ── Bottom Nav Destinations ──
         composable(Routes.Home.route) {
             HomeHubScreen(
+                windowSizeClass = windowSizeClass,
                 onNavigateToVideo = { videoId -> 
                     navController.navigate(Routes.NowPlaying.route) 
                 },
@@ -134,7 +136,7 @@ fun NavGraph(
                     navController.navigate(Routes.NowPlaying.route) 
                 },
                 onNavigateToLibrary = { navController.navigate(Routes.Library.route) },
-                onOpenV4A = { navController.navigate(Routes.V4A.route) },
+                onOpenV4A = { navController.navigate(Routes.DSP.route) },
                 onNavigateToSettings = { navController.navigate(Routes.Settings.route) }
             )
         }
@@ -157,6 +159,7 @@ fun NavGraph(
 
         composable(Routes.Library.route) {
             LibraryScreen(
+                windowSizeClass = windowSizeClass,
                 onNavigateToAlbum = { albumId ->
                     navController.navigate(Routes.AlbumDetail.createRoute(albumId))
                 },
@@ -173,26 +176,36 @@ fun NavGraph(
 
         composable(Routes.Search.route) {
             SearchScreen(
+                windowSizeClass = windowSizeClass,
                 onNavigateToNowPlaying = { navController.navigate(Routes.NowPlaying.route) }
             )
         }
 
         composable(Routes.Settings.route) {
-            SettingsScreen()
+            SettingsScreen(windowSizeClass = windowSizeClass)
         }
 
         // ── Full-screen Destinations ──
         composable(Routes.NowPlaying.route) {
             NowPlayingScreen(
+                windowSizeClass = windowSizeClass,
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToV4A = { navController.navigate(Routes.V4A.route) },
+                onNavigateToV4A = {
+                    navController.navigate(Routes.DSP.route) {
+                        launchSingleTop = true
+                    }
+                },
                 onNavigateToQueue = { /* queue bottom sheet handled internally */ },
-                onNavigateToSettings = { navController.navigate(Routes.Settings.route) }
+                onNavigateToSettings = {
+                    navController.navigate(Routes.Settings.route) {
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 
-        composable(Routes.V4A.route) {
-            V4AScreen(
+        composable(Routes.DSP.route) {
+            DSPScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
