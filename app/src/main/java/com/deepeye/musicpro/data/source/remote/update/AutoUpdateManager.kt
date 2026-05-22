@@ -1,3 +1,6 @@
+// Copyright (C) 2026 DeepEye
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 package com.deepeye.musicpro.data.source.remote.update
 
 import android.app.DownloadManager
@@ -44,7 +47,7 @@ class AutoUpdateManager @Inject constructor(
     private val okHttpClient: OkHttpClient,
     private val gson: Gson
 ) {
-    private val IS_MOCK_MODE = true
+    private val IS_MOCK_MODE = false
 
     private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val updateState: StateFlow<UpdateState> = _updateState.asStateFlow()
