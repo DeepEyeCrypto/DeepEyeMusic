@@ -206,6 +206,7 @@ fun NavGraph(
 
         composable(Routes.DSP.route) {
             DSPScreen(
+                windowSizeClass = windowSizeClass,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

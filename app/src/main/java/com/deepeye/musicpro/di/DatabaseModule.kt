@@ -42,4 +42,20 @@ object DatabaseModule {
 
     @Provides
     fun provideTasteDao(database: AppDatabase): com.deepeye.musicpro.data.db.TasteDao = database.tasteDao()
+
+    @Provides
+    @Singleton
+    fun provideDspDatabase(@ApplicationContext context: Context): com.deepeye.musicpro.dsp.data.DspDatabase {
+        return Room.databaseBuilder(
+            context,
+            com.deepeye.musicpro.dsp.data.DspDatabase::class.java,
+            "deepeye_dsp.db"
+        )
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    @Provides
+    fun provideDspPresetDao(database: com.deepeye.musicpro.dsp.data.DspDatabase): com.deepeye.musicpro.dsp.data.DspPresetDao =
+        database.dspPresetDao()
 }

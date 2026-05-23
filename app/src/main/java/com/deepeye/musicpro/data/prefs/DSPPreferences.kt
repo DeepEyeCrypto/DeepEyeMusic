@@ -16,4 +16,5 @@ object DSPKeys {
     val BASS_STRENGTH = intPreferencesKey("bass_strength")
     val VIRTUALIZER = intPreferencesKey("virtualizer_strength")
     val CUSTOM_BANDS = stringPreferencesKey("custom_bands") // Comma separated integers
+    val ACTIVE_PARAMS_JSON = stringPreferencesKey("active_params_json")
 }

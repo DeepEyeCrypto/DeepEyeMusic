@@ -1,3 +1,6 @@
+// Copyright (C) 2026 DeepEye
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 package com.deepeye.musicpro.dsp.engine
 
 import android.app.Application
@@ -5,146 +8,194 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deepeye.musicpro.data.prefs.DSPKeys
 import com.deepeye.musicpro.data.prefs.dspDataStore
-import com.deepeye.musicpro.dsp.model.DSPPreset
-import com.deepeye.musicpro.dsp.model.DSPPresets
+import com.deepeye.musicpro.dsp.data.PresetRepository
+import com.deepeye.musicpro.dsp.model.DspParams
+import com.deepeye.musicpro.dsp.model.EngineState
+import com.deepeye.musicpro.dsp.model.GainBudget
+import com.deepeye.musicpro.dsp.model.AudioRoute
+import com.deepeye.musicpro.dsp.model.RiskLevel
+import com.deepeye.musicpro.player.visualizer.VisualizerEngine
+import com.google.gson.Gson
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import androidx.datastore.preferences.core.edit
 
+/**
+ * UI state for the V4A DSP screen.
+ */
+data class V4AUiState(
+    val params: DspParams = DspParams(),
+    val engineState: EngineState = EngineState.IDLE,
+    val gainBudget: GainBudget = GainBudget(0f, RiskLevel.SAFE),
+    val presets: List<Pair<Long, String>> = emptyList(),
+    val selectedPresetId: Long? = null,
+    val sessionId: Int = 0,
+    val currentRoute: AudioRoute = AudioRoute.UNKNOWN,
+    val showConflictWarning: Boolean = false
+)
+
 @HiltViewModel
 class DSPViewModel @Inject constructor(
     private val application: Application,
-    val dspEngine: DSPEngine
+    val dspEngine: DSPEngine,
+    private val presetRepository: PresetRepository,
+    private val visualizerEngine: VisualizerEngine,
+    private val gson: Gson
 ) : ViewModel() {
 
     private val dataStore = application.dspDataStore
 
-    // States
-    private val _currentPreset = MutableStateFlow(DSPPreset.PREMIUM_BASS)
-    val currentPreset = _currentPreset.asStateFlow()
+    private val _uiState = MutableStateFlow(V4AUiState())
+    val uiState: StateFlow<V4AUiState> = _uiState.asStateFlow()
 
-    private val _isEnabled = MutableStateFlow(false)
-    val isEnabled = _isEnabled.asStateFlow()
-
-    private val _eqBands = MutableStateFlow(DSPPresets.PREMIUM_BASS.eqBands)
-    val eqBands = _eqBands.asStateFlow()
-
-    private val _bassStrength = MutableStateFlow(DSPPresets.PREMIUM_BASS.bassStrength.toInt())
-    val bassStrength = _bassStrength.asStateFlow()
-
-    private val _virtualizerStrength = MutableStateFlow(DSPPresets.PREMIUM_BASS.virtualizerStrength.toInt())
-    val virtualizerStrength = _virtualizerStrength.asStateFlow()
+    val fftData = visualizerEngine.fftData.map { bytes ->
+        if (bytes.isEmpty()) FloatArray(0)
+        else {
+            val magnitudes = FloatArray(bytes.size / 2)
+            for (i in magnitudes.indices) {
+                val r = bytes[i * 2].toInt()
+                val im = bytes[i * 2 + 1].toInt()
+                magnitudes[i] = (Math.sqrt((r * r + im * im).toDouble()) / 128f).toFloat().coerceIn(0f, 1f)
+            }
+            magnitudes
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FloatArray(0))
 
     init {
-        // Load initial state from DataStore
+        observeEngineState()
+        loadInitialState()
+    }
+
+    private fun observeEngineState() {
+        // 1. Sync engine flows into UI State
+        viewModelScope.launch {
+            combine(
+                dspEngine.engineState,
+                dspEngine.currentParams,
+                dspEngine.gainBudget,
+                dspEngine.currentRoute,
+                dspEngine.currentSessionId
+            ) { state, params, budget, route, sid ->
+                _uiState.value.copy(
+                    engineState = state,
+                    params = params,
+                    gainBudget = budget,
+                    currentRoute = route,
+                    sessionId = sid,
+                    showConflictWarning = params.surroundEnabled && params.convolverEnabled
+                )
+            }.collect { newState ->
+                _uiState.value = newState
+            }
+        }
+
+        // 2. Load Presets list from DB
+        viewModelScope.launch {
+            presetRepository.getAllPresets().collect { list ->
+                _uiState.value = _uiState.value.copy(presets = list)
+            }
+        }
+    }
+
+    private fun loadInitialState() {
         viewModelScope.launch {
             val prefs = dataStore.data.first()
+            val json = prefs[DSPKeys.ACTIVE_PARAMS_JSON]
+            val params = if (!json.isNullOrBlank()) {
+                try {
+                    gson.fromJson(json, DspParams::class.java)
+                } catch (e: Exception) {
+                    DspParams()
+                }
+            } else {
+                DspParams()
+            }
             
             val enabled = prefs[DSPKeys.ENABLED] ?: false
-            val presetName = prefs[DSPKeys.PRESET] ?: DSPPreset.PREMIUM_BASS.name
-            val savedPreset = runCatching { DSPPreset.valueOf(presetName) }.getOrDefault(DSPPreset.PREMIUM_BASS)
-            
-            _isEnabled.value = enabled
-            dspEngine.setEnabled(enabled)
+            val finalParams = params.copy(enabled = enabled)
+            dspEngine.updateParams(finalParams)
+        }
+    }
 
-            if (savedPreset == DSPPreset.CUSTOM) {
-                // Load custom bands
-                val bandsString = prefs[DSPKeys.CUSTOM_BANDS] ?: ""
-                val customBands = if (bandsString.isNotBlank()) {
-                    bandsString.split(",").mapNotNull { it.toIntOrNull() }.toIntArray()
-                } else {
-                    DSPPresets.FLAT.eqBands
-                }
-                
-                val bass = prefs[DSPKeys.BASS_STRENGTH] ?: 0
-                val virt = prefs[DSPKeys.VIRTUALIZER] ?: 0
-
-                _eqBands.value = customBands
-                _bassStrength.value = bass
-                _virtualizerStrength.value = virt
-                _currentPreset.value = DSPPreset.CUSTOM
-
-                dspEngine.setCustomEqBands(customBands)
-                dspEngine.setBassBoost(bass.toShort())
-                dspEngine.setVirtualizer(virt.toShort())
-            } else {
-                setPreset(savedPreset)
+    fun updateParams(transform: (DspParams) -> DspParams) {
+        val current = _uiState.value.params
+        val next = transform(current)
+        
+        // Push update to engine immediately
+        dspEngine.updateParams(next)
+        
+        // Persist to DataStore
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[DSPKeys.ACTIVE_PARAMS_JSON] = gson.toJson(next)
+                prefs[DSPKeys.ENABLED] = next.enabled
             }
         }
     }
 
-    fun setPreset(preset: DSPPreset) {
-        if (preset == DSPPreset.CUSTOM) return // Custom is set indirectly by modifying bands
-
-        dspEngine.applyPreset(preset)
-        _currentPreset.value = preset
-        
-        val settings = DSPPresets.fromPreset(preset)
-        _eqBands.value = settings.eqBands
-        _bassStrength.value = settings.bassStrength.toInt()
-        _virtualizerStrength.value = settings.virtualizerStrength.toInt()
-
-        saveState()
+    fun toggleMasterEnabled() {
+        updateParams { it.copy(enabled = !it.enabled) }
     }
 
-    fun setEnabled(enabled: Boolean) {
-        dspEngine.setEnabled(enabled)
-        _isEnabled.value = enabled
+    fun updateEqBand(bandIndex: Int, value: Float) {
+        updateParams { params ->
+            val newBands = params.eqBands.copyOf()
+            if (bandIndex in newBands.indices) {
+                newBands[bandIndex] = value.coerceIn(-12f, 12f)
+            }
+            params.copy(eqBands = newBands, eqEnabled = true)
+        }
+    }
+
+    fun activeModuleNames(): List<String> {
+        val p = _uiState.value.params
+        return listOfNotNull(
+            if (p.pgcEnabled) "PGC" else null,
+            if (p.eqEnabled) "EQ" else null,
+            if (p.bassBoostEnabled || p.viperBassEnabled) "Bass" else null,
+            if (p.virtualizerEnabled) "Virtualizer" else null,
+            if (p.reverbEnabled) "Reverb" else null,
+            if (p.loudnessEnabled) "Loudness" else null,
+            if (p.dynamicsEnabled) "Dynamics" else null,
+            if (p.surroundEnabled) "Surround" else null,
+            if (p.convolverEnabled) "Convolver" else null,
+            if (p.tubeEnabled) "Tube" else null,
+            if (p.clarityEnabled) "Clarity" else null,
+            if (p.hrtfEnabled) "HRTF" else null,
+            if (p.speakerProtectionEnabled) "Protection" else null,
+            if (p.noiseGateEnabled) "Gate" else null
+        )
+    }
+
+    fun loadPreset(presetId: Long) {
         viewModelScope.launch {
-            dataStore.edit { prefs ->
-                prefs[DSPKeys.ENABLED] = enabled
+            val preset = _uiState.value.presets.find { it.first == presetId }
+            presetRepository.getPresetParams(presetId).collect { params ->
+                params?.let {
+                    val finalParams = it.copy(enabled = _uiState.value.params.enabled)
+                    updateParams { finalParams }
+                    _uiState.value = _uiState.value.copy(
+                        selectedPresetId = presetId
+                    )
+                }
             }
         }
     }
 
-    fun setBassStrength(strength: Int) {
-        dspEngine.setBassBoost(strength.toShort())
-        _bassStrength.value = strength
-        markAsCustomAndSave()
-    }
-
-    fun setVirtualizer(strength: Int) {
-        dspEngine.setVirtualizer(strength.toShort())
-        _virtualizerStrength.value = strength
-        markAsCustomAndSave()
-    }
-
-    fun setBandLevel(band: Int, level: Int) {
-        dspEngine.setBandLevel(band.toShort(), level.toShort())
-        
-        val newBands = _eqBands.value.clone()
-        if (band in newBands.indices) {
-            newBands[band] = level
-            _eqBands.value = newBands
-        }
-        
-        markAsCustomAndSave()
-    }
-
-    private fun markAsCustomAndSave() {
-        if (_currentPreset.value != DSPPreset.CUSTOM) {
-            _currentPreset.value = DSPPreset.CUSTOM
-        }
-        saveState()
-    }
-
-    private fun saveState() {
+    fun savePreset(name: String) {
         viewModelScope.launch {
-            dataStore.edit { prefs ->
-                prefs[DSPKeys.PRESET] = _currentPreset.value.name
-                if (_currentPreset.value == DSPPreset.CUSTOM) {
-                    prefs[DSPKeys.BASS_STRENGTH] = _bassStrength.value
-                    prefs[DSPKeys.VIRTUALIZER] = _virtualizerStrength.value
-                    prefs[DSPKeys.CUSTOM_BANDS] = _eqBands.value.joinToString(",")
-                }
+            val id = presetRepository.savePreset(name, _uiState.value.params)
+            _uiState.value = _uiState.value.copy(selectedPresetId = id)
+        }
+    }
+
+    fun deletePreset(presetId: Long) {
+        viewModelScope.launch {
+            presetRepository.deletePreset(presetId)
+            if (_uiState.value.selectedPresetId == presetId) {
+                _uiState.value = _uiState.value.copy(selectedPresetId = null)
             }
         }
     }

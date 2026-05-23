@@ -1,166 +1,471 @@
+// Copyright (C) 2026 DeepEye
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 package com.deepeye.musicpro.ui.dsp
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.deepeye.musicpro.dsp.engine.DSPViewModel
-import com.deepeye.musicpro.dsp.model.DSPPreset
+import com.deepeye.musicpro.dsp.model.*
+import com.deepeye.musicpro.ui.dsp.components.DspDebugCard
+import com.deepeye.musicpro.ui.dsp.components.GainBudgetCard
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DSPScreen(
+    windowSizeClass: WindowSizeClass,
     viewModel: DSPViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit = {}
 ) {
-    val preset by viewModel.currentPreset.collectAsState()
-    val isEnabled by viewModel.isEnabled.collectAsState()
-    val eqBands by viewModel.eqBands.collectAsState()
-    val bassStrength by viewModel.bassStrength.collectAsState()
-    val virtualizerStrength by viewModel.virtualizerStrength.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val isEnabled = uiState.params.enabled
+    val isWideScreen = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF0A0A1A), Color(0xFF1A0A2E))
+    var showSaveDialog by remember { mutableStateOf(false) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("V4A DSP Engine", color = Color.White, fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+                },
+                actions = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = 16.dp)
+                    ) {
+                        Text(
+                            text = if (isEnabled) "ACTIVE" else "DISABLED",
+                            color = if (isEnabled) Color(0xFF00E5FF) else Color.White.copy(0.4f),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Switch(
+                            checked = isEnabled,
+                            onCheckedChange = { viewModel.toggleMasterEnabled() },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color(0xFF00E5FF)
+                            )
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF0A0A1A)
                 )
             )
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-    ) {
-        // ─── DSP Toggle Header ───────────────────
-        DSPToggleHeader(
-            isEnabled = isEnabled,
-            onToggle = viewModel::setEnabled
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        // ─── Preset Grid ─────────────────────────
-        PresetGrid(
-            currentPreset = preset,
-            onPresetSelected = viewModel::setPreset
-        )
-
-        Spacer(Modifier.height(20.dp))
-
-        // ─── EQ Visualizer + Bands ───────────────
-        Text(
-            "10-Band Equalizer",
-            style = MaterialTheme.typography.titleMedium,
-            color = Color.White,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        EQBandsSliders(
-            bands = eqBands,
-            onBandChange = viewModel::setBandLevel
-        )
-
-        Spacer(Modifier.height(20.dp))
-
-        // ─── Bass Control ─────────────────────────
-        GlassCard {
-            DSPSlider(
-                label = "🔊 Bass Boost",
-                value = bassStrength.toFloat(),
-                range = 0f..1000f,
-                onValueChange = { viewModel.setBassStrength(it.toInt()) },
-                color = Color(0xFFFF6B35)
-            )
         }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color(0xFF0A0A1A), Color(0xFF160B24))
+                    )
+                )
+                .padding(innerPadding)
+        ) {
+            if (isWideScreen) {
+                // Dual Pane Layout for Tablet / Landscape
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    // Left Pane: Sticky Dashboard
+                    Column(
+                        modifier = Modifier
+                            .width(320.dp)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        GainBudgetCard(gainBudget = uiState.gainBudget)
+                        
+                        PresetsCard(
+                            presets = uiState.presets,
+                            selectedPresetId = uiState.selectedPresetId,
+                            onPresetSelect = viewModel::loadPreset,
+                            onPresetDelete = viewModel::deletePreset,
+                            onSaveClick = { showSaveDialog = true }
+                        )
 
-        Spacer(Modifier.height(12.dp))
+                        DspDebugCard(
+                            sessionId = uiState.sessionId,
+                            gainBudget = uiState.gainBudget,
+                            activeModules = viewModel.activeModuleNames(),
+                            currentRoute = uiState.currentRoute
+                        )
+                    }
 
-        // ─── Virtualizer / 3D Sound ───────────────
-        GlassCard {
-            DSPSlider(
-                label = "🌐 3D Surround",
-                value = virtualizerStrength.toFloat(),
-                range = 0f..1000f,
-                onValueChange = { viewModel.setVirtualizer(it.toInt()) },
-                color = Color(0xFF00E5FF)
+                    // Right Pane: Collapsible Grid of Modules
+                    ModulesGrid(
+                        params = uiState.params,
+                        isEnabled = isEnabled,
+                        onUpdateParams = viewModel::updateParams,
+                        onUpdateEqBand = viewModel::updateEqBand,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            } else {
+                // Single Column Layout for Phones
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    GainBudgetCard(gainBudget = uiState.gainBudget)
+
+                    PresetsRow(
+                        presets = uiState.presets,
+                        selectedPresetId = uiState.selectedPresetId,
+                        onPresetSelect = viewModel::loadPreset,
+                        onSaveClick = { showSaveDialog = true }
+                    )
+
+                    ModulesColumn(
+                        params = uiState.params,
+                        isEnabled = isEnabled,
+                        onUpdateParams = viewModel::updateParams,
+                        onUpdateEqBand = viewModel::updateEqBand
+                    )
+
+                    DspDebugCard(
+                        sessionId = uiState.sessionId,
+                        gainBudget = uiState.gainBudget,
+                        activeModules = viewModel.activeModuleNames(),
+                        currentRoute = uiState.currentRoute
+                    )
+                }
+            }
+        }
+    }
+
+    if (showSaveDialog) {
+        SavePresetDialog(
+            onDismiss = { showSaveDialog = false },
+            onSave = { name ->
+                viewModel.savePreset(name)
+                showSaveDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun PresetsCard(
+    presets: List<Pair<Long, String>>,
+    selectedPresetId: Long?,
+    onPresetSelect: (Long) -> Unit,
+    onPresetDelete: (Long) -> Unit,
+    onSaveClick: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(0.04f)),
+        border = BorderStroke(1.dp, Color.White.copy(0.08f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Presets", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                IconButton(onClick = onSaveClick) {
+                    Icon(Icons.Default.Add, contentDescription = "Save Custom Preset", tint = Color(0xFF00E5FF))
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                presets.forEach { (id, name) ->
+                    val isSelected = id == selectedPresetId
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { onPresetSelect(id) }
+                            .background(
+                                color = if (isSelected) Color(0xFF00E5FF).copy(0.12f) else Color.Transparent,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = name,
+                            color = if (isSelected) Color(0xFF00E5FF) else Color.White.copy(0.8f),
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                        // Allow deletion of custom user presets (id > 7, built-ins are 1-7)
+                        if (id > 7) {
+                            IconButton(onClick = { onPresetDelete(id) }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red.copy(0.6f))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PresetsRow(
+    presets: List<Pair<Long, String>>,
+    selectedPresetId: Long?,
+    onPresetSelect: (Long) -> Unit,
+    onSaveClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        presets.forEach { (id, name) ->
+            val isSelected = id == selectedPresetId
+            PresetChip(
+                label = name,
+                isSelected = isSelected,
+                onClick = { onPresetSelect(id) }
             )
         }
         
-        Spacer(Modifier.height(32.dp))
-    }
-}
-
-@Composable
-fun DSPToggleHeader(isEnabled: Boolean, onToggle: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Premium DSP",
-            style = MaterialTheme.typography.headlineMedium,
-            color = Color.White
-        )
-        Switch(
-            checked = isEnabled,
-            onCheckedChange = onToggle,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = Color(0xFF00E5FF)
-            )
-        )
-    }
-}
-
-@Composable
-fun PresetGrid(
-    currentPreset: DSPPreset,
-    onPresetSelected: (DSPPreset) -> Unit
-) {
-    val presets = listOf(
-        DSPPreset.PREMIUM_BASS to "🎵 Premium Bass",
-        DSPPreset.BASS_BOOSTER_MAX to "💥 Bass MAX",
-        DSPPreset.HIFI_HEADPHONES to "🎧 HiFi",
-        DSPPreset.VOCAL_CLARITY to "🎤 Vocal",
-        DSPPreset.DEEP_HOUSE to "🏠 Deep House",
-        DSPPreset.LOUDNESS_MAX to "📢 Loud MAX",
-        DSPPreset.FLAT to "⬜ Flat",
-        DSPPreset.CUSTOM to "🎛️ Custom"
-    )
-
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        modifier = Modifier.height(200.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        userScrollEnabled = false
-    ) {
-        items(presets) { (preset, label) ->
-            PresetChip(
-                label = label,
-                isSelected = currentPreset == preset,
-                onClick = { onPresetSelected(preset) }
-            )
+        IconButton(onClick = onSaveClick) {
+            Icon(Icons.Default.Add, contentDescription = "Save Preset", tint = Color(0xFF00E5FF))
         }
     }
 }
+
+@Composable
+fun SavePresetDialog(onDismiss: () -> Unit, onSave: (String) -> Unit) {
+    var text by remember { mutableStateOf("") }
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E)),
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text("Save Preset", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    label = { Text("Preset Name") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = Color(0xFF00E5FF),
+                        unfocusedBorderColor = Color.White.copy(0.2f)
+                    )
+                )
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) { Text("Cancel", color = Color.White.copy(0.6f)) }
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        onClick = { if (text.isNotBlank()) onSave(text) },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
+                    ) {
+                        Text("Save", color = Color.Black)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ModulesGrid(
+    params: DspParams,
+    isEnabled: Boolean,
+    onUpdateParams: ((DspParams) -> DspParams) -> Unit,
+    onUpdateEqBand: (Int, Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = modifier.fillMaxHeight(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item { PgcCard(params, isEnabled, onUpdateParams) }
+        item { EqualizerCard(params, isEnabled, onUpdateEqBand) }
+        item { ViperBassCard(params, isEnabled, onUpdateParams) }
+        item { SurroundCard(params, isEnabled, onUpdateParams) }
+        item { ReverbCard(params, isEnabled, onUpdateParams) }
+        item { LoudnessCard(params, isEnabled, onUpdateParams) }
+        item { DynamicsCard(params, isEnabled, onUpdateParams) }
+        item { ConvolverCard(params, isEnabled, onUpdateParams) }
+        item { TubeCard(params, isEnabled, onUpdateParams) }
+        item { ClarityCard(params, isEnabled, onUpdateParams) }
+        item { HrtfCard(params, isEnabled, onUpdateParams) }
+        item { ProtectionCard(params, isEnabled, onUpdateParams) }
+        item { NoiseGateCard(params, isEnabled, onUpdateParams) }
+    }
+}
+
+@Composable
+fun ModulesColumn(
+    params: DspParams,
+    isEnabled: Boolean,
+    onUpdateParams: ((DspParams) -> DspParams) -> Unit,
+    onUpdateEqBand: (Int, Float) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        PgcCard(params, isEnabled, onUpdateParams)
+        EqualizerCard(params, isEnabled, onUpdateEqBand)
+        ViperBassCard(params, isEnabled, onUpdateParams)
+        SurroundCard(params, isEnabled, onUpdateParams)
+        ReverbCard(params, isEnabled, onUpdateParams)
+        LoudnessCard(params, isEnabled, onUpdateParams)
+        DynamicsCard(params, isEnabled, onUpdateParams)
+        ConvolverCard(params, isEnabled, onUpdateParams)
+        TubeCard(params, isEnabled, onUpdateParams)
+        ClarityCard(params, isEnabled, onUpdateParams)
+        HrtfCard(params, isEnabled, onUpdateParams)
+        ProtectionCard(params, isEnabled, onUpdateParams)
+        NoiseGateCard(params, isEnabled, onUpdateParams)
+    }
+}
+
+// ── Collapsible Card Container ──
+
+@Composable
+fun CollapsibleCard(
+    title: String,
+    isEnabled: Boolean,
+    isMasterEnabled: Boolean,
+    onToggle: (Boolean) -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val showContent = expanded && isEnabled && isMasterEnabled
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(0.04f)),
+        border = BorderStroke(1.dp, if (isEnabled && isMasterEnabled) Color(0xFF00E5FF).copy(0.3f) else Color.White.copy(0.08f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.padding(14.dp)) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(
+                        checked = isEnabled,
+                        onCheckedChange = onToggle,
+                        enabled = isMasterEnabled,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color(0xFF00E5FF)
+                        ),
+                        modifier = Modifier.padding(end = 12.dp)
+                    )
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (isEnabled && isMasterEnabled) Color.White else Color.White.copy(0.5f),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = Color.White.copy(0.6f)
+                )
+            }
+
+            AnimatedVisibility(
+                visible = showContent,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column {
+                    Spacer(Modifier.height(14.dp))
+                    content()
+                }
+            }
+        }
+    }
+}
+
+// ── Sliders & Controls Helpers ──
+
+@Composable
+fun DspSliderRow(
+    label: String,
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float>,
+    onValueChange: (Float) -> Unit,
+    valueFormatter: (Float) -> String = { "%.1f".format(it) }
+) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(label, color = Color.White.copy(0.7f), style = MaterialTheme.typography.bodyMedium)
+            Text(valueFormatter(value), color = Color(0xFF00E5FF), style = MaterialTheme.typography.bodyMedium)
+        }
+        Slider(
+            value = value,
+            onValueChange = onValueChange,
+            valueRange = valueRange,
+            colors = SliderDefaults.colors(
+                thumbColor = Color(0xFF00E5FF),
+                activeTrackColor = Color(0xFF00E5FF),
+                inactiveTrackColor = Color.White.copy(0.12f)
+            )
+        )
+    }
+}
+
+// ── Custom PresetChip (Alternative to version-dependent InputChip) ──
 
 @Composable
 fun PresetChip(
@@ -182,114 +487,507 @@ fun PresetChip(
         )
     ) {
         Box(
-            Modifier.padding(12.dp),
+            Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                label,
+                text = label,
                 style = MaterialTheme.typography.labelMedium,
-                color = if (isSelected) Color(0xFF00E5FF) else Color.White,
-                textAlign = TextAlign.Center
+                color = if (isSelected) Color(0xFF00E5FF) else Color.White
             )
         }
     }
 }
 
+// ── 14 Module Card Implementations ──
+
 @Composable
-fun EQBandsSliders(
-    bands: IntArray,
-    onBandChange: (Int, Int) -> Unit
-) {
-    val bandLabels = listOf(
-        "60Hz", "170Hz", "310Hz", "600Hz", "1kHz",
-        "3kHz", "6kHz", "12kHz", "14kHz", "16kHz"
-    )
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+fun PgcCard(params: DspParams, isMasterEnabled: Boolean, onUpdateParams: ((DspParams) -> DspParams) -> Unit) {
+    CollapsibleCard(
+        title = "Pre-Gain Control (PGC)",
+        isEnabled = params.pgcEnabled,
+        isMasterEnabled = isMasterEnabled,
+        onToggle = { enabled -> onUpdateParams { it.copy(pgcEnabled = enabled) } }
     ) {
-        bands.forEachIndexed { i, level ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+        DspSliderRow(
+            label = "Headroom Gain",
+            value = params.pgcGain,
+            valueRange = -12f..12f,
+            onValueChange = { v -> onUpdateParams { it.copy(pgcGain = v) } },
+            valueFormatter = { "${"%.1f".format(it)} dB" }
+        )
+    }
+}
+
+@Composable
+fun EqualizerCard(params: DspParams, isMasterEnabled: Boolean, onUpdateEqBand: (Int, Float) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    val isEnabled = params.eqEnabled
+    val showContent = expanded && isEnabled && isMasterEnabled
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(0.04f)),
+        border = BorderStroke(1.dp, if (isEnabled && isMasterEnabled) Color(0xFF00E5FF).copy(0.3f) else Color.White.copy(0.08f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.padding(14.dp)) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // To display slider vertically, we use graphicsLayer rotation.
-                // Size mapping can be tricky, so we use a Box
-                Box(
-                    modifier = Modifier
-                        .height(140.dp)
-                        .width(40.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Slider(
-                        value = level.toFloat(),
-                        onValueChange = { onBandChange(i, it.toInt()) },
-                        valueRange = -1500f..1500f,
-                        modifier = Modifier
-                            .requiredWidth(140.dp)
-                            .graphicsLayer {
-                                rotationZ = -90f
-                                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0.5f)
-                            },
-                        colors = SliderDefaults.colors(
-                            thumbColor = Color(0xFF00E5FF),
-                            activeTrackColor = Color(0xFF00E5FF),
-                            inactiveTrackColor = Color.White.copy(0.2f)
-                        )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(
+                        checked = isEnabled,
+                        onCheckedChange = { /* EQ toggle is implicit when sliders adjust, or toggles first band as a workaround */ },
+                        enabled = isMasterEnabled,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color(0xFF00E5FF)
+                        ),
+                        modifier = Modifier.padding(end = 12.dp)
+                    )
+                    Text(
+                        text = "10-Band Equalizer",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (isEnabled && isMasterEnabled) Color.White else Color.White.copy(0.5f),
+                        fontWeight = FontWeight.Bold
                     )
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    bandLabels.getOrElse(i) { "${i}band" },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(0.6f)
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = Color.White.copy(0.6f)
                 )
+            }
+
+            AnimatedVisibility(
+                visible = showContent,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column {
+                    Spacer(Modifier.height(14.dp))
+                    val bandLabels = listOf("31Hz", "62Hz", "125Hz", "250Hz", "500Hz", "1kHz", "2kHz", "4kHz", "8kHz", "16kHz")
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        params.eqBands.forEachIndexed { i, value ->
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.width(42.dp)
+                            ) {
+                                Text(
+                                    text = "${value.toInt()}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFF00E5FF)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .height(130.dp)
+                                        .width(36.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Slider(
+                                        value = value,
+                                        onValueChange = { onUpdateEqBand(i, it) },
+                                        valueRange = -12f..12f,
+                                        modifier = Modifier
+                                            .requiredWidth(130.dp)
+                                            .graphicsLayer {
+                                                rotationZ = -90f
+                                                transformOrigin = TransformOrigin(0.5f, 0.5f)
+                                            },
+                                        colors = SliderDefaults.colors(
+                                            thumbColor = Color(0xFF00E5FF),
+                                            activeTrackColor = Color(0xFF00E5FF),
+                                            inactiveTrackColor = Color.White.copy(0.1f)
+                                        )
+                                    )
+                                }
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = bandLabels[i],
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White.copy(0.5f)
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun GlassCard(content: @Composable ColumnScope.() -> Unit) {
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = Color.White.copy(alpha = 0.05f),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
-        modifier = Modifier.fillMaxWidth()
+fun ViperBassCard(params: DspParams, isMasterEnabled: Boolean, onUpdateParams: ((DspParams) -> DspParams) -> Unit) {
+    CollapsibleCard(
+        title = "Viper Bass & Boost",
+        isEnabled = params.bassBoostEnabled || params.viperBassEnabled,
+        isMasterEnabled = isMasterEnabled,
+        onToggle = { enabled ->
+            onUpdateParams { it.copy(bassBoostEnabled = enabled, viperBassEnabled = enabled) }
+        }
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            content = content
+        // Mode Selector
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("Bass Mode", color = Color.White.copy(0.7f))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ViperBassMode.values().forEach { mode ->
+                    val isSelected = params.viperBassMode == mode
+                    PresetChip(
+                        label = mode.name,
+                        isSelected = isSelected,
+                        onClick = { onUpdateParams { it.copy(viperBassMode = mode) } }
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Frequency Selector
+        DspSliderRow(
+            label = "Bass Frequency",
+            value = params.viperBassFreq.toFloat(),
+            valueRange = 30f..120f,
+            onValueChange = { v -> onUpdateParams { it.copy(viperBassFreq = v.toInt()) } },
+            valueFormatter = { "${it.toInt()} Hz" }
+        )
+
+        // Bass Gain
+        DspSliderRow(
+            label = "Viper Bass Gain",
+            value = params.viperBassGain,
+            valueRange = 0f..18f,
+            onValueChange = { v -> onUpdateParams { it.copy(viperBassGain = v) } },
+            valueFormatter = { "${"%.1f".format(it)} dB" }
+        )
+
+        // Native Bass Boost Strength
+        DspSliderRow(
+            label = "Bass Boost Strength",
+            value = params.bassBoostStrength.toFloat(),
+            valueRange = 0f..1000f,
+            onValueChange = { v -> onUpdateParams { it.copy(bassBoostStrength = v.toInt()) } },
+            valueFormatter = { "${it.toInt()} / 1000" }
         )
     }
 }
 
 @Composable
-fun DSPSlider(
-    label: String,
-    value: Float,
-    range: ClosedFloatingPointRange<Float>,
-    onValueChange: (Float) -> Unit,
-    color: Color
-) {
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text = label, color = Color.White, style = MaterialTheme.typography.bodyLarge)
-            Text(text = value.toInt().toString(), color = color, style = MaterialTheme.typography.bodyLarge)
+fun SurroundCard(params: DspParams, isMasterEnabled: Boolean, onUpdateParams: ((DspParams) -> DspParams) -> Unit) {
+    CollapsibleCard(
+        title = "Field Surround",
+        isEnabled = params.surroundEnabled,
+        isMasterEnabled = isMasterEnabled,
+        onToggle = { enabled -> onUpdateParams { it.copy(surroundEnabled = enabled) } }
+    ) {
+        // Mode
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("Surround Mode", color = Color.White.copy(0.7f))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                SurroundMode.values().forEach { mode ->
+                    val isSelected = params.surroundMode == mode
+                    PresetChip(
+                        label = mode.name,
+                        isSelected = isSelected,
+                        onClick = { onUpdateParams { it.copy(surroundMode = mode) } }
+                    )
+                }
+            }
         }
-        Slider(
-            value = value,
-            onValueChange = onValueChange,
-            valueRange = range,
-            colors = SliderDefaults.colors(
-                thumbColor = color,
-                activeTrackColor = color,
-                inactiveTrackColor = Color.White.copy(alpha = 0.2f)
+
+        Spacer(Modifier.height(8.dp))
+
+        // Strength
+        DspSliderRow(
+            label = "Surround Strength",
+            value = params.surroundStrength.toFloat(),
+            valueRange = 0f..1000f,
+            onValueChange = { v -> onUpdateParams { it.copy(surroundStrength = v.toInt()) } },
+            valueFormatter = { "${it.toInt()}" }
+        )
+    }
+}
+
+@Composable
+fun ReverbCard(params: DspParams, isMasterEnabled: Boolean, onUpdateParams: ((DspParams) -> DspParams) -> Unit) {
+    CollapsibleCard(
+        title = "Preset Reverb",
+        isEnabled = params.reverbEnabled,
+        isMasterEnabled = isMasterEnabled,
+        onToggle = { enabled -> onUpdateParams { it.copy(reverbEnabled = enabled) } }
+    ) {
+        // Preset selector
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("Reverb Room", color = Color.White.copy(0.7f))
+            Box {
+                var menuExpanded by remember { mutableStateOf(false) }
+                Button(
+                    onClick = { menuExpanded = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(0.08f))
+                ) {
+                    Text(params.reverbPreset.name, color = Color.White)
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    ReverbPreset.values().forEach { preset ->
+                        DropdownMenuItem(
+                            text = { Text(preset.name) },
+                            onClick = {
+                                onUpdateParams { it.copy(reverbPreset = preset) }
+                                menuExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LoudnessCard(params: DspParams, isMasterEnabled: Boolean, onUpdateParams: ((DspParams) -> DspParams) -> Unit) {
+    CollapsibleCard(
+        title = "Loudness Enhancer",
+        isEnabled = params.loudnessEnabled,
+        isMasterEnabled = isMasterEnabled,
+        onToggle = { enabled -> onUpdateParams { it.copy(loudnessEnabled = enabled) } }
+    ) {
+        DspSliderRow(
+            label = "Target Gain Boost",
+            value = params.loudnessTargetGainMb.toFloat(),
+            valueRange = 0f..2000f,
+            onValueChange = { v -> onUpdateParams { it.copy(loudnessTargetGainMb = v.toInt()) } },
+            valueFormatter = { "${it.toInt()} mB" }
+        )
+    }
+}
+
+@Composable
+fun DynamicsCard(params: DspParams, isMasterEnabled: Boolean, onUpdateParams: ((DspParams) -> DspParams) -> Unit) {
+    CollapsibleCard(
+        title = "Dynamics Processing",
+        isEnabled = params.dynamicsEnabled,
+        isMasterEnabled = isMasterEnabled,
+        onToggle = { enabled -> onUpdateParams { it.copy(dynamicsEnabled = enabled) } }
+    ) {
+        // Compressor parameters
+        DspSliderRow(
+            label = "Attack Time",
+            value = params.compressorAttack,
+            valueRange = 1f..100f,
+            onValueChange = { v -> onUpdateParams { it.copy(compressorAttack = v) } },
+            valueFormatter = { "${it.toInt()} ms" }
+        )
+
+        DspSliderRow(
+            label = "Release Time",
+            value = params.compressorRelease,
+            valueRange = 10f..1000f,
+            onValueChange = { v -> onUpdateParams { it.copy(compressorRelease = v) } },
+            valueFormatter = { "${it.toInt()} ms" }
+        )
+
+        // Limiter
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Enable Peak Limiter", color = Color.White.copy(0.7f))
+            Switch(
+                checked = params.limiterEnabled,
+                onCheckedChange = { v -> onUpdateParams { it.copy(limiterEnabled = v) } },
+                colors = SwitchDefaults.colors(checkedTrackColor = Color(0xFF00E5FF))
             )
+        }
+
+        DspSliderRow(
+            label = "Limiter Threshold",
+            value = params.limiterThreshold,
+            valueRange = -12f..0f,
+            onValueChange = { v -> onUpdateParams { it.copy(limiterThreshold = v) } },
+            valueFormatter = { "${"%.1f".format(it)} dB" }
+        )
+    }
+}
+
+@Composable
+fun ConvolverCard(params: DspParams, isMasterEnabled: Boolean, onUpdateParams: ((DspParams) -> DspParams) -> Unit) {
+    CollapsibleCard(
+        title = "Convolver (IRS)",
+        isEnabled = params.convolverEnabled,
+        isMasterEnabled = isMasterEnabled,
+        onToggle = { enabled -> onUpdateParams { it.copy(convolverEnabled = enabled) } }
+    ) {
+        Text(
+            text = "Convolution replicates acoustics via impulse response files (.irs).",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.White.copy(0.5f),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        DspSliderRow(
+            label = "Wet Mix Level",
+            value = params.convolverMix,
+            valueRange = 0f..1f,
+            onValueChange = { v -> onUpdateParams { it.copy(convolverMix = v) } },
+            valueFormatter = { "${(it * 100).toInt()}%" }
+        )
+    }
+}
+
+@Composable
+fun TubeCard(params: DspParams, isMasterEnabled: Boolean, onUpdateParams: ((DspParams) -> DspParams) -> Unit) {
+    CollapsibleCard(
+        title = "Tube Simulator",
+        isEnabled = params.tubeEnabled,
+        isMasterEnabled = isMasterEnabled,
+        onToggle = { enabled -> onUpdateParams { it.copy(tubeEnabled = enabled) } }
+    ) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("Valve Tube Mode", color = Color.White.copy(0.7f))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                TubeMode.values().forEach { mode ->
+                    val isSelected = params.tubeMode == mode
+                    PresetChip(
+                        label = mode.name,
+                        isSelected = isSelected,
+                        onClick = { onUpdateParams { it.copy(tubeMode = mode) } }
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        DspSliderRow(
+            label = "Vacuum Tube Drive",
+            value = params.tubeDrive.toFloat(),
+            valueRange = 0f..100f,
+            onValueChange = { v -> onUpdateParams { it.copy(tubeDrive = v.toInt()) } },
+            valueFormatter = { "${it.toInt()}%" }
+        )
+    }
+}
+
+@Composable
+fun ClarityCard(params: DspParams, isMasterEnabled: Boolean, onUpdateParams: ((DspParams) -> DspParams) -> Unit) {
+    CollapsibleCard(
+        title = "Viper Clarity / Exciter",
+        isEnabled = params.clarityEnabled || params.viperClarityEnabled,
+        isMasterEnabled = isMasterEnabled,
+        onToggle = { enabled ->
+            onUpdateParams { it.copy(clarityEnabled = enabled, viperClarityEnabled = enabled) }
+        }
+    ) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("Clarity Exciter Mode", color = Color.White.copy(0.7f))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ViperClarityMode.values().forEach { mode ->
+                    val isSelected = params.viperClarityMode == mode
+                    PresetChip(
+                        label = mode.name,
+                        isSelected = isSelected,
+                        onClick = { onUpdateParams { it.copy(viperClarityMode = mode) } }
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        DspSliderRow(
+            label = "Clarity Excitation",
+            value = params.viperClarityGain,
+            valueRange = 0f..15f,
+            onValueChange = { v -> onUpdateParams { it.copy(viperClarityGain = v) } },
+            valueFormatter = { "${"%.1f".format(it)} dB" }
+        )
+    }
+}
+
+@Composable
+fun HrtfCard(params: DspParams, isMasterEnabled: Boolean, onUpdateParams: ((DspParams) -> DspParams) -> Unit) {
+    CollapsibleCard(
+        title = "HRTF Spatialization",
+        isEnabled = params.hrtfEnabled,
+        isMasterEnabled = isMasterEnabled,
+        onToggle = { enabled -> onUpdateParams { it.copy(hrtfEnabled = enabled) } }
+    ) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("Binaural HRTF Filter", color = Color.White.copy(0.7f))
+            Box {
+                var menuExpanded by remember { mutableStateOf(false) }
+                Button(
+                    onClick = { menuExpanded = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(0.08f))
+                ) {
+                    Text(params.hrtfPreset.name, color = Color.White)
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    HrtfPreset.values().forEach { preset ->
+                        DropdownMenuItem(
+                            text = { Text(preset.name) },
+                            onClick = {
+                                onUpdateParams { it.copy(hrtfPreset = preset) }
+                                menuExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ProtectionCard(params: DspParams, isMasterEnabled: Boolean, onUpdateParams: ((DspParams) -> DspParams) -> Unit) {
+    CollapsibleCard(
+        title = "Speaker Protection",
+        isEnabled = params.speakerProtectionEnabled,
+        isMasterEnabled = isMasterEnabled,
+        onToggle = { enabled -> onUpdateParams { it.copy(speakerProtectionEnabled = enabled) } }
+    ) {
+        DspSliderRow(
+            label = "Maximum Decibel Limit",
+            value = params.speakerMaxDb,
+            valueRange = -12f..0f,
+            onValueChange = { v -> onUpdateParams { it.copy(speakerMaxDb = v) } },
+            valueFormatter = { "${"%.1f".format(it)} dB" }
+        )
+    }
+}
+
+@Composable
+fun NoiseGateCard(params: DspParams, isMasterEnabled: Boolean, onUpdateParams: ((DspParams) -> DspParams) -> Unit) {
+    CollapsibleCard(
+        title = "Noise Gate",
+        isEnabled = params.noiseGateEnabled,
+        isMasterEnabled = isMasterEnabled,
+        onToggle = { enabled -> onUpdateParams { it.copy(noiseGateEnabled = enabled) } }
+    ) {
+        DspSliderRow(
+            label = "Noise Floor Threshold",
+            value = params.noiseGateThreshold,
+            valueRange = -80f..-20f,
+            onValueChange = { v -> onUpdateParams { it.copy(noiseGateThreshold = v) } },
+            valueFormatter = { "${"%.1f".format(it)} dB" }
         )
     }
 }
