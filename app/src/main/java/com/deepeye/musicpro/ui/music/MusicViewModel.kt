@@ -85,13 +85,15 @@ class MusicViewModel @Inject constructor(
                 isVideo = false
             )
         }
-        val index = _uiState.value.recommendedMusic.indexOf(music)
-        playerController.setQueue(mediaItems, index)
+        // Use indexOfFirst by ID to avoid object-equality issues with data classes
+        val index = _uiState.value.recommendedMusic.indexOfFirst { it.id == music.id }
+        playerController.setQueue(mediaItems, if (index >= 0) index else 0)
     }
 
     fun playMusicLocal(song: Song) {
         val mediaItems = _uiState.value.localSongs.map { MediaItem.Local(it) }
-        val index = _uiState.value.localSongs.indexOf(song)
-        playerController.setQueue(mediaItems, index)
+        // Use indexOfFirst by ID to avoid object-equality issues with data classes
+        val index = _uiState.value.localSongs.indexOfFirst { it.id == song.id }
+        playerController.setQueue(mediaItems, if (index >= 0) index else 0)
     }
 }

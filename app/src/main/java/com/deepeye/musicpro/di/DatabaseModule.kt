@@ -44,6 +44,9 @@ object DatabaseModule {
     fun provideTasteDao(database: AppDatabase): com.deepeye.musicpro.data.db.TasteDao = database.tasteDao()
 
     @Provides
+    fun provideRecommendationDao(database: AppDatabase): com.deepeye.musicpro.data.db.RecommendationDao = database.recommendationDao()
+
+    @Provides
     @Singleton
     fun provideDspDatabase(@ApplicationContext context: Context): com.deepeye.musicpro.dsp.data.DspDatabase {
         return Room.databaseBuilder(

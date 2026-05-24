@@ -49,10 +49,15 @@ fun OnboardingScreen(
     
     var selectedLanguages by rememberSaveable { mutableStateOf(emptyList<String>()) }
     var selectedArtists by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    var selectedGenres by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    var selectedMood by rememberSaveable { mutableStateOf("Balanced") }
+    var autoplayEnabled by rememberSaveable { mutableStateOf(true) }
+    var mixEnabled by rememberSaveable { mutableStateOf(true) }
 
     val amoledBlack = Color(0xFF030307)
     val neonPurple = Color(0xFF7B3FE4)
     val neonCyan = Color(0xFF00D2FF)
+    val totalSteps = 4
     
     Box(
         modifier = Modifier
@@ -103,29 +108,27 @@ fun OnboardingScreen(
                     letterSpacing = 2.sp
                 )
                 
-                if (currentStep == 2) {
+                if (currentStep > 1) {
                     TextButton(
                         onClick = {
-                            viewModel.setArtists(emptySet())
+                            viewModel.setLanguages(selectedLanguages.toSet())
+                            viewModel.setArtists(selectedArtists.toSet())
+                            viewModel.setGenres(selectedGenres.toSet())
+                            viewModel.setMood(selectedMood)
+                            viewModel.setAutoplay(autoplayEnabled)
+                            viewModel.setPersonalizedMix(mixEnabled)
                             viewModel.completeOnboarding()
                             onOnboardingComplete()
                         }
                     ) {
                         Text(
-                            text = "SKIP SETUP",
+                            text = "SKIP TO APP",
                             color = neonCyan,
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp,
                             letterSpacing = 1.sp
                         )
                     }
-                } else {
-                    Text(
-                        text = "$currentStep / 2",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White.copy(alpha = 0.6f)
-                    )
                 }
             }
             
@@ -137,7 +140,7 @@ fun OnboardingScreen(
                     .clip(CircleShape)
                     .background(Color.White.copy(alpha = 0.08f))
             ) {
-                val progressWidthFraction = if (currentStep == 1) 0.5f else 1f
+                val progressWidthFraction = currentStep.toFloat() / totalSteps.toFloat()
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(progressWidthFraction)
@@ -160,7 +163,8 @@ fun OnboardingScreen(
                     label = "step_transition"
                 ) { step ->
                     when (step) {
-                        1 -> LanguageSelectionStep(
+                        1 -> WelcomeStep()
+                        2 -> LanguageSelectionStep(
                             selectedLanguages = selectedLanguages.toSet(),
                             onLanguageToggle = { lang ->
                                 selectedLanguages = if (selectedLanguages.contains(lang)) {
@@ -170,7 +174,7 @@ fun OnboardingScreen(
                                 }
                             }
                         )
-                        2 -> ArtistSelectionStep(
+                        3 -> ArtistSelectionStep(
                             localArtists = uiState.localArtists.map { it.name },
                             curatedArtists = uiState.curatedArtists,
                             selectedArtists = selectedArtists.toSet(),
@@ -181,6 +185,22 @@ fun OnboardingScreen(
                                     selectedArtists + artist
                                 }
                             }
+                        )
+                        4 -> MoodAndMixStep(
+                            selectedGenres = selectedGenres.toSet(),
+                            onGenreToggle = { genre ->
+                                selectedGenres = if (selectedGenres.contains(genre)) {
+                                    selectedGenres - genre
+                                } else {
+                                    selectedGenres + genre
+                                }
+                            },
+                            selectedMood = selectedMood,
+                            onMoodSelect = { selectedMood = it },
+                            autoplayEnabled = autoplayEnabled,
+                            onAutoplayToggle = { autoplayEnabled = it },
+                            mixEnabled = mixEnabled,
+                            onMixToggle = { mixEnabled = it }
                         )
                     }
                 }
@@ -215,20 +235,33 @@ fun OnboardingScreen(
                 }
 
                 val nextEnabled = when (currentStep) {
-                    1 -> selectedLanguages.isNotEmpty()
-                    2 -> selectedArtists.size >= 3 || (selectedArtists.isNotEmpty() && uiState.localArtists.isEmpty())
+                    1 -> true
+                    2 -> selectedLanguages.isNotEmpty()
+                    3 -> selectedArtists.size >= 3 || (selectedArtists.isNotEmpty() && uiState.localArtists.isEmpty())
+                    4 -> selectedGenres.isNotEmpty()
                     else -> false
                 }
 
                 Button(
                     onClick = {
-                        if (currentStep == 1) {
-                            viewModel.setLanguages(selectedLanguages.toSet())
-                            currentStep++
-                        } else {
-                            viewModel.setArtists(selectedArtists.toSet())
-                            viewModel.completeOnboarding()
-                            onOnboardingComplete()
+                        when (currentStep) {
+                            1 -> currentStep++
+                            2 -> {
+                                viewModel.setLanguages(selectedLanguages.toSet())
+                                currentStep++
+                            }
+                            3 -> {
+                                viewModel.setArtists(selectedArtists.toSet())
+                                currentStep++
+                            }
+                            4 -> {
+                                viewModel.setGenres(selectedGenres.toSet())
+                                viewModel.setMood(selectedMood)
+                                viewModel.setAutoplay(autoplayEnabled)
+                                viewModel.setPersonalizedMix(mixEnabled)
+                                viewModel.completeOnboarding()
+                                onOnboardingComplete()
+                            }
                         }
                     },
                     enabled = nextEnabled,
@@ -247,13 +280,61 @@ fun OnboardingScreen(
                         )
                 ) {
                     Text(
-                        text = if (currentStep == 1) "NEXT" else "FINISH SETUP",
+                        text = if (currentStep < totalSteps) "NEXT" else "FINISH SETUP",
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun WelcomeStep() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val neonPurple = Color(0xFF7B3FE4)
+        val neonCyan = Color(0xFF00D2FF)
+        
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .background(Brush.linearGradient(listOf(neonPurple, neonCyan))),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "DP",
+                color = Color.White,
+                fontSize = 48.sp,
+                fontWeight = FontWeight.Black,
+                fontFamily = FontFamily.Monospace
+            )
+        }
+        
+        Spacer(Modifier.height(32.dp))
+        
+        Text(
+            text = "Welcome to DeepEye Music Pro",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Black,
+            color = Color.White,
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(Modifier.height(16.dp))
+        
+        Text(
+            text = "The ultimate AI-powered music recommendation engine. We learn what you love locally on-device and create endless personalized streams.",
+            fontSize = 16.sp,
+            color = Color.White.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 24.dp)
+        )
     }
 }
 
@@ -498,6 +579,208 @@ fun ArtistSelectionStep(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun MoodAndMixStep(
+    selectedGenres: Set<String>,
+    onGenreToggle: (String) -> Unit,
+    selectedMood: String,
+    onMoodSelect: (String) -> Unit,
+    autoplayEnabled: Boolean,
+    onAutoplayToggle: (Boolean) -> Unit,
+    mixEnabled: Boolean,
+    onMixToggle: (Boolean) -> Unit
+) {
+    val genresList = listOf(
+        "Bollywood", "Pop", "Hip Hop", "Lofi", "Classical", "Devotional",
+        "Rock", "Electronic", "R&B", "Jazz", "Folk", "Indie"
+    )
+    
+    val moodsList = listOf(
+        "Balanced", "Calm", "Focus", "Party", "Workout", "Late Night"
+    )
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text(
+            text = "Mood & Smart Features",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Black,
+            color = Color.White
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Customize your AI recommendation engine preferences.",
+            fontSize = 14.sp,
+            color = Color.White.copy(alpha = 0.5f)
+        )
+        
+        Spacer(Modifier.height(24.dp))
+        
+        // Genres Section
+        Text(
+            text = "FAVORITE GENRES",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White.copy(alpha = 0.4f),
+            letterSpacing = 1.sp
+        )
+        Spacer(Modifier.height(12.dp))
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            genresList.forEach { genre ->
+                val isSelected = selectedGenres.contains(genre)
+                val neonPurple = Color(0xFF7B3FE4)
+                
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            if (isSelected) neonPurple.copy(alpha = 0.2f)
+                            else Color.White.copy(alpha = 0.05f)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = if (isSelected) neonPurple else Color.Transparent,
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .clickable { onGenreToggle(genre) }
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = genre,
+                        color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f),
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        fontSize = 13.sp
+                    )
+                }
+            }
+        }
+        
+        Spacer(Modifier.height(24.dp))
+        
+        // Mood Section
+        Text(
+            text = "DEFAULT MOOD",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White.copy(alpha = 0.4f),
+            letterSpacing = 1.sp
+        )
+        Spacer(Modifier.height(12.dp))
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            moodsList.forEach { mood ->
+                val isSelected = selectedMood == mood
+                val neonCyan = Color(0xFF00D2FF)
+                
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            if (isSelected) neonCyan.copy(alpha = 0.2f)
+                            else Color.White.copy(alpha = 0.05f)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = if (isSelected) neonCyan else Color.Transparent,
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .clickable { onMoodSelect(mood) }
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = mood,
+                        color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f),
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        fontSize = 13.sp
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(32.dp))
+        
+        // Toggles Section
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White.copy(alpha = 0.03f))
+                .padding(16.dp)
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Smart Autoplay",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            text = "Keep playing similar music infinitely when your queue ends.",
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = 12.sp
+                        )
+                    }
+                    Switch(
+                        checked = autoplayEnabled,
+                        onCheckedChange = onAutoplayToggle,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color(0xFF7B3FE4)
+                        )
+                    )
+                }
+                
+                Spacer(Modifier.height(16.dp))
+                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.05f)))
+                Spacer(Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Personalized Mixes",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            text = "Generate dynamic mixes on HomeHub based on your history.",
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = 12.sp
+                        )
+                    }
+                    Switch(
+                        checked = mixEnabled,
+                        onCheckedChange = onMixToggle,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color(0xFF00D2FF)
+                        )
+                    )
                 }
             }
         }

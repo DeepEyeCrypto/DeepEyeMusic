@@ -3,135 +3,204 @@
 
 package com.deepeye.musicpro.ui.home
 
+import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
-import com.deepeye.musicpro.domain.model.Album
-import com.deepeye.musicpro.domain.model.Song
-import com.deepeye.musicpro.ui.components.GlowCard
+import com.deepeye.musicpro.domain.model.MediaItem
+import com.deepeye.musicpro.domain.recommendation.RecommendationRow
+import com.deepeye.musicpro.domain.recommendation.VideoItem
 import com.deepeye.musicpro.ui.components.ShimmerBox
+
+val TealGlow = Color(0xFF00FFCC)
+val White = Color.White
 
 @Composable
 fun HomeScreen(
     onNavigateToNowPlaying: () -> Unit,
     onNavigateToAlbum: (Long) -> Unit,
-    viewModel: HomeViewModel = hiltViewModel(),
-    playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel()
+    viewModel: RecommendationViewModel = hiltViewModel(),
+    playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel(),
+    windowSizeClass: WindowSizeClass
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val recs by viewModel.recommendations.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = 16.dp)
-    ) {
-        // ── Header ──
+    LazyColumn(Modifier.fillMaxSize()) {
+        // ── Hero section ──────────────────────────
         item {
-            Text(
-                text = "Good Evening",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-            )
+            HeroSection()
         }
 
-        // ── Featured Albums ──
-        item {
-            SectionHeader(title = "Featured Albums")
-            if (uiState.isLoading) {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(5) {
-                        ShimmerBox(
-                            modifier = Modifier
-                                .size(160.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                        )
-                    }
-                }
-            } else {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.featuredAlbums, key = { it.id }) { album ->
-                        FeaturedAlbumCard(
-                            album = album,
-                            onClick = { onNavigateToAlbum(album.id) }
-                        )
-                    }
+        // ── Recommendation rows ───────────────────
+        recs?.let { result ->
+
+            // Because you listened
+            items(result.becauseYouListened) { row ->
+                RecommendationRowUI(row, windowSizeClass) { video ->
+                    playVideo(video, row.items, playerViewModel, onNavigateToNowPlaying)
                 }
             }
-            Spacer(modifier = Modifier.height(24.dp))
-        }
 
-        // ── Recently Added ──
-        item {
-            SectionHeader(title = "Recently Added")
-        }
-
-        if (uiState.isLoading) {
-            items(5) {
-                ShimmerBox(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(64.dp)
-                        .padding(horizontal = 20.dp, vertical = 4.dp)
-                )
-            }
-        } else if (uiState.recentlyAdded.isEmpty()) {
+            // Perfect for right now
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+                RecommendationRowUI(result.perfectForNow, windowSizeClass, isHighlighted = true) { video ->
+                    playVideo(video, result.perfectForNow.items, playerViewModel, onNavigateToNowPlaying)
+                }
+            }
+
+            // Favorite artists
+            items(result.favoriteArtists) { row ->
+                RecommendationRowUI(row, windowSizeClass) { video ->
+                    playVideo(video, row.items, playerViewModel, onNavigateToNowPlaying)
+                }
+            }
+
+            // Trending
+            item {
+                RecommendationRowUI(result.trending, windowSizeClass) { video ->
+                    playVideo(video, result.trending.items, playerViewModel, onNavigateToNowPlaying)
+                }
+            }
+
+            // Genre dives
+            items(result.genreDive) { row ->
+                RecommendationRowUI(row, windowSizeClass) { video ->
+                    playVideo(video, row.items, playerViewModel, onNavigateToNowPlaying)
+                }
+            }
+
+            // Hidden gems
+            item {
+                RecommendationRowUI(result.hiddenGems, windowSizeClass, isHighlighted = true) { video ->
+                    playVideo(video, result.hiddenGems.items, playerViewModel, onNavigateToNowPlaying)
+                }
+            }
+        }
+
+        // Loading shimmer
+        if (isLoading) {
+            items(3) { ShimmerRecommendationRow() }
+        }
+        
+        item { Spacer(Modifier.height(80.dp)) } // padding for bottom nav
+    }
+}
+
+private fun playVideo(
+    video: VideoItem, 
+    contextList: List<VideoItem>, 
+    playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel,
+    onNavigateToNowPlaying: () -> Unit
+) {
+    val mediaItems = contextList.map { 
+        MediaItem.Remote(
+            id = it.videoId,
+            title = it.title,
+            artist = it.artist,
+            artworkUri = Uri.parse("https://i.ytimg.com/vi/${it.videoId}/mqdefault.jpg"),
+            duration = 180000L, // Mock duration
+            isVideo = true
+        )
+    }
+    val index = contextList.indexOfFirst { it.videoId == video.videoId }
+    playerViewModel.setQueue(mediaItems, if (index >= 0) index else 0)
+    onNavigateToNowPlaying()
+}
+
+@Composable
+fun HeroSection() {
+    Column(modifier = Modifier.padding(20.dp)) {
+        Text(
+            text = "Good Evening",
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = "Here's what we curated for you",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+        )
+    }
+}
+
+@Composable
+fun RecommendationRowUI(
+    row: RecommendationRow,
+    windowSizeClass: WindowSizeClass,
+    isHighlighted: Boolean = false,
+    onVideoClick: (VideoItem) -> Unit
+) {
+    if (row.items.isEmpty()) return
+
+    Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+        // Row header
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    row.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isHighlighted) TealGlow else MaterialTheme.colorScheme.onBackground
+                )
+                if (row.subtitle.isNotBlank()) {
                     Text(
-                        text = "No music found on this device",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        row.subtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
                     )
                 }
             }
-        } else {
-            items(uiState.recentlyAdded, key = { it.id }) { song ->
-                SongListItem(
-                    song = song,
-                    onClick = { 
-                        val mediaItems = uiState.recentlyAdded.map { com.deepeye.musicpro.domain.model.MediaItem.Local(it) }
-                        val index = uiState.recentlyAdded.indexOf(song)
-                        playerViewModel.setQueue(mediaItems, index)
-                        onNavigateToNowPlaying() 
-                    }
+            TextButton(onClick = { /* show all */ }) {
+                Text("See all", color = TealGlow,
+                    style = MaterialTheme.typography.labelMedium)
+            }
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        // Horizontal scrollable cards
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(row.items, key = { it.videoId }) { video ->
+                VideoRecommendationCard(
+                    video = video,
+                    cardWidth = when (windowSizeClass.widthSizeClass) {
+                        WindowWidthSizeClass.Compact  -> 140.dp
+                        WindowWidthSizeClass.Medium   -> 170.dp
+                        else                          -> 200.dp
+                    },
+                    onClick = { onVideoClick(video) }
                 )
             }
         }
@@ -139,89 +208,93 @@ fun HomeScreen(
 }
 
 @Composable
-private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleLarge,
-        color = MaterialTheme.colorScheme.onBackground,
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
-    )
-}
-
-@Composable
-private fun FeaturedAlbumCard(
-    album: Album,
-    onClick: () -> Unit
+fun VideoRecommendationCard(
+    video: VideoItem,
+    cardWidth: Dp,
+    onClick: () -> Unit = {}
 ) {
-    GlowCard(
+    Column(
         modifier = Modifier
-            .width(160.dp)
-            .clickable { onClick() }
+            .width(cardWidth)
+            .clickable(onClick = onClick)
     ) {
-        Column {
+        // Thumbnail
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color.White.copy(0.05f))
+        ) {
             AsyncImage(
-                model = album.artUri,
-                contentDescription = album.title,
-                modifier = Modifier
-                    .size(128.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
+                model = "https://i.ytimg.com/vi/${video.videoId}/mqdefault.jpg",
+                contentDescription = video.title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = album.title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = album.artist,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            // Duration badge
+            Box(
+                Modifier.align(Alignment.BottomEnd)
+                    .padding(4.dp)
+                    .background(Color.Black.copy(0.75f),
+                        RoundedCornerShape(4.dp))
+                    .padding(horizontal = 4.dp, vertical = 2.dp)
+            ) {
+                Text(video.duration, color = White,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontSize = 10.sp)
+            }
         }
+
+        Spacer(Modifier.height(6.dp))
+
+        Text(
+            video.title,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            video.artist,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
 @Composable
-private fun SongListItem(
-    song: Song,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 20.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AsyncImage(
-            model = song.artUri,
-            contentDescription = "Album art for ${song.title}",
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = song.title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = "${song.artist} · ${song.album}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+fun ShimmerRecommendationRow() {
+    Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                ShimmerBox(Modifier.width(150.dp).height(20.dp).clip(RoundedCornerShape(4.dp)))
+                Spacer(Modifier.height(4.dp))
+                ShimmerBox(Modifier.width(100.dp).height(12.dp).clip(RoundedCornerShape(4.dp)))
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(4) {
+                Column(Modifier.width(140.dp)) {
+                    ShimmerBox(Modifier.fillMaxWidth().aspectRatio(16f/9f).clip(RoundedCornerShape(10.dp)))
+                    Spacer(Modifier.height(6.dp))
+                    ShimmerBox(Modifier.fillMaxWidth().height(14.dp).clip(RoundedCornerShape(4.dp)))
+                    Spacer(Modifier.height(4.dp))
+                    ShimmerBox(Modifier.width(80.dp).height(12.dp).clip(RoundedCornerShape(4.dp)))
+                }
+            }
         }
     }
 }

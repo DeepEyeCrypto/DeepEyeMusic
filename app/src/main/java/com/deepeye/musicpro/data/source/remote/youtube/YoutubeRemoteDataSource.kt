@@ -94,8 +94,8 @@ class YoutubeRemoteDataSource @Inject constructor(
                 infoItems.filterIsInstance<StreamInfoItem>()
                      .map { item: StreamInfoItem -> item.toHomeMusicItem() }
             } catch (e: Exception) {
-                Log.e("YoutubeDS", "searchMusic failed: ${e.message}")
-                emptyList()
+                Log.e("YoutubeDS", "searchMusic failed: ${e.message}", e)
+                throw e
             }
         }
 
@@ -130,7 +130,14 @@ class YoutubeRemoteDataSource @Inject constructor(
                 } else {
                     val audio = info.audioStreams.maxByOrNull { it.bitrate }
                         ?: info.audioStreams.firstOrNull()
-                    audio?.content?.let { StreamResult(it, isVideo = false) }
+                    if (audio != null) {
+                        StreamResult(audio.content, isVideo = false)
+                    } else {
+                        Log.w("YoutubeDS", "getStreamUrl: No audio streams found for $videoId. Trying DASH/HLS as audio-only stream source.")
+                        val dashOrHls = info.dashMpdUrl?.takeIf { it.isNotEmpty() }
+                            ?: info.hlsUrl?.takeIf { it.isNotEmpty() }
+                        dashOrHls?.let { StreamResult(it, isVideo = false) }
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "getStreamUrl failed for $videoId: ${e.message}", e)

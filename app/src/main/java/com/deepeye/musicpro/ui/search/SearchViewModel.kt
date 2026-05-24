@@ -65,8 +65,8 @@ class SearchViewModel @Inject constructor(
 
     fun playLocal(song: Song) {
         val mediaItems = _uiState.value.localResults.map { MediaItem.Local(it) }
-        val index = _uiState.value.localResults.indexOf(song)
-        playerController.setQueue(mediaItems, index)
+        val index = _uiState.value.localResults.indexOfFirst { it.id == song.id }
+        playerController.setQueue(mediaItems, if (index >= 0) index else 0)
     }
 
     fun playRemote(item: HomeMusicItem) {
@@ -79,7 +79,7 @@ class SearchViewModel @Inject constructor(
                 duration = 0 // Search results might not have duration
             )
         }
-        val index = _uiState.value.remoteResults.indexOf(item)
-        playerController.setQueue(mediaItems, index)
+        val index = _uiState.value.remoteResults.indexOfFirst { it.id == item.id }
+        playerController.setQueue(mediaItems, if (index >= 0) index else 0)
     }
 }

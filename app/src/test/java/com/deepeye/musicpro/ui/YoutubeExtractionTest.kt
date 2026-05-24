@@ -30,7 +30,7 @@ class YoutubeExtractionTest {
         NewPipe.init(downloader, Localization.DEFAULT, ContentCountry.DEFAULT)
         val yt = ServiceList.YouTube
         
-        val videoId = "5XTxuz-_myg" // A popular video
+        val videoId = "68RLvhxk_4g" // Bollywood Dj Non Stop Remix
         val url = "https://www.youtube.com/watch?v=$videoId"
         
         try {
@@ -40,34 +40,18 @@ class YoutubeExtractionTest {
                 appendLine("Title: ${info.name}")
                 appendLine("Class: ${info::class.java.name}")
                 
-                appendLine("\n=== FIELDS ===")
-                info::class.java.fields.forEach { field ->
-                    try {
-                        field.isAccessible = true
-                        appendLine("  - Field: ${field.name} (${field.type.name}) = ${field.get(info)}")
-                    } catch (e: Exception) {
-                        appendLine("  - Field: ${field.name} (error: ${e.message})")
-                    }
+                appendLine("\n=== STREAM METADATA ===")
+                appendLine("  - DASH MPD URL: ${info.dashMpdUrl}")
+                appendLine("  - HLS URL: ${info.hlsUrl}")
+ 
+                appendLine("\n=== AUDIO STREAMS (${info.audioStreams.size}) ===")
+                info.audioStreams.forEachIndexed { i, audio ->
+                    appendLine("Stream $i: Bitrate=${audio.bitrate}, Format=${audio.format}, Codec=${audio.codec}, Content=${audio.content}")
                 }
                 
-                appendLine("\n=== DECLARED FIELDS ===")
-                info::class.java.declaredFields.forEach { field ->
-                    try {
-                        field.isAccessible = true
-                        appendLine("  - Declared Field: ${field.name} (${field.type.name}) = ${field.get(info)}")
-                    } catch (e: Exception) {
-                        appendLine("  - Declared Field: ${field.name} (error: ${e.message})")
-                    }
-                }
-
-                appendLine("\n=== DECLARED METHODS ===")
-                info::class.java.declaredMethods.filter { it.parameterCount == 0 }.forEach { method ->
-                    try {
-                        method.isAccessible = true
-                        appendLine("  - Method: ${method.name} returns ${method.returnType.name} = ${method.invoke(info)}")
-                    } catch (e: Exception) {
-                        // ignore exceptions for getter side effects
-                    }
+                appendLine("\n=== ERRORS (${info.getErrors().size}) ===")
+                info.getErrors().forEachIndexed { i, err ->
+                    appendLine("Error $i: ${err.message}\n${err.stackTraceToString()}")
                 }
             }
             println(resultText)
@@ -79,5 +63,62 @@ class YoutubeExtractionTest {
             File("scratch").mkdirs()
             File("scratch/extraction_result.txt").writeText(err)
         }
+    }
+
+    @Test
+    fun testSearchMusic() = runBlocking {
+        // Mock Android Log methods
+        mockkStatic(Log::class)
+        every { Log.d(any<String>(), any<String>()) } returns 0
+        every { Log.e(any<String>(), any<String>()) } returns 0
+        every { Log.e(any<String>(), any<String>(), any<Throwable>()) } returns 0
+        every { Log.w(any<String>(), any<String>()) } returns 0
+
+        val client = OkHttpClient.Builder().build()
+        val downloader = NewPipeDownloader(client)
+        NewPipe.init(downloader, Localization.DEFAULT, ContentCountry.DEFAULT)
+        val yt = ServiceList.YouTube
+        
+        try {
+            val query = "trending music"
+            val extractor = yt.getSearchExtractor(
+                query,
+                listOf("music_songs"),
+                ""
+            )
+            extractor.fetchPage()
+            val infoItems = extractor.initialPage.items
+            val resultText = buildString {
+                appendLine("=== searchMusic Results ===")
+                infoItems.forEachIndexed { index, item ->
+                    appendLine("Item $index:")
+                    appendLine("  - Class: ${item::class.java.name}")
+                    appendLine("  - Name: ${item.name}")
+                    appendLine("  - Url: ${item.url}")
+                    if (item is com.yushosei.newpipe.extractor.stream.StreamInfoItem) {
+                        val extractedId = item.url.extractVideoId()
+                        appendLine("  - Extracted ID: $extractedId")
+                    }
+                }
+            }
+            println(resultText)
+            File("scratch").mkdirs()
+            File("scratch/search_music_result.txt").writeText(resultText)
+        } catch (e: Exception) {
+            val err = "searchMusic failed: ${e.message}\n${e.stackTraceToString()}"
+            println(err)
+            File("scratch").mkdirs()
+            File("scratch/search_music_result.txt").writeText(err)
+        }
+    }
+
+    private fun String.extractVideoId(): String {
+        val id = when {
+            contains("v=") -> substringAfter("v=").substringBefore("&")
+            contains("youtu.be/") -> substringAfterLast("/")
+            contains("/shorts/") -> substringAfterLast("/")
+            else -> this
+        }.take(11)
+        return id
     }
 }

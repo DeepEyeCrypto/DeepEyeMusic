@@ -86,11 +86,27 @@ fun HybridPlayerCard(
     isLoading: Boolean,
     isPlaying: Boolean,
     playbackPosition: Long = 0L,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onTogglePlayPause: () -> Unit
 ) {
     var playbackSpeed by remember { mutableStateOf(1.0f) }
     var isMuted by remember { mutableStateOf(false) }
-    var seekTrigger by remember { mutableStateOf(0) }
+    var controlsVisible by remember { mutableStateOf(true) }
+    var sliderPosition by remember { mutableStateOf<Float?>(null) }
+    var interactionCount by remember { mutableStateOf(0) }
+
+    fun resetTimer() {
+        interactionCount++
+    }
+
+    LaunchedEffect(controlsVisible, isPlaying, playbackSpeed, isMuted, interactionCount) {
+        android.util.Log.e("HybridPlayerCard", "LaunchedEffect: controlsVisible=$controlsVisible, isPlaying=$isPlaying, interactionCount=$interactionCount")
+        if (controlsVisible && isPlaying) {
+            delay(3000)
+            android.util.Log.e("HybridPlayerCard", "Auto-hiding controls after 3 seconds")
+            controlsVisible = false
+        }
+    }
 
 
 
@@ -184,38 +200,44 @@ fun HybridPlayerCard(
         ) {
             if (isVideo) {
                 Box(modifier = Modifier.fillMaxSize()) {
+                    val videoPlaybackPosition = sliderPosition?.toLong() ?: playbackPosition
                     YouTubeVideoPlayer(
                         webView = webView,
                         videoId = item.id,
                         isPlaying = isPlaying,
-                        playbackPosition = playbackPosition,
+                        playbackPosition = videoPlaybackPosition,
                         playbackSpeed = playbackSpeed,
                         isMuted = isMuted,
-                        seekTrigger = seekTrigger,
                         muteWebViewAudio = false,
                         modifier = Modifier.fillMaxSize()
                     )
 
                     // Close / Exit Fullscreen Button Overlay (top right)
                     if (isFullscreen && !isInPipMode) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(24.dp),
-                            contentAlignment = Alignment.TopEnd
+                        AnimatedVisibility(
+                            visible = controlsVisible,
+                            enter = fadeIn(),
+                            exit = fadeOut()
                         ) {
-                            IconButton(
-                                onClick = { fullscreenMode.exit() },
+                            Box(
                                 modifier = Modifier
-                                    .size(48.dp)
-                                    .background(Color.Black.copy(alpha = 0.55f), CircleShape)
+                                    .fillMaxSize()
+                                    .padding(24.dp),
+                                contentAlignment = Alignment.TopEnd
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.FullscreenExit,
-                                    contentDescription = "Exit Fullscreen",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
-                                )
+                                IconButton(
+                                    onClick = { fullscreenMode.exit() },
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(Color.Black.copy(alpha = 0.55f), CircleShape)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.FullscreenExit,
+                                        contentDescription = "Exit Fullscreen",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -231,12 +253,10 @@ fun HybridPlayerCard(
                                     .pointerInput(Unit) {
                                         detectTapGestures(
                                             onDoubleTap = {
-                                                if (isVideo) {
-                                                    seekTrigger -= 1
-                                                } else {
-                                                    val newPos = (player.currentPosition - 10000L).coerceAtLeast(0L)
-                                                    player.seekTo(newPos)
-                                                }
+                                                android.util.Log.e("HybridPlayerCard", "Double tap left zone! Seeking backward.")
+                                                resetTimer()
+                                                val newPos = (player.currentPosition - 10000L).coerceAtLeast(0L)
+                                                player.seekTo(newPos)
                                                 showLeftRipple = true
                                                 scope.launch {
                                                     delay(650)
@@ -244,7 +264,9 @@ fun HybridPlayerCard(
                                                 }
                                             },
                                             onTap = {
-                                                if (player.isPlaying) player.pause() else player.play()
+                                                android.util.Log.e("HybridPlayerCard", "Single tap left zone! Toggling controls. Current visibility: $controlsVisible")
+                                                resetTimer()
+                                                controlsVisible = !controlsVisible
                                             }
                                         )
                                     },
@@ -280,12 +302,15 @@ fun HybridPlayerCard(
                                     .pointerInput(Unit) {
                                         detectTapGestures(
                                             onDoubleTap = {
-                                                if (isVideo) {
-                                                    seekTrigger += 1
+                                                android.util.Log.e("HybridPlayerCard", "Double tap right zone! Seeking forward.")
+                                                resetTimer()
+                                                val duration = player.duration
+                                                val newPos = if (duration > 0) {
+                                                    (player.currentPosition + 10000L).coerceAtMost(duration)
                                                 } else {
-                                                    val newPos = (player.currentPosition + 10000L).coerceAtMost(player.duration)
-                                                    player.seekTo(newPos)
+                                                    player.currentPosition + 10000L
                                                 }
+                                                player.seekTo(newPos)
                                                 showRightRipple = true
                                                 scope.launch {
                                                     delay(650)
@@ -293,7 +318,9 @@ fun HybridPlayerCard(
                                                 }
                                             },
                                             onTap = {
-                                                if (player.isPlaying) player.pause() else player.play()
+                                                android.util.Log.e("HybridPlayerCard", "Single tap right zone! Toggling controls. Current visibility: $controlsVisible")
+                                                resetTimer()
+                                                controlsVisible = !controlsVisible
                                             }
                                         )
                                     },
@@ -323,13 +350,18 @@ fun HybridPlayerCard(
                         }
 
                         // CENTER PLAY OVERLAY when player is paused
-                        if (!isPlaying) {
+                        AnimatedVisibility(
+                            visible = controlsVisible && !isPlaying,
+                            enter = fadeIn(),
+                            exit = fadeOut(),
+                            modifier = Modifier.align(Alignment.Center)
+                        ) {
                             Box(
                                 modifier = Modifier
                                     .size(60.dp)
                                     .clip(CircleShape)
                                     .background(Color.Black.copy(alpha = 0.55f))
-                                    .clickable { player.play() }
+                                    .clickable { onTogglePlayPause() }
                                     .border(1.5.dp, Color.White.copy(alpha = 0.35f), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -343,120 +375,192 @@ fun HybridPlayerCard(
                         }
 
                         // BOTTOM GLASSMORPHIC QUICK MEDIA CONTROL PANEL OVERLAY
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(8.dp),
-                            contentAlignment = Alignment.BottomCenter
+                        AnimatedVisibility(
+                            visible = controlsVisible,
+                            enter = fadeIn(),
+                            exit = fadeOut(),
+                            modifier = Modifier.align(Alignment.BottomCenter)
                         ) {
-                            Row(
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .pointerInput(Unit) {} // Consume touches to prevent fall-through to underlying gesture layers
-                                    .background(
-                                        brush = Brush.verticalGradient(
-                                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
-                                        ),
-                                        shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
-                                    )
-                                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.BottomCenter
                             ) {
-                                // 1. Interactive Play/Pause Button
-                                IconButton(
-                                    onClick = { if (isPlaying) player.pause() else player.play() },
+                                Column(
                                     modifier = Modifier
-                                        .size(32.dp)
-                                        .background(Color.White.copy(alpha = 0.15f), CircleShape)
+                                        .fillMaxWidth()
+                                        .clickable(
+                                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                            indication = null,
+                                            onClick = { resetTimer() }
+                                        )
+                                        .background(
+                                            brush = Brush.verticalGradient(
+                                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))
+                                            ),
+                                            shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                                        )
+                                        .padding(horizontal = 16.dp, vertical = 12.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                        contentDescription = "Play/Pause",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-
-                                // 2. Interactive Mute/Unmute Indicator Button
-                                IconButton(
-                                    onClick = { isMuted = !isMuted },
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .background(Color.White.copy(alpha = 0.15f), CircleShape)
-                                ) {
-                                    Icon(
-                                        imageVector = if (isMuted) Icons.AutoMirrored.Filled.VolumeMute else Icons.AutoMirrored.Filled.VolumeUp,
-                                        contentDescription = "Mute",
-                                        tint = if (isMuted) Color.White.copy(alpha = 0.6f) else Color(0xFFFFB300),
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-
-                                // 3. VLC-style Playback Speed Selector (0.5x → 0.75x → 1.0x → 1.25x → 1.5x → 1.75x → 2.0x)
-                                Surface(
-                                    shape = RoundedCornerShape(14.dp),
-                                    color = if (playbackSpeed != 1.0f) Color(0xFF00BFA5).copy(alpha = 0.25f) else Color.White.copy(alpha = 0.15f),
-                                    modifier = Modifier
-                                        .clickable {
-                                            val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
-                                            val currentIdx = speeds.indexOf(playbackSpeed).takeIf { it >= 0 } ?: 2
-                                            playbackSpeed = speeds[(currentIdx + 1) % speeds.size]
-                                        }
-                                        .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
-                                ) {
+                                    // Seekbar (Slider) Row
                                     Row(
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        modifier = Modifier.fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Speed,
-                                            contentDescription = null,
-                                            tint = if (playbackSpeed != 1.0f) Color(0xFF00BFA5) else Color.White,
-                                            modifier = Modifier.size(12.dp)
-                                        )
-                                        Spacer(Modifier.width(4.dp))
+                                        val displayPosition = sliderPosition?.toLong() ?: playbackPosition
                                         Text(
-                                            text = "${playbackSpeed}x",
-                                            color = if (playbackSpeed != 1.0f) Color(0xFF00BFA5) else Color.White,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold
+                                            text = com.deepeye.musicpro.core.utils.TimeFormatter.formatDuration(displayPosition),
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
+                                        
+                                        Spacer(Modifier.width(8.dp))
+                                        
+                                        val duration = player.duration.coerceAtLeast(0L)
+                                        Slider(
+                                            value = sliderPosition ?: playbackPosition.toFloat(),
+                                            onValueChange = {
+                                                sliderPosition = it
+                                                player.seekTo(it.toLong())
+                                                resetTimer()
+                                            },
+                                            onValueChangeFinished = {
+                                                sliderPosition = null
+                                            },
+                                            valueRange = 0f..duration.toFloat().coerceAtLeast(1f),
+                                            colors = SliderDefaults.colors(
+                                                thumbColor = Color(0xFFFFB300),
+                                                activeTrackColor = Color(0xFFFFB300),
+                                                inactiveTrackColor = Color.White.copy(alpha = 0.24f)
+                                            ),
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        
+                                        Spacer(Modifier.width(8.dp))
+                                        
+                                        Text(
+                                            text = com.deepeye.musicpro.core.utils.TimeFormatter.formatDuration(duration),
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.labelMedium
                                         )
                                     }
-                                }
-
-                                // 4. PiP Button
-                                if (!isInPipMode) {
-                                    IconButton(
-                                        onClick = {
-                                            (context as? com.deepeye.musicpro.MainActivity)?.enterPipMode()
-                                        },
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .background(Color.White.copy(alpha = 0.15f), CircleShape)
+                                    
+                                    Spacer(Modifier.height(8.dp))
+                                    
+                                    // Row of Control buttons
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.PictureInPicture,
-                                            contentDescription = "Picture in Picture",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                    }
-                                }
+                                        // 1. Interactive Play/Pause Button
+                                        IconButton(
+                                            onClick = {
+                                                resetTimer()
+                                                onTogglePlayPause()
+                                            },
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .background(Color.White.copy(alpha = 0.15f), CircleShape)
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                                contentDescription = "Play/Pause",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
 
-                                // 5. Fullscreen Overlay Button
-                                IconButton(
-                                    onClick = { if (isFullscreen) fullscreenMode.exit() else fullscreenMode.enter() },
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .background(Color.White.copy(alpha = 0.15f), CircleShape)
-                                ) {
-                                    Icon(
-                                        imageVector = if (isFullscreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
-                                        contentDescription = if (isFullscreen) "Exit Fullscreen" else "Fullscreen",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
-                                    )
+                                        // 2. Interactive Mute/Unmute Indicator Button
+                                        IconButton(
+                                            onClick = {
+                                                resetTimer()
+                                                isMuted = !isMuted
+                                            },
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .background(Color.White.copy(alpha = 0.15f), CircleShape)
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isMuted) Icons.AutoMirrored.Filled.VolumeMute else Icons.AutoMirrored.Filled.VolumeUp,
+                                                contentDescription = "Mute",
+                                                tint = if (isMuted) Color.White.copy(alpha = 0.6f) else Color(0xFFFFB300),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+
+                                        // 3. VLC-style Playback Speed Selector
+                                        Surface(
+                                            shape = RoundedCornerShape(14.dp),
+                                            color = if (playbackSpeed != 1.0f) Color(0xFF00BFA5).copy(alpha = 0.25f) else Color.White.copy(alpha = 0.15f),
+                                            modifier = Modifier
+                                                .clickable {
+                                                    resetTimer()
+                                                    val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
+                                                    val currentIdx = speeds.indexOf(playbackSpeed).takeIf { it >= 0 } ?: 2
+                                                    playbackSpeed = speeds[(currentIdx + 1) % speeds.size]
+                                                }
+                                                .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Speed,
+                                                    contentDescription = null,
+                                                    tint = if (playbackSpeed != 1.0f) Color(0xFF00BFA5) else Color.White,
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                                Spacer(Modifier.width(4.dp))
+                                                Text(
+                                                    text = "${playbackSpeed}x",
+                                                    color = if (playbackSpeed != 1.0f) Color(0xFF00BFA5) else Color.White,
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+
+                                        // 4. PiP Button
+                                        if (!isInPipMode) {
+                                            IconButton(
+                                                onClick = {
+                                                    resetTimer()
+                                                    (context as? com.deepeye.musicpro.MainActivity)?.enterPipMode()
+                                                },
+                                                modifier = Modifier
+                                                    .size(32.dp)
+                                                    .background(Color.White.copy(alpha = 0.15f), CircleShape)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.PictureInPicture,
+                                                    contentDescription = "Picture in Picture",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+                                        }
+
+                                        // 5. Fullscreen Overlay Button
+                                        IconButton(
+                                            onClick = {
+                                                resetTimer()
+                                                if (isFullscreen) fullscreenMode.exit() else fullscreenMode.enter()
+                                            },
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .background(Color.White.copy(alpha = 0.15f), CircleShape)
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isFullscreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
+                                                contentDescription = if (isFullscreen) "Exit Fullscreen" else "Fullscreen",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -560,7 +664,7 @@ fun HybridPlayerCard(
                                 .size(48.dp)
                                 .clip(CircleShape)
                                 .background(Color.White.copy(alpha = 0.15f))
-                                .clickable { if (isPlayingAudio) player.pause() else player.play() }
+                                .clickable { onTogglePlayPause() }
                                 .border(1.dp, Color.White.copy(alpha = 0.25f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {

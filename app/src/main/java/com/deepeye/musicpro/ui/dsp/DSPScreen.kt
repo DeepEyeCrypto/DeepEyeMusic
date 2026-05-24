@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -80,6 +81,7 @@ fun DSPScreen(
                         Switch(
                             checked = isEnabled,
                             onCheckedChange = { viewModel.toggleMasterEnabled() },
+                            modifier = Modifier.testTag("dsp_toggle"),
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
                                 checkedTrackColor = Color(0xFF00E5FF)
@@ -332,7 +334,7 @@ fun ModulesGrid(
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item { PgcCard(params, isEnabled, onUpdateParams) }
-        item { EqualizerCard(params, isEnabled, onUpdateEqBand) }
+        item { EqualizerCard(params, isEnabled, onToggle = { enabled -> onUpdateParams { it.copy(eqEnabled = enabled) } }, onUpdateEqBand) }
         item { ViperBassCard(params, isEnabled, onUpdateParams) }
         item { SurroundCard(params, isEnabled, onUpdateParams) }
         item { ReverbCard(params, isEnabled, onUpdateParams) }
@@ -356,7 +358,7 @@ fun ModulesColumn(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         PgcCard(params, isEnabled, onUpdateParams)
-        EqualizerCard(params, isEnabled, onUpdateEqBand)
+        EqualizerCard(params, isEnabled, onToggle = { enabled -> onUpdateParams { it.copy(eqEnabled = enabled) } }, onUpdateEqBand)
         ViperBassCard(params, isEnabled, onUpdateParams)
         SurroundCard(params, isEnabled, onUpdateParams)
         ReverbCard(params, isEnabled, onUpdateParams)
@@ -520,7 +522,12 @@ fun PgcCard(params: DspParams, isMasterEnabled: Boolean, onUpdateParams: ((DspPa
 }
 
 @Composable
-fun EqualizerCard(params: DspParams, isMasterEnabled: Boolean, onUpdateEqBand: (Int, Float) -> Unit) {
+fun EqualizerCard(
+    params: DspParams,
+    isMasterEnabled: Boolean,
+    onToggle: (Boolean) -> Unit,
+    onUpdateEqBand: (Int, Float) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
     val isEnabled = params.eqEnabled
     val showContent = expanded && isEnabled && isMasterEnabled
@@ -542,7 +549,7 @@ fun EqualizerCard(params: DspParams, isMasterEnabled: Boolean, onUpdateEqBand: (
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Switch(
                         checked = isEnabled,
-                        onCheckedChange = { /* EQ toggle is implicit when sliders adjust, or toggles first band as a workaround */ },
+                        onCheckedChange = onToggle,
                         enabled = isMasterEnabled,
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
@@ -600,6 +607,7 @@ fun EqualizerCard(params: DspParams, isMasterEnabled: Boolean, onUpdateEqBand: (
                                         valueRange = -12f..12f,
                                         modifier = Modifier
                                             .requiredWidth(130.dp)
+                                            .testTag("eq_band_$i")
                                             .graphicsLayer {
                                                 rotationZ = -90f
                                                 transformOrigin = TransformOrigin(0.5f, 0.5f)

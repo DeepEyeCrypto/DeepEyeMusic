@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,7 +48,11 @@ fun MusicScreen(
                 CenterAlignedTopAppBar(
                     title = { Text("Music", fontWeight = FontWeight.Bold) },
                     actions = {
-                        if (selectedTab == 1) {
+                        if (selectedTab == 0) {
+                            IconButton(onClick = { viewModel.loadRecommendations() }) {
+                                Icon(Icons.Default.Refresh, "Refresh Recommendations")
+                            }
+                        } else if (selectedTab == 1) {
                             IconButton(onClick = { viewModel.syncLibrary() }) {
                                 Icon(Icons.Default.Refresh, "Sync Library")
                             }
@@ -98,7 +103,32 @@ private fun DiscoveryTab(
         }
     } else if (uiState.error != null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Error: ${uiState.error}", color = MaterialTheme.colorScheme.error)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Error: ${uiState.error}",
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = { viewModel.loadRecommendations() }) {
+                    Text("Retry")
+                }
+            }
+        }
+    } else if (uiState.recommendedMusic.isEmpty()) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "No recommendations found",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = { viewModel.loadRecommendations() }) {
+                    Text("Refresh")
+                }
+            }
         }
     } else {
         LazyVerticalGrid(

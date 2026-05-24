@@ -18,9 +18,12 @@ import androidx.room.RoomDatabase
         PlaylistEntity::class,
         PlaylistSongCrossRef::class,
         PlayEvent::class,
-        UserFeedback::class
+        UserFeedback::class,
+        ListenEvent::class,
+        ArtistScore::class,
+        SongScore::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -28,4 +31,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun songDao(): SongDao
     abstract fun playlistDao(): PlaylistDao
     abstract fun tasteDao(): TasteDao
+    abstract fun recommendationDao(): RecommendationDao
 }

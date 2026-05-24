@@ -40,6 +40,7 @@ fun LibraryScreen(
     onNavigateToAlbum: (Long) -> Unit,
     onNavigateToArtist: (Long) -> Unit,
     onNavigateToDownloads: () -> Unit,
+    onNavigateToNowPlaying: () -> Unit,
     sharedTransitionScope: SharedTransitionScope,
     animatedVisibilityScope: AnimatedVisibilityScope,
     viewModel: LibraryViewModel = hiltViewModel(),
@@ -82,8 +83,9 @@ fun LibraryScreen(
         when (uiState.selectedTab) {
             0 -> SongsTab(uiState.songs) { song ->
                 val mediaItems = uiState.songs.map { com.deepeye.musicpro.domain.model.MediaItem.Local(it) }
-                val index = uiState.songs.indexOf(song)
-                playerViewModel.setQueue(mediaItems, index)
+                val index = uiState.songs.indexOfFirst { it.id == song.id }
+                playerViewModel.setQueue(mediaItems, if (index >= 0) index else 0)
+                onNavigateToNowPlaying()
             }
             1 -> AlbumsTab(uiState.albums, onNavigateToAlbum, sharedTransitionScope, animatedVisibilityScope, windowSizeClass)
             2 -> ArtistsTab(uiState.artists, onNavigateToArtist)

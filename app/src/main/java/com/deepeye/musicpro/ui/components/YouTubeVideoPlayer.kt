@@ -95,12 +95,18 @@ fun YouTubeVideoPlayer(
                     // 1. Initial html load vs subsequent loadVideo
                     if (updateState.videoId == null) {
                         updateState.videoId = videoId
+                        updateState.lastSentPosition = -1L
+                        updateState.lastUpdateTime = -1L
+                        updateState.lastSeekTime = 0L
                         updateState.networkError.value = false
                         val startSec = (playbackPosition / 1000).toInt()
                         val htmlContent = getYouTubeHtmlTemplate(videoId, startSec, muteWebViewAudio)
                         webView.loadDataWithBaseURL("https://www.youtube-nocookie.com", htmlContent, "text/html", "UTF-8", null)
                     } else if (updateState.videoId != videoId) {
                         updateState.videoId = videoId
+                        updateState.lastSentPosition = -1L
+                        updateState.lastUpdateTime = -1L
+                        updateState.lastSeekTime = 0L
                         updateState.networkError.value = false
                         webView.evaluateJavascript("if (typeof loadVideo === 'function') loadVideo('$videoId');", null)
                     }
@@ -123,15 +129,33 @@ fun YouTubeVideoPlayer(
                         webView.evaluateJavascript("if (typeof setWebViewMuted === 'function') setWebViewMuted(true);", null)
                     }
                     
-                    // 6. Sync seek triggers (local double-tap gesture seek)
-                    if (seekTrigger != 0 && seekTrigger != updateState.prevSeekTrigger) {
-                        val prev = updateState.prevSeekTrigger
-                        updateState.prevSeekTrigger = seekTrigger
-                        if (seekTrigger > prev) {
-                            webView.evaluateJavascript("if (typeof seekForward === 'function') seekForward();", null)
-                        } else if (seekTrigger < prev) {
-                            webView.evaluateJavascript("if (typeof seekBackward === 'function') seekBackward();", null)
+                    // 7. Sync manual seeking via progress slider / double-taps
+                    val now = System.currentTimeMillis()
+                    if (updateState.lastSentPosition == -1L || updateState.lastUpdateTime == -1L) {
+                        updateState.lastSentPosition = playbackPosition
+                        updateState.lastUpdateTime = now
+                    } else {
+                        val elapsedTime = now - updateState.lastUpdateTime
+                        val expectedPosition = if (isPlaying) {
+                            updateState.lastSentPosition + (elapsedTime * playbackSpeed).toLong()
+                        } else {
+                            updateState.lastSentPosition
                         }
+                        
+                        val deviation = Math.abs(playbackPosition - expectedPosition)
+                        val isManualSeek = deviation > 1200L
+                        
+                        if (isManualSeek) {
+                            if (now - updateState.lastSeekTime > 150L) {
+                                val currentPosSec = playbackPosition / 1000
+                                webView.evaluateJavascript("if (typeof seekTo === 'function') seekTo($currentPosSec);", null)
+                                updateState.lastSeekTime = now
+                                updateState.lastSentPosition = playbackPosition
+                            }
+                        } else {
+                            updateState.lastSentPosition = playbackPosition
+                        }
+                        updateState.lastUpdateTime = now
                     }
                 },
         modifier = Modifier.fillMaxSize()
@@ -316,6 +340,8 @@ class YouTubePlayerState(
     var videoId: String? = null,
     var prevSeekTrigger: Int = 0,
     var lastSentPosition: Long = -1L,
+    var lastUpdateTime: Long = -1L,
+    var lastSeekTime: Long = 0L,
     val networkError: kotlinx.coroutines.flow.MutableStateFlow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(false)
 )
 
@@ -572,6 +598,18 @@ fun getYouTubeHtmlTemplate(videoId: String, startSec: Int, muteWebViewAudio: Boo
                     }
                 }
                 
+                function seekTo(seconds) {
+                    currentTime = seconds;
+                    var iframe = document.getElementById('player');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage(JSON.stringify({
+                            "event": "command",
+                            "func": "seekTo",
+                            "args": [seconds, true]
+                        }), "*");
+                    }
+                }
+
                 function playVideo() {
                     var iframe = document.getElementById('player');
                     if (iframe && iframe.contentWindow) {

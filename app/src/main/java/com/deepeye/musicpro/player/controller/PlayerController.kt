@@ -39,6 +39,7 @@ class PlayerController @Inject constructor(
     private val dspEngine: com.deepeye.musicpro.dsp.engine.DSPEngine,
     private val tasteProfileRepository: com.deepeye.musicpro.domain.repository.TasteProfileRepository,
     private val musicRepository: com.deepeye.musicpro.domain.repository.MusicRepository,
+    private val recommendationEngine: com.deepeye.musicpro.domain.recommendation.RecommendationEngine,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -77,9 +78,7 @@ class PlayerController @Inject constructor(
 
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
-                if (!playerState.value.isVideo) {
-                    updateState { it.copy(isPlaying = isPlaying) }
-                }
+                updateState { it.copy(isPlaying = isPlaying) }
                 if (isPlaying) {
                     startPositionUpdates()
                     lastPlaybackStateTime = System.currentTimeMillis()
@@ -113,6 +112,22 @@ class PlayerController @Inject constructor(
                 android.util.Log.e("PlayerController", "ExoPlayer Error: ${error.message}", error)
                 updateState { it.copy(isLoading = false) }
             }
+
+            override fun onPositionDiscontinuity(
+                oldPosition: Player.PositionInfo,
+                newPosition: Player.PositionInfo,
+                reason: Int
+            ) {
+                if (reason == Player.DISCONTINUITY_REASON_SEEK) {
+                    val currentPos = player.currentPosition.coerceAtLeast(0)
+                    updateState {
+                        it.copy(
+                            position = currentPos,
+                            duration = player.duration.coerceAtLeast(0)
+                        )
+                    }
+                }
+            }
         })
     }
 
@@ -140,31 +155,53 @@ class PlayerController @Inject constructor(
                         android.util.Log.e("PlayerController", "Remote item: ${item.title}, id: ${item.id}, streamUri: ${item.streamUri}")
                         if (item.streamUri == null || item.streamUri == Uri.EMPTY) {
                             android.util.Log.e("PlayerController", "streamUri is null or empty, fetching getStreamUrl...")
-                            val result = youtubeDataSource.getStreamUrl(item.id, preferVideo = item.isVideo)
+                            var result = youtubeDataSource.getStreamUrl(item.id, preferVideo = item.isVideo)
                             ensureActive()
-                            android.util.Log.e("PlayerController", "getStreamUrl fetched: $result")
+                            android.util.Log.e("PlayerController", "First extraction fetched: $result")
+                            
+                            // Audio extraction fallback: if requested audio-only but it failed, retry with video DASH/HLS
+                            if (result == null && !item.isVideo) {
+                                android.util.Log.e("PlayerController", "Audio stream extraction failed. Retrying with video DASH/HLS stream fallback...")
+                                result = youtubeDataSource.getStreamUrl(item.id, preferVideo = true)
+                                ensureActive()
+                                android.util.Log.e("PlayerController", "Fallback video extraction fetched: $result")
+                            }
+                            
                             if (result != null) {
+                                // If the original requested item was audio-only (item.isVideo == false),
+                                // keep it as isVideo = false so ExoPlayer plays it as audio-only,
+                                // even if the fallback returned result has isVideo = true (meaning DASH/HLS stream).
                                 item.copy(
                                     streamUri = Uri.parse(result.url),
-                                    isVideo = item.isVideo || result.isVideo
+                                    isVideo = item.isVideo // Keep original isVideo setting for proper focus/WebView mute
                                 )
                             } else {
-                                android.util.Log.e("PlayerController", "getStreamUrl returned null!")
+                                android.util.Log.e("PlayerController", "All stream extraction attempts failed!")
+                                withContext(Dispatchers.Main) {
+                                    android.widget.Toast.makeText(
+                                        context, 
+                                        "Streaming failed: YouTube signature extraction error for \"${item.title}\"", 
+                                        android.widget.Toast.LENGTH_LONG
+                                    ).show()
+                                }
                                 if (item.isVideo) {
-                                    // For video items: use the YouTube watch URL so the WebView iframe
-                                    // can still render the video by videoId, preserving video mode
                                     android.util.Log.e("PlayerController", "Video item fallback: using YouTube watch URL for iframe playback")
                                     item.copy(
                                         streamUri = Uri.parse("https://www.youtube.com/watch?v=${item.id}"),
                                         isVideo = true
                                     )
                                 } else {
-                                    // For audio items: fall back to a placeholder audio stream
-                                    android.util.Log.e("PlayerController", "Audio item fallback: using placeholder stream")
-                                    item.copy(
-                                        streamUri = Uri.parse("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"),
-                                        isVideo = false
-                                    )
+                                    // ⚠️ Do NOT play placeholder audio — show error and abort
+                                    android.util.Log.e("PlayerController", "Audio stream extraction failed completely. Aborting playback.")
+                                    withContext(Dispatchers.Main) {
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            "Cannot play \"${item.title}\" — stream unavailable. Try again later.",
+                                            android.widget.Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                    updateState { it.copy(isLoading = false) }
+                                    return@launch
                                 }
                             }
                         } else {
@@ -287,9 +324,9 @@ class PlayerController @Inject constructor(
 
     fun togglePlayPause() {
         if (playerState.value.isVideo) {
-            val currentlyPlaying = playerState.value.isPlaying
-            updateState { it.copy(isPlaying = !currentlyPlaying) }
-            if (currentlyPlaying) player.pause() else player.play()
+            val newIsPlaying = !playerState.value.isPlaying
+            updateState { it.copy(isPlaying = newIsPlaying) }
+            if (newIsPlaying) player.play() else player.pause()
         } else {
             if (player.isPlaying) player.pause() else player.play()
         }
@@ -305,6 +342,30 @@ class PlayerController @Inject constructor(
     }
 
     fun next() {
+        val trackId = currentTrackId
+        if (trackId != null && playerState.value.isPlaying) {
+            val listenMs = totalPlayTimeCurrentTrack + (System.currentTimeMillis() - lastPlaybackStateTime)
+            val item = playerState.value.currentItem
+            val totalMs = playerState.value.duration
+            val wasSkipped = listenMs < totalMs * 0.9f // Consider it a skip if less than 90% played
+            
+            scope.launch {
+                recommendationEngine.trackListenEvent(
+                    videoId = item?.id ?: "",
+                    title = item?.title ?: "",
+                    artist = item?.artist ?: "",
+                    channelId = "", 
+                    listenDurationMs = listenMs,
+                    totalDurationMs = totalMs,
+                    wasSkipped = wasSkipped,
+                    wasLiked = false,
+                    wasDisliked = false,
+                    wasAddedToPlaylist = false,
+                    wasReplayed = false
+                )
+            }
+        }
+        
         val nextTrack = queueManager.next()
         if (nextTrack != null) {
             playMedia(nextTrack)

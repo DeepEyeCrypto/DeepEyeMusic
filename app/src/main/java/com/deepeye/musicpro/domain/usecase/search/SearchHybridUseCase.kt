@@ -26,8 +26,12 @@ class SearchHybridUseCase @Inject constructor(
         
         val localFlow = musicRepository.searchSongs(query)
         val remoteFlow = flow {
-            val youtubeResults = youtubeRemoteDataSource.searchMusic(query)
-            emit(youtubeResults)
+            try {
+                val youtubeResults = youtubeRemoteDataSource.searchMusic(query)
+                emit(youtubeResults)
+            } catch (e: Exception) {
+                emit(emptyList())
+            }
         }
 
         return combine(localFlow, remoteFlow) { local, remote ->

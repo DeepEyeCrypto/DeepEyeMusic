@@ -169,6 +169,9 @@ fun NavGraph(
                 onNavigateToDownloads = {
                     navController.navigate(Routes.Downloads.route)
                 },
+                onNavigateToNowPlaying = {
+                    navController.navigate(Routes.NowPlaying.route)
+                },
                 sharedTransitionScope = this@SharedTransitionLayout,
                 animatedVisibilityScope = this@composable
             )

@@ -46,6 +46,10 @@ class YouTubeViewModel @Inject constructor(
     val player = playerController.player
     val playerState = playerController.playerState
 
+    fun togglePlayPause() {
+        playerController.togglePlayPause()
+    }
+
     init {
         loadCategory("Home")
     }
@@ -177,7 +181,7 @@ class YouTubeViewModel @Inject constructor(
                 isVideo = true
             )
         }
-        val index = _uiState.value.videos.indexOf(video)
+        val index = _uiState.value.videos.indexOfFirst { it.id == video.id }
         if (index >= 0) {
             playerController.setQueue(mediaItems, index)
         }

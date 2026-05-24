@@ -33,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import com.deepeye.musicpro.core.utils.TimeFormatter
@@ -382,7 +383,7 @@ fun NowPlayingScreen(
                             activeTrackColor = Color.White,
                             inactiveTrackColor = Color.White.copy(alpha = 0.24f)
                         ),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().testTag("seek_slider")
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -549,7 +550,8 @@ fun NowPlayingScreen(
                     isLoading = playerState.isLoading,
                     isPlaying = playerState.isPlaying,
                     playbackPosition = playerState.position,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    onTogglePlayPause = { viewModel.togglePlayPause() }
                 )
             } else {
                 Box(

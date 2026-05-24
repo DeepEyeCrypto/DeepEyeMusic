@@ -64,6 +64,30 @@ class TasteProfileViewModel @Inject constructor(
         }
     }
 
+    fun setGenres(genres: Set<String>) {
+        viewModelScope.launch {
+            tasteProfileRepository.updatePreferredGenres(genres)
+        }
+    }
+
+    fun setMood(mood: String) {
+        viewModelScope.launch {
+            tasteProfileRepository.updatePreferredMood(mood)
+        }
+    }
+
+    fun setAutoplay(enabled: Boolean) {
+        viewModelScope.launch {
+            tasteProfileRepository.updateAutoplayEnabled(enabled)
+        }
+    }
+
+    fun setPersonalizedMix(enabled: Boolean) {
+        viewModelScope.launch {
+            tasteProfileRepository.updatePersonalizedMixEnabled(enabled)
+        }
+    }
+
     fun completeOnboarding() {
         viewModelScope.launch {
             tasteProfileRepository.updateOnboardingCompleted(true)

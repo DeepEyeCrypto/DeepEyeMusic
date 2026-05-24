@@ -22,6 +22,10 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        // Build config for YouTube API
+        val youtubeApiKey = project.findProperty("youtubeApiKey") as? String ?: ""
+        buildConfigField("String", "YOUTUBE_API_KEY", "\"$youtubeApiKey\"")
+
         // Room schema export for migration verification
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
@@ -181,6 +185,11 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.test.manifest)
+    androidTestImplementation(composeBom)
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
+    androidTestImplementation("androidx.test:runner:1.6.1")
+    androidTestImplementation("androidx.test:rules:1.6.1")
 }
 
 android {

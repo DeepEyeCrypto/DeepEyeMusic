@@ -36,6 +36,22 @@ class TasteProfileRepositoryImpl @Inject constructor(
         tasteProfileDataStore.setFavoriteArtists(artists)
     }
 
+    override suspend fun updatePreferredGenres(genres: Set<String>) {
+        tasteProfileDataStore.setPreferredGenres(genres)
+    }
+
+    override suspend fun updatePreferredMood(mood: String) {
+        tasteProfileDataStore.setPreferredMood(mood)
+    }
+
+    override suspend fun updateAutoplayEnabled(enabled: Boolean) {
+        tasteProfileDataStore.setAutoplayEnabled(enabled)
+    }
+
+    override suspend fun updatePersonalizedMixEnabled(enabled: Boolean) {
+        tasteProfileDataStore.setPersonalizedMixEnabled(enabled)
+    }
+
     override suspend fun recordPlayEvent(event: PlayEvent) {
         tasteDao.insertPlayEvent(event)
     }

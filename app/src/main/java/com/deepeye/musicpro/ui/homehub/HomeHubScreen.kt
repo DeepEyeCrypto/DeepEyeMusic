@@ -45,10 +45,13 @@ fun HomeHubScreen(
     onNavigateToLibrary: () -> Unit,
     onOpenV4A: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    viewModel: HomeHubViewModel = hiltViewModel()
+    viewModel: HomeHubViewModel = hiltViewModel(),
+    playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel(),
+    recommendationViewModel: com.deepeye.musicpro.ui.home.RecommendationViewModel = hiltViewModel()
 ) {
     val feedState     by viewModel.feedState.collectAsStateWithLifecycle()
-
+    val recs by recommendationViewModel.recommendations.collectAsStateWithLifecycle()
+    val isRecsLoading by recommendationViewModel.isLoading.collectAsStateWithLifecycle()
 
     val isExpanded = windowSizeClass.widthSizeClass == androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
 
@@ -111,56 +114,75 @@ fun HomeHubScreen(
         }
 
 
+        // 2. Video Rail (Phase D6)
+        item {
+            com.deepeye.musicpro.ui.homehub.video.VideoRail(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                onNavigateToVideo = onNavigateToVideo
+            )
+        }
 
-        // 3. Trending Videos Rail
-        if (feedState.isLoading) {
-            item {
-                HomeRailShimmer(title = "🔥 Trending")
+        item {
+            HorizontalDivider(
+                color = Color.White.copy(0.05f),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
+
+        // 3. New Dynamic Recommendation Rows
+        if (isRecsLoading) {
+            item { HomeRailShimmer(title = "Loading Recommendations...") }
+            item { HomeRailShimmer(title = "") }
+            item { HomeRailShimmer(title = "") }
+        }
+
+        recs?.let { result ->
+            // Because you listened
+            items(result.becauseYouListened) { row ->
+                com.deepeye.musicpro.ui.home.RecommendationRowUI(row, windowSizeClass) { video ->
+                    playRecVideo(video, row.items, playerViewModel, onNavigateToVideo)
+                }
             }
-        } else if (feedState.trending.isNotEmpty()) {
+
+            // Perfect for right now
             item {
-                HomeVideoRail(
-                    title  = "🔥 Trending",
-                    items  = feedState.trending,
-                    onClick = { 
-                        android.util.Log.e("HomeHubScreen", "Trending clicked: ${it.id}")
-                        viewModel.playVideo(it)
-                        onNavigateToVideo(it.id) 
-                    }
-                )
+                com.deepeye.musicpro.ui.home.RecommendationRowUI(result.perfectForNow, windowSizeClass, isHighlighted = true) { video ->
+                    playRecVideo(video, result.perfectForNow.items, playerViewModel, onNavigateToVideo)
+                }
+            }
+
+            // Favorite artists
+            items(result.favoriteArtists) { row ->
+                com.deepeye.musicpro.ui.home.RecommendationRowUI(row, windowSizeClass) { video ->
+                    playRecVideo(video, row.items, playerViewModel, onNavigateToVideo)
+                }
+            }
+
+            // Trending
+            item {
+                com.deepeye.musicpro.ui.home.RecommendationRowUI(result.trending, windowSizeClass) { video ->
+                    playRecVideo(video, result.trending.items, playerViewModel, onNavigateToVideo)
+                }
+            }
+
+            // Genre dives
+            items(result.genreDive) { row ->
+                com.deepeye.musicpro.ui.home.RecommendationRowUI(row, windowSizeClass) { video ->
+                    playRecVideo(video, row.items, playerViewModel, onNavigateToVideo)
+                }
+            }
+
+            // Hidden gems
+            item {
+                com.deepeye.musicpro.ui.home.RecommendationRowUI(result.hiddenGems, windowSizeClass, isHighlighted = true) { video ->
+                    playRecVideo(video, result.hiddenGems.items, playerViewModel, onNavigateToVideo)
+                }
             }
         }
 
-        // 4. Shorts Rail
-        if (feedState.shorts.isNotEmpty()) {
-            item {
-                ShortsRail(
-                    items   = feedState.shorts,
-                    onClick = { 
-                        android.util.Log.e("HomeHubScreen", "Short clicked: ${it.id}")
-                        viewModel.playVideo(it)
-                        onNavigateToVideo(it.id) 
-                    }
-                )
-            }
-        }
-
-        // 5. Quick Picks (Music)
-        if (feedState.quickPicks.isNotEmpty()) {
-            item {
-                HomeMusicRail(
-                    title  = "🎵 Quick Picks",
-                    items  = feedState.quickPicks,
-                    onClick = { 
-                        android.util.Log.e("HomeHubScreen", "Music clicked: ${it.id}")
-                        viewModel.playMusic(it)
-                        onNavigateToMusic(it.id) 
-                    }
-                )
-            }
-        }
-
-        // 6. Offline fallback
+        // 4. Offline fallback
         if (feedState.isOffline && !feedState.isLoading) {
             item {
                 OfflineFallbackCard(
@@ -380,4 +402,25 @@ private fun OfflineFallbackCard(onRetry: () -> Unit) {
             }
         }
     }
+}
+
+private fun playRecVideo(
+    video: com.deepeye.musicpro.domain.recommendation.VideoItem, 
+    contextList: List<com.deepeye.musicpro.domain.recommendation.VideoItem>, 
+    playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel,
+    onNavigateToVideo: (String) -> Unit
+) {
+    val mediaItems = contextList.map { 
+        com.deepeye.musicpro.domain.model.MediaItem.Remote(
+            id = it.videoId,
+            title = it.title,
+            artist = it.artist,
+            artworkUri = android.net.Uri.parse("https://i.ytimg.com/vi/${it.videoId}/mqdefault.jpg"),
+            duration = 180000L, // Mock duration
+            isVideo = true
+        )
+    }
+    val index = contextList.indexOfFirst { it.videoId == video.videoId }
+    playerViewModel.setQueue(mediaItems, if (index >= 0) index else 0)
+    onNavigateToVideo(video.videoId)
 }

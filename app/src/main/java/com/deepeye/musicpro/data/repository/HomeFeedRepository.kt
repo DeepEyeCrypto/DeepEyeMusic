@@ -23,11 +23,19 @@ class HomeFeedRepository @Inject constructor(
 
     suspend fun getHomeFeed(): HomeFeedState =
         withContext(ioDispatcher) {
-            // Run all in parallel
-            val trendingDeferred  = async { youtubeDs.getTrending() }
-            val shortsDeferred    = async { youtubeDs.getShorts() }
-            val musicDeferred     = async { youtubeDs.searchMusic("top hits 2025") }
-            val localDeferred     = async { localRepo.getRecentlyAdded(limit = 10).first() }
+            // Run all in parallel and catch individual failures to keep the screen partially functional
+            val trendingDeferred  = async {
+                try { youtubeDs.getTrending() } catch (e: Exception) { emptyList() }
+            }
+            val shortsDeferred    = async {
+                try { youtubeDs.getShorts() } catch (e: Exception) { emptyList() }
+            }
+            val musicDeferred     = async {
+                try { youtubeDs.searchMusic("top hits 2025") } catch (e: Exception) { emptyList() }
+            }
+            val localDeferred     = async {
+                try { localRepo.getRecentlyAdded(limit = 10).first() } catch (e: Exception) { emptyList() }
+            }
 
             val trending = trendingDeferred.await()
             val shorts   = shortsDeferred.await()

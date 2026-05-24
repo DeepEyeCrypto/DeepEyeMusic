@@ -80,7 +80,8 @@ fun YouTubeScreen(
                         isVideo = true,
                         isLoading = playerState.isLoading,
                         isPlaying = playerState.isPlaying,
-                        playbackPosition = playerState.position
+                        playbackPosition = playerState.position,
+                        onTogglePlayPause = { viewModel.togglePlayPause() }
                     )
 
                     // Floating "Stats for Nerds" toggle button (hidden in PiP)
