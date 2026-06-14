@@ -55,7 +55,7 @@ object PlayerModule {
             }
         }
         renderersFactory.setExtensionRendererMode(
-            androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER
+            androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON
         ).setEnableDecoderFallback(true)
 
         val trackSelector = androidx.media3.exoplayer.trackselection.DefaultTrackSelector(context)
@@ -109,6 +109,9 @@ object PlayerModule {
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
+            
+        // Enable detailed logging for debugging DRM and playback issues
+        player.addAnalyticsListener(androidx.media3.exoplayer.util.EventLogger(trackSelector))
         // Register global WebViewCookieHandler to delegate JVM-level requests to Android WebView's CookieManager
         try {
             CookieHandler.setDefault(WebViewCookieHandler())
