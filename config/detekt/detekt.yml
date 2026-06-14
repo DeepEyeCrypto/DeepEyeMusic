@@ -1,0 +1,50 @@
+build:
+  maxIssues: 0
+
+complexity:
+  LongMethod:
+    threshold: 60
+  ComplexMethod:
+    active: true
+  LargeClass:
+    threshold: 400
+
+coroutines:
+  GlobalCoroutineUsage:
+    active: true
+  RedundantSuspendModifier:
+    active: true
+  SuspendFunWithFlowReturnType:
+    active: true
+
+empty-blocks:
+  EmptyCatchBlock:
+    active: true
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: true
+  SwallowedException:
+    active: true
+
+naming:
+  ClassNaming:
+    active: true
+  FunctionNaming:
+    active: true
+
+potential-bugs:
+  EqualsAlwaysReturnsTrueOrFalse:
+    active: true
+  UnreachableCode:
+    active: true
+  NullableToStringCall:
+    active: true
+  ElseCaseInsteadOfExhaustiveWhen:
+    active: true
+
+performance:
+  SpreadOperator:
+    active: true
+  UnnecessaryTemporaryInstantiation:
+    active: true

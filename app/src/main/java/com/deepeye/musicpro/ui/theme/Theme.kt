@@ -4,93 +4,142 @@
 package com.deepeye.musicpro.ui.theme
 
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.deepeye.musicpro.util.ExtractedColors
 
-/**
- * DeepEye Music Pro — Material 3 Theme
- *
- * Supports dark/light modes with dynamic color (Material You) on Android 12+.
- * Falls back to the custom DeepEye palette on older devices.
- */
-
-private val DarkColorScheme = darkColorScheme(
-    primary            = DeepEyePrimary,
-    onPrimary          = DarkOnBackground,
-    primaryContainer   = DeepEyePrimaryDark,
-    secondary          = DeepEyeSecondary,
-    onSecondary        = DarkOnBackground,
-    tertiary           = DeepEyeTertiary,
-    background         = DarkBackground,
-    onBackground       = DarkOnBackground,
-    surface            = DarkSurface,
-    onSurface          = DarkOnSurface,
-    surfaceVariant     = DarkSurfaceVariant,
-    onSurfaceVariant   = DarkOnSurfaceVariant,
-    outline            = DarkOutline,
-    error              = ErrorRed,
-    onError            = DarkOnBackground
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary            = DeepEyePrimary,
-    onPrimary          = LightOnBackground,
-    primaryContainer   = DeepEyePrimaryDark,
-    secondary          = DeepEyeSecondary,
-    onSecondary        = LightOnBackground,
-    tertiary           = DeepEyeTertiary,
-    background         = LightBackground,
-    onBackground       = LightOnBackground,
-    surface            = LightSurface,
-    onSurface          = LightOnSurface,
-    surfaceVariant     = LightSurfaceVariant,
-    onSurfaceVariant   = LightOnSurfaceVariant,
-    outline            = LightOutline,
-    error              = ErrorRed,
-    onError            = LightOnBackground
-)
-
 @Composable
-fun DeepEyeTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+fun DeepEyeMusicTheme(
+    darkTheme: Boolean = true,
+    useDynamicColor: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
+    amoledMode: Boolean = false,
     overrideColors: ExtractedColors? = null,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
-    val colorScheme = when {
-        overrideColors != null -> {
-            darkColorScheme(
-                primary = overrideColors.primary,
-                secondary = overrideColors.secondary,
-                tertiary = overrideColors.tertiary,
-                background = overrideColors.background,
-                surface = overrideColors.background,
-                onPrimary = Color.White,
-                onBackground = Color.White,
-                onSurface = Color.White
-            )
+    val context = LocalContext.current
+
+    val colorScheme =
+        when {
+            overrideColors != null -> {
+                val animPrimary by animateColorAsState(
+                    targetValue = overrideColors.primary,
+                    animationSpec = tween(600),
+                    label = "ThemePrimary"
+                )
+                val animSecondary by animateColorAsState(
+                    targetValue = overrideColors.secondary,
+                    animationSpec = tween(600),
+                    label = "ThemeSecondary"
+                )
+                val animTertiary by animateColorAsState(
+                    targetValue = overrideColors.tertiary,
+                    animationSpec = tween(600),
+                    label = "ThemeTertiary"
+                )
+                val animBackground by animateColorAsState(
+                    targetValue = if (amoledMode) AmoledBlack else overrideColors.background,
+                    animationSpec = tween(600),
+                    label = "ThemeBackground"
+                )
+                val animSurface by animateColorAsState(
+                    targetValue = if (amoledMode) AmoledSurface else overrideColors.background,
+                    animationSpec = tween(600),
+                    label = "ThemeSurface"
+                )
+
+                if (darkTheme) {
+                    darkColorScheme(
+                        primary = animPrimary,
+                        secondary = animSecondary,
+                        tertiary = animTertiary,
+                        background = animBackground,
+                        surface = animSurface,
+                        onPrimary = Color.Black,
+                        onBackground = TextPrimary,
+                        onSurface = TextPrimary,
+                    )
+                } else {
+                    lightColorScheme(
+                        primary = animPrimary,
+                        secondary = animSecondary,
+                        tertiary = animTertiary,
+                        background = Color(0xFFF5F6FA), // Keep light background for contrast
+                        surface = Color.White,
+                        surfaceVariant = Color(0xFFF0F1F5),
+                        onPrimary = Color.Black, // Dark text on potentially light primary buttons
+                        onSecondary = Color.Black,
+                        onBackground = Color(0xFF1A1C20),
+                        onSurface = Color(0xFF2D3038),
+                        onSurfaceVariant = Color(0xFF6B7080), // Proper placeholder text color
+                    )
+                }
+            }
+            useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme ->
+                dynamicDarkColorScheme(context)
+            useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !darkTheme ->
+                dynamicLightColorScheme(context)
+            else ->
+                if (darkTheme) {
+                    darkColorScheme(
+                        primary = TealGlow,
+                        secondary = AccentHot,
+                        tertiary = AccentPink,
+                        background = if (amoledMode) AmoledBlack else DeepBg,
+                        surface = if (amoledMode) AmoledSurface else DeepSurface,
+                        surfaceVariant = if (amoledMode) AmoledSurface2 else DeepSurface2,
+                        onPrimary = Color.Black,
+                        onSecondary = Color.Black,
+                        onBackground = TextPrimary,
+                        onSurface = TextPrimary,
+                    )
+                } else {
+                    lightColorScheme(
+                        primary = TealDim,
+                        secondary = AccentHot,
+                        tertiary = AccentPink,
+                        background = Color(0xFFF5F6FA),
+                        surface = Color.White,
+                        surfaceVariant = Color(0xFFF0F1F5),
+                        onPrimary = Color.Black, // Fix for light theme default text on buttons
+                        onSecondary = Color.Black,
+                        onBackground = Color(0xFF1A1C20),
+                        onSurface = Color(0xFF2D3038),
+                        onSurfaceVariant = Color(0xFF6B7080), // Fix for light theme default placeholder text
+                        outline = Color(0xFFD0D3DC),
+                    )
+                }
         }
-        // Use Material You dynamic colors on Android 12+ if enabled
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+
+
+    val view = androidx.compose.ui.platform.LocalView.current
+    if (!view.isInEditMode) {
+        androidx.compose.runtime.SideEffect {
+            var context = view.context
+            while (context is android.content.ContextWrapper) {
+                if (context is android.app.Activity) break
+                context = context.baseContext
+            }
+            val window = (context as? android.app.Activity)?.window
+            if (window != null) {
+                androidx.core.view.WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+                androidx.core.view.WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
+            }
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = DeepEyeTypography,
-        shapes = DeepEyeShapes,
-        content = content
+        typography = AppTypography,
+        shapes = AppShapes,
+        content = content,
     )
 }

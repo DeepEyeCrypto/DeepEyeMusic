@@ -4,14 +4,12 @@
 package com.deepeye.musicpro
 
 import android.Manifest
-import android.app.PictureInPictureParams
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
-import android.util.Rational
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -29,11 +27,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.deepeye.musicpro.data.prefs.ThemeMode
 import com.deepeye.musicpro.ui.DeepEyeMusicApp
 import com.deepeye.musicpro.ui.FullscreenMode
-import com.deepeye.musicpro.ui.theme.DeepEyeTheme
+import com.deepeye.musicpro.ui.theme.DeepEyeMusicTheme
 import com.deepeye.musicpro.ui.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -53,24 +54,43 @@ class MainActivity : ComponentActivity() {
     @javax.inject.Inject
     lateinit var playerController: com.deepeye.musicpro.player.controller.PlayerController
 
+    @javax.inject.Inject
+    lateinit var contentFetcher: com.deepeye.musicpro.domain.recommendation.ContentFetcher
+
     private val themeViewModel: ThemeViewModel by viewModels()
 
     /** Fullscreen mode controller for auto-rotate to landscape on fullscreen */
     val fullscreenMode = FullscreenMode().apply {
-        onEnterFullscreen = {
-            // Lock to sensor landscape for fullscreen video
-            this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        onEnterFullscreen = { forceLandscape ->
+            // Lock to sensor landscape for fullscreen video only if requested (e.g. via button)
+            if (forceLandscape) {
+                this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            }
             val windowInsetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
             windowInsetsController.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             windowInsetsController.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            // Fix for SurfaceView edge-to-edge black bar bug on Android 14+
+            window.attributes.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.setDecorFitsSystemWindows(false)
+            }
         }
         onExitFullscreen = {
             // Restore to unspecified so the user can freely rotate again
             this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             val windowInsetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
             windowInsetsController.show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            enableEdgeToEdge(
+                statusBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+                navigationBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+            )
         }
     }
+
+    private lateinit var pipEngine: com.deepeye.musicpro.player.controller.PipEngine
+
+    private var orientationEventListener: android.view.OrientationEventListener? = null
+    private var hasRotatedToLandscape = false
 
     /** Observable PiP state for Compose UI */
     var isInPipMode by mutableStateOf(false)
@@ -90,6 +110,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        orientationEventListener?.disable()
+    }
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -103,43 +128,149 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
 
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+        )
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+            window.isStatusBarContrastEnforced = false
+        }
+        window.setBackgroundDrawableResource(android.R.color.transparent)
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
+        pipEngine = com.deepeye.musicpro.player.controller.PipEngine(this, playerController)
 
         checkAndRequestPermissions()
 
-        // Observe player state to dynamically toggle Android 12+ auto-PiP
+        orientationEventListener = object : android.view.OrientationEventListener(this) {
+            override fun onOrientationChanged(orientation: Int) {
+                if (orientation == ORIENTATION_UNKNOWN) return
+                
+                // Allow a generous range for landscape and portrait
+                val isPortrait = (orientation in 0..30) || (orientation in 330..359) || (orientation in 150..210)
+                val isLandscape = (orientation in 60..120) || (orientation in 240..300)
+                
+                if (fullscreenMode.isFullscreen) {
+                    if (isLandscape) {
+                        hasRotatedToLandscape = true
+                    } else if (isPortrait && hasRotatedToLandscape) {
+                        // User physically rotated back to portrait after being in landscape!
+                        fullscreenMode.exit()
+                    }
+                } else {
+                    hasRotatedToLandscape = false
+                }
+            }
+        }
+        if (orientationEventListener?.canDetectOrientation() == true) {
+            orientationEventListener?.enable()
+        }
+
+        // Initialize Brave Shields Engine for 0-latency tracking protection and background auto-sync
+        com.deepeye.musicpro.engine.BraveShieldsEngine.initialize(applicationContext)
+
+        // Observe player state to dynamically toggle Android 12+ auto-PiP.
+        // Only react to fields that affect PiP params (video mode + play/pause),
+        // NOT the 250ms position ticks which would otherwise rebuild PiP params
+        // and remote actions four times per second.
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                playerController.playerState.collect { state ->
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        val shouldAutoEnter = state.isVideo && state.isPlaying
-                        setPictureInPictureParams(
-                            PictureInPictureParams.Builder()
-                                .setAspectRatio(Rational(16, 9))
-                                .setAutoEnterEnabled(shouldAutoEnter)
-                                .setSeamlessResizeEnabled(true)
-                                .build()
-                        )
+                playerController.playerState
+                    .map { it.isVideo to it.isPlaying }
+                    .distinctUntilChanged()
+                    .collect {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            pipEngine.updatePipParams()
+                        }
                     }
-                }
             }
         }
 
         setContent {
+            val appSettings by themeViewModel.settings.collectAsStateWithLifecycle()
             val dynamicColors by themeViewModel.dynamicColors.collectAsStateWithLifecycle()
             val windowSizeClass = androidx.compose.material3.windowsizeclass.calculateWindowSizeClass(this)
 
-            DeepEyeTheme(overrideColors = dynamicColors) {
+            val isDarkTheme = when (appSettings.themeMode) {
+                ThemeMode.DARK -> true
+                ThemeMode.LIGHT -> false
+                ThemeMode.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
+            }
+            val useDynamicColor = appSettings.dynamicColor
+
+            val currentDensity = androidx.compose.ui.platform.LocalDensity.current
+            val clampedDensity = androidx.compose.ui.unit.Density(
+                density = currentDensity.density.coerceAtMost(3.0f), // Don't let layout scale too extremely either
+                fontScale = 1.0f // STRICTLY enforce 1.0x font scaling for editor-grade UI stability
+            )
+
+            androidx.compose.runtime.CompositionLocalProvider(
+                androidx.compose.ui.platform.LocalDensity provides clampedDensity
+            ) {
+                DeepEyeMusicTheme(
+                    darkTheme = isDarkTheme,
+                    useDynamicColor = useDynamicColor,
+                    amoledMode = appSettings.amoledMode,
+                    overrideColors = dynamicColors
+                ) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    DeepEyeMusicApp(
-                        isInPipMode = isInPipMode,
-                        fullscreenMode = fullscreenMode,
-                        playerController = playerController,
-                        windowSizeClass = windowSizeClass
-                    )
+                    androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize()) {
+                        // Premium Fog / Mesh Background
+                        if (!appSettings.amoledMode) {
+                            val color1 = androidx.compose.material3.MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                            val color2 = androidx.compose.material3.MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
+                            val color3 = androidx.compose.material3.MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)
+                            
+                            androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+                                drawCircle(
+                                    brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                                        colors = listOf(color1, androidx.compose.ui.graphics.Color.Transparent),
+                                        center = androidx.compose.ui.geometry.Offset(0f, 0f),
+                                        radius = size.width * 1.2f
+                                    ),
+                                    radius = size.width * 1.2f,
+                                    center = androidx.compose.ui.geometry.Offset(0f, 0f)
+                                )
+                                drawCircle(
+                                    brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                                        colors = listOf(color2, androidx.compose.ui.graphics.Color.Transparent),
+                                        center = androidx.compose.ui.geometry.Offset(size.width, size.height * 0.4f),
+                                        radius = size.width
+                                    ),
+                                    radius = size.width,
+                                    center = androidx.compose.ui.geometry.Offset(size.width, size.height * 0.4f)
+                                )
+                                drawCircle(
+                                    brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                                        colors = listOf(color3, androidx.compose.ui.graphics.Color.Transparent),
+                                        center = androidx.compose.ui.geometry.Offset(size.width * 0.2f, size.height),
+                                        radius = size.width * 1.1f
+                                    ),
+                                    radius = size.width * 1.1f,
+                                    center = androidx.compose.ui.geometry.Offset(size.width * 0.2f, size.height)
+                                )
+                            }
+                        }
+
+                        DeepEyeMusicApp(
+                            isInPipMode = isInPipMode,
+                            fullscreenMode = fullscreenMode,
+                            playerController = playerController,
+                            windowSizeClass = windowSizeClass
+                        )
+                    }
                 }
             }
+            }
         }
+        
+        handleIntent(intent)
     }
 
     // ── Picture-in-Picture ──
@@ -151,14 +282,8 @@ class MainActivity : ComponentActivity() {
      */
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            // Only pre-12 needs this; Android 12+ uses setAutoEnterEnabled
-            if (::playerController.isInitialized) {
-                val state = playerController.playerState.value
-                if (state.isVideo && state.isPlaying) {
-                    enterPipMode()
-                }
-            }
+        if (::pipEngine.isInitialized) {
+            pipEngine.onUserLeaveHint()
         }
     }
 
@@ -172,11 +297,8 @@ class MainActivity : ComponentActivity() {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         isInPipMode = isInPictureInPictureMode
 
-        if (!isInPictureInPictureMode) {
-            // Returned from PiP — restore foreground state
-            if (::playerController.isInitialized) {
-                playerController.setAppInForeground(true)
-            }
+        if (::pipEngine.isInitialized) {
+            pipEngine.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         }
     }
 
@@ -185,47 +307,18 @@ class MainActivity : ComponentActivity() {
      * Guarded: will no-op if not playing video.
      */
     fun enterPipMode() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-
-        // Guard: only enter PiP if video is actually playing
-        if (::playerController.isInitialized) {
-            val state = playerController.playerState.value
-            if (!state.isVideo) return
+        if (::pipEngine.isInitialized) {
+            pipEngine.enterPipMode()
         }
-
-        val params = PictureInPictureParams.Builder()
-            .setAspectRatio(Rational(16, 9))
-            .apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    setAutoEnterEnabled(true)
-                    setSeamlessResizeEnabled(true)
-                }
-            }
-            .build()
-        enterPictureInPictureMode(params)
     }
 
     /**
      * Update PiP params (e.g., source rect hint for smooth animation).
      */
     fun updatePipParams(sourceRect: Rect? = null) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-
-        val builder = PictureInPictureParams.Builder()
-            .setAspectRatio(Rational(16, 9))
-
-        if (sourceRect != null) {
-            builder.setSourceRectHint(sourceRect)
+        if (::pipEngine.isInitialized) {
+            pipEngine.updatePipParams(sourceRect)
         }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val state = if (::playerController.isInitialized) playerController.playerState.value else null
-            val shouldAutoEnter = state?.isVideo == true && state.isPlaying
-            builder.setAutoEnterEnabled(shouldAutoEnter)
-            builder.setSeamlessResizeEnabled(true)
-        }
-
-        setPictureInPictureParams(builder.build())
     }
 
     private fun checkAndRequestPermissions() {
@@ -247,6 +340,112 @@ class MainActivity : ComponentActivity() {
 
         if (permissionsToRequest.isNotEmpty()) {
             requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
+        }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: android.content.Intent?) {
+        if (intent?.action == android.content.Intent.ACTION_SEND && intent.type == "text/plain") {
+            val sharedText = intent.getStringExtra(android.content.Intent.EXTRA_TEXT) ?: return
+            
+            // Extract YouTube video ID (handles youtu.be, youtube.com/watch?v=, youtube.com/shorts/, etc)
+            val youtubeUrlRegex = Regex("(?:youtube\\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\\.be/|youtube\\.com/shorts/)([^\"&?/\\s]{11})")
+            val match = youtubeUrlRegex.find(sharedText)
+            
+            if (match != null) {
+                val videoId = match.groups[1]?.value ?: return
+                lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    try {
+                        val results = contentFetcher.searchByQuery(videoId, 1)
+                        val videoItem = results.firstOrNull { it.videoId == videoId } ?: results.firstOrNull()
+                        
+                        val title = videoItem?.title ?: "Shared Audio"
+                        val artist = videoItem?.artist ?: "YouTube"
+                        
+                        val remoteItem = com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                            id = videoId,
+                            title = title,
+                            artist = artist,
+                            artworkUri = android.net.Uri.parse("https://img.youtube.com/vi/$videoId/hqdefault.jpg"),
+                            duration = 0L,
+                            isVideo = true
+                        )
+                        
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                            playerController.playMedia(remoteItem)
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("MainActivity", "Error handling shared YouTube link", e)
+                    }
+                }
+            }
+            return
+        }
+
+        if (intent?.action == android.content.Intent.ACTION_VIEW || intent?.action == android.content.Intent.ACTION_SEND) {
+            val uri = intent.data ?: (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(android.content.Intent.EXTRA_STREAM, android.net.Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(android.content.Intent.EXTRA_STREAM) as? android.net.Uri
+            }) ?: return
+            
+            lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                var title = "Unknown Title"
+                var artist = "Unknown Artist"
+                var duration = 0L
+                try {
+                    val retriever = android.media.MediaMetadataRetriever()
+                    retriever.setDataSource(this@MainActivity, uri)
+                    title = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_TITLE) ?: "Unknown Title"
+                    artist = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: "Unknown Artist"
+                    val durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)
+                    duration = durationStr?.toLongOrNull() ?: 0L
+                    retriever.release()
+                } catch (e: Exception) {
+                    android.util.Log.e("MainActivity", "Error extracting metadata", e)
+                }
+
+                if (title == "Unknown Title" && uri.scheme == "content") {
+                    try {
+                        contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                            if (cursor.moveToFirst()) {
+                                val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                                if (nameIndex != -1) {
+                                    val displayName = cursor.getString(nameIndex)
+                                    if (displayName != null) {
+                                        title = displayName.substringBeforeLast('.')
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {}
+                } else if (title == "Unknown Title" && uri.scheme == "file") {
+                    title = uri.lastPathSegment?.substringBeforeLast('.') ?: "Unknown Title"
+                }
+
+                val song = com.deepeye.musicpro.domain.model.Song(
+                    id = uri.hashCode().toLong(),
+                    title = title,
+                    artist = artist,
+                    album = "",
+                    albumId = 0L,
+                    artistId = 0L,
+                    uri = uri,
+                    duration = duration,
+                    size = 0L,
+                    path = uri.toString(),
+                    artUri = null
+                )
+                
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    playerController.playMedia(com.deepeye.musicpro.domain.model.MediaItem.Local(song))
+                }
+            }
         }
     }
 }

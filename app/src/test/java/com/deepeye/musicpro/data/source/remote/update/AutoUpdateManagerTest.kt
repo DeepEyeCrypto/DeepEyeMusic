@@ -1,24 +1,29 @@
 package com.deepeye.musicpro.data.source.remote.update
 
-import android.app.DownloadManager
 import android.content.Context
-import io.mockk.every
+import androidx.test.core.app.ApplicationProvider
 import io.mockk.mockk
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class AutoUpdateManagerTest {
+    private lateinit var context: Context
+    private lateinit var updateManager: AutoUpdateManager
 
-    private val context: Context = mockk(relaxed = true) {
-        every { getSystemService(Context.DOWNLOAD_SERVICE) } returns mockk<DownloadManager>(relaxed = true)
+    @Before
+    fun setUp() {
+        context = ApplicationProvider.getApplicationContext()
+        updateManager = AutoUpdateManager(
+            context = context,
+            okHttpClient = mockk(relaxed = true),
+            gson = mockk(relaxed = true),
+        )
     }
-
-    private val updateManager = AutoUpdateManager(
-        context = context,
-        okHttpClient = mockk(relaxed = true),
-        gson = mockk(relaxed = true)
-    )
 
     @Test
     fun testIsNewerVersion_newerMajor() {

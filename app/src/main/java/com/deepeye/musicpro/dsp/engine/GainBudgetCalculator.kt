@@ -3,7 +3,6 @@
 
 package com.deepeye.musicpro.dsp.engine
 
-import android.util.Log
 import com.deepeye.musicpro.dsp.model.DspParams
 import com.deepeye.musicpro.dsp.model.GainBudget
 import com.deepeye.musicpro.dsp.model.RiskLevel
@@ -13,7 +12,6 @@ import com.deepeye.musicpro.dsp.model.RiskLevel
  * Used to prevent digital clipping and provide real-time feedback.
  */
 object GainBudgetCalculator {
-
     fun calculate(params: DspParams): GainBudget {
         var total = 0f
 
@@ -45,11 +43,12 @@ object GainBudgetCalculator {
         // PGC headroom subtracts from total
         total += params.pgcGain // negative value reduces risk
 
-        val risk = when {
-            total < 8f  -> RiskLevel.SAFE
-            total < 14f -> RiskLevel.MODERATE
-            else        -> RiskLevel.DANGER
-        }
+        val risk =
+            when {
+                total < 8f -> RiskLevel.SAFE
+                total < 14f -> RiskLevel.MODERATE
+                else -> RiskLevel.DANGER
+            }
 
         return GainBudget(totalDb = total.coerceAtLeast(0f), risk = risk)
     }
@@ -63,8 +62,10 @@ object GainBudgetCalculator {
             params.copy(
                 loudnessTargetGainMb = (params.loudnessTargetGainMb * 0.5f).toInt(),
                 bassBoostStrength = (params.bassBoostStrength * 0.7f).toInt(),
-                viperBassGain = params.viperBassGain * 0.8f
+                viperBassGain = params.viperBassGain * 0.8f,
             )
-        } else params
+        } else {
+            params
+        }
     }
 }

@@ -3,7 +3,6 @@
 
 package com.deepeye.musicpro.ui
 
-import android.content.pm.ActivityInfo
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,13 +19,13 @@ class FullscreenMode {
         private set
 
     /** Callback interface for the Activity to implement */
-    var onEnterFullscreen: () -> Unit = {}
+    var onEnterFullscreen: (Boolean) -> Unit = {}
     var onExitFullscreen: () -> Unit = {}
 
-    fun enter() {
+    fun enter(forceLandscape: Boolean = true) {
         if (isFullscreen) return
         isFullscreen = true
-        onEnterFullscreen()
+        onEnterFullscreen(forceLandscape)
     }
 
     fun exit() {

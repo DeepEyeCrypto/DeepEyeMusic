@@ -8,7 +8,6 @@ package com.deepeye.musicpro.core.utils
  * Pure Kotlin — zero Android dependencies.
  */
 object TimeFormatter {
-
     /**
      * Formats milliseconds to "mm:ss" or "h:mm:ss" format.
      */

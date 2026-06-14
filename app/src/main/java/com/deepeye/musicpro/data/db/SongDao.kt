@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.Flow
  */
 @Dao
 interface SongDao {
-
     @Query("SELECT * FROM songs ORDER BY title ASC")
     fun getAllSongs(): Flow<List<SongEntity>>
 
@@ -32,68 +31,80 @@ interface SongDao {
     @Query("SELECT * FROM songs WHERE genre = :genre ORDER BY title ASC")
     fun getSongsByGenre(genre: String): Flow<List<SongEntity>>
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM songs 
         WHERE title LIKE '%' || :query || '%' 
            OR artist LIKE '%' || :query || '%' 
            OR album LIKE '%' || :query || '%'
         ORDER BY title ASC
-    """)
+    """,
+    )
     fun searchSongs(query: String): Flow<List<SongEntity>>
 
     @Query("SELECT * FROM songs ORDER BY date_added DESC LIMIT :limit")
     fun getRecentlyAdded(limit: Int): Flow<List<SongEntity>>
 
     // ── Aggregation queries for Albums ──
-    @Query("""
+    @Query(
+        """
         SELECT DISTINCT album_id, album, artist, artist_id, art_uri, 
                COUNT(*) as song_count, SUM(duration) as total_duration,
                MAX(year) as year
         FROM songs 
         GROUP BY album_id 
         ORDER BY album ASC
-    """)
+    """,
+    )
     fun getAllAlbums(): Flow<List<AlbumProjection>>
 
-    @Query("""
+    @Query(
+        """
         SELECT DISTINCT album_id, album, artist, artist_id, art_uri,
                COUNT(*) as song_count, SUM(duration) as total_duration,
                MAX(year) as year
         FROM songs 
         WHERE album_id = :albumId 
         GROUP BY album_id
-    """)
+    """,
+    )
     fun getAlbumById(albumId: Long): Flow<AlbumProjection?>
 
     // ── Aggregation queries for Artists ──
-    @Query("""
+    @Query(
+        """
         SELECT DISTINCT artist_id, artist,
                COUNT(DISTINCT album_id) as album_count,
                COUNT(*) as song_count
         FROM songs 
         GROUP BY artist_id 
         ORDER BY artist ASC
-    """)
+    """,
+    )
     fun getAllArtists(): Flow<List<ArtistProjection>>
 
-    @Query("""
+    @Query(
+        """
         SELECT DISTINCT artist_id, artist,
                COUNT(DISTINCT album_id) as album_count,
                COUNT(*) as song_count
         FROM songs 
         WHERE artist_id = :artistId 
         GROUP BY artist_id
-    """)
+    """,
+    )
     fun getArtistById(artistId: Long): Flow<ArtistProjection?>
 
     // ── Aggregation queries for Genres ──
-    @Query("""
+    @Query(
+        """
         SELECT genre, COUNT(*) as song_count 
         FROM songs 
         WHERE genre != '' 
         GROUP BY genre 
         ORDER BY genre ASC
-    """)
+    """,
+    )
     fun getAllGenres(): Flow<List<GenreProjection>>
 
     // ── Write operations ──
@@ -127,7 +138,7 @@ data class AlbumProjection(
     val art_uri: String?,
     val song_count: Int,
     val total_duration: Long,
-    val year: Int
+    val year: Int,
 )
 
 /**
@@ -137,7 +148,7 @@ data class ArtistProjection(
     val artist_id: Long,
     val artist: String,
     val album_count: Int,
-    val song_count: Int
+    val song_count: Int,
 )
 
 /**
@@ -145,5 +156,5 @@ data class ArtistProjection(
  */
 data class GenreProjection(
     val genre: String,
-    val song_count: Int
+    val song_count: Int,
 )

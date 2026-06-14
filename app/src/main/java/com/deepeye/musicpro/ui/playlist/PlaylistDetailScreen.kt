@@ -31,21 +31,26 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class PlaylistDetailViewModel @Inject constructor(
+class PlaylistDetailViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
-    repository: PlaylistRepository
+    repository: PlaylistRepository,
 ) : ViewModel() {
     private val playlistId: Long = savedStateHandle.get<Long>("playlistId") ?: 0L
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
     val songs: StateFlow<List<Song>> = _songs.asStateFlow()
-    init { viewModelScope.launch { repository.getPlaylistSongs(playlistId).collect { _songs.value = it } } }
+
+    init {
+        viewModelScope.launch { repository.getPlaylistSongs(playlistId).collect { _songs.value = it } }
+    }
 }
 
 @Composable
 fun PlaylistDetailScreen(
     playlistId: Long,
     onNavigateBack: () -> Unit,
-    viewModel: PlaylistDetailViewModel = hiltViewModel()
+    viewModel: PlaylistDetailViewModel = hiltViewModel(),
 ) {
     val songs by viewModel.songs.collectAsStateWithLifecycle()
 
@@ -53,16 +58,33 @@ fun PlaylistDetailScreen(
         item {
             Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
-                Text("Playlist", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(start = 8.dp))
+                Text(
+                    "Playlist",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
             }
         }
         items(songs, key = { it.id }) { song ->
             Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp)) {
                 Column(Modifier.weight(1f)) {
-                    Text(song.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(song.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        song.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        song.artist,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-                Text(TimeFormatter.formatDuration(song.duration), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    TimeFormatter.formatDuration(song.duration),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

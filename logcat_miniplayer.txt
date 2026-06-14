@@ -1,0 +1,720 @@
+--------- beginning of system
+05-25 10:36:42.376 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:38:28.583 E/ActivityThread(28347): Failed to find provider info for subscribedfeeds
+05-25 10:41:08.036 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:41:09.889 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:41:12.483 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:41:14.178 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:46:16.152 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.161 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.182 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.608 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.610 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.611 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.613 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.622 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.624 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:53:19.838 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:53:19.838 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:53:19.838 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:53:19.838 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 10:53:21.048 E/ShortcutService( 3077): Invalid icon type in shortcut 66791137099963@lid. Bitmaps are not allowed in long-lived shortcuts. Use Resource icons, or Uri-based icons instead.
+05-25 10:55:47.302 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:55:47.302 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:55:47.302 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:55:47.302 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 10:57:21.262 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:57:21.262 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:57:21.262 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:57:21.262 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 10:58:21.381 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:58:21.381 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:58:21.381 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:58:21.381 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 10:59:34.365 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:59:34.365 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:59:34.365 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:59:34.365 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 11:00:33.367 E/ActivityTaskManager( 3077): Abort background activity starts from 10376
+05-25 11:00:33.392 E/ActivityTaskManager( 3077): Abort background activity starts from 10376
+05-25 11:00:33.529 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 11:03:52.797 E/NotificationService( 3077): Muting recently noisy 0|in.rebase.app|1|null|10471
+05-25 11:04:33.685 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.686 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.686 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.716 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.720 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.725 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.744 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.759 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.775 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:07:33.672 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 11:12:09.333 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:12:09.341 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:12:09.347 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:12:09.463 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:12:09.464 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:12:09.466 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:12:09.471 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:12:09.472 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:12:09.473 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+--------- beginning of main
+05-25 11:12:55.091 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:12:55.118 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:12:57.729 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:12:57.761 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:13:06.226 E/ANDR-PERF-LM( 1849): MetaMeter: handleAsync() 166: AdaptLaunch Invalid Async
+05-25 11:13:06.226 E/ANDR-PERF-LM( 1849): MetaMeter: handleAsync() 166: AdaptLaunch Invalid Async
+05-25 11:13:06.258 E/OpenGLRenderer( 7709): Unable to match the desired swap behavior.
+05-25 11:13:06.266 E/ANDR-PERF-LM( 1849): MetaMeter: handleAsync() 166: AdaptLaunch Invalid Async
+05-25 11:13:06.299 E/QTI PowerHAL( 1767): Failed to acquire lock for hint_id: 10A5.
+05-25 11:13:06.328 E/ANDR-PERF-LM( 1849): MetaMeter: handleAsync() 166: AdaptLaunch Invalid Async
+05-25 11:13:07.189 E/AudioSessionManager(28260): attachToPlayer called with player: androidx.media3.exoplayer.ExoPlayerImpl@9049caa
+05-25 11:13:07.189 E/AudioSessionManager(28260): Handling session change: 0 -> 42265
+05-25 11:13:07.265 E/ANDR-PERF-LM( 1849): VmRssMeter:: start() 358: Could not find pid, can not collect vmrss data
+05-25 11:13:07.265 E/ANDR-PERF-LM( 1849): AdaptiveLaunch: writeToDataBase() 64: Meter aborted or could not get meter data for this run
+05-25 11:13:07.267 E/ANDR-PERF-LM( 1849): VmRssMeter:: start() 358: Could not find pid, can not collect vmrss data
+05-25 11:13:07.428 E/chromium(28260): [0525/111307.427625:ERROR:android_webview/browser/variations/variations_seed_loader.cc:39] Seed missing signature.
+05-25 11:13:07.471 E/libc    (28308): SetHeapTaggingLevel: re-enabling tagging after it was disabled is not supported
+05-25 11:13:07.682 E/OpenGLRenderer(28260): Unable to match the desired swap behavior.
+05-25 11:13:08.906 E/ity.app.android(28434): No package ID 6a found for resource ID 0x6a0b0013.
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.053 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.059 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.059 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.059 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.059 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.063 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.063 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.063 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.063 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.063 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.063 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.063 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.063 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.064 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.064 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.064 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.064 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.064 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.064 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.064 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.064 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.064 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.064 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.064 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.064 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.065 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.065 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.065 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.065 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.065 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.065 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.065 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.065 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.065 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.066 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.066 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.066 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.066 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.066 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.066 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.066 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.066 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.066 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.066 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.066 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.068 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.068 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.068 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.068 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.068 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.068 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.068 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.068 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.069 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.069 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.069 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.069 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.069 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.069 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.069 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.069 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.069 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.069 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.069 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.069 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.108 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.109 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.109 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.109 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:09.109 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.205 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:10.265 E/system_server( 3077): No package ID 7f found for resource ID 0x7f08008c.
+05-25 11:13:10.265 E/system_server( 3077): No package ID 7f found for resource ID 0x7f1408e1.
+05-25 11:13:10.265 E/system_server( 3077): No package ID 7f found for resource ID 0x7f1408dd.
+05-25 11:13:10.265 E/system_server( 3077): No package ID 7f found for resource ID 0x7f08008d.
+05-25 11:13:10.265 E/system_server( 3077): No package ID 7f found for resource ID 0x7f1408e2.
+05-25 11:13:10.265 E/system_server( 3077): No package ID 7f found for resource ID 0x7f1408de.
+05-25 11:13:10.265 E/system_server( 3077): No package ID 7f found for resource ID 0x7f080092.
+05-25 11:13:10.266 E/system_server( 3077): No package ID 7f found for resource ID 0x7f1408e4.
+05-25 11:13:10.266 E/system_server( 3077): No package ID 7f found for resource ID 0x7f1408e0.
+05-25 11:13:11.396 E/PlayerController(28260): playMedia called with item: Remote(id=7c3-Gei5j4w, title=Chaand Baaliyan – Aditya A. | Trending Song | Official Video, artist=Sony Music India, artworkUri=https://i.ytimg.com/vi/7c3-Gei5j4w/hq720.jpg?sqp=-oaymwEcCNAFEJQDSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLC4g6eQMG5eZgivYA73UaxnR7Lnaw, duration=122000, streamUri=null, isVideo=true)
+05-25 11:13:11.625 E/PlayerController(28260): Remote item: Chaand Baaliyan – Aditya A. | Trending Song | Official Video, id: 7c3-Gei5j4w, streamUri: null
+05-25 11:13:11.625 E/PlayerController(28260): streamUri is null or empty, fetching getStreamUrl...
+05-25 11:13:14.936 E/DatabaseUtils( 4090): Writing exception to parcel
+05-25 11:13:14.936 E/DatabaseUtils( 4090): java.lang.SecurityException: No permission to access APN settings
+05-25 11:13:14.936 E/DatabaseUtils( 4090): 	at com.android.providers.telephony.TelephonyProvider.checkPermissionForApnTable(TelephonyProvider.java:5480)
+05-25 11:13:14.936 E/DatabaseUtils( 4090): 	at com.android.providers.telephony.TelephonyProvider.checkPermission(TelephonyProvider.java:5452)
+05-25 11:13:14.936 E/DatabaseUtils( 4090): 	at com.android.providers.telephony.TelephonyProvider.checkPermissionCompat(TelephonyProvider.java:5497)
+05-25 11:13:14.936 E/DatabaseUtils( 4090): 	at com.android.providers.telephony.TelephonyProvider.query(TelephonyProvider.java:4063)
+05-25 11:13:14.936 E/DatabaseUtils( 4090): 	at android.content.ContentProvider.query(ContentProvider.java:1619)
+05-25 11:13:14.936 E/DatabaseUtils( 4090): 	at android.content.ContentProvider.query(ContentProvider.java:1715)
+05-25 11:13:14.936 E/DatabaseUtils( 4090): 	at android.content.ContentProvider$Transport.query(ContentProvider.java:302)
+05-25 11:13:14.936 E/DatabaseUtils( 4090): 	at android.content.ContentProviderNative.onTransact(ContentProviderNative.java:107)
+05-25 11:13:14.936 E/DatabaseUtils( 4090): 	at android.os.Binder.execTransactInternal(Binder.java:1380)
+05-25 11:13:14.936 E/DatabaseUtils( 4090): 	at android.os.Binder.execTransact(Binder.java:1310)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): Could not get APN after (but including) LollipopMr1: 
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): java.lang.SecurityException: No permission to access APN settings
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at android.os.Parcel.createExceptionOrNull(Parcel.java:3079)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at android.os.Parcel.createException(Parcel.java:3063)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at android.os.Parcel.readException(Parcel.java:3046)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at android.database.DatabaseUtils.readExceptionFromParcel(DatabaseUtils.java:190)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at android.database.DatabaseUtils.readExceptionFromParcel(DatabaseUtils.java:142)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at android.content.ContentProviderProxy.query(ContentProviderNative.java:495)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at android.content.ContentResolver.query(ContentResolver.java:1229)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at android.content.ContentResolver.query(ContentResolver.java:1161)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at android.content.ContentResolver.query(ContentResolver.java:1117)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at bksn.b(PG:113)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at bksn.a(PG:137)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at bkol.a(PG:608)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at bkok.s(PG:5)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at bkok.n(PG:52)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at qrm.call(PG:435)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at bmzq.a(PG:3)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at bmyv.run(PG:19)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at bmzr.run(PG:5)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1154)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:652)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at vpy.run(PG:636)
+05-25 11:13:14.936 E/RequestContextBuilder( 9843): 	at java.lang.Thread.run(Thread.java:1564)
+05-25 11:13:15.016 E/KeymasterUtils( 1268): rsp_header->status: -28
+05-25 11:13:15.016 E/KeyMasterHalDevice( 1268): abort_operation
+05-25 11:13:15.016 E/KeyMasterHalDevice( 1268): ret: -28
+05-25 11:13:15.072 E/KeymasterUtils( 1268): rsp_header->status: -28
+05-25 11:13:15.072 E/KeyMasterHalDevice( 1268): abort_operation
+05-25 11:13:15.072 E/KeyMasterHalDevice( 1268): ret: -28
+05-25 11:13:15.101 E/PlayerController(28260): First extraction fetched: null
+05-25 11:13:15.101 E/PlayerController(28260): All stream extraction attempts failed!
+05-25 11:13:15.110 E/PlayerController(28260): Video item fallback: using YouTube iframe playback
+05-25 11:13:15.151 E/OpenGLRenderer( 7709): Unable to match the desired swap behavior.
+05-25 11:13:15.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.958 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.958 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.958 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.958 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.958 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.958 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.958 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.958 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.958 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.958 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.958 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.958 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.959 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.959 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.961 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.961 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.966 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.968 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.971 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.971 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.971 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.971 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.971 E/AudioSessionManager(28260): attachToPlayer called with player: androidx.media3.exoplayer.ExoPlayerImpl@9049caa
+05-25 11:13:15.974 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.974 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.974 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.975 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.976 E/BluetoothAvrcpServiceJni( 3992): updatePlayStatusToStack
+05-25 11:13:15.976 E/bt_btif ( 3992): update_play_status_to_stack:invalid index,remote suspend not set
+05-25 11:13:15.976 E/BluetoothAvrcpServiceJni( 3992): updatePlayStatusToStack: status: 1
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.979 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.983 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.984 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.984 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:15.986 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.165 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.165 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.165 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.165 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.167 E/HybridPlayerCard(28260): LaunchedEffect: controlsVisible=true, isPlaying=true, interactionCount=0
+05-25 11:13:16.167 E/YouTubeVideoPlayer(28260): LaunchedEffect triggered - videoId: 7c3-Gei5j4w, isPlaying: true, muteWebViewAudio: true
+05-25 11:13:16.167 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.167 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.167 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.167 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.168 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.170 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.170 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.170 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.170 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.170 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.170 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.171 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.470 E/JavaBinder(28551): !!! FAILED BINDER TRANSACTION !!!  (parcel size = 552)
+05-25 11:13:16.669 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.669 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.669 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.669 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.669 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.669 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.669 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.669 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.669 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.669 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.670 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.670 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.670 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.670 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.670 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.670 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.670 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.670 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.670 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.670 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260): Playback error
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):   androidx.media3.exoplayer.ExoPlaybackException: Source error
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):       at androidx.media3.exoplayer.ExoPlayerImplInternal.handleIoException(ExoPlayerImplInternal.java:737)
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):       at androidx.media3.exoplayer.ExoPlayerImplInternal.handleMessage(ExoPlayerImplInternal.java:707)
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):       at android.os.Handler.dispatchMessage(Handler.java:107)
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):       at android.os.Looper.loopOnce(Looper.java:242)
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):       at android.os.Looper.loop(Looper.java:362)
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):       at android.os.HandlerThread.run(HandlerThread.java:85)
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):   Caused by: androidx.media3.exoplayer.source.UnrecognizedInputFormatException: None of the available extractors (FlvExtractor, FlacExtractor, WavExtractor, FragmentedMp4Extractor, Mp4Extractor, AmrExtractor, PsExtractor, OggExtractor, TsExtractor, MatroskaExtractor, AdtsExtractor, Ac3Extractor, Ac4Extractor, Mp3Extractor, AviExtractor, JpegExtractor, PngExtractor, WebpExtractor, BmpExtractor, HeifExtractor, AvifExtractor) could read the stream. {contentIsMalformed=false, dataType=1}
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):       at androidx.media3.exoplayer.source.BundledExtractorsAdapter.init(BundledExtractorsAdapter.java:108)
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):       at androidx.media3.exoplayer.source.ProgressiveMediaPeriod$ExtractingLoadable.load(ProgressiveMediaPeriod.java:1100)
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):       at androidx.media3.exoplayer.upstream.Loader$LoadTask.run(Loader.java:450)
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):       at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1154)
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):       at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:652)
+05-25 11:13:16.780 E/ExoPlayerImplInternal(28260):       at java.lang.Thread.run(Thread.java:1564)
+05-25 11:13:16.785 E/PlayerController(28260): ExoPlayer Error: Source error
+05-25 11:13:16.785 E/PlayerController(28260): androidx.media3.exoplayer.ExoPlaybackException: Source error
+05-25 11:13:16.785 E/PlayerController(28260): 	at androidx.media3.exoplayer.ExoPlayerImplInternal.handleIoException(ExoPlayerImplInternal.java:737)
+05-25 11:13:16.785 E/PlayerController(28260): 	at androidx.media3.exoplayer.ExoPlayerImplInternal.handleMessage(ExoPlayerImplInternal.java:707)
+05-25 11:13:16.785 E/PlayerController(28260): 	at android.os.Handler.dispatchMessage(Handler.java:107)
+05-25 11:13:16.785 E/PlayerController(28260): 	at android.os.Looper.loopOnce(Looper.java:242)
+05-25 11:13:16.785 E/PlayerController(28260): 	at android.os.Looper.loop(Looper.java:362)
+05-25 11:13:16.785 E/PlayerController(28260): 	at android.os.HandlerThread.run(HandlerThread.java:85)
+05-25 11:13:16.785 E/PlayerController(28260): Caused by: androidx.media3.exoplayer.source.UnrecognizedInputFormatException: None of the available extractors (FlvExtractor, FlacExtractor, WavExtractor, FragmentedMp4Extractor, Mp4Extractor, AmrExtractor, PsExtractor, OggExtractor, TsExtractor, MatroskaExtractor, AdtsExtractor, Ac3Extractor, Ac4Extractor, Mp3Extractor, AviExtractor, JpegExtractor, PngExtractor, WebpExtractor, BmpExtractor, HeifExtractor, AvifExtractor) could read the stream. {contentIsMalformed=false, dataType=1}
+05-25 11:13:16.785 E/PlayerController(28260): 	at androidx.media3.exoplayer.source.BundledExtractorsAdapter.init(BundledExtractorsAdapter.java:108)
+05-25 11:13:16.785 E/PlayerController(28260): 	at androidx.media3.exoplayer.source.ProgressiveMediaPeriod$ExtractingLoadable.load(ProgressiveMediaPeriod.java:1100)
+05-25 11:13:16.785 E/PlayerController(28260): 	at androidx.media3.exoplayer.upstream.Loader$LoadTask.run(Loader.java:450)
+05-25 11:13:16.785 E/PlayerController(28260): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1154)
+05-25 11:13:16.785 E/PlayerController(28260): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:652)
+05-25 11:13:16.785 E/PlayerController(28260): 	at java.lang.Thread.run(Thread.java:1564)
+05-25 11:13:16.986 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7db4 went down
+05-25 11:13:16.987 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7db5 went down
+05-25 11:13:16.988 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7db6 went down
+05-25 11:13:16.988 E/Diag_Lib( 1753): diag: Diag_LSM_Init: invoked for pid: 1753 with init_count: 0
+05-25 11:13:16.988 E/Diag_Lib( 1753): diag:failed to connect to diag socket
+05-25 11:13:16.988 E/Diag_Lib( 1753):  Diag_LSM_Init: Failed to open handle to diag driver, error = 13
+05-25 11:13:16.990 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7db7 went down
+05-25 11:13:17.032 E/RemoteProvisionSysSvc( 3077): RKP not allowed. Key 10207 for client 225037395
+05-25 11:13:17.032 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 11:13:17.036 E/QC-time-services( 1269): Receive Passed == base = 13, unit = 1, operation = 2, result = 0
+05-25 11:13:17.037 E/QC-time-services( 1573): Daemon: Time-services: Waiting to acceptconnection
+05-25 11:13:17.038 E/QC-time-services( 1573): Daemon: Time-services: Waiting to acceptconnection
+05-25 11:13:17.178 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7db8 went down
+05-25 11:13:17.261 E/QConfig ( 1822): failed to find module QModKey_Static_VppFilter
+05-25 11:13:17.261 E/QConfig ( 1822): failed to find module QModKey_Static_VppFilter
+05-25 11:13:17.262 E/QConfig ( 1822): failed to find module QModKey_Dynamic_VppFilter
+05-25 11:13:17.262 E/QConfig ( 1822): failed to find module QModKey_Dynamic_VppFilter
+05-25 11:13:17.297 E/QC2V4l2Codec( 1859): [vp9D_1524]  ? is not a supported pixel format!
+05-25 11:13:17.304 E/QC2Interface( 1859): Few parameters failed to configure
+05-25 11:13:17.333 E/QC2V4l2Driver( 1859): [vp9D_1524] failed to set format on port:OUT
+05-25 11:13:17.333 E/QC2V4l2Codec( 1859): [vp9D_1524] Failed to set resolution and buffer size for OUT port
+05-25 11:13:17.333 E/QC2Comp ( 1859): [vp9D_1524] handleQueue: Codec failed to configure !!
+05-25 11:13:17.358 E/chromium(28260): [ERROR:media/gpu/android/frame_info_helper.cc:231] Guessed coded size incorrectly. Expected 856x480, got 854x480
+05-25 11:13:19.168 E/HybridPlayerCard(28260): Auto-hiding controls after 3 seconds
+05-25 11:13:19.200 E/HybridPlayerCard(28260): LaunchedEffect: controlsVisible=false, isPlaying=true, interactionCount=0
+05-25 11:13:23.228 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:13:23.264 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:13:26.598 E/QC2Interface( 1859): Few parameters failed to configure
+05-25 11:13:26.613 E/QC2Comp ( 1859): comp.release() is called without comp.stop()
+05-25 11:13:28.163 E/HybridPlayerCard(28260): LaunchedEffect: controlsVisible=true, isPlaying=true, interactionCount=0
+05-25 11:13:28.163 E/YouTubeVideoPlayer(28260): LaunchedEffect triggered - videoId: 7c3-Gei5j4w, isPlaying: true, muteWebViewAudio: true
+05-25 11:13:28.360 E/QConfig ( 1822): failed to find module QModKey_Static_VppFilter
+05-25 11:13:28.360 E/QConfig ( 1822): failed to find module QModKey_Static_VppFilter
+05-25 11:13:28.361 E/QConfig ( 1822): failed to find module QModKey_Dynamic_VppFilter
+05-25 11:13:28.361 E/QConfig ( 1822): failed to find module QModKey_Dynamic_VppFilter
+05-25 11:13:28.392 E/QC2V4l2Codec( 1859): [vp9D_1525]  ? is not a supported pixel format!
+05-25 11:13:28.398 E/QC2Interface( 1859): Few parameters failed to configure
+05-25 11:13:28.414 E/QC2V4l2Driver( 1859): [vp9D_1525] failed to set format on port:OUT
+05-25 11:13:28.414 E/QC2V4l2Codec( 1859): [vp9D_1525] Failed to set resolution and buffer size for OUT port
+05-25 11:13:28.414 E/QC2Comp ( 1859): [vp9D_1525] handleQueue: Codec failed to configure !!
+05-25 11:13:28.417 E/chromium(28260): [ERROR:media/gpu/android/frame_info_helper.cc:231] Guessed coded size incorrectly. Expected 856x480, got 854x480
+05-25 11:13:28.752 E/QC2Interface( 1859): Few parameters failed to configure
+05-25 11:13:28.767 E/QC2Comp ( 1859): comp.release() is called without comp.stop()
+05-25 11:13:29.171 E/HybridPlayerCard(28260): LaunchedEffect: controlsVisible=true, isPlaying=true, interactionCount=0
+05-25 11:13:29.172 E/YouTubeVideoPlayer(28260): LaunchedEffect triggered - videoId: 7c3-Gei5j4w, isPlaying: true, muteWebViewAudio: true
+05-25 11:13:29.344 E/QConfig ( 1822): failed to find module QModKey_Static_VppFilter
+05-25 11:13:29.344 E/QConfig ( 1822): failed to find module QModKey_Static_VppFilter
+05-25 11:13:29.345 E/QConfig ( 1822): failed to find module QModKey_Dynamic_VppFilter
+05-25 11:13:29.345 E/QConfig ( 1822): failed to find module QModKey_Dynamic_VppFilter
+05-25 11:13:29.372 E/QC2V4l2Codec( 1859): [vp9D_1526]  ? is not a supported pixel format!
+05-25 11:13:29.378 E/QC2Interface( 1859): Few parameters failed to configure
+05-25 11:13:29.431 E/QC2V4l2Driver( 1859): [vp9D_1526] failed to set format on port:OUT
+05-25 11:13:29.431 E/QC2V4l2Codec( 1859): [vp9D_1526] Failed to set resolution and buffer size for OUT port
+05-25 11:13:29.431 E/QC2Comp ( 1859): [vp9D_1526] handleQueue: Codec failed to configure !!
+05-25 11:13:29.444 E/chromium(28260): [ERROR:media/gpu/android/frame_info_helper.cc:231] Guessed coded size incorrectly. Expected 856x480, got 854x480
+05-25 11:13:30.060 E/QC2Interface( 1859): Few parameters failed to configure
+05-25 11:13:30.073 E/YouTubeVideoPlayer(28260): WebView Error for https://rr1---sn-ci5gup-qxall.googlevideo.com/videoplayback?expire=1779709398&ei=duETav-QEuzs9fwPluq-gQk&ip=2401%3A4900%3A8811%3Af77a%3Afe41%3A79f3%3Add62%3Ac22d&id=o-AI8jNUACUUHvWDJZMdP4tqQ0z6Lpgp-LwNoGpKWPxthQ&itag=244&aitags=133%2C134%2C135%2C136%2C137%2C160%2C242%2C243%2C244%2C247%2C248%2C278%2C394%2C395%2C396%2C397%2C398%2C399&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=855&met=1779687798%2C&mh=99&mm=31%2C26&mn=sn-ci5gup-qxall%2Csn-cvh76nes&ms=au%2Conr&mv=m&mvi=1&pl=49&rms=au%2Cau&initcwndbps=1930000&bui=AbKmrwpEvAXB2SnPAlqKqTnmqFFTisGcFe1-HOdVkHBs2_WAU0CrHxRGFpPVwSmZZ5auEXuAZ_Vy8rWq&spc=96Xrv4MU35rvB6CklWZSSeJSooMlOGbvr7FeOnrwFPNUox7IJmafLMgU1Xb5QhxcO1q0gd-U&vprv=1&svpuc=1&mime=video%2Fwebm&ns=ftWkn0O1ol0MZZw13BehQj4V&rqh=1&gir=yes&clen=5113304&dur=121.496&lmt=1754052491845789&mt=1779686934&fvip=5&keepalive=yes&fexp=51565115%2C51565682&c=WEB_EMBEDDED_PLAYER&sefc=1&txp=4537534&n=llgyhtbpLMcQug&sparams=expire%2Cei%2Cip%2Cid%2Caitags%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRAIgJYCWGfzT2cUXpnE-00z7lc_eMwaRRiNUeCteCBMOOlwCIFWenLR0qxD7aZF-TdQIiPxPxWddNTUJTHajKw2mVS-G&alr=yes&sig=AHEqNM4wRAIgUUcL3UJ2BPrDN43v8IxXwkFuYgqNcL-AP_tS7UsoEiECIGYI9e0NAnYEsNuBBToWSr7ngHFFEbiuoAQl_UJuJHJ-&cpn=UDNGdi0yhBGRz-Fv&cver=2.20260522.01.00&range=156500-361449&rn=18&rbuf=2629&pot=MlNPobHreS_5HU-dw-ewZ6nVhJLLKNGGN80edkTnyVMk3nW5yV01Yj84DmiOJ-oJ9hO6ElPw7Wq_xSAooR9bAyV3lKXprT2QsTsBhygPqD56W9VsVQ==&ump=1&srfvp=1: net::ERR_FAILED (code: -1)
+05-25 11:13:30.074 E/QC2Comp ( 1859): comp.release() is called without comp.stop()
+05-25 11:13:30.225 E/HybridPlayerCard(28260): LaunchedEffect: controlsVisible=true, isPlaying=true, interactionCount=0
+05-25 11:13:30.226 E/YouTubeVideoPlayer(28260): LaunchedEffect triggered - videoId: 7c3-Gei5j4w, isPlaying: true, muteWebViewAudio: true
+05-25 11:13:30.863 E/YouTubeVideoPlayer(28260): WebView Error for https://rr1---sn-ci5gup-qxall.googlevideo.com/videoplayback?expire=1779709398&ei=duETav-QEuzs9fwPluq-gQk&ip=2401%3A4900%3A8811%3Af77a%3Afe41%3A79f3%3Add62%3Ac22d&id=o-AI8jNUACUUHvWDJZMdP4tqQ0z6Lpgp-LwNoGpKWPxthQ&itag=244&aitags=133%2C134%2C135%2C136%2C137%2C160%2C242%2C243%2C244%2C247%2C248%2C278%2C394%2C395%2C396%2C397%2C398%2C399&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=855&met=1779687798%2C&mh=99&mm=31%2C26&mn=sn-ci5gup-qxall%2Csn-cvh76nes&ms=au%2Conr&mv=m&mvi=1&pl=49&rms=au%2Cau&initcwndbps=1930000&bui=AbKmrwpEvAXB2SnPAlqKqTnmqFFTisGcFe1-HOdVkHBs2_WAU0CrHxRGFpPVwSmZZ5auEXuAZ_Vy8rWq&spc=96Xrv4MU35rvB6CklWZSSeJSooMlOGbvr7FeOnrwFPNUox7IJmafLMgU1Xb5QhxcO1q0gd-U&vprv=1&svpuc=1&mime=video%2Fwebm&ns=ftWkn0O1ol0MZZw13BehQj4V&rqh=1&gir=yes&clen=5113304&dur=121.496&lmt=1754052491845789&mt=1779686934&fvip=5&keepalive=yes&fexp=51565115%2C51565682&c=WEB_EMBEDDED_PLAYER&sefc=1&txp=4537534&n=llgyhtbpLMcQug&sparams=expire%2Cei%2Cip%2Cid%2Caitags%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRAIgJYCWGfzT2cUXpnE-00z7lc_eMwaRRiNUeCteCBMOOlwCIFWenLR0qxD7aZF-TdQIiPxPxWddNTUJTHajKw2mVS-G&alr=yes&sig=AHEqNM4wRAIgUUcL3UJ2BPrDN43v8IxXwkFuYgqNcL-AP_tS7UsoEiECIGYI9e0NAnYEsNuBBToWSr7ngHFFEbiuoAQl_UJuJHJ-&cpn=UDNGdi0yhBGRz-Fv&cver=2.20260522.01.00&range=585-156499&rn=20&rbuf=0&pot=MlNPobHreS_5HU-dw-ewZ6nVhJLLKNGGN80edkTnyVMk3nW5yV01Yj84DmiOJ-oJ9hO6ElPw7Wq_xSAooR9bAyV3lKXprT2QsTsBhygPqD56W9VsVQ==&ump=1&srfvp=1: net::ERR_FAILED (code: -1)
+05-25 11:13:31.040 E/hostapd (28636): skipping (WEXT?) event as drv is null!
+05-25 11:13:31.045 E/WifiVendorHal( 3077): Unexpected number of iface info in list 1, 2
+05-25 11:13:31.045 E/WifiVendorHal( 3077): Unexpected number of iface info in list 1, 2
+05-25 11:13:31.046 E/WifiVendorHal( 3077): Unexpected number of iface info in list 1, 2
+05-25 11:13:31.133 E/ConnectivityService( 3077): BUG: NetworkAgentInfo{network{883}  handle{3795861819405}  ni{WIFI CONNECTED extra: } created=2026-05-25T05:25:43.629Z Score(Policies : TRANSPORT_PRIMARY&EVER_EVALUATED&IS_UNMETERED&EVER_VALIDATED&IS_VALIDATED ; KeepConnected : 0)  created 1509532786 firstValidated 1509536442 lastValidated 1509536442  lp{{InterfaceName: wlan0 LinkAddresses: [ fe80::f4ab:28ff:fe05:3189/64,192.168.1.4/24,2401:4900:8811:f77a:f4ab:28ff:fe05:3189/64,2401:4900:8811:f77a:fe41:79f3:dd62:c22d/64 ] DnsAddresses: [ /192.168.1.1 ] UsePrivateDns: true PrivateDnsServerName: family.adguard-dns.com ValidatedPrivateDnsAddresses: [2a10:50c0::bad1:ff,2a10:50c0::bad2:ff,94.140.15.16,94.140.14.15] Domains: null MTU: 0 ServerAddress: /192.168.1.1 TcpBufferSizes: 524288,2097152,4194304,262144,524288,1048576 Routes: [ fe80::/64 -> :: wlan0 mtu 0,::/0 -> fe80::1 wlan0 mtu 0,2401:4900:8811:f77a::/64 -> :: wlan0 mtu 0,192.168.1.0/24 -> 0.0.0.0 wlan0 mtu 0,0.0.0.0/0 -> 192.168.1.1 wlan0 mtu 0 ]}}  nc{[ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED LinkUpBandwidth>=1663Kbps LinkDnBandwidth>=37515Kbps Specifier: <WifiNetworkAgentSpecifier [WifiConfiguration=, SSID="Airtel_Siddhanth's wifi", BSSID=f2:ed:b8:13:24:72, band=2, mMatchLocalOnlySpecifiers=false]> TransportInfo: <SSID: "Airtel_Siddhanth's wifi", BSSID: 00:00:00:00:00:00, MAC: f6:ab:28:05:31:89, IP: /192.168.1.4, Security type: 2, Supplicant state: ASSOCIATED, Wi-Fi standard: 11n, RSSI: -54, Link speed: 175Mbps, Tx Link speed: 175Mbps, Max Supported Tx Link speed: 300Mbps, Rx Link speed: 175Mbps, Max Supported Rx Link speed: 300Mbps, Frequency: 5745MHz, Net ID: 6, Metered hint: false, score: 100, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: 1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none>"Airtel_Siddhanth's wifi"wpa2-pskMLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -54 OwnerUid: 1000 AdminUids: [1000] SSID: "Airtel_Siddhanth's wifi" UnderlyingNetworks: Null]}  factorySerialNumber=8} lost immutable capabilities:specifier changed: WifiNetworkAgentSpecifier [WifiConfiguration=, SSID="Airtel_Siddhanth's wifi", BSSID=f2:ed:b8:13:24:72, band=2, mMatchLocalOnlySpecifiers=false] -> WifiNetworkAgentSpecifier [WifiConfiguration=, SSID="Airtel_Siddhanth's wifi", BSSID=f2:ed:b8:13:24:71, band=1, mMatchLocalOnlySpecifiers=false]
+05-25 11:13:31.158 E/WifiHAL ( 1770): wifi_get_usable_channels: Error -5 waiting for response.
+05-25 11:13:31.158 E/WifiChipHidlImpl( 3077): getUsableChannels failed with status: {.code = ERROR_INVALID_ARGS, .description = }
+05-25 11:13:31.172 E/WifiHAL ( 1770): wifi_get_usable_channels: Error -5 waiting for response.
+05-25 11:13:31.172 E/WifiChipHidlImpl( 3077): getUsableChannels failed with status: {.code = ERROR_INVALID_ARGS, .description = }
+05-25 11:13:31.178 E/WifiHAL ( 1770): wifi_get_usable_channels: Error -5 waiting for response.
+05-25 11:13:31.178 E/WifiChipHidlImpl( 3077): getUsableChannels failed with status: {.code = ERROR_INVALID_ARGS, .description = }
+05-25 11:13:31.185 E/WifiHAL ( 1770): wifi_get_usable_channels: Error -5 waiting for response.
+05-25 11:13:31.185 E/WifiChipHidlImpl( 3077): getUsableChannels failed with status: {.code = ERROR_INVALID_ARGS, .description = }
+05-25 11:13:31.193 E/WifiHAL ( 1770): wifi_get_usable_channels: Error -5 waiting for response.
+05-25 11:13:31.193 E/WifiChipHidlImpl( 3077): getUsableChannels failed with status: {.code = ERROR_INVALID_ARGS, .description = }
+05-25 11:13:31.201 E/WifiHAL ( 1770): wifi_get_usable_channels: Error -5 waiting for response.
+05-25 11:13:31.201 E/WifiChipHidlImpl( 3077): getUsableChannels failed with status: {.code = ERROR_INVALID_ARGS, .description = }
+05-25 11:13:33.874 E/HybridPlayerCard(28260): LaunchedEffect: controlsVisible=true, isPlaying=true, interactionCount=0
+05-25 11:13:33.875 E/YouTubeVideoPlayer(28260): LaunchedEffect triggered - videoId: 7c3-Gei5j4w, isPlaying: true, muteWebViewAudio: true
+05-25 11:13:34.679 E/QConfig ( 1822): failed to find module QModKey_Static_VppFilter
+05-25 11:13:34.679 E/QConfig ( 1822): failed to find module QModKey_Static_VppFilter
+05-25 11:13:34.679 E/QConfig ( 1822): failed to find module QModKey_Dynamic_VppFilter
+05-25 11:13:34.680 E/QConfig ( 1822): failed to find module QModKey_Dynamic_VppFilter
+05-25 11:13:34.706 E/QC2V4l2Codec( 1859): [vp9D_1527]  ? is not a supported pixel format!
+05-25 11:13:34.713 E/QC2Interface( 1859): Few parameters failed to configure
+05-25 11:13:34.737 E/QC2V4l2Driver( 1859): [vp9D_1527] failed to set format on port:OUT
+05-25 11:13:34.737 E/QC2V4l2Codec( 1859): [vp9D_1527] Failed to set resolution and buffer size for OUT port
+05-25 11:13:34.737 E/QC2Comp ( 1859): [vp9D_1527] handleQueue: Codec failed to configure !!
+05-25 11:13:34.742 E/chromium(28260): [ERROR:media/gpu/android/frame_info_helper.cc:231] Guessed coded size incorrectly. Expected 856x480, got 854x480
+05-25 11:13:34.762 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:13:34.781 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:13:35.380 E/QC2Interface( 1859): Few parameters failed to configure
+05-25 11:13:35.386 E/YouTubeVideoPlayer(28260): WebView Error for https://rr1---sn-ci5gup-qxall.googlevideo.com/videoplayback?expire=1779709398&ei=duETav-QEuzs9fwPluq-gQk&ip=2401%3A4900%3A8811%3Af77a%3Afe41%3A79f3%3Add62%3Ac22d&id=o-AI8jNUACUUHvWDJZMdP4tqQ0z6Lpgp-LwNoGpKWPxthQ&itag=251&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=855&met=1779687798%2C&mh=99&mm=31%2C26&mn=sn-ci5gup-qxall%2Csn-cvh76nes&ms=au%2Conr&mv=m&mvi=1&pl=49&rms=au%2Cau&initcwndbps=1930000&bui=AbKmrwpEvAXB2SnPAlqKqTnmqFFTisGcFe1-HOdVkHBs2_WAU0CrHxRGFpPVwSmZZ5auEXuAZ_Vy8rWq&spc=96Xrv4MU35rvB6CklWZSSeJSooMlOGbvr7FeOnrwFPNUox7IJmafLMgU1Xb5QhxcO1q0gd-U&vprv=1&svpuc=1&mime=audio%2Fwebm&ns=ftWkn0O1ol0MZZw13BehQj4V&rqh=1&gir=yes&clen=2046844&dur=121.521&lmt=1754048026479896&mt=1779686934&fvip=5&keepalive=yes&fexp=51565115%2C51565682&c=WEB_EMBEDDED_PLAYER&sefc=1&txp=4532534&n=llgyhtbpLMcQug&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRAIgJYCWGfzT2cUXpnE-00z7lc_eMwaRRiNUeCteCBMOOlwCIFWenLR0qxD7aZF-TdQIiPxPxWddNTUJTHajKw2mVS-G&alr=yes&sig=AHEqNM4wRQIhAL1B-IgBJ17n5yr5_tkYtqiZdt-caGW1dV6CAyl2BsVHAiBZgqNnP2sqmmVmo7ATMTjM9_9K1ED0PL7G9kl55rgKDg%3D%3D&cpn=UDNGdi0yhBGRz-Fv&cver=2.20260522.01.00&range=66020-135826&rn=25&rbuf=3782&pot=MlNPobHreS_5HU-dw-ewZ6nVhJLLKNGGN80edkTnyVMk3nW5yV01Yj84DmiOJ-oJ9hO6ElPw7Wq_xSAooR9bAyV3lKXprT2QsTsBhygPqD56W9VsVQ==&ump=1&srfvp=1: net::ERR_FAILED (code: -1)
+05-25 11:13:35.387 E/YouTubeVideoPlayer(28260): WebView Error for https://rr1---sn-ci5gup-qxall.googlevideo.com/videoplayback?expire=1779709398&ei=duETav-QEuzs9fwPluq-gQk&ip=2401%3A4900%3A8811%3Af77a%3Afe41%3A79f3%3Add62%3Ac22d&id=o-AI8jNUACUUHvWDJZMdP4tqQ0z6Lpgp-LwNoGpKWPxthQ&itag=244&aitags=133%2C134%2C135%2C136%2C137%2C160%2C242%2C243%2C244%2C247%2C248%2C278%2C394%2C395%2C396%2C397%2C398%2C399&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=855&met=1779687798%2C&mh=99&mm=31%2C26&mn=sn-ci5gup-qxall%2Csn-cvh76nes&ms=au%2Conr&mv=m&mvi=1&pl=49&rms=au%2Cau&initcwndbps=1930000&bui=AbKmrwpEvAXB2SnPAlqKqTnmqFFTisGcFe1-HOdVkHBs2_WAU0CrHxRGFpPVwSmZZ5auEXuAZ_Vy8rWq&spc=96Xrv4MU35rvB6CklWZSSeJSooMlOGbvr7FeOnrwFPNUox7IJmafLMgU1Xb5QhxcO1q0gd-U&vprv=1&svpuc=1&mime=video%2Fwebm&ns=ftWkn0O1ol0MZZw13BehQj4V&rqh=1&gir=yes&clen=5113304&dur=121.496&lmt=1754052491845789&mt=1779686934&fvip=5&keepalive=yes&fexp=51565115%2C51565682&c=WEB_EMBEDDED_PLAYER&sefc=1&txp=4537534&n=llgyhtbpLMcQug&sparams=expire%2Cei%2Cip%2Cid%2Caitags%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Cns%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRAIgJYCWGfzT2cUXpnE-00z7lc_eMwaRRiNUeCteCBMOOlwCIFWenLR0qxD7aZF-TdQIiPxPxWddNTUJTHajKw2mVS-G&alr=yes&sig=AHEqNM4wRAIgUUcL3UJ2BPrDN43v8IxXwkFuYgqNcL-AP_tS7UsoEiECIGYI9e0NAnYEsNuBBToWSr7ngHFFEbiuoAQl_UJuJHJ-&cpn=UDNGdi0yhBGRz-Fv&cver=2.20260522.01.00&range=156500-361449&rn=24&rbuf=2629&pot=MlNPobHreS_5HU-dw-ewZ6nVhJLLKNGGN80edkTnyVMk3nW5yV01Yj84DmiOJ-oJ9hO6ElPw7Wq_xSAooR9bAyV3lKXprT2QsTsBhygPqD56W9VsVQ==&ump=1&srfvp=1: net::ERR_FAILED (code: -1)
+05-25 11:13:35.391 E/QC2Comp ( 1859): comp.release() is called without comp.stop()
+05-25 11:13:35.479 E/JavaBinder( 3077): !!! FAILED BINDER TRANSACTION !!!  (parcel size = 1164)
+05-25 11:13:35.481 E/ConnectivityService( 3077): RemoteException caught trying to send a callback msg for NetworkRequest [ TRACK_DEFAULT id=47591, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10200 RequestorUid: 10200 RequestorPkg: com.google.android.apps.messaging UnderlyingNetworks: Null] ]
+05-25 11:13:35.482 E/JavaBinder( 3077): !!! FAILED BINDER TRANSACTION !!!  (parcel size = 1152)
+05-25 11:13:35.482 E/ConnectivityService( 3077): RemoteException caught trying to send a callback msg for NetworkRequest [ LISTEN id=47595, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10200 RequestorUid: 10200 RequestorPkg: com.google.android.apps.messaging UnderlyingNetworks: Null] ]
+05-25 11:13:45.048 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:13:45.074 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:13:48.888 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:13:48.913 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:13:50.136 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:13:50.169 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:13:51.859 E/ModemStats( 6458): [NRCheckinApplication] MotoExtTelephonyInfo.NRCheckinEvents return null
+05-25 11:13:53.167 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:13:53.190 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =7
+05-25 11:13:53.214 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:13:56.621 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =7
+05-25 11:13:56.641 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:13:56.666 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:14:22.132 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:14:22.164 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:14:35.071 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:14:35.094 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =7
+05-25 11:14:35.128 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:14:37.548 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =7
+05-25 11:14:37.571 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:14:37.596 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:14:47.711 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:14:47.741 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:14:51.215 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7db9 went down
+05-25 11:14:51.216 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dba went down
+05-25 11:14:51.217 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dbb went down
+05-25 11:14:51.220 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dbc went down
+05-25 11:14:52.296 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dbd went down
+05-25 11:14:52.297 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dbe went down
+05-25 11:14:52.298 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dbf went down
+05-25 11:14:52.300 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dc0 went down
+05-25 11:14:53.391 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dc1 went down
+05-25 11:14:53.393 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dc2 went down
+05-25 11:14:53.396 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dc3 went down
+05-25 11:14:53.398 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dc4 went down
+05-25 11:14:54.270 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:14:54.297 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =7
+05-25 11:14:54.327 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:14:54.560 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dc5 went down
+05-25 11:14:54.561 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dc6 went down
+05-25 11:14:54.564 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dc7 went down
+05-25 11:14:54.566 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dc8 went down
+05-25 11:14:55.661 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dc9 went down
+05-25 11:14:55.664 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dca went down
+05-25 11:14:55.667 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dcb went down
+05-25 11:14:55.669 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dcc went down
+05-25 11:14:56.750 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =7
+05-25 11:14:56.766 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:14:56.793 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called
+05-25 11:14:57.499 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dcd went down
+05-25 11:14:57.500 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dce went down
+05-25 11:14:57.504 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dcf went down
+05-25 11:14:57.506 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dd0 went down
+05-25 11:14:58.601 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dd1 went down
+05-25 11:14:58.604 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dd2 went down
+05-25 11:14:58.607 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dd3 went down
+05-25 11:14:58.609 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dd4 went down
+05-25 11:14:59.916 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dd5 went down
+05-25 11:14:59.917 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dd6 went down
+05-25 11:14:59.920 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dd7 went down
+05-25 11:14:59.923 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dd8 went down
+05-25 11:15:01.016 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dd9 went down
+05-25 11:15:01.017 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dda went down
+05-25 11:15:01.019 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7ddb went down
+05-25 11:15:01.022 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7ddc went down
+05-25 11:15:02.114 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7ddd went down
+05-25 11:15:02.116 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7dde went down
+05-25 11:15:02.119 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7ddf went down
+05-25 11:15:02.121 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7de0 went down

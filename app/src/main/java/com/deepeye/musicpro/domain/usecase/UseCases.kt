@@ -16,38 +16,50 @@ import javax.inject.Inject
 // Song Use Cases
 // ═══════════════════════════════════════════════════
 
-class GetAllSongsUseCase @Inject constructor(
-    private val repository: MusicRepository
+class GetAllSongsUseCase
+@Inject
+constructor(
+    private val repository: MusicRepository,
 ) {
     operator fun invoke(): Flow<List<Song>> = repository.getAllSongs()
 }
 
-class GetSongByIdUseCase @Inject constructor(
-    private val repository: MusicRepository
+class GetSongByIdUseCase
+@Inject
+constructor(
+    private val repository: MusicRepository,
 ) {
     operator fun invoke(id: Long): Flow<Song?> = repository.getSongById(id)
 }
 
-class GetSongsByAlbumUseCase @Inject constructor(
-    private val repository: MusicRepository
+class GetSongsByAlbumUseCase
+@Inject
+constructor(
+    private val repository: MusicRepository,
 ) {
     operator fun invoke(albumId: Long): Flow<List<Song>> = repository.getSongsByAlbum(albumId)
 }
 
-class GetSongsByArtistUseCase @Inject constructor(
-    private val repository: MusicRepository
+class GetSongsByArtistUseCase
+@Inject
+constructor(
+    private val repository: MusicRepository,
 ) {
     operator fun invoke(artistId: Long): Flow<List<Song>> = repository.getSongsByArtist(artistId)
 }
 
-class SearchSongsUseCase @Inject constructor(
-    private val repository: MusicRepository
+class SearchSongsUseCase
+@Inject
+constructor(
+    private val repository: MusicRepository,
 ) {
     operator fun invoke(query: String): Flow<List<Song>> = repository.searchSongs(query)
 }
 
-class GetRecentlyAddedUseCase @Inject constructor(
-    private val repository: MusicRepository
+class GetRecentlyAddedUseCase
+@Inject
+constructor(
+    private val repository: MusicRepository,
 ) {
     operator fun invoke(limit: Int = 20): Flow<List<Song>> = repository.getRecentlyAdded(limit)
 }
@@ -56,14 +68,18 @@ class GetRecentlyAddedUseCase @Inject constructor(
 // Album Use Cases
 // ═══════════════════════════════════════════════════
 
-class GetAllAlbumsUseCase @Inject constructor(
-    private val repository: MusicRepository
+class GetAllAlbumsUseCase
+@Inject
+constructor(
+    private val repository: MusicRepository,
 ) {
     operator fun invoke(): Flow<List<Album>> = repository.getAllAlbums()
 }
 
-class GetAlbumByIdUseCase @Inject constructor(
-    private val repository: MusicRepository
+class GetAlbumByIdUseCase
+@Inject
+constructor(
+    private val repository: MusicRepository,
 ) {
     operator fun invoke(id: Long): Flow<Album?> = repository.getAlbumById(id)
 }
@@ -72,14 +88,18 @@ class GetAlbumByIdUseCase @Inject constructor(
 // Artist Use Cases
 // ═══════════════════════════════════════════════════
 
-class GetAllArtistsUseCase @Inject constructor(
-    private val repository: MusicRepository
+class GetAllArtistsUseCase
+@Inject
+constructor(
+    private val repository: MusicRepository,
 ) {
     operator fun invoke(): Flow<List<Artist>> = repository.getAllArtists()
 }
 
-class GetArtistByIdUseCase @Inject constructor(
-    private val repository: MusicRepository
+class GetArtistByIdUseCase
+@Inject
+constructor(
+    private val repository: MusicRepository,
 ) {
     operator fun invoke(id: Long): Flow<Artist?> = repository.getArtistById(id)
 }
@@ -88,8 +108,10 @@ class GetArtistByIdUseCase @Inject constructor(
 // Genre Use Cases
 // ═══════════════════════════════════════════════════
 
-class GetAllGenresUseCase @Inject constructor(
-    private val repository: MusicRepository
+class GetAllGenresUseCase
+@Inject
+constructor(
+    private val repository: MusicRepository,
 ) {
     operator fun invoke(): Flow<List<Genre>> = repository.getAllGenres()
 }
@@ -98,38 +120,52 @@ class GetAllGenresUseCase @Inject constructor(
 // Playlist Use Cases
 // ═══════════════════════════════════════════════════
 
-class CreatePlaylistUseCase @Inject constructor(
-    private val repository: PlaylistRepository
+class CreatePlaylistUseCase
+@Inject
+constructor(
+    private val repository: PlaylistRepository,
 ) {
     suspend operator fun invoke(name: String): Long = repository.createPlaylist(name)
 }
 
-class DeletePlaylistUseCase @Inject constructor(
-    private val repository: PlaylistRepository
+class DeletePlaylistUseCase
+@Inject
+constructor(
+    private val repository: PlaylistRepository,
 ) {
     suspend operator fun invoke(playlistId: Long) = repository.deletePlaylist(playlistId)
 }
 
-class AddSongToPlaylistUseCase @Inject constructor(
-    private val repository: PlaylistRepository
+class AddSongToPlaylistUseCase
+@Inject
+constructor(
+    private val repository: PlaylistRepository,
 ) {
-    suspend operator fun invoke(playlistId: Long, songId: Long) =
-        repository.addSongToPlaylist(playlistId, songId)
+    suspend operator fun invoke(
+        playlistId: Long,
+        songId: Long,
+    ) = repository.addSongToPlaylist(playlistId, songId)
 }
 
-class RemoveSongFromPlaylistUseCase @Inject constructor(
-    private val repository: PlaylistRepository
+class RemoveSongFromPlaylistUseCase
+@Inject
+constructor(
+    private val repository: PlaylistRepository,
 ) {
-    suspend operator fun invoke(playlistId: Long, songId: Long) =
-        repository.removeSongFromPlaylist(playlistId, songId)
+    suspend operator fun invoke(
+        playlistId: Long,
+        songId: Long,
+    ) = repository.removeSongFromPlaylist(playlistId, songId)
 }
 
 // ═══════════════════════════════════════════════════
 // Library Sync Use Case
 // ═══════════════════════════════════════════════════
 
-class SyncLibraryUseCase @Inject constructor(
-    private val repository: MusicRepository
+class SyncLibraryUseCase
+@Inject
+constructor(
+    private val repository: MusicRepository,
 ) {
     suspend operator fun invoke() = repository.syncFromMediaStore()
 }

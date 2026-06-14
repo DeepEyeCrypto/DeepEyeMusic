@@ -16,14 +16,15 @@ fun SplitMediaHero(
     music: HomeMusicItem,
     modifier: Modifier = Modifier,
     onVideoClick: () -> Unit = {},
-    onMusicClick: () -> Unit = {}
+    onMusicClick: () -> Unit = {},
 ) {
     Row(
-        modifier = modifier
+        modifier =
+        modifier
             .fillMaxWidth()
             .height(220.dp)
             .padding(horizontal = 20.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         PremiumHeroCard(
             title = video.title,
@@ -31,17 +32,16 @@ fun SplitMediaHero(
             imageUrl = video.thumbnailUrl,
             badge = "Featured Video",
             onClick = onVideoClick,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
-        
+
         PremiumHeroCard(
             title = music.title,
             subtitle = music.artist,
             imageUrl = music.thumbnailUrl,
             badge = "Featured Artist",
             onClick = onMusicClick,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
     }
 }
-

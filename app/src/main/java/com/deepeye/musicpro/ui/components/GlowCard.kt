@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -30,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import com.deepeye.musicpro.ui.theme.DeepEyePrimary
 import com.deepeye.musicpro.ui.theme.DeepEyeSecondary
 import com.deepeye.musicpro.ui.theme.GlassBorder
-import com.deepeye.musicpro.ui.theme.GlassWhite
 
 /**
  * Glassmorphic card component with animated glow border.
@@ -48,7 +46,7 @@ fun GlowCard(
     cornerRadius: Dp = 16.dp,
     glowIntensity: Float = 0.6f,
     animateGlow: Boolean = true,
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(cornerRadius)
 
@@ -56,46 +54,52 @@ fun GlowCard(
     val animatedAlpha by infiniteTransition.animateFloat(
         initialValue = if (animateGlow) 0.3f else glowIntensity,
         targetValue = if (animateGlow) glowIntensity else glowIntensity,
-        animationSpec = infiniteRepeatable(
+        animationSpec =
+        infiniteRepeatable(
             animation = tween(2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = "glowAlpha"
+        label = "glowAlpha",
     )
 
     Box(modifier = modifier) {
         // Glow layer (behind the card)
         Box(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .matchParentSize()
                 .padding(4.dp)
                 .blur(20.dp)
                 .clip(shape)
                 .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
+                    brush =
+                    Brush.linearGradient(
+                        colors =
+                        listOf(
                             glowColor.copy(alpha = animatedAlpha),
-                            secondaryGlowColor.copy(alpha = animatedAlpha * 0.6f)
-                        )
-                    )
-                )
+                            secondaryGlowColor.copy(alpha = animatedAlpha * 0.6f),
+                        ),
+                    ),
+                ),
         )
 
         // Glass card
         Box(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .matchParentSize()
                 .clip(shape)
-                .background(GlassWhite)
-                .border(1.dp, GlassBorder, shape)
+                .background(Color.White.copy(alpha = 0.1f))
+                .border(1.dp, GlassBorder, shape),
         )
 
         // Content
         Box(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .clip(shape)
                 .padding(16.dp),
-            content = content
+            content = content,
         )
     }
 }
@@ -104,9 +108,10 @@ fun GlowCard(
 @Composable
 private fun GlowCardPreview() {
     GlowCard(
-        modifier = Modifier
+        modifier =
+        Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         // Preview content
     }

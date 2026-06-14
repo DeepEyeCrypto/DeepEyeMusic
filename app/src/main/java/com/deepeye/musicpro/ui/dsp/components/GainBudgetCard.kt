@@ -36,80 +36,84 @@ import com.deepeye.musicpro.dsp.model.RiskLevel
 @Composable
 fun GainBudgetCard(
     gainBudget: GainBudget,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val riskColor by animateColorAsState(
-        targetValue = when (gainBudget.risk) {
-            RiskLevel.SAFE     -> Color(0xFF00E676)
-            RiskLevel.MODERATE -> Color(0xFFFFD600)
-            RiskLevel.DANGER   -> Color(0xFFFF4B4B)
+        targetValue =
+        when (gainBudget.risk) {
+            RiskLevel.SAFE -> Color(0xFF00B248)
+            RiskLevel.MODERATE -> Color(0xFFE69A00)
+            RiskLevel.DANGER -> Color(0xFFE53935)
         },
         animationSpec = tween(400),
-        label = "riskColor"
+        label = "riskColor",
     )
 
     val progress = (gainBudget.totalDb / 16f).coerceIn(0f, 1f)
 
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
-        animationSpec = spring(
+        animationSpec =
+        spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+            stiffness = Spring.StiffnessMedium,
         ),
-        label = "progress"
+        label = "progress",
     )
 
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1A1A2E)
+        colors =
+        CardDefaults.cardColors(
+            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant,
         ),
-        border = BorderStroke(1.dp, riskColor.copy(alpha = 0.4f))
+        border = BorderStroke(1.dp, riskColor.copy(alpha = 0.4f)),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             // Header row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.GraphicEq,
                         contentDescription = null,
                         tint = riskColor,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
                     )
                     Text(
                         text = "GAIN BUDGET",
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFF9E9E9E),
-                        letterSpacing = 1.sp
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                        letterSpacing = 1.sp,
                     )
                 }
 
                 // Risk badge
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = riskColor.copy(alpha = 0.15f)
+                    color = riskColor.copy(alpha = 0.15f),
                 ) {
                     Text(
                         text = gainBudget.risk.name,
-                        modifier = Modifier.padding(
+                        modifier =
+                        Modifier.padding(
                             horizontal = 10.dp,
-                            vertical = 4.dp
+                            vertical = 4.dp,
                         ),
                         style = MaterialTheme.typography.labelSmall,
                         color = riskColor,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
+                        letterSpacing = 0.5.sp,
                     )
                 }
             }
@@ -119,47 +123,59 @@ fun GainBudgetCard(
                 text = "${"%.1f".format(gainBudget.totalDb)} dB",
                 style = MaterialTheme.typography.headlineMedium,
                 color = riskColor,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
 
             // Animated progress bar
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Box(
-                    modifier = Modifier
+                    modifier =
+                    Modifier
                         .fillMaxWidth()
                         .height(8.dp)
                         .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xFF2A2A3E))
+                        .background(androidx.compose.material3.MaterialTheme.colorScheme.surface),
                 ) {
                     Box(
-                        modifier = Modifier
+                        modifier =
+                        Modifier
                             .fillMaxWidth(animatedProgress)
                             .fillMaxHeight()
                             .clip(RoundedCornerShape(4.dp))
                             .background(
                                 Brush.horizontalGradient(
-                                    colors = listOf(
-                                        Color(0xFF00E676),
-                                        Color(0xFFFFD600),
-                                        Color(0xFFFF4B4B)
+                                    colors =
+                                    listOf(
+                                        Color(0xFF00B248),
+                                        Color(0xFFE69A00),
+                                        Color(0xFFE53935),
                                     ),
-                                    endX = Float.POSITIVE_INFINITY
-                                )
-                            )
+                                    endX = Float.POSITIVE_INFINITY,
+                                ),
+                            ),
                     )
                 }
 
                 // Zone markers
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Text("0 dB",  style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF00E676))
-                    Text("8 dB",  style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFFFFD600))
-                    Text("14 dB", style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFFFF4B4B))
+                    Text(
+                        "0 dB",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF00B248),
+                    )
+                    Text(
+                        "8 dB",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFFE69A00),
+                    )
+                    Text(
+                        "14 dB",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFFE53935),
+                    )
                 }
             }
 
@@ -167,23 +183,23 @@ fun GainBudgetCard(
             if (gainBudget.risk == RiskLevel.DANGER) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = Color(0xFFFF4B4B).copy(alpha = 0.12f)
+                    color = Color(0xFFE53935).copy(alpha = 0.12f),
                 ) {
                     Row(
                         modifier = Modifier.padding(10.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Warning,
                             contentDescription = null,
-                            tint = Color(0xFFFF4B4B),
-                            modifier = Modifier.size(16.dp)
+                            tint = Color(0xFFE53935),
+                            modifier = Modifier.size(16.dp),
                         )
                         Text(
                             text = "Clipping risk! Reduce bass or EQ boost.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFFFF4B4B)
+                            color = Color(0xFFE53935),
                         )
                     }
                 }
@@ -194,7 +210,7 @@ fun GainBudgetCard(
                 Text(
                     text = "💡 Consider reducing one boost module.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFFFD600).copy(alpha = 0.8f)
+                    color = Color(0xFFE69A00).copy(alpha = 0.8f),
                 )
             }
         }

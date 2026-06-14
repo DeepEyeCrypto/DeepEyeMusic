@@ -1,0 +1,1690 @@
+--------- beginning of system
+05-25 10:36:42.376 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:38:28.583 E/ActivityThread(28347): Failed to find provider info for subscribedfeeds
+05-25 10:41:08.036 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:41:09.889 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:41:12.483 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:41:14.178 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:46:16.152 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.161 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.182 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.608 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.610 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.611 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.613 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.622 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.624 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:53:19.838 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:53:19.838 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:53:19.838 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:53:19.838 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 10:53:21.048 E/ShortcutService( 3077): Invalid icon type in shortcut 66791137099963@lid. Bitmaps are not allowed in long-lived shortcuts. Use Resource icons, or Uri-based icons instead.
+05-25 10:55:47.302 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:55:47.302 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:55:47.302 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:55:47.302 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 10:57:21.262 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:57:21.262 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:57:21.262 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:57:21.262 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 10:58:21.381 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:58:21.381 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:58:21.381 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:58:21.381 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 10:59:34.365 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:59:34.365 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:59:34.365 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:59:34.365 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+--------- beginning of main
+05-25 11:00:27.290 E/MCF_AlgInterface_MOTDRSDv2(19040): parseJson MotDRSDv2 disabled
+05-25 11:00:27.290 E/MCF_JsonUtils(19040): getValue: Error: missing JSON value: lib-name
+05-25 11:00:27.290 E/MCF_JsonUtils(19040): parseValue: Failed to parse lib-name
+05-25 11:00:27.291 E/McfConfig(19040): loadConfiguration: ai-scene-detect-capture exists
+05-25 11:00:27.291 E/MCF_AlgInterface_MotNVDetect(19040): parseJson MotNVDetect disabled
+05-25 11:00:27.291 E/MCF_AlgInterface_AsBandingDetect(19040): parseJson Arcsoft Banding detect alg disabled
+05-25 11:00:27.292 E/MCF_SMConfig(19040): hdr-advanced: parseQcMfnrValuesByLux: [sensorIndex=2, lux>=400] mfnr_number_of_frames should not be zero
+05-25 11:00:27.292 E/MCF_AlgInterface_MOTDRSDv2(19040): parseJson MotDRSDv2 disabled
+05-25 11:00:27.292 E/MCF_JsonUtils(19040): getValue: Error: missing JSON value: lib-name
+05-25 11:00:27.292 E/MCF_JsonUtils(19040): parseValue: Failed to parse lib-name
+05-25 11:00:27.293 E/McfConfig(19040): loadConfiguration: ai-scene-detect-capture exists
+05-25 11:00:27.293 E/MCF_AlgInterface_MotNVDetect(19040): parseJson MotNVDetect disabled
+05-25 11:00:27.293 E/MCF_AlgInterface_AsBandingDetect(19040): parseJson Arcsoft Banding detect alg disabled
+05-25 11:00:27.293 E/MCF_SMConfig(19040): hdr-advanced: parseQcMfnrValuesByLux: [sensorIndex=3, lux>=400] mfnr_number_of_frames should not be zero
+05-25 11:00:27.293 E/MCF_AlgInterface_MOTDRSDv2(19040): parseJson MotDRSDv2 disabled
+05-25 11:00:27.293 E/MCF_JsonUtils(19040): getValue: Error: missing JSON value: lib-name
+05-25 11:00:27.294 E/MCF_JsonUtils(19040): parseValue: Failed to parse lib-name
+05-25 11:00:27.294 E/McfConfig(19040): loadConfiguration: ai-scene-detect-capture exists
+05-25 11:00:27.294 E/MCF_AlgInterface_MotNVDetect(19040): parseJson MotNVDetect disabled
+05-25 11:00:27.294 E/MCF_AlgInterface_AsBandingDetect(19040): parseJson Arcsoft Banding detect alg disabled
+05-25 11:00:27.295 E/MCF_SMConfig(19040): hdr-advanced: parseQcMfnrValuesByLux: [sensorIndex=4, lux>=400] mfnr_number_of_frames should not be zero
+05-25 11:00:27.296 E/MCF_AlgInterface_MOTDRSDv2(19040): parseJson MotDRSDv2 disabled
+05-25 11:00:27.297 E/MCF_JsonUtils(19040): getValue: Error: missing JSON value: lib-name
+05-25 11:00:27.297 E/MCF_JsonUtils(19040): parseValue: Failed to parse lib-name
+05-25 11:00:27.297 E/McfConfig(19040): loadConfiguration: ai-scene-detect-capture exists
+05-25 11:00:27.297 E/MCF_AlgInterface_MotNVDetect(19040): parseJson MotNVDetect disabled
+05-25 11:00:27.297 E/MCF_AlgInterface_AsBandingDetect(19040): parseJson Arcsoft Banding detect alg disabled
+05-25 11:00:27.300 E/MCF_AlgInterface_MOTDRSDv2(19040): parseJson MotDRSDv2 disabled
+05-25 11:00:27.300 E/MCF_JsonUtils(19040): getValue: Error: missing JSON value: lib-name
+05-25 11:00:27.300 E/MCF_JsonUtils(19040): parseValue: Failed to parse lib-name
+05-25 11:00:27.301 E/McfConfig(19040): loadConfiguration: ai-scene-detect-capture exists
+05-25 11:00:27.301 E/MCF_AlgInterface_MotNVDetect(19040): parseJson MotNVDetect disabled
+05-25 11:00:27.301 E/MCF_AlgInterface_AsBandingDetect(19040): parseJson Arcsoft Banding detect alg disabled
+05-25 11:00:27.301 E/MCF_SMConfig(19040): hdr-advanced: parseQcMfnrValuesByLux: [sensorIndex=6, lux>=400] mfnr_number_of_frames should not be zero
+05-25 11:00:27.303 E/MCF_AlgInterface_MOTDRSDv2(19040): parseJson MotDRSDv2 disabled
+05-25 11:00:27.303 E/MCF_JsonUtils(19040): getValue: Error: missing JSON value: lib-name
+05-25 11:00:27.303 E/MCF_JsonUtils(19040): parseValue: Failed to parse lib-name
+05-25 11:00:27.303 E/McfConfig(19040): loadConfiguration: ai-scene-detect-capture exists
+05-25 11:00:27.303 E/MCF_AlgInterface_MotNVDetect(19040): parseJson MotNVDetect disabled
+05-25 11:00:27.303 E/MCF_AlgInterface_AsBandingDetect(19040): parseJson Arcsoft Banding detect alg disabled
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: 7c3-Gei5j4w from https://www.youtube.com/watch?v=7c3-Gei5j4w
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: CP7GY11pmG0 from https://www.youtube.com/watch?v=CP7GY11pmG0
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: -MPHg4wPiyg from https://www.youtube.com/watch?v=-MPHg4wPiyg
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: hOyn0bCydZo from https://www.youtube.com/watch?v=hOyn0bCydZo
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: rIt4pBtu0QA from https://www.youtube.com/watch?v=rIt4pBtu0QA
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: Hi-uxR2Bq3c from https://www.youtube.com/watch?v=Hi-uxR2Bq3c
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: uV3cillyhLk from https://www.youtube.com/watch?v=uV3cillyhLk
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: L13OySSpjeI from https://www.youtube.com/watch?v=L13OySSpjeI
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: LuzXr3He9NI from https://www.youtube.com/watch?v=LuzXr3He9NI
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: 27QmkvKQLDk from https://www.youtube.com/watch?v=27QmkvKQLDk
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: hGOBIaGWoPk from https://www.youtube.com/watch?v=hGOBIaGWoPk
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: fBOvfOpR39E from https://www.youtube.com/watch?v=fBOvfOpR39E
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: aw5NWcHpEPc from https://www.youtube.com/watch?v=aw5NWcHpEPc
+05-25 11:00:27.392 D/YoutubeDS(18464): Extracted Video ID: tRtZvG1Dops from https://www.youtube.com/watch?v=tRtZvG1Dops
+05-25 11:00:27.486 E/OtaApp  (19046): CusSM.forceDownloadTimerSanityCheck: version is not in db 9e72c9ecd3b08eb
+05-25 11:00:27.513 E/otorola.ccc.ota(19046): hiddenapi: Accessing hidden method Lcom/motorola/android/provider/CheckinEvent;-><init>(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V (runtime_flags=0, domain=platform, api=blocked) from Lcom/motorola/loggerservice/checkin/CheckinEventWrapper; (domain=app, TargetSdkVersion=34) using reflection: denied
+05-25 11:00:27.985 E/FilePhenotypeFlags(10625): Config package com.google.android.gms.clearcut_client#com.mobikwik_new cannot use FILE backing without declarative registration. See go/phenotype-android-integration#phenotype for more information. This will lead to stale flags.
+05-25 11:00:28.019 E/FilePhenotypeFlags(10625): Config package com.google.android.gms.clearcut_client#com.mobikwik_new cannot use FILE backing without declarative registration. See go/phenotype-android-integration#phenotype for more information. This will lead to stale flags.
+05-25 11:00:28.020 E/FilePhenotypeFlags(10625): Config package com.google.android.gms.clearcut_client#com.mobikwik_new cannot use FILE backing without declarative registration. See go/phenotype-android-integration#phenotype for more information. This will lead to stale flags.
+05-25 11:00:28.871 E/PlayerController(18464): playMedia called with item: Remote(id=7c3-Gei5j4w, title=Chaand Baaliyan – Aditya A. | Trending Song | Official Video, artist=Sony Music India, artworkUri=https://i.ytimg.com/vi/7c3-Gei5j4w/hq720.jpg?sqp=-oaymwEcCNAFEJQDSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLC4g6eQMG5eZgivYA73UaxnR7Lnaw, duration=122000, streamUri=null, isVideo=true)
+05-25 11:00:29.103 E/PlayerController(18464): Remote item: Chaand Baaliyan – Aditya A. | Trending Song | Official Video, id: 7c3-Gei5j4w, streamUri: null
+05-25 11:00:29.103 E/PlayerController(18464): streamUri is null or empty, fetching getStreamUrl...
+05-25 11:00:31.270 D/YoutubeDS(18464): Video stream extraction for 7c3-Gei5j4w: DASH=false, HLS=false
+05-25 11:00:31.270 W/YoutubeDS(18464): getStreamUrl: No valid DASH/HLS URL found for 7c3-Gei5j4w. Falling back to audio stream.
+05-25 11:00:31.271 E/PlayerController(18464): First extraction fetched: StreamResult(url=https://rr1---sn-ci5gup-qxall.googlevideo.com/videoplayback?expire=1779708631&ei=dt4TasuTO4Tir7wPhLD4kA8&ip=2401%3A4900%3A8811%3Af77a%3Afe41%3A79f3%3Add62%3Ac22d&id=o-AFMgTAAgWkYesOSnGexGm0u0oNIovOerku2GhguyG3bF&itag=251&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=269&met=1779687030%2C&mh=99&mm=31%2C26&mn=sn-ci5gup-qxall%2Csn-cvh7knze&ms=au%2Conr&mv=m&mvi=1&pl=49&rms=au%2Cau&initcwndbps=1930000&bui=AbKmrwqNIwf-DBY8ySha5CzrgfSfy9en_IjPhlMnQw_YQhuZdNQmkkLoG_fzbwF-HkE4jS_JmkXnaxIL&spc=96Xrvzfw7n0Tzk9La-zL0bYEqpJlR_EWRPOFkwZJE0PhJ4J09YJ_NI1cRjBZ8xjZ&vprv=1&svpuc=1&mime=audio%2Fwebm&rqh=1&gir=yes&clen=2046844&dur=121.521&lmt=1754048026479896&mt=1779686694&fvip=4&keepalive=yes&fexp=51565115%2C51565681&c=ANDROID&txp=4532534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AHEqNM4wRAIgT8qRz-IS4zeQPL6u9JPhuQNVK9PKP3lpLKK_ERzmsPYCIDZ17okoICxqny0OnyTxpgUhwzPylgm-LE8VSoJzgvbV&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRQIgf5idupr_NfGRzSIMUkgwxO5FmzFaejtUG1aUydcYqfICIQCyOafYl_RKZ5XKgkeC32fetP_Jhw2IxbRIzOCNXRKftA%3D%3D&cpn=QiafrFHf6gcdgUoi, isVideo=false)
+05-25 11:00:32.196 D/SponsorBlock(18464): Found 1 segments for 7c3-Gei5j4w
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.261 E/AudioSessionManager(18464): attachToPlayer called with player: androidx.media3.exoplayer.ExoPlayerImpl@c4592d9
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.268 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.269 E/BluetoothAvrcpServiceJni( 3992): updatePlayStatusToStack
+05-25 11:00:32.269 E/bt_btif ( 3992): update_play_status_to_stack:invalid index,remote suspend not set
+05-25 11:00:32.269 E/BluetoothAvrcpServiceJni( 3992): updatePlayStatusToStack: status: 1
+05-25 11:00:32.269 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.269 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.269 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.269 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.273 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.273 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.273 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.273 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.273 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.273 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.273 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.273 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.273 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.273 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.274 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.274 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.274 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.274 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.274 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.274 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.274 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.274 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.274 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.274 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.275 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.275 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.275 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.275 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.275 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.275 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.276 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.476 E/HybridPlayerCard(18464): LaunchedEffect: controlsVisible=true, isPlaying=true, interactionCount=0
+05-25 11:00:32.477 E/YouTubeVideoPlayer(18464): LaunchedEffect triggered - videoId: 7c3-Gei5j4w, isPlaying: true, muteWebViewAudio: true
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.484 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.485 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.485 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.485 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.485 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.499 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.501 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.502 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.502 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.502 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.502 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.502 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.851 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.853 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.853 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.853 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.853 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.853 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.853 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.853 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.853 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.853 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.853 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.853 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.854 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.854 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.854 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.854 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.854 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.854 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.854 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.854 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.854 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.856 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:32.928 E/AppSecurity(10625): Kill Process ..........................[D13002]
+05-25 11:00:32.963 E/Codec2-ComponentInterface( 2447): We have a failed config
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.366 E/ANDR-PERF-LM( 1849): MetaMeter: handleAsync() 166: AdaptLaunch Invalid Async
+05-25 11:00:33.366 E/ANDR-PERF-LM( 1849): MetaMeter: handleAsync() 166: AdaptLaunch Invalid Async
+05-25 11:00:33.367 E/ActivityTaskManager( 3077): Abort background activity starts from 10376
+05-25 11:00:33.391 E/ANDR-PERF-LM( 1849): MetaMeter: handleAsync() 166: AdaptLaunch Invalid Async
+05-25 11:00:33.392 E/ANDR-PERF-LM( 1849): MetaMeter: handleAsync() 166: AdaptLaunch Invalid Async
+05-25 11:00:33.392 E/ANDR-PERF-LM( 1849): MetaMeter: handleAsync() 166: AdaptLaunch Invalid Async
+05-25 11:00:33.392 E/ActivityTaskManager( 3077): Abort background activity starts from 10376
+05-25 11:00:33.443 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7d98 went down
+05-25 11:00:33.443 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7d99 went down
+05-25 11:00:33.444 E/Diag_Lib( 1753): diag: Diag_LSM_Init: invoked for pid: 1753 with init_count: 0
+05-25 11:00:33.444 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7d9a went down
+05-25 11:00:33.444 E/Diag_Lib( 1753): diag:failed to connect to diag socket
+05-25 11:00:33.444 E/Diag_Lib( 1753):  Diag_LSM_Init: Failed to open handle to diag driver, error = 13
+05-25 11:00:33.445 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7d9b went down
+05-25 11:00:33.529 E/RemoteProvisionSysSvc( 3077): RKP not allowed. Key 10207 for client 113663096
+05-25 11:00:33.529 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 11:00:33.534 E/QC-time-services( 1269): Receive Passed == base = 13, unit = 1, operation = 2, result = 0
+05-25 11:00:33.534 E/QC-time-services( 1573): Daemon: Time-services: Waiting to acceptconnection
+05-25 11:00:33.537 E/QC-time-services( 1573): Daemon: Time-services: Waiting to acceptconnection
+05-25 11:00:33.576 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7d9c went down
+05-25 11:00:33.697 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.697 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.697 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.697 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.698 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.729 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.729 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.729 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.729 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.729 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.729 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.729 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.729 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.762 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.762 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.762 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.762 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.762 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.762 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.762 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.762 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.762 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.762 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.762 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.762 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.763 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.763 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.763 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.763 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.763 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.763 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.765 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.765 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.819 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.837 E/ACDB    ( 1830): AcdbCmdGetGraphAlias:4153 Error[19]: Graph Alias chunk data does not exist. Is it enabled?.
+05-25 11:00:33.838 E/gsl     ( 1830): gsl_get_graph_alias:2191 acdb get graph alias failed 19, len 255
+05-25 11:00:33.842 E/gsl     ( 1830): gsl_graph_send_nonpersist_cal:790 send non-perist cal failed 3
+05-25 11:00:33.842 E/ACDB    ( 1830): AcdbCmdGetProcSubgraphCalDataPersist:8416 Error[19]: No calibration found
+05-25 11:00:33.860 E/ACDB    ( 1830): AcdbCmdGetGraphAlias:4153 Error[19]: Graph Alias chunk data does not exist. Is it enabled?.
+05-25 11:00:33.860 E/gsl     ( 1830): gsl_get_graph_alias:2191 acdb get graph alias failed 19, len 255
+05-25 11:00:33.875 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.875 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.875 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.875 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.875 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.875 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.875 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.876 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.876 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.876 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.876 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.876 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.876 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.876 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.876 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.876 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.876 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.876 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.876 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.876 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.880 E/ACDB    ( 1830): AcdbCmdGetProcSubgraphCalDataPersist:8416 Error[19]: No calibration found
+05-25 11:00:33.881 E/ACDB    ( 1830): AcdbCmdGetProcSubgraphCalDataPersist:8416 Error[19]: No calibration found
+05-25 11:00:33.881 E/ACDB    ( 1830): AcdbCmdGetProcSubgraphCalDataPersist:8416 Error[19]: No calibration found
+05-25 11:00:33.881 E/ACDB    ( 1830): AcdbCmdGetProcSubgraphCalDataPersist:8416 Error[19]: No calibration found
+05-25 11:00:33.893 E/AGM: graph( 1830): configure_buffer_params: 298 Unsupported buffer mode : 0, Default to Blocking
+05-25 11:00:33.898 E/QConfig ( 1822): failed to find module QModKey_Static_VppFilter
+05-25 11:00:33.900 E/QConfig ( 1822): failed to find module QModKey_Static_VppFilter
+05-25 11:00:33.901 E/QConfig ( 1822): failed to find module QModKey_Dynamic_VppFilter
+05-25 11:00:33.901 E/QConfig ( 1822): failed to find module QModKey_Dynamic_VppFilter
+05-25 11:00:33.902 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.902 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.902 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.902 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.902 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.902 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.903 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.956 E/QC2V4l2Codec( 1859): [vp9D_1522]  ? is not a supported pixel format!
+05-25 11:00:33.962 E/QC2Interface( 1859): Few parameters failed to configure
+05-25 11:00:33.997 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.997 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.997 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.997 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.997 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.997 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.997 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.997 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.997 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.997 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.998 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.998 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.998 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.998 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.998 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.998 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.998 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.998 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.998 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:33.998 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.031 E/QC2V4l2Driver( 1859): [vp9D_1522] failed to set format on port:OUT
+05-25 11:00:34.031 E/QC2V4l2Codec( 1859): [vp9D_1522] Failed to set resolution and buffer size for OUT port
+05-25 11:00:34.031 E/QC2Comp ( 1859): [vp9D_1522] handleQueue: Codec failed to configure !!
+05-25 11:00:34.043 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.043 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.043 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.043 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.043 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.043 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.044 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.070 E/chromium(18464): [ERROR:media/gpu/android/frame_info_helper.cc:231] Guessed coded size incorrectly. Expected 856x480, got 854x480
+05-25 11:00:34.076 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.076 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.076 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.077 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.077 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.077 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.077 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.077 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.077 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.077 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.077 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.077 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.077 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.077 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.077 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.077 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.078 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.078 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.078 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.078 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.246 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.247 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.247 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.247 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.247 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.247 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.247 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.265 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.265 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.265 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.265 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.266 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.266 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.266 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.266 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.266 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.266 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.267 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.267 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.267 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.267 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.267 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.267 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.267 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.267 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.267 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.267 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.280 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.280 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.280 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.280 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.281 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.312 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.312 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.312 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.312 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.312 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.312 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.312 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.312 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.312 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.312 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.325 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.325 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.325 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.325 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.327 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.327 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.327 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.327 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.376 E/HybridPlayerCard(18464): LaunchedEffect: controlsVisible=true, isPlaying=false, interactionCount=0
+05-25 11:00:34.405 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.405 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.405 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.405 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.405 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.405 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.405 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.405 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.405 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.405 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.406 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.406 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.406 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.406 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.406 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.406 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.407 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.407 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.407 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.407 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.423 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.423 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.423 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.423 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.423 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.423 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.423 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.423 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.424 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.424 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.424 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.424 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.424 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.424 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.424 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.424 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.424 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.424 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.424 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.424 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:34.438 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:36.559 E/GoogleApiManager(18486): Failed to get service from broker. 
+05-25 11:00:36.559 E/GoogleApiManager(18486): java.lang.SecurityException: Unknown calling package name 'com.google.android.gms'.
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at android.os.Parcel.createExceptionOrNull(Parcel.java:3079)
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at android.os.Parcel.createException(Parcel.java:3063)
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at android.os.Parcel.readException(Parcel.java:3046)
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at android.os.Parcel.readException(Parcel.java:2988)
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at bioy.a(:com.google.android.gms@261833029@26.18.33 (190400-913931251):36)
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at bimu.z(:com.google.android.gms@261833029@26.18.33 (190400-913931251):143)
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at bhso.run(:com.google.android.gms@261833029@26.18.33 (190400-913931251):42)
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at android.os.Handler.handleCallback(Handler.java:1000)
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at android.os.Handler.dispatchMessage(Handler.java:104)
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at cyek.mP(:com.google.android.gms@261833029@26.18.33 (190400-913931251):1)
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at cyek.dispatchMessage(:com.google.android.gms@261833029@26.18.33 (190400-913931251):5)
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at android.os.Looper.loopOnce(Looper.java:242)
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at android.os.Looper.loop(Looper.java:362)
+05-25 11:00:36.559 E/GoogleApiManager(18486): 	at android.os.HandlerThread.run(HandlerThread.java:85)
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.394 E/BluetoothAvrcpServiceJni( 3992): updatePlayStatusToStack
+05-25 11:00:37.394 E/bt_btif ( 3992): update_play_status_to_stack:invalid index,remote suspend not set
+05-25 11:00:37.394 E/BluetoothAvrcpServiceJni( 3992): updatePlayStatusToStack: status: 1
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.404 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.442 E/HybridPlayerCard(18464): LaunchedEffect: controlsVisible=true, isPlaying=true, interactionCount=0
+05-25 11:00:37.451 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.451 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.451 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.451 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.451 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.451 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.451 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.451 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.451 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.451 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.451 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.451 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.452 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.452 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.452 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.452 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.452 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.452 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.452 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.452 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.466 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.467 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.467 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.467 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.467 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.475 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.475 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.476 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.506 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.539 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.546 E/HybridPlayerCard(18464): LaunchedEffect: controlsVisible=true, isPlaying=false, interactionCount=0
+05-25 11:00:37.560 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.560 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.560 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.560 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.560 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.560 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.560 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.560 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.561 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.561 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.561 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.561 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.561 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.561 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.561 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.561 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.561 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.561 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.561 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.561 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.570 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.571 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.571 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.571 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.571 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.571 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.571 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.582 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.582 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.582 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.582 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.582 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.582 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.582 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.582 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.583 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.583 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.583 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.583 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.583 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.583 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.583 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.583 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.583 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.583 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.583 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.583 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.594 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.595 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.595 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.595 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.595 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.605 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:37.606 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.408 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.408 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.408 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.408 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.408 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.408 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.408 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.408 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.408 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.408 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.409 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.410 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.410 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.410 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.410 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.410 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.410 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.410 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.410 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.410 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.410 E/BluetoothAvrcpServiceJni( 3992): updatePlayStatusToStack
+05-25 11:00:39.410 E/bt_btif ( 3992): update_play_status_to_stack:invalid index,remote suspend not set
+05-25 11:00:39.410 E/BluetoothAvrcpServiceJni( 3992): updatePlayStatusToStack: status: 1
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.420 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.445 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.445 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.445 E/HybridPlayerCard(18464): LaunchedEffect: controlsVisible=true, isPlaying=true, interactionCount=0
+05-25 11:00:39.445 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.445 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.445 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.445 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.445 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.445 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.445 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.445 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.446 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.446 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.446 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.446 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.446 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.446 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.446 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.446 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.446 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.446 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.460 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.474 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.488 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.498 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.508 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.509 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.509 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.509 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.509 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.517 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.517 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.518 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.529 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.530 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.530 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.530 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.530 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.540 E/HybridPlayerCard(18464): LaunchedEffect: controlsVisible=true, isPlaying=false, interactionCount=0
+05-25 11:00:39.564 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.564 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.564 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.564 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.564 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.564 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.564 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.564 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.565 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.565 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.565 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.565 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.565 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.565 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.565 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.565 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.565 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.565 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.565 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.565 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.575 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.575 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.575 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.575 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.575 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.575 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.575 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.576 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.576 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.576 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.576 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.576 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.576 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.576 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.576 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.576 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.576 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.576 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.576 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.576 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:39.586 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:40.956 E/system_server( 3077): updateValue is called with a value {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, which is lower than the previous value {0, 0, 0, 0, 0, 10816, 199, 9603, 446, 704, 649, 373, 3013, 0, 0, 19, 5341, 626, 361, 205, 3354, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 105, 6, 10, 8, 0, 10, 12, 15, 751, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.154 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.155 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.155 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.155 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.155 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.155 E/BluetoothAvrcpServiceJni( 3992): updatePlayStatusToStack
+05-25 11:00:41.155 E/bt_btif ( 3992): update_play_status_to_stack:invalid index,remote suspend not set
+05-25 11:00:41.155 E/BluetoothAvrcpServiceJni( 3992): updatePlayStatusToStack: status: 1
+05-25 11:00:41.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.163 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.164 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.184 E/HybridPlayerCard(18464): LaunchedEffect: controlsVisible=true, isPlaying=true, interactionCount=0
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.196 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.207 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.221 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.231 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.231 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.231 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.231 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.231 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.231 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.231 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.231 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.231 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.231 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.240 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.266 E/HybridPlayerCard(18464): LaunchedEffect: controlsVisible=true, isPlaying=false, interactionCount=0
+05-25 11:00:41.278 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.278 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.278 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.278 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.278 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.278 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.278 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.278 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.279 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.279 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.279 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.279 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.279 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.279 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.279 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.279 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.279 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.279 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.279 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.279 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.293 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.305 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.305 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.305 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.305 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.306 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:41.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.866 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.866 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.866 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.866 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.866 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.866 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.866 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.866 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.867 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.867 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.867 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.867 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.867 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.867 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.867 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.867 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.867 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.867 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.867 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:43.867 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.288 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.288 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.289 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.289 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.289 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.289 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.290 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.290 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.290 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.290 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.290 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.290 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.290 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.290 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.290 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.290 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.290 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.291 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.291 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:44.291 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.294 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.294 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.294 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.294 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:47.295 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.309 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.309 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.309 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.309 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.310 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.310 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.310 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.310 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.310 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.310 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:50.311 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.318 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.318 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.318 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.318 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.319 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.319 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.319 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.319 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:53.320 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.324 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.324 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.324 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.324 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.324 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.325 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.325 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.325 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.325 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.325 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.326 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.327 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.327 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.327 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.327 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.328 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:56.328 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.329 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.330 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.330 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.330 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.330 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.330 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.330 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.330 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.331 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.331 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.331 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.331 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.332 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.332 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.332 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.332 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.332 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.332 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.333 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:00:59.333 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected

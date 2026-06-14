@@ -15,11 +15,12 @@ import javax.inject.Singleton
  * Repository for DSP presets — handles serialization and seeding of built-in presets.
  */
 @Singleton
-class PresetRepository @Inject constructor(
+class PresetRepository
+@Inject
+constructor(
     private val dao: DspPresetDao,
-    private val gson: Gson
+    private val gson: Gson,
 ) {
-
     fun getAllPresets(): Flow<List<Pair<Long, String>>> =
         dao.getAllPresets().map { entities ->
             entities.map { it.id to it.name }
@@ -30,26 +31,33 @@ class PresetRepository @Inject constructor(
             entity?.let { gson.fromJson(it.paramsJson, DspParams::class.java) }
         }
 
-    suspend fun savePreset(name: String, params: DspParams): Long {
+    suspend fun savePreset(
+        name: String,
+        params: DspParams,
+    ): Long {
         val json = gson.toJson(params)
         return dao.insert(
             DspPresetEntity(
                 name = name,
                 paramsJson = json,
-                isBuiltin = false
-            )
+                isBuiltin = false,
+            ),
         )
     }
 
-    suspend fun updatePreset(id: Long, name: String, params: DspParams) {
+    suspend fun updatePreset(
+        id: Long,
+        name: String,
+        params: DspParams,
+    ) {
         val json = gson.toJson(params)
         dao.update(
             DspPresetEntity(
                 id = id,
                 name = name,
                 paramsJson = json,
-                modifiedAt = System.currentTimeMillis()
-            )
+                modifiedAt = System.currentTimeMillis(),
+            ),
         )
     }
 
@@ -70,23 +78,25 @@ class PresetRepository @Inject constructor(
     suspend fun seedBuiltinPresets() {
         if (dao.getBuiltinCount() > 0) return
 
-        val builtins = listOf(
-            "Flat" to DspParams.flat(),
-            "Premium Headphone Bass" to DspParams.premiumHeadphoneBass(),
-            "Bollywood Vocals" to DspParams.bollywoodVocals(),
-            "Night Mode" to DspParams.nightMode(),
-            "Bass Monster" to DspParams.bassMonster(),
-            "Speaker Safe" to DspParams.speakerSafe(),
-            "Bluetooth Optimized" to DspParams.bluetoothOptimized()
-        )
+        val builtins =
+            listOf(
+                "Flat" to DspParams.flat(),
+                "Audiophile USB DAC" to DspParams.audiophileUsbDac(),
+                "Premium Headphone Bass" to DspParams.premiumHeadphoneBass(),
+                "Bollywood Vocals" to DspParams.bollywoodVocals(),
+                "Night Mode" to DspParams.nightMode(),
+                "Bass Monster" to DspParams.bassMonster(),
+                "Speaker Safe" to DspParams.speakerSafe(),
+                "Bluetooth Optimized" to DspParams.bluetoothOptimized(),
+            )
 
         builtins.forEach { (name, params) ->
             dao.insert(
                 DspPresetEntity(
                     name = name,
                     paramsJson = gson.toJson(params),
-                    isBuiltin = true
-                )
+                    isBuiltin = true,
+                ),
             )
         }
         Log.i("PresetRepository", "✅ Seeded ${builtins.size} premium built-in presets")

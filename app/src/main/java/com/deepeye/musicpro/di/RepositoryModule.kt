@@ -20,7 +20,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
-
     @Binds
     @Singleton
     abstract fun bindMusicRepository(impl: LocalMusicRepositoryImpl): MusicRepository
@@ -32,6 +31,6 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindTasteProfileRepository(
-        impl: com.deepeye.musicpro.data.repository.TasteProfileRepositoryImpl
+        impl: com.deepeye.musicpro.data.repository.TasteProfileRepositoryImpl,
     ): com.deepeye.musicpro.domain.repository.TasteProfileRepository
 }

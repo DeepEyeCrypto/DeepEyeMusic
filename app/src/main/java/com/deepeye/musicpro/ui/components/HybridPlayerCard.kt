@@ -1,6 +1,8 @@
 // Copyright (C) 2026 DeepEye
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+@file:androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+
 package com.deepeye.musicpro.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
@@ -9,61 +11,64 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.automirrored.filled.VolumeMute
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PictureInPicture
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.deepeye.musicpro.ui.components.DynamicLabel
+import com.deepeye.musicpro.ui.components.SecondaryLabel
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.MediaItem
-import androidx.compose.material.icons.filled.PictureInPicture
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import com.deepeye.musicpro.ui.LocalFullscreenMode
 import com.deepeye.musicpro.ui.LocalPipMode
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun VideoPlayerView(
     player: ExoPlayer,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val playerView = remember {
-        PlayerView(context).apply {
-            useController = false
-            resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-            keepScreenOn = true
+    val playerView =
+        remember {
+            val view = android.view.LayoutInflater.from(context).inflate(com.deepeye.musicpro.R.layout.custom_player_view, null, false)
+            val pv = view as androidx.media3.ui.PlayerView
+            pv.keepScreenOn = true
+            pv
         }
-    }
 
     DisposableEffect(player) {
         playerView.player = player
@@ -74,7 +79,8 @@ fun VideoPlayerView(
 
     AndroidView(
         factory = { playerView },
-        modifier = modifier
+        modifier = modifier,
+        update = { it.requestLayout() }
     )
 }
 
@@ -87,7 +93,8 @@ fun HybridPlayerCard(
     isPlaying: Boolean,
     playbackPosition: Long = 0L,
     modifier: Modifier = Modifier,
-    onTogglePlayPause: () -> Unit
+    onTogglePlayPause: () -> Unit,
+    onSeekTo: (Long) -> Unit,
 ) {
     var playbackSpeed by remember { mutableStateOf(1.0f) }
     var isMuted by remember { mutableStateOf(false) }
@@ -100,7 +107,10 @@ fun HybridPlayerCard(
     }
 
     LaunchedEffect(controlsVisible, isPlaying, playbackSpeed, isMuted, interactionCount) {
-        android.util.Log.e("HybridPlayerCard", "LaunchedEffect: controlsVisible=$controlsVisible, isPlaying=$isPlaying, interactionCount=$interactionCount")
+        android.util.Log.e(
+            "HybridPlayerCard",
+            "LaunchedEffect: controlsVisible=$controlsVisible, isPlaying=$isPlaying, interactionCount=$interactionCount",
+        )
         if (controlsVisible && isPlaying) {
             delay(3000)
             android.util.Log.e("HybridPlayerCard", "Auto-hiding controls after 3 seconds")
@@ -108,57 +118,55 @@ fun HybridPlayerCard(
         }
     }
 
-
-
     LaunchedEffect(playbackSpeed) {
         player.setPlaybackSpeed(playbackSpeed)
     }
 
-    // ExoPlayer audio track is disabled in video mode via setTrackTypeDisabled (PlayerController).
-    // The mute button toggles WebView audio via isMuted param. For audio mode, ExoPlayer handles volume natively.
+    // ExoPlayer handles audio natively for both audio and video modes now.
+    // The mute button toggles ExoPlayer volume.
     LaunchedEffect(isMuted) {
-        if (!isVideo) {
-            player.volume = if (isMuted) 0f else 1f
-        }
+        player.volume = if (isMuted) 0f else 1f
     }
-    
+
     // Tap-seeking animated indicator visual triggers
     var showLeftRipple by remember { mutableStateOf(false) }
     var showRightRipple by remember { mutableStateOf(false) }
-    
+
     // Fullscreen mode from CompositionLocal — toggles activity orientation
     val fullscreenMode = LocalFullscreenMode.current
     val isFullscreen = fullscreenMode.isFullscreen
-    
+
     val scope = rememberCoroutineScope()
 
     // PiP mode awareness
     val isInPipMode = LocalPipMode.current
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    val webView = com.deepeye.musicpro.ui.LocalSharedWebView.current ?: remember {
-        createYouTubeWebView(context)
-    }
+    // WebView player removed. ExoPlayer handles all video track rendering natively.
 
     // ── Fullscreen Dialog Overlay Removed ──
 
-    val cardModifier = if (isFullscreen && !isInPipMode) {
-        Modifier.fillMaxSize()
-    } else {
-        modifier
-            .fillMaxSize()
-    }
+    val cardModifier =
+        if (isFullscreen && !isInPipMode) {
+            Modifier.fillMaxSize()
+        } else {
+            modifier
+        }
 
     Box(
         modifier = cardModifier,
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         // PREMIUM AMBILIGHT DYNAMIC GLOW (Breathing ambient aura matching video colors)
-        if (!isFullscreen || isInPipMode) {
+        // Hidden during active video playback because the blur Compose layer renders
+        // on top of the native WebView, covering the video with a blurred overlay.
+        // Only shown for audio-only mode where it creates a premium ambient effect.
+        if (!isVideo && (!isFullscreen || isInPipMode)) {
             AsyncImage(
                 model = item.artworkUri,
                 contentDescription = null,
-                modifier = Modifier
+                modifier =
+                Modifier
                     .fillMaxWidth(0.92f)
                     .aspectRatio(16 / 9f)
                     .blur(36.dp)
@@ -166,49 +174,49 @@ fun HybridPlayerCard(
                     .graphicsLayer {
                         translationY = 15f
                     },
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
         }
 
         // MAIN HIGH-FIDELITY MEDIA CONTAINER CARD
-        val containerModifier = if (isFullscreen && !isInPipMode) {
-            Modifier
-                .fillMaxSize()
-                .background(Color.Black)
-        } else {
-            Modifier
-                .fillMaxSize()
-                .border(
-                    width = 1.5.dp,
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
-                        )
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        }
+        val containerModifier =
+            if (isFullscreen && !isInPipMode) {
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+            } else if (isVideo) {
+                // Video mode: minimal container — no background, no clip with rounded corners.
+                // The WebView is a native View; Compose clip/background draws over it.
+                Modifier.fillMaxSize()
+            } else {
+                Modifier
+                    .fillMaxSize()
+                    .border(
+                        width = 1.5.dp,
+                        brush =
+                        Brush.linearGradient(
+                            colors =
+                            listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f),
+                            ),
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                    )
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            }
 
         Box(
             modifier = containerModifier,
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             if (isVideo) {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    val videoPlaybackPosition = sliderPosition?.toLong() ?: playbackPosition
-                    YouTubeVideoPlayer(
-                        webView = webView,
-                        videoId = item.id,
-                        isPlaying = isPlaying,
-                        playbackPosition = videoPlaybackPosition,
-                        playbackSpeed = playbackSpeed,
-                        isMuted = isMuted,
-                        muteWebViewAudio = false,
+                    VideoPlayerView(
+                        player = player,
                         modifier = Modifier.fillMaxSize()
                     )
 
@@ -217,25 +225,27 @@ fun HybridPlayerCard(
                         AnimatedVisibility(
                             visible = controlsVisible,
                             enter = fadeIn(),
-                            exit = fadeOut()
+                            exit = fadeOut(),
                         ) {
                             Box(
-                                modifier = Modifier
+                                modifier =
+                                Modifier
                                     .fillMaxSize()
                                     .padding(24.dp),
-                                contentAlignment = Alignment.TopEnd
+                                contentAlignment = Alignment.TopEnd,
                             ) {
                                 IconButton(
                                     onClick = { fullscreenMode.exit() },
-                                    modifier = Modifier
+                                    modifier =
+                                    Modifier
                                         .size(48.dp)
-                                        .background(Color.Black.copy(alpha = 0.55f), CircleShape)
+                                        .background(Color.Black.copy(alpha = 0.55f), CircleShape),
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.FullscreenExit,
                                         contentDescription = "Exit Fullscreen",
                                         tint = Color.White,
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(24.dp),
                                     )
                                 }
                             }
@@ -244,51 +254,125 @@ fun HybridPlayerCard(
 
                     // GESTURE SKIP ZONES + OVERLAYS: Hidden in PiP for clean view
                     if (!isInPipMode) {
-                        Row(modifier = Modifier.fillMaxSize()) {
+                        // Vertical drag overlay for fullscreen exit — uses Final pass
+                        // so child tap zones (which use Main pass) get priority.
+                        // Only consumes clearly vertical drags; taps and horizontal
+                        // movements pass through uninterrupted.
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .pointerInput(isFullscreen) {
+                                    if (!isFullscreen) return@pointerInput
+                                    awaitEachGesture {
+                                        val down = awaitFirstDown(
+                                            requireUnconsumed = false,
+                                            pass = PointerEventPass.Final
+                                        )
+                                        val slopThreshold = viewConfiguration.touchSlop
+                                        while (true) {
+                                            val event = awaitPointerEvent(PointerEventPass.Final)
+                                            val change = event.changes.firstOrNull { it.id == down.id }
+                                            if (change == null || !change.pressed) break
+                                            val dy = change.position.y - down.position.y
+                                            val dx = change.position.x - down.position.x
+                                            // Only consume if clearly vertical (2:1 ratio)
+                                            if (kotlin.math.abs(dy) > slopThreshold * 2 &&
+                                                kotlin.math.abs(dy) > kotlin.math.abs(dx) * 2f
+                                            ) {
+                                                if (dy > 50f) {
+                                                    fullscreenMode.exit()
+                                                    break
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
                             // Left Column Zone: Skip Backward / Single Tap Play-Pause
                             Box(
-                                modifier = Modifier
+                                modifier =
+                                Modifier
                                     .fillMaxHeight()
                                     .weight(1f)
                                     .pointerInput(Unit) {
-                                        detectTapGestures(
-                                            onDoubleTap = {
-                                                android.util.Log.e("HybridPlayerCard", "Double tap left zone! Seeking backward.")
+                                        var lastTapTime = 0L
+                                        awaitEachGesture {
+                                            val down =
+                                                awaitFirstDown(
+                                                    requireUnconsumed = false,
+                                                    pass = PointerEventPass.Main
+                                                )
+                                            val now = System.currentTimeMillis()
+                                            if (now - lastTapTime < 300L) {
+                                                down.consume()
+                                                while (true) {
+                                                    val event = awaitPointerEvent(pass = PointerEventPass.Main)
+                                                    event.changes.forEach { it.consume() }
+                                                    if (event.changes.none { it.pressed }) break
+                                                }
+                                                android.util.Log.e(
+                                                    "HybridPlayerCard",
+                                                    "Double tap left zone! Seeking backward."
+                                                )
                                                 resetTimer()
-                                                val newPos = (player.currentPosition - 10000L).coerceAtLeast(0L)
-                                                player.seekTo(newPos)
+                                                val currentPos = player.currentPosition
+                                                val newPos = (currentPos - 10000L).coerceAtLeast(0L)
+                                                onSeekTo(newPos)
                                                 showLeftRipple = true
                                                 scope.launch {
                                                     delay(650)
                                                     showLeftRipple = false
                                                 }
-                                            },
-                                            onTap = {
-                                                android.util.Log.e("HybridPlayerCard", "Single tap left zone! Toggling controls. Current visibility: $controlsVisible")
-                                                resetTimer()
-                                                controlsVisible = !controlsVisible
+                                                lastTapTime = 0L
+                                            } else {
+                                                lastTapTime = now
+                                                var isClick = true
+                                                while (true) {
+                                                    val event = awaitPointerEvent(pass = PointerEventPass.Main)
+                                                    if (event.changes.any { it.isConsumed }) {
+                                                        isClick = false
+                                                    }
+                                                    if (event.changes.none { it.pressed }) break
+                                                }
+                                                if (isClick && System.currentTimeMillis() - now < 300L) {
+                                                    android.util.Log.e(
+                                                        "HybridPlayerCard",
+                                                        "Single tap left zone! Toggling controls. Current visibility: $controlsVisible",
+                                                    )
+                                                    controlsVisible = !controlsVisible
+                                                    resetTimer()
+                                                }
                                             }
-                                        )
+                                        }
                                     },
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 if (showLeftRipple) {
                                     Surface(
                                         shape = RoundedCornerShape(12.dp),
-                                        color = Color.Black.copy(alpha = 0.75f)
+                                        color = Color.Black.copy(alpha = 0.75f),
                                     ) {
                                         Row(
                                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                            verticalAlignment = Alignment.CenterVertically,
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.FastRewind,
                                                 contentDescription = null,
                                                 tint = Color.White,
-                                                modifier = Modifier.size(16.dp)
+                                                modifier = Modifier.size(16.dp),
                                             )
                                             Spacer(Modifier.width(4.dp))
-                                            Text("-10s", color = Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                            Text(
+                                                "-10s",
+                                                color = Color.White,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold,
+                                            )
                                         }
                                     }
                                 }
@@ -296,52 +380,90 @@ fun HybridPlayerCard(
 
                             // Right Column Zone: Skip Forward / Single Tap Play-Pause
                             Box(
-                                modifier = Modifier
+                                modifier =
+                                Modifier
                                     .fillMaxHeight()
                                     .weight(1f)
                                     .pointerInput(Unit) {
-                                        detectTapGestures(
-                                            onDoubleTap = {
-                                                android.util.Log.e("HybridPlayerCard", "Double tap right zone! Seeking forward.")
+                                        var lastTapTime = 0L
+                                        awaitEachGesture {
+                                            val down =
+                                                awaitFirstDown(
+                                                    requireUnconsumed = false,
+                                                    pass = PointerEventPass.Main
+                                                )
+                                            val now = System.currentTimeMillis()
+                                            if (now - lastTapTime < 300L) {
+                                                down.consume()
+                                                while (true) {
+                                                    val event = awaitPointerEvent(pass = PointerEventPass.Main)
+                                                    event.changes.forEach { it.consume() }
+                                                    if (event.changes.none { it.pressed }) break
+                                                }
+                                                android.util.Log.e(
+                                                    "HybridPlayerCard",
+                                                    "Double tap right zone! Seeking forward."
+                                                )
                                                 resetTimer()
                                                 val duration = player.duration
-                                                val newPos = if (duration > 0) {
-                                                    (player.currentPosition + 10000L).coerceAtMost(duration)
-                                                } else {
-                                                    player.currentPosition + 10000L
-                                                }
-                                                player.seekTo(newPos)
+                                                val currentPos = player.currentPosition
+                                                val newPos =
+                                                    if (duration > 0) {
+                                                        (currentPos + 10000L).coerceAtMost(duration)
+                                                    } else {
+                                                        currentPos + 10000L
+                                                    }
+                                                onSeekTo(newPos)
                                                 showRightRipple = true
                                                 scope.launch {
                                                     delay(650)
                                                     showRightRipple = false
                                                 }
-                                            },
-                                            onTap = {
-                                                android.util.Log.e("HybridPlayerCard", "Single tap right zone! Toggling controls. Current visibility: $controlsVisible")
-                                                resetTimer()
-                                                controlsVisible = !controlsVisible
+                                                lastTapTime = 0L
+                                            } else {
+                                                lastTapTime = now
+                                                var isClick = true
+                                                while (true) {
+                                                    val event = awaitPointerEvent(pass = PointerEventPass.Main)
+                                                    if (event.changes.any { it.isConsumed }) {
+                                                        isClick = false
+                                                    }
+                                                    if (event.changes.none { it.pressed }) break
+                                                }
+                                                if (isClick && System.currentTimeMillis() - now < 300L) {
+                                                    android.util.Log.e(
+                                                        "HybridPlayerCard",
+                                                        "Single tap right zone! Toggling controls. Current visibility: $controlsVisible",
+                                                    )
+                                                    controlsVisible = !controlsVisible
+                                                    resetTimer()
+                                                }
                                             }
-                                        )
+                                        }
                                     },
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 if (showRightRipple) {
                                     Surface(
                                         shape = RoundedCornerShape(12.dp),
-                                        color = Color.Black.copy(alpha = 0.75f)
+                                        color = Color.Black.copy(alpha = 0.75f),
                                     ) {
                                         Row(
                                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                            verticalAlignment = Alignment.CenterVertically,
                                         ) {
-                                            Text("+10s", color = Color.White, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                            Text(
+                                                "+10s",
+                                                color = Color.White,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold,
+                                            )
                                             Spacer(Modifier.width(4.dp))
                                             Icon(
                                                 imageVector = Icons.Default.FastForward,
                                                 contentDescription = null,
                                                 tint = Color.White,
-                                                modifier = Modifier.size(16.dp)
+                                                modifier = Modifier.size(16.dp),
                                             )
                                         }
                                     }
@@ -354,22 +476,23 @@ fun HybridPlayerCard(
                             visible = controlsVisible && !isPlaying,
                             enter = fadeIn(),
                             exit = fadeOut(),
-                            modifier = Modifier.align(Alignment.Center)
+                            modifier = Modifier.align(Alignment.Center),
                         ) {
                             Box(
-                                modifier = Modifier
+                                modifier =
+                                Modifier
                                     .size(60.dp)
                                     .clip(CircleShape)
                                     .background(Color.Black.copy(alpha = 0.55f))
                                     .clickable { onTogglePlayPause() }
                                     .border(1.5.dp, Color.White.copy(alpha = 0.35f), CircleShape),
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.PlayArrow,
                                     contentDescription = "Play",
                                     tint = Color.White,
-                                    modifier = Modifier.size(28.dp)
+                                    modifier = Modifier.size(28.dp),
                                 )
                             }
                         }
@@ -379,80 +502,110 @@ fun HybridPlayerCard(
                             visible = controlsVisible,
                             enter = fadeIn(),
                             exit = fadeOut(),
-                            modifier = Modifier.align(Alignment.BottomCenter)
+                            modifier = Modifier.align(Alignment.BottomCenter),
                         ) {
                             Box(
-                                modifier = Modifier
+                                modifier =
+                                Modifier
                                     .fillMaxWidth()
                                     .padding(8.dp),
-                                contentAlignment = Alignment.BottomCenter
+                                contentAlignment = Alignment.BottomCenter,
                             ) {
                                 Column(
-                                    modifier = Modifier
+                                    modifier =
+                                    Modifier
                                         .fillMaxWidth()
                                         .clickable(
                                             interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
                                             indication = null,
-                                            onClick = { resetTimer() }
+                                            onClick = { resetTimer() },
                                         )
                                         .background(
-                                            brush = Brush.verticalGradient(
-                                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))
+                                            brush =
+                                            Brush.verticalGradient(
+                                                colors = listOf(
+                                                    Color.Transparent,
+                                                    Color.Black.copy(alpha = 0.85f)
+                                                ),
                                             ),
-                                            shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                                            shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp),
                                         )
-                                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
                                 ) {
-                                    // Seekbar (Slider) Row
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        val displayPosition = sliderPosition?.toLong() ?: playbackPosition
-                                        Text(
-                                            text = com.deepeye.musicpro.core.utils.TimeFormatter.formatDuration(displayPosition),
-                                            color = Color.White,
-                                            style = MaterialTheme.typography.labelMedium
-                                        )
-                                        
-                                        Spacer(Modifier.width(8.dp))
-                                        
-                                        val duration = player.duration.coerceAtLeast(0L)
-                                        Slider(
-                                            value = sliderPosition ?: playbackPosition.toFloat(),
-                                            onValueChange = {
-                                                sliderPosition = it
-                                                player.seekTo(it.toLong())
-                                                resetTimer()
-                                            },
-                                            onValueChangeFinished = {
-                                                sliderPosition = null
-                                            },
-                                            valueRange = 0f..duration.toFloat().coerceAtLeast(1f),
-                                            colors = SliderDefaults.colors(
-                                                thumbColor = Color(0xFFFFB300),
-                                                activeTrackColor = Color(0xFFFFB300),
-                                                inactiveTrackColor = Color.White.copy(alpha = 0.24f)
-                                            ),
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        
-                                        Spacer(Modifier.width(8.dp))
-                                        
-                                        Text(
-                                            text = com.deepeye.musicpro.core.utils.TimeFormatter.formatDuration(duration),
-                                            color = Color.White,
-                                            style = MaterialTheme.typography.labelMedium
-                                        )
+                                    // Seekbar (Slider) Row - Only show in fullscreen since NowPlayingScreen has one
+                                    if (isFullscreen) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            val displayPosition = sliderPosition?.toLong() ?: playbackPosition
+                                            Text(
+                                                text = com.deepeye.musicpro.core.utils.TimeFormatter.formatDuration(
+                                                    displayPosition
+                                                ),
+                                                color = Color.White,
+                                                style = MaterialTheme.typography.labelMedium,
+                                            )
+
+                                            Spacer(Modifier.width(8.dp))
+
+                                            val duration = player.duration.coerceAtLeast(0L)
+                                            @OptIn(ExperimentalMaterial3Api::class)
+                                            Slider(
+                                                value =
+                                                (sliderPosition ?: playbackPosition.toFloat()).coerceIn(
+                                                    0f,
+                                                    duration.toFloat().coerceAtLeast(1f),
+                                                ),
+                                                onValueChange = {
+                                                    sliderPosition = it
+                                                    onSeekTo(it.toLong())
+                                                    resetTimer()
+                                                },
+                                                onValueChangeFinished = {
+                                                    sliderPosition = null
+                                                },
+                                                valueRange = 0f..duration.toFloat().coerceAtLeast(1f),
+                                                modifier = Modifier.weight(1f),
+                                                thumb = {
+                                                    SliderDefaults.Thumb(
+                                                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                                        colors = SliderDefaults.colors(thumbColor = Color(0xFFFFB300)),
+                                                        modifier = Modifier.size(12.dp),
+                                                    )
+                                                },
+                                                track = { sliderState ->
+                                                    SliderDefaults.Track(
+                                                        colors =
+                                                        SliderDefaults.colors(
+                                                            activeTrackColor = Color(0xFFFFB300),
+                                                            inactiveTrackColor = Color.White.copy(alpha = 0.24f),
+                                                        ),
+                                                        sliderState = sliderState,
+                                                        modifier = Modifier.height(4.dp),
+                                                    )
+                                                },
+                                            )
+
+                                            Spacer(Modifier.width(8.dp))
+
+                                            Text(
+                                                text = com.deepeye.musicpro.core.utils.TimeFormatter.formatDuration(
+                                                    duration
+                                                ),
+                                                color = Color.White,
+                                                style = MaterialTheme.typography.labelMedium,
+                                            )
+                                        }
+
+                                        Spacer(Modifier.height(8.dp))
                                     }
-                                    
-                                    Spacer(Modifier.height(8.dp))
-                                    
+
                                     // Row of Control buttons
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                                        verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         // 1. Interactive Play/Pause Button
                                         IconButton(
@@ -460,15 +613,16 @@ fun HybridPlayerCard(
                                                 resetTimer()
                                                 onTogglePlayPause()
                                             },
-                                            modifier = Modifier
+                                            modifier =
+                                            Modifier
                                                 .size(32.dp)
-                                                .background(Color.White.copy(alpha = 0.15f), CircleShape)
+                                                .background(Color.White.copy(alpha = 0.15f), CircleShape),
                                         ) {
                                             Icon(
                                                 imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                                                 contentDescription = "Play/Pause",
                                                 tint = Color.White,
-                                                modifier = Modifier.size(16.dp)
+                                                modifier = Modifier.size(16.dp),
                                             )
                                         }
 
@@ -478,47 +632,78 @@ fun HybridPlayerCard(
                                                 resetTimer()
                                                 isMuted = !isMuted
                                             },
-                                            modifier = Modifier
+                                            modifier =
+                                            Modifier
                                                 .size(32.dp)
-                                                .background(Color.White.copy(alpha = 0.15f), CircleShape)
+                                                .background(Color.White.copy(alpha = 0.15f), CircleShape),
                                         ) {
                                             Icon(
                                                 imageVector = if (isMuted) Icons.AutoMirrored.Filled.VolumeMute else Icons.AutoMirrored.Filled.VolumeUp,
                                                 contentDescription = "Mute",
-                                                tint = if (isMuted) Color.White.copy(alpha = 0.6f) else Color(0xFFFFB300),
-                                                modifier = Modifier.size(16.dp)
+                                                tint = if (isMuted) {
+                                                    Color.White.copy(
+                                                        alpha = 0.6f
+                                                    )
+                                                } else {
+                                                    Color(0xFFFFB300)
+                                                },
+                                                modifier = Modifier.size(16.dp),
                                             )
                                         }
 
                                         // 3. VLC-style Playback Speed Selector
                                         Surface(
                                             shape = RoundedCornerShape(14.dp),
-                                            color = if (playbackSpeed != 1.0f) Color(0xFF00BFA5).copy(alpha = 0.25f) else Color.White.copy(alpha = 0.15f),
-                                            modifier = Modifier
+                                            color =
+                                            if (playbackSpeed != 1.0f) {
+                                                Color(
+                                                    0xFF00BFA5,
+                                                ).copy(alpha = 0.25f)
+                                            } else {
+                                                Color.White.copy(alpha = 0.15f)
+                                            },
+                                            modifier =
+                                            Modifier
                                                 .clickable {
                                                     resetTimer()
                                                     val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
                                                     val currentIdx = speeds.indexOf(playbackSpeed).takeIf { it >= 0 } ?: 2
                                                     playbackSpeed = speeds[(currentIdx + 1) % speeds.size]
                                                 }
-                                                .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
+                                                .border(
+                                                    1.dp,
+                                                    Color.White.copy(alpha = 0.25f),
+                                                    RoundedCornerShape(14.dp)
+                                                ),
                                         ) {
                                             Row(
                                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                                verticalAlignment = Alignment.CenterVertically
+                                                verticalAlignment = Alignment.CenterVertically,
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.Speed,
                                                     contentDescription = null,
-                                                    tint = if (playbackSpeed != 1.0f) Color(0xFF00BFA5) else Color.White,
-                                                    modifier = Modifier.size(12.dp)
+                                                    tint = if (playbackSpeed != 1.0f) {
+                                                        Color(
+                                                            0xFF00BFA5
+                                                        )
+                                                    } else {
+                                                        Color.White
+                                                    },
+                                                    modifier = Modifier.size(12.dp),
                                                 )
                                                 Spacer(Modifier.width(4.dp))
                                                 Text(
                                                     text = "${playbackSpeed}x",
-                                                    color = if (playbackSpeed != 1.0f) Color(0xFF00BFA5) else Color.White,
+                                                    color = if (playbackSpeed != 1.0f) {
+                                                        Color(
+                                                            0xFF00BFA5
+                                                        )
+                                                    } else {
+                                                        Color.White
+                                                    },
                                                     style = MaterialTheme.typography.labelMedium,
-                                                    fontWeight = FontWeight.Bold
+                                                    fontWeight = FontWeight.Bold,
                                                 )
                                             }
                                         }
@@ -530,15 +715,16 @@ fun HybridPlayerCard(
                                                     resetTimer()
                                                     (context as? com.deepeye.musicpro.MainActivity)?.enterPipMode()
                                                 },
-                                                modifier = Modifier
+                                                modifier =
+                                                Modifier
                                                     .size(32.dp)
-                                                    .background(Color.White.copy(alpha = 0.15f), CircleShape)
+                                                    .background(Color.White.copy(alpha = 0.15f), CircleShape),
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.PictureInPicture,
                                                     contentDescription = "Picture in Picture",
                                                     tint = Color.White,
-                                                    modifier = Modifier.size(16.dp)
+                                                    modifier = Modifier.size(16.dp),
                                                 )
                                             }
                                         }
@@ -549,23 +735,24 @@ fun HybridPlayerCard(
                                                 resetTimer()
                                                 if (isFullscreen) fullscreenMode.exit() else fullscreenMode.enter()
                                             },
-                                            modifier = Modifier
+                                            modifier =
+                                            Modifier
                                                 .size(32.dp)
-                                                .background(Color.White.copy(alpha = 0.15f), CircleShape)
+                                                .background(Color.White.copy(alpha = 0.15f), CircleShape),
                                         ) {
                                             Icon(
                                                 imageVector = if (isFullscreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
                                                 contentDescription = if (isFullscreen) "Exit Fullscreen" else "Fullscreen",
                                                 tint = Color.White,
-                                                modifier = Modifier.size(18.dp)
+                                                modifier = Modifier.size(18.dp),
                                             )
                                         }
                                     }
                                 }
                             }
                         }
-                        } // end if (!isInPipMode)
-                    }
+                    } // end if (!isInPipMode)
+                }
             } else {
                 // Premium Fallback Audio card
                 Box(modifier = Modifier.fillMaxSize()) {
@@ -573,85 +760,98 @@ fun HybridPlayerCard(
                     AsyncImage(
                         model = item.artworkUri,
                         contentDescription = null,
-                        modifier = Modifier
+                        modifier =
+                        Modifier
                             .fillMaxSize()
                             .blur(20.dp),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
                     )
-                    
+
                     // Contrast gradient overlay
                     Box(
-                        modifier = Modifier
+                        modifier =
+                        Modifier
                             .fillMaxSize()
                             .background(
                                 Brush.verticalGradient(
-                                    colors = listOf(
+                                    colors =
+                                    listOf(
                                         Color.Black.copy(alpha = 0.5f),
-                                        Color(0xFF1E0B36).copy(alpha = 0.8f)
-                                    )
-                                )
-                            )
+                                        Color(0xFF1E0B36).copy(alpha = 0.8f),
+                                    ),
+                                ),
+                            ),
                     )
 
                     // Audio Layout Content
                     Row(
-                        modifier = Modifier
+                        modifier =
+                        Modifier
                             .fillMaxSize()
                             .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         AsyncImage(
                             model = item.artworkUri,
                             contentDescription = null,
-                            modifier = Modifier
+                            modifier =
+                            Modifier
                                 .size(72.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .border(1.5.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Crop,
                         )
 
                         Spacer(Modifier.width(16.dp))
 
                         Column(
-                            modifier = Modifier
+                            modifier =
+                            Modifier
                                 .weight(1f)
-                                .align(Alignment.CenterVertically)
+                                .align(Alignment.CenterVertically),
                         ) {
                             Text(
                                 text = item.title,
-                                style = MaterialTheme.typography.titleMedium.copy(
+                                style =
+                                MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = Color.White,
                                 ),
                                 maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
+                                overflow = TextOverflow.Ellipsis,
                             )
-                            
+
                             Spacer(Modifier.height(4.dp))
-                            
+
                             Text(
                                 text = item.artist,
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = Color.White.copy(alpha = 0.7f)
+                                style =
+                                MaterialTheme.typography.bodyMedium.copy(
+                                    color = Color.White.copy(alpha = 0.7f),
                                 ),
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                overflow = TextOverflow.Ellipsis,
                             )
-                            
+
                             Spacer(Modifier.height(4.dp))
-                            
+
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
                                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                                border =
+                                androidx.compose.foundation.BorderStroke(
+                                    1.dp,
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                ),
                             ) {
                                 Text(
                                     text = "🎧 High-Fidelity Audio Mode",
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall.copy(
+                                    style =
+                                    MaterialTheme.typography.labelSmall.copy(
                                         color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                        fontWeight = FontWeight.Bold,
+                                    ),
                                 )
                             }
                         }
@@ -660,19 +860,20 @@ fun HybridPlayerCard(
 
                         val isPlayingAudio = player.isPlaying
                         Box(
-                            modifier = Modifier
+                            modifier =
+                            Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)
                                 .background(Color.White.copy(alpha = 0.15f))
                                 .clickable { onTogglePlayPause() }
                                 .border(1.dp, Color.White.copy(alpha = 0.25f), CircleShape),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Icon(
                                 imageVector = if (isPlayingAudio) Icons.Default.Pause else Icons.Default.PlayArrow,
                                 contentDescription = "Play/Pause",
                                 tint = Color.White,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(24.dp),
                             )
                         }
                     }
@@ -683,14 +884,15 @@ fun HybridPlayerCard(
         // Global spinner overlay when buffering or loading streams
         if (isLoading) {
             Box(
-                modifier = Modifier
+                modifier =
+                Modifier
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.5f)),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
                     color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 3.dp
+                    strokeWidth = 3.dp,
                 )
             }
         }
@@ -704,35 +906,50 @@ fun MediaInfoOverlay(player: ExoPlayer) {
     var audioFormat by remember { mutableStateOf(player.audioFormat) }
 
     LaunchedEffect(player) {
-        val listener = object : androidx.media3.common.Player.Listener {
-            override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
-                videoFormat = player.videoFormat
-                audioFormat = player.audioFormat
+        val listener =
+            object : androidx.media3.common.Player.Listener {
+                override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
+                    videoFormat = player.videoFormat
+                    audioFormat = player.audioFormat
+                }
             }
-        }
         player.addListener(listener)
-        // Cleanup not strictly necessary since effect scope ties to lifecycle, 
+        // Cleanup not strictly necessary since effect scope ties to lifecycle,
         // but good practice if player outlives compose
     }
 
     val vCodec = videoFormat?.sampleMimeType?.substringAfter("/") ?: "unknown"
     val aCodec = audioFormat?.sampleMimeType?.substringAfter("/") ?: "unknown"
-    val res = if (videoFormat != null) "${videoFormat!!.width}x${videoFormat!!.height}" else "Audio Only"
-    val aBitrate = if (audioFormat != null && audioFormat!!.bitrate > 0) "${audioFormat!!.bitrate / 1000}kbps" else ""
+    val res = videoFormat?.let { "${it.width}x${it.height}" } ?: "Audio Only"
+    val aBitrate = audioFormat?.bitrate?.takeIf { it > 0 }?.let { "${it / 1000}kbps" } ?: ""
 
     Box(
-        modifier = Modifier
+        modifier =
+        Modifier
             .padding(16.dp)
             .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
             .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-            .padding(12.dp)
+            .padding(12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Speed, contentDescription = "Media Info", tint = Color.White, modifier = Modifier.size(16.dp))
+            Icon(
+                Icons.Default.Speed,
+                contentDescription = "Media Info",
+                tint = Color.White,
+                modifier = Modifier.size(16.dp)
+            )
             Spacer(Modifier.width(8.dp))
             Column {
-                Text("Video: $vCodec • $res", color = Color.White, style = MaterialTheme.typography.labelSmall)
-                Text("Audio: $aCodec • $aBitrate", color = Color.White.copy(alpha=0.7f), style = MaterialTheme.typography.labelSmall)
+                DynamicLabel(
+                    text = "Video: $vCodec • $res", 
+                    backgroundColor = Color.Black, 
+                    style = MaterialTheme.typography.labelSmall
+                )
+                SecondaryLabel(
+                    text = "Audio: $aCodec • $aBitrate",
+                    backgroundColor = Color.Black,
+                    style = MaterialTheme.typography.labelSmall
+                )
             }
         }
     }

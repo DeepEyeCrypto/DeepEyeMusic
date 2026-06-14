@@ -1,0 +1,16 @@
+05-27 02:59:47.587 18878 118791 D adb     : adb_trace.cpp:201 Android Debug Bridge version 1.0.41
+05-27 02:59:47.587 18878 118791 D adb     : adb_trace.cpp:201 Version 37.0.0-14910828
+05-27 02:59:47.587 18878 118791 D adb     : adb_trace.cpp:201 Installed as /usr/local/bin/adb
+05-27 02:59:47.587 18878 118791 D adb     : adb_trace.cpp:201 Running on Darwin 24.6.0 (x86_64)
+05-27 02:59:47.587 18878 118791 D adb     : adb_trace.cpp:201 
+05-27 02:59:47.598 18878 118791 D adb     : commandline.cpp:1683 Using server socket: tcp:5037
+05-27 02:59:47.598 18878 118791 D adb     : adb_client.cpp:160 _adb_connect: host:version
+05-27 02:59:47.607 18878 118791 D adb     : adb_client.cpp:194 _adb_connect: return fd 3
+05-27 02:59:47.607 18878 118791 D adb     : adb_client.cpp:400 adb_query: host:devices-l
+05-27 02:59:47.607 18878 118791 D adb     : adb_client.cpp:358 adb_connect: service: host:devices-l
+05-27 02:59:47.607 18878 118791 D adb     : adb_client.cpp:160 _adb_connect: host:devices-l
+05-27 02:59:47.609 18878 118791 D adb     : adb_client.cpp:194 _adb_connect: return fd 3
+05-27 02:59:47.609 18878 118791 D adb     : adb_client.cpp:376 adb_connect: return fd 3
+List of devices attached
+ZD2226X6RW             device usb:20-4 product:hiphi_g model:motorola_edge_30_pro device:hiphi transport_id:1
+

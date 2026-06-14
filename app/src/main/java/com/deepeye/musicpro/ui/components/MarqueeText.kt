@@ -11,7 +11,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -23,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -47,7 +47,7 @@ fun MarqueeText(
     style: TextStyle = MaterialTheme.typography.titleMedium,
     color: Color = MaterialTheme.colorScheme.onSurface,
     gradientEdgeWidth: Float = 24f,
-    scrollSpeed: Int = 8000 // ms per full scroll cycle
+    scrollSpeed: Int = 8000, // ms per full scroll cycle
 ) {
     val density = LocalDensity.current
     var textWidth by remember { mutableStateOf(0) }
@@ -59,29 +59,32 @@ fun MarqueeText(
         val offset by infiniteTransition.animateFloat(
             initialValue = 0f,
             targetValue = -(textWidth.toFloat() + containerWidth * 0.3f),
-            animationSpec = infiniteRepeatable(
+            animationSpec =
+            infiniteRepeatable(
                 animation = tween(scrollSpeed, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart
+                repeatMode = RepeatMode.Restart,
             ),
-            label = "marqueeOffset"
+            label = "marqueeOffset",
         )
 
         Box(
-            modifier = modifier
+            modifier =
+            modifier
                 .clipToBounds()
                 .onSizeChanged { containerWidth = it.width }
                 .drawWithContent {
                     drawContent()
                     // Fade edges
                     drawRect(
-                        brush = Brush.horizontalGradient(
+                        brush =
+                        Brush.horizontalGradient(
                             0f to Color.Transparent,
                             gradientEdgeWidth / size.width to color,
                             (size.width - gradientEdgeWidth) / size.width to color,
-                            1f to Color.Transparent
-                        )
+                            1f to Color.Transparent,
+                        ),
                     )
-                }
+                },
         ) {
             Row {
                 Text(
@@ -90,9 +93,10 @@ fun MarqueeText(
                     color = color,
                     maxLines = 1,
                     softWrap = false,
-                    modifier = Modifier
+                    modifier =
+                    Modifier
                         .offset { IntOffset(offset.toInt(), 0) }
-                        .onSizeChanged { textWidth = it.width / 2 }
+                        .onSizeChanged { textWidth = it.width / 2 },
                 )
             }
         }
@@ -103,8 +107,9 @@ fun MarqueeText(
             color = color,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = modifier
-                .onSizeChanged { containerWidth = it.width }
+            modifier =
+            modifier
+                .onSizeChanged { containerWidth = it.width },
         )
     }
 }
@@ -114,8 +119,9 @@ fun MarqueeText(
 private fun MarqueeTextPreview() {
     MarqueeText(
         text = "This Is A Very Long Song Title That Should Scroll Smoothly Across The Screen",
-        modifier = Modifier
+        modifier =
+        Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
     )
 }

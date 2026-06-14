@@ -3,15 +3,20 @@
 
 package com.deepeye.musicpro.domain.model
 
+import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+
 /**
  * State representing the current playback status.
  */
+@Immutable
 data class PlayerState(
     val isPlaying: Boolean = false,
     val currentItem: MediaItem? = null,
     val position: Long = 0,
     val duration: Long = 0,
-    val queue: List<MediaItem> = emptyList(),
+    val queue: ImmutableList<MediaItem> = persistentListOf(),
     val currentIndex: Int = -1,
     val repeatMode: RepeatMode = RepeatMode.NONE,
     val shuffleMode: ShuffleMode = ShuffleMode.OFF,
@@ -19,22 +24,26 @@ data class PlayerState(
     val isVideo: Boolean = false,
     val isLoading: Boolean = false,
     val isAppInForeground: Boolean = true,
-    val sponsorSegments: List<SponsorSegment> = emptyList(),
+    val sponsorSegments: ImmutableList<SponsorSegment> = persistentListOf(),
     val autoplayEnabled: Boolean = true,
     // Keep legacy field for backward compatibility during migration
-    val currentSong: Song? = null 
+    val currentSong: Song? = null,
 )
 
+@Immutable
 data class SponsorSegment(
     val startMs: Long,
     val endMs: Long,
-    val category: String
+    val category: String,
 )
 
 enum class RepeatMode {
-    NONE, ONE, ALL
+    NONE,
+    ONE,
+    ALL,
 }
 
 enum class ShuffleMode {
-    OFF, ON
+    OFF,
+    ON,
 }

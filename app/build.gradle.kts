@@ -1,5 +1,5 @@
-import java.util.Properties
 import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    id("io.gitlab.arturbosch.detekt")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -16,9 +18,9 @@ android {
     defaultConfig {
         applicationId = "com.deepeye.musicpro"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 3
-        versionName = "1.2.0"
+        targetSdk = 34
+        versionCode = 209
+        versionName = "2.0.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -40,14 +42,16 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystorePath = System.getenv("KEYSTORE_FILE")
-                ?: (keystoreProps["storeFile"] as? String)
-                ?: "keystore.jks"
-            storeFile = if (keystorePath.startsWith("/")) {
-                file(keystorePath)
-            } else {
-                rootProject.file(keystorePath)
-            }
+            val keystorePath =
+                System.getenv("KEYSTORE_FILE")
+                    ?: (keystoreProps["storeFile"] as? String)
+                    ?: "keystore.jks"
+            storeFile =
+                if (keystorePath.startsWith("/")) {
+                    file(keystorePath)
+                } else {
+                    rootProject.file(keystorePath)
+                }
             storePassword = System.getenv("KEYSTORE_PASSWORD")
                 ?: (keystoreProps["storePassword"] as? String)
                 ?: ""
@@ -63,7 +67,6 @@ android {
     buildTypes {
         debug {
             isDebuggable = true
-            applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
         release {
@@ -71,7 +74,7 @@ android {
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
             signingConfig = signingConfigs.getByName("release")
         }
@@ -86,9 +89,9 @@ android {
         jvmTarget = "17"
     }
 
-    // Ensure Kotlin uses JDK 21 toolchain to avoid Java version parsing issues
+    // Ensure Kotlin uses JDK 17 toolchain to match compile options
     kotlin {
-        jvmToolchain(21)
+        jvmToolchain(17)
     }
 
     buildFeatures {
@@ -100,9 +103,27 @@ android {
         checkReleaseBuilds = false
         abortOnError = false
     }
+
+    detekt {
+        config.setFrom(file("../config/detekt/detekt.yml"))
+        buildUponDefaultConfig = true
+        allRules = false
+        autoCorrect = true
+        ignoreFailures = true
+    }
 }
 
 dependencies {
+    // Firebase BOM & Analytics & Auth
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+
+    // Credential Manager for Google Sign-In
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
     // Compose BOM
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
@@ -114,6 +135,8 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
+
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.6")
 
     // AndroidX Core
     implementation(libs.core.ktx)
@@ -131,11 +154,13 @@ dependencies {
     implementation(libs.androidx.window)
     implementation(libs.compose.material3.window.size)
 
-
     // Hilt DI
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("androidx.hilt:hilt-work:1.2.0")
+    ksp("androidx.hilt:hilt-compiler:1.2.0")
 
     // Room
     implementation(libs.room.runtime)
@@ -150,9 +175,10 @@ dependencies {
     implementation(libs.media3.ui)
     implementation("androidx.media:media:1.7.0")
 
-    // Coroutines
+    // Coroutines & Collections
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
+    implementation(libs.kotlinx.collections.immutable)
 
     // DataStore Preferences
     implementation(libs.datastore.prefs)
@@ -162,6 +188,13 @@ dependencies {
 
     // Coil (image loading for Compose)
     implementation(libs.coil.compose)
+    implementation(libs.coil.network)
+    implementation(libs.coil.video)
+    // Haze (glassmorphism blur)
+    implementation(libs.haze.compose)
+    implementation(libs.liquidglass)
+
+
 
     // LeakCanary (debug only)
     // debugImplementation(libs.leakcanary)
@@ -170,18 +203,21 @@ dependencies {
     implementation(libs.paging.runtime)
     implementation(libs.paging.compose)
 
-    // NewPipe Extractor & Network
+    // NewPipe Extractor (primary) and YouTube Extractor (fallback)
     implementation(libs.newpipe.extractor.kmp)
     implementation(libs.okhttp)
+    implementation("io.github.ajaydhattarwal:youtube-extractor-android:1.0.2")
 
     // Palette & Splash
     implementation(libs.palette)
     implementation(libs.splashscreen)
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
 
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.mockk)
+    testImplementation("org.json:json:20231013")
     testImplementation(libs.robolectric)
     testImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.test.manifest)

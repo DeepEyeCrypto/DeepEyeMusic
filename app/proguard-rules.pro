@@ -41,3 +41,37 @@
 # Coil
 -keep class coil.** { *; }
 -dontwarn coil.**
+
+# ── Phase 9: Release Hardening Additions ──
+
+# Haze (glassmorphism blur library)
+-keep class dev.chrisbanes.haze.** { *; }
+-dontwarn dev.chrisbanes.haze.**
+
+# DataStore Preferences
+-keep class androidx.datastore.** { *; }
+-keepclassmembers class * extends com.google.protobuf.GeneratedMessageLite { *; }
+
+# Paging 3
+-keep class androidx.paging.** { *; }
+
+# Compose Stability Annotations
+-keep @androidx.compose.runtime.Immutable class * { *; }
+-keep @androidx.compose.runtime.Stable class * { *; }
+
+# Project cache & library entities (Room reflection)
+-keep class com.deepeye.musicpro.data.cache.entities.** { *; }
+-keep class com.deepeye.musicpro.data.library.entities.** { *; }
+-keep class com.deepeye.musicpro.data.db.** { *; }
+
+# Recommendation models (Gson serialization via CacheManager)
+-keep class com.deepeye.musicpro.domain.recommendation.** { *; }
+
+# Palette (album art color extraction)
+-keep class androidx.palette.** { *; }
+
+
+-dontwarn com.google.re2j.**
+-dontwarn java.beans.**
+-dontwarn javax.script.**
+

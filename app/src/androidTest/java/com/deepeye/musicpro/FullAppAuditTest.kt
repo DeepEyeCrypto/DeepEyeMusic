@@ -3,8 +3,15 @@
 
 package com.deepeye.musicpro
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.test.swipeUp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
@@ -14,13 +21,13 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class FullAppAuditTest {
-
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
-    private val device = UiDevice.getInstance(
-        InstrumentationRegistry.getInstrumentation()
-    )
+    private val device =
+        UiDevice.getInstance(
+            InstrumentationRegistry.getInstrumentation(),
+        )
 
     // ─── HOME SCREEN TESTS ────────────────────
     @Test
@@ -66,8 +73,9 @@ class FullAppAuditTest {
     @Test
     fun test_play_pause_button() {
         navigateToPlayer()
-        val playPauseBtn = composeRule
-            .onNodeWithContentDescription("Play/Pause")
+        val playPauseBtn =
+            composeRule
+                .onNodeWithContentDescription("Play/Pause")
         playPauseBtn.assertIsDisplayed()
         playPauseBtn.performClick()
         composeRule.waitForIdle()
@@ -131,9 +139,14 @@ class FullAppAuditTest {
     @Test
     fun test_dsp_screen_all_presets() {
         navigateToDSP()
-        val presets = listOf(
-            "Bass Monster", "Bluetooth Optimized", "Bollywood Vocals", "Flat", "Night Mode"
-        )
+        val presets =
+            listOf(
+                "Bass Monster",
+                "Bluetooth Optimized",
+                "Bollywood Vocals",
+                "Flat",
+                "Night Mode",
+            )
         presets.forEach { preset ->
             composeRule.onNodeWithText(preset)
                 .assertIsDisplayed()

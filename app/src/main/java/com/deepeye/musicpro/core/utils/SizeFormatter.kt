@@ -10,7 +10,6 @@ import java.util.Locale
  * Pure Kotlin — zero Android dependencies.
  */
 object SizeFormatter {
-
     private val UNITS = arrayOf("B", "KB", "MB", "GB", "TB")
 
     /**

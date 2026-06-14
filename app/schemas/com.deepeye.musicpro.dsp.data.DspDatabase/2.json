@@ -1,0 +1,145 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "7b7f9463b86e5811daab171aba8fcd5e",
+    "entities": [
+      {
+        "tableName": "dsp_presets",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `params_json` TEXT NOT NULL, `is_builtin` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `modified_at` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paramsJson",
+            "columnName": "params_json",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isBuiltin",
+            "columnName": "is_builtin",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modifiedAt",
+            "columnName": "modified_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "dsp_profiles",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`track_id` TEXT NOT NULL, `device_id` TEXT NOT NULL, `eq_bands` TEXT NOT NULL, `bass_boost_strength` INTEGER NOT NULL, `sub_bass_gain` REAL NOT NULL, `mid_bass_gain` REAL NOT NULL, `virtualizer_strength` INTEGER NOT NULL, `reverb_preset` INTEGER NOT NULL, `dynamics_enabled` INTEGER NOT NULL, `limiter_threshold` REAL NOT NULL, `updated_at` INTEGER NOT NULL, PRIMARY KEY(`track_id`, `device_id`))",
+        "fields": [
+          {
+            "fieldPath": "trackId",
+            "columnName": "track_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deviceId",
+            "columnName": "device_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "eqBands",
+            "columnName": "eq_bands",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bassBoostStrength",
+            "columnName": "bass_boost_strength",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "subBassGain",
+            "columnName": "sub_bass_gain",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "midBassGain",
+            "columnName": "mid_bass_gain",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "virtualizerStrength",
+            "columnName": "virtualizer_strength",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reverbPreset",
+            "columnName": "reverb_preset",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dynamicsEnabled",
+            "columnName": "dynamics_enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "limiterThreshold",
+            "columnName": "limiter_threshold",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "track_id",
+            "device_id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7b7f9463b86e5811daab171aba8fcd5e')"
+    ]
+  }
+}

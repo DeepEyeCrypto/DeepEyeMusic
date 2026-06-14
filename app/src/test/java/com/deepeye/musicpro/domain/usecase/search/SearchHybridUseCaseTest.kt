@@ -5,7 +5,12 @@ import com.deepeye.musicpro.domain.model.Song
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.domain.model.home.MusicItemType
 import com.deepeye.musicpro.domain.repository.MusicRepository
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -18,7 +23,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SearchHybridUseCaseTest {
-
     private val musicRepository = mockk<MusicRepository>()
     private val youtubeRemoteDataSource = mockk<YoutubeRemoteDataSource>()
     private lateinit var useCase: SearchHybridUseCase
@@ -34,64 +38,70 @@ class SearchHybridUseCaseTest {
     }
 
     @Test
-    fun testEmptyQuery_returnsEmptyLists() = runTest {
-        val result = useCase("").first()
-        assertTrue(result.localSongs.isEmpty())
-        assertTrue(result.remoteItems.isEmpty())
-    }
+    fun testEmptyQuery_returnsEmptyLists() =
+        runTest {
+            val result = useCase("").first()
+            assertTrue(result.localSongs.isEmpty())
+            assertTrue(result.remoteItems.isEmpty())
+        }
 
     @Test
-    fun testBlankQuery_returnsEmptyLists() = runTest {
-        val result = useCase("   ").first()
-        assertTrue(result.localSongs.isEmpty())
-        assertTrue(result.remoteItems.isEmpty())
-    }
+    fun testBlankQuery_returnsEmptyLists() =
+        runTest {
+            val result = useCase("   ").first()
+            assertTrue(result.localSongs.isEmpty())
+            assertTrue(result.remoteItems.isEmpty())
+        }
 
     @Test
-    fun testValidQuery_returnsMatchedLocalAndRemoteSongs() = runTest {
-        val query = "arijit"
-        val mockLocalSongs = listOf(
-            mockk<Song> {
-                every { id } returns 101L
-                every { title } returns "Channa Mereya"
-                every { artist } returns "Arijit Singh"
-            }
-        )
-        val mockRemoteItems = listOf(
-            HomeMusicItem(
-                id = "yt_123",
-                title = "Tum Hi Ho",
-                artist = "Arijit Singh",
-                thumbnailUrl = "https://example.com/thumb.jpg",
-                duration = 260000L,
-                playCount = 1000000L,
-                type = MusicItemType.SONG,
-                streamUrl = null
-            )
-        )
+    fun testValidQuery_returnsMatchedLocalAndRemoteSongs() =
+        runTest {
+            val query = "arijit"
+            val mockLocalSongs =
+                listOf(
+                    mockk<Song> {
+                        every { id } returns 101L
+                        every { title } returns "Channa Mereya"
+                        every { artist } returns "Arijit Singh"
+                    },
+                )
+            val mockRemoteItems =
+                listOf(
+                    HomeMusicItem(
+                        id = "yt_123",
+                        title = "Tum Hi Ho",
+                        artist = "Arijit Singh",
+                        thumbnailUrl = "https://example.com/thumb.jpg",
+                        duration = 260000L,
+                        playCount = 1000000L,
+                        type = MusicItemType.SONG,
+                        streamUrl = null,
+                    ),
+                )
 
-        every { musicRepository.searchSongs(query) } returns flowOf(mockLocalSongs)
-        coEvery { youtubeRemoteDataSource.searchMusic(query) } returns mockRemoteItems
+            every { musicRepository.searchSongs(query) } returns flowOf(mockLocalSongs)
+            coEvery { youtubeRemoteDataSource.searchMusic(query) } returns mockRemoteItems
 
-        val result = useCase(query).first()
+            val result = useCase(query).first()
 
-        assertEquals(1, result.localSongs.size)
-        assertEquals("Channa Mereya", result.localSongs.first().title)
-        assertEquals(1, result.remoteItems.size)
-        assertEquals("Tum Hi Ho", result.remoteItems.first().title)
+            assertEquals(1, result.localSongs.size)
+            assertEquals("Channa Mereya", result.localSongs.first().title)
+            assertEquals(1, result.remoteItems.size)
+            assertEquals("Tum Hi Ho", result.remoteItems.first().title)
 
-        verify(exactly = 1) { musicRepository.searchSongs(query) }
-        coVerify(exactly = 1) { youtubeRemoteDataSource.searchMusic(query) }
-    }
+            verify(exactly = 1) { musicRepository.searchSongs(query) }
+            coVerify(exactly = 1) { youtubeRemoteDataSource.searchMusic(query) }
+        }
 
     @Test
-    fun testSpecialCharactersQuery_doesNotCrash() = runTest {
-        val query = "arijit@123!#$"
-        every { musicRepository.searchSongs(query) } returns flowOf(emptyList())
-        coEvery { youtubeRemoteDataSource.searchMusic(query) } returns emptyList()
+    fun testSpecialCharactersQuery_doesNotCrash() =
+        runTest {
+            val query = "arijit@123!#$"
+            every { musicRepository.searchSongs(query) } returns flowOf(emptyList())
+            coEvery { youtubeRemoteDataSource.searchMusic(query) } returns emptyList()
 
-        val result = useCase(query).first()
-        assertTrue(result.localSongs.isEmpty())
-        assertTrue(result.remoteItems.isEmpty())
-    }
+            val result = useCase(query).first()
+            assertTrue(result.localSongs.isEmpty())
+            assertTrue(result.remoteItems.isEmpty())
+        }
 }

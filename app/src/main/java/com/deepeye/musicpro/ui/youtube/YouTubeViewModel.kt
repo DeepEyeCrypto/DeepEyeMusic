@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,24 +25,32 @@ data class YouTubeUiState(
     val error: String? = null,
     val selectedCategory: String = "Home",
     val searchQuery: String = "",
-    val activeSponsorBlockCategories: Set<String> = setOf("sponsor", "selfpromo", "interaction", "intro", "outro", "preview"),
+    val activeSponsorBlockCategories: Set<String> =
+        setOf("sponsor", "selfpromo", "interaction", "intro", "outro", "preview"),
     val showStatsForNerds: Boolean = false,
     val searchSuggestions: List<String> = emptyList(),
     val isMoreLoading: Boolean = false,
     val hasMore: Boolean = false,
     val shieldsEnabled: Boolean = true,
     val shieldMode: String = "Standard", // "Standard" or "Aggressive"
-    val hideShorts: Boolean = false
+    val hideShorts: Boolean = false,
 )
 
 @HiltViewModel
-class YouTubeViewModel @Inject constructor(
+class YouTubeViewModel
+@Inject
+constructor(
     private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
-    private val playerController: PlayerController
+    private val playerController: PlayerController,
+    private val homeFeedRepository: com.deepeye.musicpro.data.repository.HomeFeedRepository,
+    private val tasteProfileRepository: com.deepeye.musicpro.domain.repository.TasteProfileRepository,
+    private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(YouTubeUiState())
     val uiState: StateFlow<YouTubeUiState> = _uiState.asStateFlow()
+
+    private val _homeFeedState = MutableStateFlow(com.deepeye.musicpro.domain.model.home.HomeFeedState())
+    val homeFeedState: StateFlow<com.deepeye.musicpro.domain.model.home.HomeFeedState> = _homeFeedState.asStateFlow()
 
     val player = playerController.player
     val playerState = playerController.playerState
@@ -52,9 +61,20 @@ class YouTubeViewModel @Inject constructor(
 
     init {
         loadCategory("Home")
+        loadHomeFeed()
     }
 
-    private var nextPageToken: com.yushosei.newpipe.extractor.Page? = null
+    private fun loadHomeFeed() {
+        viewModelScope.launch {
+            try {
+                _homeFeedState.value = homeFeedRepository.getHomeFeed()
+            } catch (e: Exception) {
+                // ignore
+            }
+        }
+    }
+
+    private var nextPageToken: org.schabi.newpipe.extractor.Page? = null
     private var currentActiveQuery: String = ""
     private var suggestionsJob: kotlinx.coroutines.Job? = null
 
@@ -66,18 +86,19 @@ class YouTubeViewModel @Inject constructor(
 
     fun updateSearchQuery(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
-        
+
         suggestionsJob?.cancel()
         if (query.trim().isEmpty()) {
             _uiState.update { it.copy(searchSuggestions = emptyList()) }
             return
         }
-        
-        suggestionsJob = viewModelScope.launch {
-            kotlinx.coroutines.delay(300)
-            val suggestions = youtubeRemoteDataSource.getSearchSuggestions(query)
-            _uiState.update { it.copy(searchSuggestions = suggestions) }
-        }
+
+        suggestionsJob =
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(300)
+                val suggestions = youtubeRemoteDataSource.getSearchSuggestions(query)
+                _uiState.update { it.copy(searchSuggestions = suggestions) }
+            }
     }
 
     fun performSearch() {
@@ -117,14 +138,33 @@ class YouTubeViewModel @Inject constructor(
     }
 
     private fun loadCategory(category: String) {
-        val query = when (category) {
-            "Home" -> "trending music"
-            "Music" -> "official music video songs hits"
-            "Gaming" -> "gaming gameplay walkthrough let's play"
-            "News" -> "news highlights live report world news"
-            else -> return // Search / SponsorBlock handle separately
+        viewModelScope.launch {
+            var baseQuery =
+                when (category) {
+                    "Home" -> "trending music"
+                    "Music" -> "official music video songs hits"
+                    "Gaming" -> "gaming gameplay walkthrough let's play"
+                    "News" -> "news highlights live report world news"
+                    else -> return@launch // Search / SponsorBlock handle separately
+                }
+            
+            if (category == "Home") {
+                val subs = libraryRepository.getAllSubscribedChannels()
+                if (subs.isNotEmpty()) {
+                    val channels = subs.shuffled().take(3).joinToString(" | ") { it.channelName }
+                    baseQuery = "$channels latest videos"
+                }
+            }
+            
+            try {
+                val prefs = tasteProfileRepository.getTasteProfile().first()
+                val langString = prefs.preferredLanguages.joinToString(" ")
+                val finalQuery = if (langString.isNotEmpty() && category != "News") "$baseQuery $langString" else baseQuery
+                fetchVideos(finalQuery)
+            } catch (e: Exception) {
+                fetchVideos(baseQuery)
+            }
         }
-        fetchVideos(query)
     }
 
     private fun fetchVideos(query: String) {
@@ -135,15 +175,15 @@ class YouTubeViewModel @Inject constructor(
             try {
                 val result = youtubeRemoteDataSource.searchVideosFirstPage(query)
                 nextPageToken = result.nextPage
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
-                        videos = result.items, 
+                        videos = result.items,
                         isLoading = false,
-                        hasMore = result.nextPage != null
-                    ) 
+                        hasMore = result.nextPage != null,
+                    )
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
+                _uiState.update { it.copy(isLoading = false, error = "Unable to search YouTube right now. Please check your connection.") }
             }
         }
     }
@@ -151,7 +191,7 @@ class YouTubeViewModel @Inject constructor(
     fun loadMoreVideos() {
         val token = nextPageToken ?: return
         if (_uiState.value.isMoreLoading) return
-        
+
         viewModelScope.launch {
             _uiState.update { it.copy(isMoreLoading = true) }
             try {
@@ -161,7 +201,7 @@ class YouTubeViewModel @Inject constructor(
                     state.copy(
                         videos = state.videos + result.items,
                         isMoreLoading = false,
-                        hasMore = result.nextPage != null
+                        hasMore = result.nextPage != null,
                     )
                 }
             } catch (e: Exception) {
@@ -171,16 +211,17 @@ class YouTubeViewModel @Inject constructor(
     }
 
     fun playVideo(video: HomeVideoItem) {
-        val mediaItems = _uiState.value.videos.map { item ->
-            MediaItem.Remote(
-                id = item.id,
-                title = item.title,
-                artist = item.channelName,
-                artworkUri = Uri.parse(item.thumbnailUrl),
-                duration = item.duration * 1000L,
-                isVideo = true
-            )
-        }
+        val mediaItems =
+            _uiState.value.videos.map { item ->
+                MediaItem.Remote(
+                    id = item.id,
+                    title = item.title,
+                    artist = item.channelName,
+                    artworkUri = Uri.parse(item.thumbnailUrl),
+                    duration = item.duration * 1000L,
+                    isVideo = true,
+                )
+            }
         val index = _uiState.value.videos.indexOfFirst { it.id == video.id }
         if (index >= 0) {
             playerController.setQueue(mediaItems, index)

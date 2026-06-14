@@ -28,11 +28,14 @@ import androidx.compose.ui.unit.dp
 fun ShimmerVideoCard(modifier: Modifier = Modifier) {
     val shimmer = rememberInfiniteTransition(label = "shimmer")
     val shimmerAlpha by shimmer.animateFloat(
-        initialValue = 0.1f, targetValue = 0.25f,
-        animationSpec = infiniteRepeatable(
+        initialValue = 0.1f,
+        targetValue = 0.25f,
+        animationSpec =
+        infiniteRepeatable(
             animation = tween(900, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ), label = "shimmerAlpha"
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "shimmerAlpha",
     )
     Column(modifier.width(180.dp)) {
         Box(
@@ -40,21 +43,21 @@ fun ShimmerVideoCard(modifier: Modifier = Modifier) {
                 .fillMaxWidth()
                 .height(110.dp)
                 .clip(RoundedCornerShape(14.dp))
-                .background(Color.White.copy(shimmerAlpha))
+                .background(Color.White.copy(shimmerAlpha)),
         )
         Spacer(Modifier.height(8.dp))
         Box(
             Modifier
                 .fillMaxWidth(0.9f).height(12.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .background(Color.White.copy(shimmerAlpha))
+                .background(Color.White.copy(shimmerAlpha)),
         )
         Spacer(Modifier.height(4.dp))
         Box(
             Modifier
                 .fillMaxWidth(0.6f).height(10.dp)
                 .clip(RoundedCornerShape(5.dp))
-                .background(Color.White.copy(shimmerAlpha * 0.6f))
+                .background(Color.White.copy(shimmerAlpha * 0.6f)),
         )
     }
 }

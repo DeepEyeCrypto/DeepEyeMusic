@@ -17,7 +17,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
     @Provides
     @Singleton
     fun provideGson(): Gson {
@@ -28,16 +27,22 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): okhttp3.OkHttpClient =
-        okhttp3.OkHttpClient.Builder()
+    fun provideOkHttpClient(@dagger.hilt.android.qualifiers.ApplicationContext context: android.content.Context): okhttp3.OkHttpClient {
+        val cacheSize = (50 * 1024 * 1024).toLong() // 50 MB
+        val cache = okhttp3.Cache(java.io.File(context.cacheDir, "http_cache"), cacheSize)
+
+        return okhttp3.OkHttpClient.Builder()
+            .cache(cache)
+            .connectionPool(okhttp3.ConnectionPool(15, 5, java.util.concurrent.TimeUnit.MINUTES))
             .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .build()
+    }
 
     @Provides
     @Singleton
     fun provideNewPipeDownloader(
         client: okhttp3.OkHttpClient
-    ): com.deepeye.musicpro.data.source.remote.youtube.NewPipeDownloader = 
+    ): com.deepeye.musicpro.data.source.remote.youtube.NewPipeDownloader =
         com.deepeye.musicpro.data.source.remote.youtube.NewPipeDownloader(client)
 }

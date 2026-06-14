@@ -1,0 +1,51 @@
+{
+  "project_status": "dsp_bridge_active",
+  "tested": true,
+  "adb_available": true,
+  "adb_device": "ZD2226X6RW",
+  "device_info": "Motorola Edge 30 Pro, Android 14, 1080x2400, gesture nav",
+  "workflow_version": "2026.12",
+  "next_phase": "dsp_bridge_hardening",
+  "source_files": 204,
+  "test_files": 7,
+  "last_sync": "2026-06-01T00:38:00+05:30",
+  "dsp_bridge": {
+    "status": "VALIDATED",
+    "architecture": "WebView URL Capture → ExoPlayer → Audio Session → DSP/V4A",
+    "success_rate": "POC validated on device",
+    "needs_validation": "50+ videos across different types for production confidence"
+  },
+  "extraction_chain": {
+    "tier1": "NewPipeExtractor v0.25.0 (FAILS: ContentNotAvailableException)",
+    "tier2": "AjayDhattarwal YouTubeExtractor (FAILS: UNKNOWN)",
+    "tier3": "Piped API (FAILS: instances unreliable)",
+    "tier4": "WebView URL Capture → ExoPlayer (WORKS: DSP active)",
+    "tier5": "WebView Playback (WORKS: no DSP, emergency fallback)"
+  },
+  "fixes_applied": [
+    "pip_params_throttle",
+    "color_extraction_distinct",
+    "pip_remote_action_explicit_intent",
+    "sleep_timer_end_of_track_wired",
+    "log_level_normalization",
+    "dead_code_removal",
+    "seekbar_video_progress_bridge",
+    "duplicate_key_crash_fix",
+    "webview_scroll_disable",
+    "youtube_css_cosmetic_fix",
+    "mini_player_navbar_overlap_fix",
+    "mini_player_half_expanded_removed",
+    "mini_player_audio_continues_collapsed",
+    "video_play_pause_watch_fallback",
+    "isPlaying_video_mode_fix",
+    "pip_artwork_fallback",
+    "pip_webview_alive",
+    "traffic_light_removed",
+    "black_video_compose_layers_fix",
+    "newpipe_v0.25.0_migration",
+    "youtube_extractor_fallback",
+    "piped_api_fallback",
+    "stream_capture_manager",
+    "dsp_bridge_webview_to_exoplayer"
+  ]
+}

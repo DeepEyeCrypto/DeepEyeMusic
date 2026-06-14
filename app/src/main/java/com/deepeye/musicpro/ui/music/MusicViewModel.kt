@@ -24,16 +24,17 @@ data class MusicUiState(
     val recommendedMusic: List<HomeMusicItem> = emptyList(),
     val localSongs: List<Song> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )
 
 @HiltViewModel
-class MusicViewModel @Inject constructor(
+class MusicViewModel
+@Inject
+constructor(
     private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
     private val musicRepository: MusicRepository,
-    private val playerController: PlayerController
+    private val playerController: PlayerController,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(MusicUiState())
     val uiState: StateFlow<MusicUiState> = _uiState.asStateFlow()
 
@@ -56,7 +57,7 @@ class MusicViewModel @Inject constructor(
             try {
                 musicRepository.syncFromMediaStore()
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = "Sync failed: ${e.message}")
+                _uiState.value = _uiState.value.copy(error = "Unable to sync local library right now.")
             }
         }
     }
@@ -69,22 +70,23 @@ class MusicViewModel @Inject constructor(
                 val music = youtubeRemoteDataSource.searchMusic("trending music")
                 _uiState.value = _uiState.value.copy(recommendedMusic = music, isLoading = false)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
+                _uiState.value = _uiState.value.copy(isLoading = false, error = "Unable to sync local library right now.")
             }
         }
     }
 
     fun playMusic(music: HomeMusicItem) {
-        val mediaItems = _uiState.value.recommendedMusic.map { item ->
-            MediaItem.Remote(
-                id = item.id,
-                title = item.title,
-                artist = item.artist,
-                artworkUri = Uri.parse(item.thumbnailUrl),
-                duration = item.duration * 1000L,
-                isVideo = false
-            )
-        }
+        val mediaItems =
+            _uiState.value.recommendedMusic.map { item ->
+                MediaItem.Remote(
+                    id = item.id,
+                    title = item.title,
+                    artist = item.artist,
+                    artworkUri = Uri.parse(item.thumbnailUrl),
+                    duration = item.duration * 1000L,
+                    isVideo = false,
+                )
+            }
         // Use indexOfFirst by ID to avoid object-equality issues with data classes
         val index = _uiState.value.recommendedMusic.indexOfFirst { it.id == music.id }
         playerController.setQueue(mediaItems, if (index >= 0) index else 0)

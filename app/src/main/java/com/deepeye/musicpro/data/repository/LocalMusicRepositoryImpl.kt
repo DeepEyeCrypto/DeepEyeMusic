@@ -5,15 +5,17 @@ package com.deepeye.musicpro.data.repository
 
 import android.net.Uri
 import com.deepeye.musicpro.data.db.SongDao
+import com.deepeye.musicpro.data.db.SongEntity
 import com.deepeye.musicpro.data.source.local.MediaStoreScanner
 import com.deepeye.musicpro.domain.model.Album
 import com.deepeye.musicpro.domain.model.Artist
 import com.deepeye.musicpro.domain.model.Genre
 import com.deepeye.musicpro.domain.model.Song
 import com.deepeye.musicpro.domain.repository.MusicRepository
-import com.deepeye.musicpro.data.db.SongEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,33 +26,35 @@ import javax.inject.Singleton
  * [syncFromMediaStore] refreshes from the device's MediaStore.
  */
 @Singleton
-class LocalMusicRepositoryImpl @Inject constructor(
+class LocalMusicRepositoryImpl
+@Inject
+constructor(
     private val songDao: SongDao,
-    private val mediaStoreScanner: MediaStoreScanner
+    private val mediaStoreScanner: MediaStoreScanner,
 ) : MusicRepository {
-
     // ── Songs ──
 
-    override fun getAllSongs(): Flow<List<Song>> =
-        songDao.getAllSongs().map { entities -> entities.map { it.toDomain() } }
+    override fun getAllSongs(): Flow<List<Song>> = songDao.getAllSongs().map { entities -> entities.map { it.toDomain() } }.flowOn(Dispatchers.IO)
 
-    override fun getSongById(id: Long): Flow<Song?> =
-        songDao.getSongById(id).map { it?.toDomain() }
+    override fun getSongById(id: Long): Flow<Song?> = songDao.getSongById(id).map { it?.toDomain() }.flowOn(Dispatchers.IO)
 
     override fun getSongsByAlbum(albumId: Long): Flow<List<Song>> =
-        songDao.getSongsByAlbum(albumId).map { entities -> entities.map { it.toDomain() } }
+        songDao.getSongsByAlbum(albumId).map { entities -> entities.map { it.toDomain() } }.flowOn(Dispatchers.IO)
 
     override fun getSongsByArtist(artistId: Long): Flow<List<Song>> =
-        songDao.getSongsByArtist(artistId).map { entities -> entities.map { it.toDomain() } }
+        songDao.getSongsByArtist(artistId).map { entities -> entities.map { it.toDomain() } }.flowOn(Dispatchers.IO)
 
     override fun getSongsByGenre(genreId: Long): Flow<List<Song>> =
-        songDao.getSongsByGenre(genreId.toString()).map { entities -> entities.map { it.toDomain() } }
+        songDao.getSongsByGenre(genreId.toString()).map { entities -> entities.map { it.toDomain() } }.flowOn(Dispatchers.IO)
 
     override fun searchSongs(query: String): Flow<List<Song>> =
-        songDao.searchSongs(query).map { entities -> entities.map { it.toDomain() } }
+        songDao.searchSongs(query).map { entities -> entities.map { it.toDomain() } }.flowOn(Dispatchers.IO)
 
     override fun getRecentlyAdded(limit: Int): Flow<List<Song>> =
-        songDao.getRecentlyAdded(limit).map { entities -> entities.map { it.toDomain() } }
+        songDao.getRecentlyAdded(limit).map { entities -> entities.map { it.toDomain() } }.flowOn(Dispatchers.IO)
+
+    override fun getRecentlyPlayed(limit: Int): Flow<List<Song>> =
+        songDao.getRecentlyAdded(limit).map { entities -> entities.map { it.toDomain() } }.flowOn(Dispatchers.IO)
 
     // ── Albums ──
 
@@ -65,10 +69,10 @@ class LocalMusicRepositoryImpl @Inject constructor(
                     artUri = p.art_uri?.let { Uri.parse(it) },
                     songCount = p.song_count,
                     totalDuration = p.total_duration,
-                    year = p.year
+                    year = p.year,
                 )
             }
-        }
+        }.flowOn(Dispatchers.IO)
 
     override fun getAlbumById(id: Long): Flow<Album?> =
         songDao.getAlbumById(id).map { p ->
@@ -81,10 +85,10 @@ class LocalMusicRepositoryImpl @Inject constructor(
                     artUri = it.art_uri?.let { uri -> Uri.parse(uri) },
                     songCount = it.song_count,
                     totalDuration = it.total_duration,
-                    year = it.year
+                    year = it.year,
                 )
             }
-        }
+        }.flowOn(Dispatchers.IO)
 
     // ── Artists ──
 
@@ -95,10 +99,10 @@ class LocalMusicRepositoryImpl @Inject constructor(
                     id = p.artist_id,
                     name = p.artist,
                     albumCount = p.album_count,
-                    songCount = p.song_count
+                    songCount = p.song_count,
                 )
             }
-        }
+        }.flowOn(Dispatchers.IO)
 
     override fun getArtistById(id: Long): Flow<Artist?> =
         songDao.getArtistById(id).map { p ->
@@ -107,10 +111,10 @@ class LocalMusicRepositoryImpl @Inject constructor(
                     id = it.artist_id,
                     name = it.artist,
                     albumCount = it.album_count,
-                    songCount = it.song_count
+                    songCount = it.song_count,
                 )
             }
-        }
+        }.flowOn(Dispatchers.IO)
 
     // ── Genres ──
 
@@ -120,10 +124,10 @@ class LocalMusicRepositoryImpl @Inject constructor(
                 Genre(
                     id = index.toLong(),
                     name = p.genre,
-                    songCount = p.song_count
+                    songCount = p.song_count,
                 )
             }
-        }
+        }.flowOn(Dispatchers.IO)
 
     // ── Library Sync ──
 
@@ -135,22 +139,23 @@ class LocalMusicRepositoryImpl @Inject constructor(
 
     // ── Mapper ──
 
-    private fun SongEntity.toDomain(): Song = Song(
-        id = id,
-        title = title,
-        artist = artist,
-        album = album,
-        albumId = albumId,
-        artistId = artistId,
-        uri = Uri.parse(uri),
-        duration = duration,
-        size = size,
-        path = path,
-        artUri = artUri?.let { Uri.parse(it) },
-        trackNumber = trackNumber,
-        year = year,
-        genre = genre,
-        dateAdded = dateAdded,
-        dateModified = dateModified
-    )
+    private fun SongEntity.toDomain(): Song =
+        Song(
+            id = id,
+            title = title,
+            artist = artist,
+            album = album,
+            albumId = albumId,
+            artistId = artistId,
+            uri = Uri.parse(uri),
+            duration = duration,
+            size = size,
+            path = path,
+            artUri = artUri?.let { Uri.parse(it) },
+            trackNumber = trackNumber,
+            year = year,
+            genre = genre,
+            dateAdded = dateAdded,
+            dateModified = dateModified,
+        )
 }

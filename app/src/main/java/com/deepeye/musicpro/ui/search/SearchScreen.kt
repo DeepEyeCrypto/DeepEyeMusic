@@ -1,150 +1,161 @@
-// Copyright (C) 2026 DeepEye
-// SPDX-License-Identifier: GPL-3.0-or-later
-
 package com.deepeye.musicpro.ui.search
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.automirrored.filled.CallMade
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
-import com.deepeye.musicpro.core.utils.TimeFormatter
-import com.deepeye.musicpro.domain.model.Song
-import com.deepeye.musicpro.domain.model.home.HomeMusicItem
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.GridItemSpan
+import coil3.compose.AsyncImage
+import com.deepeye.musicpro.domain.model.search.SearchResultItem
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
-    windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
+    windowSizeClass: WindowSizeClass,
     onNavigateToNowPlaying: () -> Unit,
-    viewModel: SearchViewModel = hiltViewModel()
+    onNavigateToArtist: (String) -> Unit,
+    viewModel: SearchViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val query by viewModel.query.collectAsStateWithLifecycle()
+    val results by viewModel.results.collectAsStateWithLifecycle()
+    val selectedFilter by viewModel.selectedFilter.collectAsStateWithLifecycle()
+    val suggestions by viewModel.suggestions.collectAsStateWithLifecycle()
+    val recent by viewModel.recentSearches.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             Column(
-                modifier = Modifier
+                modifier =
+                Modifier
                     .fillMaxWidth()
+                    .then(
+                        if (com.deepeye.musicpro.ui.LocalHazeState.current != null) {
+                            Modifier.hazeEffect(
+                                state = com.deepeye.musicpro.ui.LocalHazeState.current!!,
+                                style = HazeStyle(
+                                    tint = HazeTint(Color(0xFF1D1E26).copy(alpha = 0.4f)),
+                                    blurRadius = 32.dp,
+                                    noiseFactor = 0.05f
+                                )
+                            )
+                        } else {
+                            Modifier.background(Color(0xFF1D1E26).copy(alpha = 0.4f))
+                        }
+                    )
                     .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
                 Text(
                     text = "Search",
-                    style = MaterialTheme.typography.headlineMedium.copy(
+                    style =
+                    MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp
+                        letterSpacing = (-0.5).sp,
                     ),
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    modifier = Modifier.padding(bottom = 12.dp),
                 )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.Center,
                 ) {
                     Box(
-                        modifier = Modifier
+                        modifier =
+                        Modifier
                             .fillMaxWidth()
                             .then(
                                 when (windowSizeClass.widthSizeClass) {
-                                    androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Medium -> Modifier.widthIn(max = 600.dp)
-                                    androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded -> Modifier.widthIn(max = 800.dp)
+                                    WindowWidthSizeClass.Medium -> Modifier.widthIn(max = 600.dp)
+                                    WindowWidthSizeClass.Expanded -> Modifier.widthIn(max = 800.dp)
                                     else -> Modifier
-                                }
-                            )
+                                },
+                            ),
                     ) {
-                        SearchBar(
-                            query = uiState.query,
-                            onQueryChange = { viewModel.onQueryChanged(it) },
-                            onClear = { viewModel.onQueryChanged("") }
+                        com.deepeye.musicpro.ui.components.premium.GlassOmnibox(
+                            query = query,
+                            onQueryChange = viewModel::onQueryChange,
+                            onClear = { viewModel.onQueryChange("") },
+                            placeholder = "Search local & YouTube Music",
                         )
                     }
                 }
             }
-        }
+        },
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
+        Column(
+            modifier =
+            Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
         ) {
-            when {
-                uiState.isSearching && uiState.localResults.isEmpty() && uiState.remoteResults.isEmpty() -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                !uiState.hasSearched -> {
-                    SearchPlaceHolder()
-                }
-                uiState.localResults.isEmpty() && uiState.remoteResults.isEmpty() -> {
-                    EmptySearchState(uiState.query)
-                }
-                else -> {
-                    val columns = when (windowSizeClass.widthSizeClass) {
-                        androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact -> 1
-                        androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Medium -> 2
-                        else -> 3
-                    }
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(columns),
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 80.dp)
-                    ) {
-                        if (uiState.localResults.isNotEmpty()) {
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                SearchSectionHeader("Library")
-                            }
-                            items(uiState.localResults, key = { "local_${it.id}" }) { song ->
-                                LocalSongItem(song, onClick = { 
-                                    viewModel.playLocal(song)
-                                    onNavigateToNowPlaying()
-                                })
-                            }
-                        }
+            SearchFilterBar(
+                selected = selectedFilter,
+                onSelected = viewModel::onFilterChange,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
 
-                        if (uiState.remoteResults.isNotEmpty()) {
-                            item(span = { GridItemSpan(maxLineSpan) }) {
-                                SearchSectionHeader("YouTube Music")
-                            }
-                            items(uiState.remoteResults, key = { "remote_${it.id}" }) { item ->
-                                RemoteMusicItem(item, onClick = {
-                                    viewModel.playRemote(item)
-                                    onNavigateToNowPlaying()
-                                })
-                            }
-                        }
+            if (query.isBlank()) {
+                SearchSuggestionsSection(
+                    suggestions = suggestions,
+                    recentSearches = recent,
+                    onSuggestionClick = viewModel::onQueryChange,
+                )
+            } else if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
+            } else if (results.isEmpty()) {
+                SearchEmptyState(query)
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 180.dp),
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    items(results, key = { it.id }) { item ->
+                        SearchResultRow(
+                            item = item,
+                            onClick = {
+                                viewModel.playResult(item)
+                                onNavigateToNowPlaying()
+                            },
+                            onArtistClick = { item.artist?.let(onNavigateToArtist) },
+                        )
                     }
                 }
             }
@@ -156,43 +167,47 @@ fun SearchScreen(
 fun SearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
-    onClear: () -> Unit
+    onClear: () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
 
     Surface(
-        modifier = Modifier
+        modifier =
+        Modifier
             .fillMaxWidth()
             .height(56.dp),
         shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        tonalElevation = 2.dp
+        tonalElevation = 2.dp,
     ) {
         Row(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = Icons.Default.Search,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            
+
             TextField(
                 value = query,
                 onValueChange = onQueryChange,
-                modifier = Modifier
+                modifier =
+                Modifier
                     .weight(1f)
                     .fillMaxHeight(),
                 placeholder = {
                     Text(
                         "Search local & YouTube Music",
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
                     )
                 },
-                colors = TextFieldDefaults.colors(
+                colors =
+                TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     disabledContainerColor = Color.Transparent,
@@ -200,12 +215,11 @@ fun SearchBar(
                     unfocusedIndicatorColor = Color.Transparent,
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        focusManager.clearFocus()
-                    }
+                keyboardActions =
+                KeyboardActions(
+                    onSearch = { focusManager.clearFocus() },
                 ),
-                singleLine = true
+                singleLine = true,
             )
 
             if (query.isNotEmpty()) {
@@ -213,7 +227,7 @@ fun SearchBar(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Clear",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -222,69 +236,115 @@ fun SearchBar(
 }
 
 @Composable
-fun SearchSectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium.copy(
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        ),
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-    )
-}
-
-@Composable
-fun LocalSongItem(song: Song, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+fun SearchSuggestionsSection(
+    suggestions: List<String>,
+    recentSearches: List<String>,
+    onSuggestionClick: (String) -> Unit,
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        AsyncImage(
-            model = song.artUri,
-            contentDescription = null,
-            modifier = Modifier
-                .size(52.dp)
-                .clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop
-        )
-        Spacer(Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = song.title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = "${song.artist} · ${TimeFormatter.formatDuration(song.duration)}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
-            )
+        if (recentSearches.isNotEmpty()) {
+            item {
+                Text(
+                    text = "Recent Searches",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+            items(recentSearches) { recent ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSuggestionClick(recent) }
+                        .padding(vertical = 12.dp, horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = "Recent",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(16.dp))
+                    Text(
+                        text = recent,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.CallMade,
+                        contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+
+        if (suggestions.isNotEmpty()) {
+            item {
+                Text(
+                    text = "Suggestions",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+            }
+            item {
+                @OptIn(ExperimentalLayoutApi::class)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(top = 8.dp),
+                ) {
+                    suggestions.forEach { suggestion ->
+                        SuggestionChip(
+                            onClick = { onSuggestionClick(suggestion) },
+                            label = { Text(suggestion) },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = SuggestionChipDefaults.suggestionChipColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                labelColor = MaterialTheme.colorScheme.onSurface
+                            ),
+                            border = null
+                        )
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun RemoteMusicItem(item: HomeMusicItem, onClick: () -> Unit) {
+fun SearchResultRow(
+    item: SearchResultItem,
+    onClick: () -> Unit,
+    onArtistClick: () -> Unit,
+) {
     Row(
-        modifier = Modifier
+        modifier =
+        Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
             model = item.thumbnailUrl,
             contentDescription = null,
             modifier = Modifier
-                .size(52.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentScale = ContentScale.Crop
+                .size(64.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .border(
+                    width = 1.dp,
+                    color = com.deepeye.musicpro.ui.theme.GlassBorderLight,
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            contentScale = ContentScale.Crop,
         )
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -292,59 +352,55 @@ fun RemoteMusicItem(item: HomeMusicItem, onClick: () -> Unit) {
                 text = item.title,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = "${item.artist} · YouTube Music",
+                text = item.subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
+                maxLines = 1,
             )
+        }
+        if (item.artist != null) {
+            IconButton(
+                onClick = onArtistClick,
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = "Go to artist",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
         }
     }
 }
 
 @Composable
-fun SearchPlaceHolder() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = Icons.Default.History,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            "Discover something new",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-fun EmptySearchState(query: String) {
+fun SearchEmptyState(query: String) {
     Column(
         modifier = Modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("😕", fontSize = 48.sp)
-        Spacer(Modifier.height(16.dp))
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = com.deepeye.musicpro.ui.theme.TextSecondary.copy(alpha = 0.5f)
+        )
+        Spacer(Modifier.height(24.dp))
         Text(
             "No results for \"$query\"",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleLarge,
+            color = com.deepeye.musicpro.ui.theme.TextPrimary,
+            fontWeight = FontWeight.Bold,
         )
         Text(
             "Try checking for typos or searching for something else.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 8.dp)
+            color = com.deepeye.musicpro.ui.theme.TextSecondary,
+            modifier = Modifier.padding(top = 8.dp),
         )
     }
 }

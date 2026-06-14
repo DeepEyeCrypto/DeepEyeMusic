@@ -14,15 +14,17 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
-class OnboardingGateViewModel @Inject constructor(
-    tasteProfileRepository: TasteProfileRepository
+class OnboardingGateViewModel
+@Inject
+constructor(
+    tasteProfileRepository: TasteProfileRepository,
 ) : ViewModel() {
-
-    val onboardingState: StateFlow<Boolean?> = tasteProfileRepository.getTasteProfile()
-        .map { profile -> profile.hasCompletedOnboarding }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = null
-        )
+    val onboardingState: StateFlow<Boolean?> =
+        tasteProfileRepository.getTasteProfile()
+            .map { profile -> profile.hasCompletedOnboarding }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = null,
+            )
 }

@@ -17,11 +17,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class VideoRailViewModel @Inject constructor(
+class VideoRailViewModel
+@Inject
+constructor(
     private val repository: VideoRailRepository,
-    private val playerController: PlayerController
+    private val playerController: PlayerController,
 ) : ViewModel() {
-
     private val _state = MutableStateFlow(VideoRailState())
     val state = _state.asStateFlow()
 
@@ -43,7 +44,7 @@ class VideoRailViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        error = "Couldn't load videos"
+                        error = "Couldn't load videos",
                     )
                 }
             }
@@ -70,15 +71,16 @@ class VideoRailViewModel @Inject constructor(
     private fun playSelectedVideo(videoId: String) {
         val section = state.value.sections.find { it.items.any { item -> item.videoId == videoId } }
         val item = section?.items?.find { it.videoId == videoId } ?: return
-        
-        val mediaItem = com.deepeye.musicpro.domain.model.MediaItem.Remote(
-            id = item.videoId,
-            title = item.title,
-            artist = item.channelName,
-            artworkUri = android.net.Uri.parse(item.thumbnailUrl),
-            duration = 180000L, // Mock
-            isVideo = true
-        )
+
+        val mediaItem =
+            com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                id = item.videoId,
+                title = item.title,
+                artist = item.channelName,
+                artworkUri = android.net.Uri.parse(item.thumbnailUrl),
+                duration = 180000L, // Mock
+                isVideo = true,
+            )
         playerController.playMedia(mediaItem)
     }
 

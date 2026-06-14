@@ -6,40 +6,44 @@ import com.deepeye.musicpro.domain.model.ShuffleMode
 import com.deepeye.musicpro.domain.model.Song
 import io.mockk.every
 import io.mockk.mockk
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
 class QueueManagerTest {
-
     private lateinit var queueManager: QueueManager
     private lateinit var songs: List<MediaItem>
 
     @Before
     fun setUp() {
         queueManager = QueueManager()
-        
-        val song1 = mockk<Song>(relaxed = true) {
-            every { id } returns 1L
-            every { title } returns "Song 1"
-            every { artist } returns "Artist A"
-        }
-        val song2 = mockk<Song>(relaxed = true) {
-            every { id } returns 2L
-            every { title } returns "Song 2"
-            every { artist } returns "Artist B"
-        }
-        val song3 = mockk<Song>(relaxed = true) {
-            every { id } returns 3L
-            every { title } returns "Song 3"
-            every { artist } returns "Artist C"
-        }
 
-        songs = listOf(
-            MediaItem.Local(song = song1),
-            MediaItem.Local(song = song2),
-            MediaItem.Local(song = song3)
-        )
+        val song1 =
+            mockk<Song>(relaxed = true) {
+                every { id } returns 1L
+                every { title } returns "Song 1"
+                every { artist } returns "Artist A"
+            }
+        val song2 =
+            mockk<Song>(relaxed = true) {
+                every { id } returns 2L
+                every { title } returns "Song 2"
+                every { artist } returns "Artist B"
+            }
+        val song3 =
+            mockk<Song>(relaxed = true) {
+                every { id } returns 3L
+                every { title } returns "Song 3"
+                every { artist } returns "Artist C"
+            }
+
+        songs =
+            listOf(
+                MediaItem.Local(song = song1),
+                MediaItem.Local(song = song2),
+                MediaItem.Local(song = song3),
+            )
     }
 
     @Test
@@ -53,7 +57,7 @@ class QueueManagerTest {
     @Test
     fun testShuffleAndUnshuffle() {
         queueManager.setQueue(songs, 0)
-        
+
         // Toggle shuffle ON
         queueManager.toggleShuffleMode()
         assertEquals(ShuffleMode.ON, queueManager.shuffleMode.value)
@@ -98,5 +102,38 @@ class QueueManagerTest {
         val nextItem = queueManager.next()
         assertNull(nextItem)
         assertEquals(2, queueManager.currentIndex.value)
+    }
+
+    @Test
+    fun testMoveItemUpdatesCurrentIndex() {
+        queueManager.setQueue(songs, 1) // Currently playing index 1 (Song 2)
+        assertEquals(songs[1], queueManager.currentItem)
+
+        // Move item from index 1 to 2
+        queueManager.moveItem(1, 2)
+        assertEquals(2, queueManager.currentIndex.value)
+        assertEquals(songs[1], queueManager.currentItem) // Should still be Song 2
+    }
+
+    @Test
+    fun testRemovePrecedingItemShiftsIndex() {
+        queueManager.setQueue(songs, 2) // Currently playing index 2 (Song 3)
+        assertEquals(songs[2], queueManager.currentItem)
+
+        // Remove item at index 0 (Song 1)
+        queueManager.removeItem(0)
+        assertEquals(1, queueManager.currentIndex.value) // Index should shift back to 1
+        assertEquals(songs[2], queueManager.currentItem) // Should still point to Song 3
+    }
+
+    @Test
+    fun testRemoveCurrentlyPlayingItemClampsIndex() {
+        queueManager.setQueue(songs, 1) // Currently playing index 1 (Song 2)
+        assertEquals(songs[1], queueManager.currentItem)
+
+        // Remove item at index 1 (Song 2)
+        queueManager.removeItem(1)
+        assertEquals(1, queueManager.currentIndex.value) // Index should now point to Song 3 (which shifted to index 1)
+        assertEquals(songs[2], queueManager.currentItem)
     }
 }

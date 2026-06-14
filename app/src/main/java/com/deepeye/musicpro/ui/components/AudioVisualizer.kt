@@ -9,7 +9,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -41,12 +40,13 @@ fun AudioVisualizer(
     cornerRadius: Dp = 2.dp,
     primaryColor: Color = DeepEyePrimary,
     secondaryColor: Color = DeepEyeSecondary,
-    minBarHeight: Float = 0.05f
+    minBarHeight: Float = 0.05f,
 ) {
     // Animate each bar's height for smooth transitions
-    val animatedHeights = remember(barCount) {
-        List(barCount) { Animatable(minBarHeight) }
-    }
+    val animatedHeights =
+        remember(barCount) {
+            List(barCount) { Animatable(minBarHeight) }
+        }
 
     LaunchedEffect(fftData) {
         val step = fftData.size / barCount
@@ -55,7 +55,7 @@ fun AudioVisualizer(
             val targetHeight = fftData[dataIndex].coerceIn(minBarHeight, 1f)
             animatedHeights[i].animateTo(
                 targetValue = targetHeight,
-                animationSpec = tween(100, easing = LinearEasing)
+                animationSpec = tween(100, easing = LinearEasing),
             )
         }
     }
@@ -64,8 +64,9 @@ fun AudioVisualizer(
         val totalBarWidth = barWidth.toPx()
         val totalSpacing = barSpacing.toPx()
         val availableWidth = size.width
-        val barsToRender = ((availableWidth + totalSpacing) / (totalBarWidth + totalSpacing)).toInt()
-            .coerceAtMost(barCount)
+        val barsToRender =
+            ((availableWidth + totalSpacing) / (totalBarWidth + totalSpacing)).toInt()
+                .coerceAtMost(barCount)
 
         val totalBarsWidth = barsToRender * totalBarWidth + (barsToRender - 1) * totalSpacing
         val startX = (availableWidth - totalBarsWidth) / 2
@@ -77,17 +78,18 @@ fun AudioVisualizer(
             val y = size.height - barHeight
 
             // Gradient from primary to secondary based on height
-            val barBrush = Brush.verticalGradient(
-                colors = listOf(secondaryColor, primaryColor),
-                startY = y,
-                endY = size.height
-            )
+            val barBrush =
+                Brush.verticalGradient(
+                    colors = listOf(secondaryColor, primaryColor),
+                    startY = y,
+                    endY = size.height,
+                )
 
             drawRoundRect(
                 brush = barBrush,
                 topLeft = Offset(x, y),
                 size = Size(totalBarWidth, barHeight),
-                cornerRadius = CornerRadius(cornerRadius.toPx())
+                cornerRadius = CornerRadius(cornerRadius.toPx()),
             )
         }
     }
@@ -99,8 +101,9 @@ private fun AudioVisualizerPreview() {
     val mockData = FloatArray(64) { (it % 8).toFloat() / 8f }
     AudioVisualizer(
         fftData = mockData,
-        modifier = Modifier
+        modifier =
+        Modifier
             .fillMaxWidth()
-            .height(120.dp)
+            .height(120.dp),
     )
 }

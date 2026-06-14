@@ -1,0 +1,16 @@
+05-27 02:59:44.128 18875 118736 D adb     : adb_trace.cpp:201 Android Debug Bridge version 1.0.41
+05-27 02:59:44.128 18875 118736 D adb     : adb_trace.cpp:201 Version 37.0.0-14910828
+05-27 02:59:44.128 18875 118736 D adb     : adb_trace.cpp:201 Installed as /usr/local/bin/adb
+05-27 02:59:44.128 18875 118736 D adb     : adb_trace.cpp:201 Running on Darwin 24.6.0 (x86_64)
+05-27 02:59:44.128 18875 118736 D adb     : adb_trace.cpp:201 
+05-27 02:59:44.129 18875 118736 D adb     : commandline.cpp:1683 Using server socket: tcp:5037
+05-27 02:59:44.129 18875 118736 D adb     : adb_client.cpp:358 adb_connect: service: host:start-server
+05-27 02:59:44.129 18875 118736 D adb     : adb_client.cpp:160 _adb_connect: host:version
+* daemon not running; starting now at tcp:5037
+05-27 02:59:44.313 18876 118741 D adb     : adb_trace.cpp:201 Android Debug Bridge version 1.0.41
+05-27 02:59:44.313 18876 118741 D adb     : adb_trace.cpp:201 Version 37.0.0-14910828
+05-27 02:59:44.313 18876 118741 D adb     : adb_trace.cpp:201 Installed as /usr/local/bin/adb
+05-27 02:59:44.313 18876 118741 D adb     : adb_trace.cpp:201 Running on Darwin 24.6.0 (x86_64)
+05-27 02:59:44.313 18876 118741 D adb     : adb_trace.cpp:201 
+05-27 02:59:44.314 18876 118741 D adb     : commandline.cpp:1683 Using server socket: tcp:5037
+* daemon started successfully

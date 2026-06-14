@@ -5,7 +5,6 @@ package com.deepeye.musicpro.ui.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -20,14 +19,14 @@ fun MiniVisualizerBar(
     fftData: FloatArray,
     barColor: Color,
     modifier: Modifier = Modifier,
-    barCount: Int = 32
+    barCount: Int = 32,
 ) {
     val animatedBars = remember { Animatable(0f) }
 
     LaunchedEffect(fftData.toList()) {
         animatedBars.animateTo(
             1f,
-            animationSpec = tween(80, easing = LinearEasing)
+            animationSpec = tween(80, easing = LinearEasing),
         )
         animatedBars.snapTo(0f)
     }
@@ -37,23 +36,28 @@ fun MiniVisualizerBar(
         val gap = barWidth * 0.5f
 
         for (i in 0 until barCount) {
-            val rawMagnitude = if (fftData.isNotEmpty()) {
-                val fftIndex = (i * (fftData.size / barCount))
-                    .coerceIn(0, fftData.size - 1)
-                fftData[fftIndex].coerceIn(0f, 1f)
-            } else 0f
+            val rawMagnitude =
+                if (fftData.isNotEmpty()) {
+                    val fftIndex =
+                        (i * (fftData.size / barCount))
+                            .coerceIn(0, fftData.size - 1)
+                    fftData[fftIndex].coerceIn(0f, 1f)
+                } else {
+                    0f
+                }
 
             val barHeight = (rawMagnitude * size.height).coerceAtLeast(4.dp.toPx())
             val x = i * (barWidth + gap)
             val y = size.height - barHeight
 
             drawRoundRect(
-                color = barColor.copy(
-                    alpha = 0.4f + (rawMagnitude * 0.6f)
+                color =
+                barColor.copy(
+                    alpha = 0.4f + (rawMagnitude * 0.6f),
                 ),
                 topLeft = Offset(x, y),
                 size = Size(barWidth, barHeight),
-                cornerRadius = CornerRadius(2.dp.toPx())
+                cornerRadius = CornerRadius(2.dp.toPx()),
             )
         }
     }

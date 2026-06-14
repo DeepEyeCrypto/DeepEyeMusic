@@ -20,8 +20,10 @@ import javax.inject.Singleton
 private val Context.tasteDataStore: DataStore<Preferences> by preferencesDataStore(name = "deepeye_taste_profile")
 
 @Singleton
-class TasteProfileDataStore @Inject constructor(
-    @ApplicationContext private val context: Context
+class TasteProfileDataStore
+@Inject
+constructor(
+    @ApplicationContext private val context: Context,
 ) {
     companion object {
         private val KEY_ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
@@ -33,17 +35,18 @@ class TasteProfileDataStore @Inject constructor(
         private val KEY_PERSONALIZED_MIX_ENABLED = booleanPreferencesKey("personalized_mix_enabled")
     }
 
-    val tasteProfile: Flow<TasteProfile> = context.tasteDataStore.data.map { prefs ->
-        TasteProfile(
-            hasCompletedOnboarding = prefs[KEY_ONBOARDING_COMPLETED] ?: false,
-            preferredLanguages = prefs[KEY_PREFERRED_LANGUAGES] ?: emptySet(),
-            favoriteArtists = prefs[KEY_FAVORITE_ARTISTS] ?: emptySet(),
-            preferredGenres = prefs[KEY_PREFERRED_GENRES] ?: emptySet(),
-            preferredMood = prefs[KEY_PREFERRED_MOOD] ?: "Balanced",
-            autoplayEnabled = prefs[KEY_AUTOPLAY_ENABLED] ?: true,
-            personalizedMixEnabled = prefs[KEY_PERSONALIZED_MIX_ENABLED] ?: true
-        )
-    }
+    val tasteProfile: Flow<TasteProfile> =
+        context.tasteDataStore.data.map { prefs ->
+            TasteProfile(
+                hasCompletedOnboarding = prefs[KEY_ONBOARDING_COMPLETED] ?: false,
+                preferredLanguages = prefs[KEY_PREFERRED_LANGUAGES] ?: emptySet(),
+                favoriteArtists = prefs[KEY_FAVORITE_ARTISTS] ?: emptySet(),
+                preferredGenres = prefs[KEY_PREFERRED_GENRES] ?: emptySet(),
+                preferredMood = prefs[KEY_PREFERRED_MOOD] ?: "Balanced",
+                autoplayEnabled = prefs[KEY_AUTOPLAY_ENABLED] ?: true,
+                personalizedMixEnabled = prefs[KEY_PERSONALIZED_MIX_ENABLED] ?: true,
+            )
+        }
 
     suspend fun setOnboardingCompleted(completed: Boolean) {
         context.tasteDataStore.edit { it[KEY_ONBOARDING_COMPLETED] = completed }
@@ -81,5 +84,5 @@ data class TasteProfile(
     val preferredGenres: Set<String> = emptySet(),
     val preferredMood: String = "Balanced",
     val autoplayEnabled: Boolean = true,
-    val personalizedMixEnabled: Boolean = true
+    val personalizedMixEnabled: Boolean = true,
 )

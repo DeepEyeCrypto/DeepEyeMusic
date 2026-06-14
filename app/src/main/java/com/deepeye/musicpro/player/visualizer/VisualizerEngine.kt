@@ -12,9 +12,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class VisualizerEngine @Inject constructor() {
+class VisualizerEngine
+@Inject
+constructor() {
     private var visualizer: Visualizer? = null
-    
+
     private val _fftData = MutableStateFlow(ByteArray(0))
     val fftData: StateFlow<ByteArray> = _fftData.asStateFlow()
 
@@ -27,12 +29,13 @@ class VisualizerEngine @Inject constructor() {
 
         // Try progressively smaller capture sizes if max fails
         val sizeRange = Visualizer.getCaptureSizeRange() // [min, max]
-        val candidateSizes = listOf(
-            sizeRange[1],       // max (usually 8192 or 4096)
-            2048,
-            1024,
-            sizeRange[0]        // min (usually 128)
-        ).distinct().filter { it <= sizeRange[1] && it >= sizeRange[0] }
+        val candidateSizes =
+            listOf(
+                sizeRange[1], // max (usually 8192 or 4096)
+                2048,
+                1024,
+                sizeRange[0], // min (usually 128)
+            ).distinct().filter { it <= sizeRange[1] && it >= sizeRange[0] }
 
         for (size in candidateSizes) {
             try {
@@ -40,16 +43,25 @@ class VisualizerEngine @Inject constructor() {
                 viz.captureSize = size
                 viz.setDataCaptureListener(
                     object : Visualizer.OnDataCaptureListener {
-                        override fun onWaveFormDataCapture(v: Visualizer, waveform: ByteArray, samplingRate: Int) {
+                        override fun onWaveFormDataCapture(
+                            v: Visualizer,
+                            waveform: ByteArray,
+                            samplingRate: Int,
+                        ) {
                             // Not used for now
                         }
-                        override fun onFftDataCapture(v: Visualizer, fft: ByteArray, samplingRate: Int) {
+
+                        override fun onFftDataCapture(
+                            v: Visualizer,
+                            fft: ByteArray,
+                            samplingRate: Int,
+                        ) {
                             _fftData.value = fft
                         }
                     },
                     Visualizer.getMaxCaptureRate() / 2,
                     false,
-                    true
+                    true,
                 )
                 viz.enabled = true
                 visualizer = viz

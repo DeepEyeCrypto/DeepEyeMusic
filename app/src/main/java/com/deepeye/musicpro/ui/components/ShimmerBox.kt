@@ -36,33 +36,37 @@ fun ShimmerBox(
     modifier: Modifier = Modifier,
     cornerRadius: Dp = 8.dp,
     baseColor: Color = Color(0xFF1A2035),
-    highlightColor: Color = Color(0xFF2A3050)
+    highlightColor: Color = Color(0xFF2A3050),
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "shimmer")
     val shimmerOffset by infiniteTransition.animateFloat(
         initialValue = -500f,
         targetValue = 1500f,
-        animationSpec = infiniteRepeatable(
+        animationSpec =
+        infiniteRepeatable(
             animation = tween(1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
+            repeatMode = RepeatMode.Restart,
         ),
-        label = "shimmerOffset"
+        label = "shimmerOffset",
     )
 
-    val shimmerBrush = Brush.linearGradient(
-        colors = listOf(
-            baseColor,
-            highlightColor,
-            baseColor
-        ),
-        start = Offset(shimmerOffset, 0f),
-        end = Offset(shimmerOffset + 500f, 0f)
-    )
+    val shimmerBrush =
+        Brush.linearGradient(
+            colors =
+            listOf(
+                baseColor,
+                highlightColor,
+                baseColor,
+            ),
+            start = Offset(shimmerOffset, 0f),
+            end = Offset(shimmerOffset + 500f, 0f),
+        )
 
     Box(
-        modifier = modifier
+        modifier =
+        modifier
             .clip(RoundedCornerShape(cornerRadius))
-            .background(shimmerBrush)
+            .background(shimmerBrush),
     )
 }
 
@@ -70,9 +74,10 @@ fun ShimmerBox(
 @Composable
 private fun ShimmerBoxPreview() {
     ShimmerBox(
-        modifier = Modifier
+        modifier =
+        Modifier
             .fillMaxWidth()
             .height(60.dp)
-            .padding(16.dp)
+            .padding(16.dp),
     )
 }

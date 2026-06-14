@@ -4,7 +4,6 @@
 package com.deepeye.musicpro.di
 
 import android.content.Context
-import com.deepeye.musicpro.DeepEyeApp
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,8 +17,9 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
     @Provides
     @Singleton
-    fun provideApplicationContext(@ApplicationContext context: Context): Context = context
+    fun provideApplicationContext(
+        @ApplicationContext context: Context,
+    ): Context = context
 }

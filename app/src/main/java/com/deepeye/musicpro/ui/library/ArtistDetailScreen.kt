@@ -3,6 +3,7 @@
 
 package com.deepeye.musicpro.ui.library
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,10 +34,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ArtistDetailViewModel @Inject constructor(
+class ArtistDetailViewModel
+@Inject
+constructor(
     savedStateHandle: SavedStateHandle,
     getArtistByIdUseCase: GetArtistByIdUseCase,
-    getSongsByArtistUseCase: GetSongsByArtistUseCase
+    getSongsByArtistUseCase: GetSongsByArtistUseCase,
 ) : ViewModel() {
     private val artistId: Long = savedStateHandle.get<Long>("artistId") ?: 0L
     private val _artist = MutableStateFlow<Artist?>(null)
@@ -54,7 +57,9 @@ class ArtistDetailViewModel @Inject constructor(
 fun ArtistDetailScreen(
     artistId: Long,
     onNavigateBack: () -> Unit,
-    viewModel: ArtistDetailViewModel = hiltViewModel()
+    onNavigateToNowPlaying: () -> Unit,
+    viewModel: ArtistDetailViewModel = hiltViewModel(),
+    playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel(),
 ) {
     val artist by viewModel.artist.collectAsStateWithLifecycle()
     val songs by viewModel.songs.collectAsStateWithLifecycle()
@@ -63,20 +68,52 @@ fun ArtistDetailScreen(
         item {
             Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
-                Text(artist?.name ?: "", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(start = 8.dp))
+                Text(
+                    artist?.name ?: "",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
             }
             artist?.let {
-                Text("${it.albumCount} albums · ${it.songCount} songs", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
+                Text(
+                    "${it.albumCount} albums · ${it.songCount} songs",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                )
             }
             Spacer(Modifier.height(16.dp))
         }
         items(songs, key = { it.id }) { song ->
-            Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp)) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        val mediaItems = songs.map { com.deepeye.musicpro.domain.model.MediaItem.Local(it) }
+                        val index = songs.indexOfFirst { it.id == song.id }
+                        playerViewModel.setQueue(mediaItems, if (index >= 0) index else 0)
+                        onNavigateToNowPlaying()
+                    }
+                    .padding(horizontal = 20.dp, vertical = 10.dp)
+            ) {
                 Column(Modifier.weight(1f)) {
-                    Text(song.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(song.album, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        song.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        song.album,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-                Text(TimeFormatter.formatDuration(song.duration), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    TimeFormatter.formatDuration(song.duration),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

@@ -11,15 +11,21 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class RecommendationViewModel @Inject constructor(
-    private val engine: RecommendationEngine
+class RecommendationViewModel
+@Inject
+constructor(
+    private val engine: RecommendationEngine,
+    private val cacheManager: com.deepeye.musicpro.data.cache.CacheManager,
+    private val sourceResolverManager: com.deepeye.musicpro.domain.resolver.SourceResolverManager,
 ) : ViewModel() {
-
     private val _recommendations = MutableStateFlow<RecommendationResult?>(null)
     val recommendations = _recommendations.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading = _isLoading.asStateFlow()
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing = _isRefreshing.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error = _error.asStateFlow()
 
     init {
         loadRecommendations()
@@ -27,14 +33,45 @@ class RecommendationViewModel @Inject constructor(
 
     fun loadRecommendations() {
         viewModelScope.launch {
-            _isLoading.value = true
+            _error.value = null
+            // 1. Load from cache INSTANTLY
+            val cached = cacheManager.loadCachedRecommendations()
+            if (cached != null) {
+                _recommendations.value = cached
+                prefetchFirstRecommendedTracks(cached)
+            } else {
+                _isRefreshing.value = true
+            }
+
+            // 2. Refresh from network silently
             try {
-                val result = engine.buildRecommendations()
-                _recommendations.value = result
+                _isRefreshing.value = true
+                val fresh = engine.buildRecommendations()
+                cacheManager.saveRecommendations(fresh)
+                _recommendations.value = fresh
+                _error.value = null
+                prefetchFirstRecommendedTracks(fresh)
             } catch (e: Exception) {
                 e.printStackTrace()
+                if (_recommendations.value == null) {
+                    _error.value = "Please check your network connection and try again."
+                }
             } finally {
-                _isLoading.value = false
+                _isRefreshing.value = false
+            }
+        }
+    }
+
+    private fun prefetchFirstRecommendedTracks(result: RecommendationResult) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val items = result.perfectForNow.items.take(3)
+            for (item in items) {
+                try {
+                    android.util.Log.d("RecommendationViewModel", "Prefetching stream URL for recommended track: ${item.title} (${item.videoId})")
+                    sourceResolverManager.resolve(item.videoId, false)
+                } catch (e: Exception) {
+                    android.util.Log.w("RecommendationViewModel", "Prefetch failed for ${item.videoId}: ${e.message}")
+                }
             }
         }
     }
@@ -50,13 +87,13 @@ class RecommendationViewModel @Inject constructor(
         wasSkipped: Boolean = false,
         wasLiked: Boolean = false,
         wasDisliked: Boolean = false,
-        wasAddedToPlaylist: Boolean = false
+        wasAddedToPlaylist: Boolean = false,
     ) {
         viewModelScope.launch {
             engine.trackListenEvent(
                 videoId, title, artist, channelId,
                 listenMs, totalMs, wasSkipped, wasLiked,
-                wasDisliked, wasAddedToPlaylist, false
+                wasDisliked, wasAddedToPlaylist, false,
             )
             // Optionally, we could refresh recommendations here in background
             // loadRecommendations()

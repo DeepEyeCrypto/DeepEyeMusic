@@ -2,19 +2,16 @@ package com.deepeye.musicpro.data.db
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.ColumnInfo
 
 @Entity(tableName = "listen_events")
 data class ListenEvent(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-
     val videoId: String,
     val title: String,
     val artist: String,
     val channelId: String,
     val genre: String = "",
-
     // Engagement signals
     val listenDurationMs: Long,
     val totalDurationMs: Long,
@@ -26,14 +23,12 @@ data class ListenEvent(
     val wasReplayed: Boolean,
     val seekCount: Int,
     val shareCount: Int,
-
     // Context signals
     val timeOfDay: Int,
     val dayOfWeek: Int,
     val isHeadphonesOn: Boolean,
     val sessionId: String,
-
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
 )
 
 @Entity(tableName = "artist_scores")
@@ -46,7 +41,7 @@ data class ArtistScore(
     val likeCount: Int,
     val skipCount: Int,
     val lastPlayedAt: Long,
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
 )
 
 @Entity(tableName = "song_scores")
@@ -58,7 +53,7 @@ data class SongScore(
     val playCount: Int,
     val totalListenMs: Long,
     val lastPlayedAt: Long,
-    val isBlacklisted: Boolean = false
+    val isBlacklisted: Boolean = false,
 )
 
 // Data classes for DAO projections
@@ -71,7 +66,7 @@ data class SongStats(
     val avgCompletion: Float,
     val likes: Int,
     val skips: Int,
-    val lastPlayed: Long
+    val lastPlayed: Long,
 )
 
 data class ArtistStats(
@@ -80,10 +75,10 @@ data class ArtistStats(
     val playCount: Int,
     val avgCompletion: Float,
     val likeCount: Int,
-    val skipCount: Int
+    val skipCount: Int,
 )
 
 data class GenreCount(
     val genre: String,
-    val count: Int
+    val count: Int,
 )

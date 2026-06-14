@@ -12,6 +12,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,7 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.home.VideoRailItem
 
 @Composable
@@ -47,51 +48,62 @@ fun VideoRailCard(
     isExpanded: Boolean,
     onTap: () -> Unit,
     onExpandedTap: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val cardWidth by animateDpAsState(
         targetValue = if (isExpanded) 280.dp else 180.dp,
-        animationSpec = spring(
+        animationSpec =
+        spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+            stiffness = Spring.StiffnessMedium,
         ),
-        label = "cardWidth"
+        label = "cardWidth",
     )
     val cardHeight by animateDpAsState(
         targetValue = if (isExpanded) 180.dp else 110.dp,
-        animationSpec = spring(
+        animationSpec =
+        spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+            stiffness = Spring.StiffnessMedium,
         ),
-        label = "cardHeight"
+        label = "cardHeight",
     )
 
     Column(
-        modifier = modifier.width(cardWidth)
+        modifier = modifier.width(cardWidth),
     ) {
         // Thumbnail / Inline Player
         Box(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .width(cardWidth)
                 .height(cardHeight)
+                .border(
+                    1.dp,
+                    Color(0x22FFFFFF),
+                    RoundedCornerShape(14.dp)
+                )
                 .clip(RoundedCornerShape(14.dp))
                 .clickable {
-                    if (isExpanded) onExpandedTap()
-                    else onTap()
-                }
+                    // Bypass inline iframe expansion to avoid Error 152
+                    // Directly open the native full player
+                    onExpandedTap()
+                },
         ) {
             if (isExpanded) {
-                // Inline WebView player
-                InlineVideoPlayer(
-                    videoId = item.videoId,
-                    modifier = Modifier.fillMaxSize()
+                // Inline WebView removed due to YouTube iframe restrictions (Error 152)
+                AsyncImage(
+                    model = item.thumbnailUrl,
+                    contentDescription = item.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
                 )
                 // Tap overlay — "Tap to open full player"
                 Box(
                     Modifier
                         .fillMaxSize()
                         .background(Color.Transparent)
-                        .clickable { onExpandedTap() }
+                        .clickable { onExpandedTap() },
                 )
                 // Open fullscreen hint
                 Box(
@@ -100,15 +112,15 @@ fun VideoRailCard(
                         .padding(6.dp)
                         .background(
                             Color.Black.copy(0.7f),
-                            RoundedCornerShape(6.dp)
+                            RoundedCornerShape(6.dp),
                         )
-                        .padding(horizontal = 6.dp, vertical = 3.dp)
+                        .padding(horizontal = 6.dp, vertical = 3.dp),
                 ) {
                     Text(
                         "⛶ Open",
                         color = Color.White,
                         fontSize = 10.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
                     )
                 }
             } else {
@@ -117,7 +129,7 @@ fun VideoRailCard(
                     model = item.thumbnailUrl,
                     contentDescription = item.title,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
                 // Duration badge
                 Box(
@@ -126,14 +138,14 @@ fun VideoRailCard(
                         .padding(4.dp)
                         .background(
                             Color.Black.copy(0.75f),
-                            RoundedCornerShape(4.dp)
+                            RoundedCornerShape(4.dp),
                         )
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
                 ) {
                     Text(
                         item.duration,
                         color = Color.White,
-                        fontSize = 9.sp
+                        fontSize = 9.sp,
                     )
                 }
                 // Trending badge
@@ -144,29 +156,29 @@ fun VideoRailCard(
                             .padding(6.dp)
                             .background(
                                 Color(0xFFFF6B35),
-                                RoundedCornerShape(6.dp)
+                                RoundedCornerShape(6.dp),
                             )
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
                     ) {
                         Text(
                             "🔥 TRENDING",
                             color = Color.White,
                             fontSize = 8.sp,
                             fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.5.sp
+                            letterSpacing = 0.5.sp,
                         )
                     }
                 }
                 // Play icon overlay
                 Box(
                     Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         Icons.Rounded.PlayCircle,
                         contentDescription = "Play",
                         tint = Color.White.copy(0.85f),
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(36.dp),
                     )
                 }
             }
@@ -176,24 +188,24 @@ fun VideoRailCard(
         AnimatedVisibility(
             visible = !isExpanded,
             enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically()
+            exit = fadeOut() + shrinkVertically(),
         ) {
             Column(Modifier.padding(top = 6.dp, start = 2.dp)) {
                 Text(
                     item.title,
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    lineHeight = 16.sp
+                    lineHeight = 16.sp,
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
                     "${item.channelName} · ${item.viewCount}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(0.45f),
+                    color = MaterialTheme.colorScheme.onSurface.copy(0.45f),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }

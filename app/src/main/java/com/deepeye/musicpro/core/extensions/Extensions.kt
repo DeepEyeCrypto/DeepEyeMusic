@@ -3,10 +3,10 @@
 
 package com.deepeye.musicpro.core.extensions
 
+import com.deepeye.musicpro.core.result.Result
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import com.deepeye.musicpro.core.result.Result
 
 /**
  * Kotlin extension functions used across the project.
@@ -23,15 +23,20 @@ fun <T> Flow<T>.asResult(): Flow<Result<T, Throwable>> =
 /**
  * Returns the string if it is not null or blank, otherwise returns the fallback.
  */
-fun String?.orDefault(fallback: String = "Unknown"): String =
-    if (this.isNullOrBlank()) fallback else this
+fun String?.orDefault(fallback: String = "Unknown"): String = if (this.isNullOrBlank()) fallback else this
 
 /**
  * Clamps a value between a minimum and maximum.
  */
-fun Float.clamp(min: Float, max: Float): Float = coerceIn(min, max)
+fun Float.clamp(
+    min: Float,
+    max: Float,
+): Float = coerceIn(min, max)
 
 /**
  * Clamps an Int between a minimum and maximum.
  */
-fun Int.clamp(min: Int, max: Int): Int = coerceIn(min, max)
+fun Int.clamp(
+    min: Int,
+    max: Int,
+): Int = coerceIn(min, max)

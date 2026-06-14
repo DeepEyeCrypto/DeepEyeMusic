@@ -36,3 +36,7 @@ Thumbs.db
 
 # LeakCanary
 leakcanary-deobfuscation-mapping/
+.gradle-jdk21-test/
+scratch/
+bugreport_out/
+full_logcat.txt

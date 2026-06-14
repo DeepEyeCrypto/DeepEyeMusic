@@ -16,8 +16,43 @@ import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 // ═══════════════════════════════════════════════════
-// Entity
+// Entities
 // ═══════════════════════════════════════════════════
+
+/**
+ * Room entity for per-track and per-device DSP profiles.
+ * Composite key: (trackId, deviceId).
+ * Use "*" for trackId to represent a device-level profile.
+ * Use "*" for deviceId to represent a global profile.
+ */
+@Entity(
+    tableName = "dsp_profiles",
+    primaryKeys = ["track_id", "device_id"],
+)
+data class DspProfileEntity(
+    @ColumnInfo(name = "track_id")
+    val trackId: String,
+    @ColumnInfo(name = "device_id")
+    val deviceId: String,
+    @ColumnInfo(name = "eq_bands")
+    val eqBands: String, // JSON serialized float array
+    @ColumnInfo(name = "bass_boost_strength")
+    val bassBoostStrength: Int,
+    @ColumnInfo(name = "sub_bass_gain")
+    val subBassGain: Float = 0f,
+    @ColumnInfo(name = "mid_bass_gain")
+    val midBassGain: Float = 0f,
+    @ColumnInfo(name = "virtualizer_strength")
+    val virtualizerStrength: Int,
+    @ColumnInfo(name = "reverb_preset")
+    val reverbPreset: Int,
+    @ColumnInfo(name = "dynamics_enabled")
+    val dynamicsEnabled: Boolean = false,
+    @ColumnInfo(name = "limiter_threshold")
+    val limiterThreshold: Float = -0.5f,
+    @ColumnInfo(name = "updated_at")
+    val updatedAt: Long = System.currentTimeMillis(),
+)
 
 /**
  * Room entity for a saved DSP preset.
@@ -28,30 +63,48 @@ data class DspPresetEntity(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
     val id: Long = 0,
-
     @ColumnInfo(name = "name")
     val name: String,
-
     @ColumnInfo(name = "params_json")
     val paramsJson: String,
-
     @ColumnInfo(name = "is_builtin")
     val isBuiltin: Boolean = false,
-
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
-
     @ColumnInfo(name = "modified_at")
-    val modifiedAt: Long = System.currentTimeMillis()
+    val modifiedAt: Long = System.currentTimeMillis(),
 )
 
 // ═══════════════════════════════════════════════════
-// DAO
+// DAOs
 // ═══════════════════════════════════════════════════
 
 @Dao
-interface DspPresetDao {
+interface DspProfileDao {
+    @Query("SELECT * FROM dsp_profiles WHERE track_id = :trackId AND device_id = :deviceId")
+    suspend fun getProfile(trackId: String, deviceId: String): DspProfileEntity?
 
+    @Query("SELECT * FROM dsp_profiles WHERE track_id = :trackId")
+    suspend fun getProfilesForTrack(trackId: String): List<DspProfileEntity>
+
+    @Query("SELECT * FROM dsp_profiles WHERE device_id = :deviceId AND track_id = '*'")
+    suspend fun getDeviceProfile(deviceId: String): DspProfileEntity?
+
+    @Query("SELECT * FROM dsp_profiles WHERE track_id = '*' AND device_id = '*'")
+    suspend fun getGlobalProfile(): DspProfileEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(profile: DspProfileEntity)
+
+    @Query("DELETE FROM dsp_profiles WHERE track_id = :trackId AND device_id = :deviceId")
+    suspend fun delete(trackId: String, deviceId: String)
+
+    @Query("DELETE FROM dsp_profiles WHERE track_id = :trackId")
+    suspend fun deleteAllForTrack(trackId: String)
+}
+
+@Dao
+interface DspPresetDao {
     @Query("SELECT * FROM dsp_presets ORDER BY is_builtin DESC, name ASC")
     fun getAllPresets(): Flow<List<DspPresetEntity>>
 
@@ -85,10 +138,11 @@ interface DspPresetDao {
 // ═══════════════════════════════════════════════════
 
 @Database(
-    entities = [DspPresetEntity::class],
-    version = 1,
-    exportSchema = true
+    entities = [DspPresetEntity::class, DspProfileEntity::class],
+    version = 2,
+    exportSchema = true,
 )
 abstract class DspDatabase : RoomDatabase() {
     abstract fun dspPresetDao(): DspPresetDao
+    abstract fun dspProfileDao(): DspProfileDao
 }

@@ -1,0 +1,1000 @@
+06-14 02:51:10.672  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:10.672  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:10.672  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:10.672  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:10.672  4050  4723 V Avrcp_ext: isPlayStateToBeUpdated device is active device
+06-14 02:51:10.672  4050  4723 I Avrcp_ext: updatePlayStatusForDevice: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:10.672  4050  4723 V Avrcp_ext: updatePlaybackState (0): old=PlaybackState {state=PLAYING(3), position=141402, buffered position=209978, speed=1.0, updated=31259752, actions=7339671, custom actions=[], active item id=0, error=null}(1), new=PlaybackState {state=PLAYING(3), position=144407, buffered position=209978, speed=1.0, updated=31262755, actions=7339671, custom actions=[], active item id=0, error=null}(1)
+06-14 02:51:10.672  4050  4723 I Avrcp_ext: Exit updatePlayStatusForDevice
+06-14 02:51:10.673  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:10.673  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:10.673  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:10.673  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:10.673  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:10.673  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:10.673  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:10.673  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:10.673  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:10.673  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:10.673  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:10.673  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:10.673  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:10.673  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:10.673  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:10.673  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:10.674  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:10.674  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:10.674  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:10.674  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:10.674  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:10.674  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:10.674  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:10.674  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:10.674  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:10.674  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:10.674  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:10.674  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:10.674  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:10.674  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:10.674  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:10.674  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:10.674  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:10.674  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:10.674  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:10.674  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:10.674  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:10.674  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:10.674  4050  4723 V Avrcp_ext: Exit updatePlayerStateAndPosition
+06-14 02:51:10.674  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: getActiveAbsoluteDevice(): device: 64:8F:DB:D5:6F:1C
+06-14 02:51:10.674  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: isStableState(): true
+06-14 02:51:10.674  4050  4723 D Avrcp_ext: isAdmStable = true activeAbsAddr = 64:8F:DB:D5:6F:1C device = null
+06-14 02:51:10.674  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:10.674  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=144407, buffered position=209978, speed=1.0, updated=31262755, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:10.674  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:10.674  4050  4723 W Avrcp_ext: updated player state = PlaybackState {state=PLAYING(3), position=144407, buffered position=209978, speed=1.0, updated=31262755, actions=7339671, custom actions=[], active item id=0, error=null}to MCP module also
+06-14 02:51:10.674  4050  4723 V Avrcp_ext:  Exit onPlaybackStateChanged
+06-14 02:51:10.938  7645 12650 D BufferPoolAccessor2.0: bufferpool2 0xb40000765fa9ec38 : 5(40960 size) total buffers - 1(8192 size) used buffers - 21930/21935 (recycle/alloc) - 10/21917 (fetch/transfer)
+06-14 02:51:10.968  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54c3 went down
+06-14 02:51:10.969  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54c4 went down
+06-14 02:51:10.970  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54c5 went down
+06-14 02:51:10.973  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54c6 went down
+06-14 02:51:11.211  1826 11091 I QC2Comp : [avcD_133] Stats: Pending(4) i/p-done(0) Works: Q: 21443/Done 21440|Work-Rate: Q(25.2/s Avg=24.9/s) Done(25.198/s Avg=24.913/s)| Stream: 25.00fps 497.9Kbps
+06-14 02:51:11.211  1826 11091 I QC2Comp : [avcD_133] Mem-usage:  [In-1D: 7 bufs 20.918 MB] [1D-249: 15 bufs 0.234 MB] [2D-250: 23 bufs 8.445 MB] | Total: 29.598 MB
+06-14 02:51:11.756  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1240 ms, latest timeUs 1000146000000, flags 128
+06-14 02:51:11.760  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1235 ms, latest timeUs 1000146160000
+06-14 02:51:11.938  1722  4310 D DlbDap2ProcessWithIht: process() called [2211000] times with input format 0x22 and channel mask 0x3 (ProcessingMode=9), htEnable=0(0, 0, 0)
+06-14 02:51:12.077  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54c7 went down
+06-14 02:51:12.078  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54c8 went down
+06-14 02:51:12.079  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54c9 went down
+06-14 02:51:12.082  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54ca went down
+06-14 02:51:12.475  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54cb went down
+06-14 02:51:12.476  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54cc went down
+06-14 02:51:12.477  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54cd went down
+06-14 02:51:12.480  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54cf went down
+06-14 02:51:12.481  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54d0 went down
+06-14 02:51:12.483  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54d1 went down
+06-14 02:51:12.916  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1160 ms, latest timeUs 1000147200000, flags 128
+06-14 02:51:12.923  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1163 ms, latest timeUs 1000147360000
+06-14 02:51:13.128  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_IND: 0xFD
+06-14 02:51:13.129  1723  4663 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK ON
+06-14 02:51:13.129  1723  4663 D vendor.qti.bluetooth@1.0-wake_lock: Acquire wakelock is acquired 
+06-14 02:51:13.129  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Writing IBS_WAKE_ACK
+06-14 02:51:13.130  4050  4665 E bt_avp  : avdt_ad_tc_data_ind: type: x0, tcid: 0, ccb_idx: 0
+06-14 02:51:13.130  4050  4665 D bt_btif : bta_av_ssm_execute(): AV Sevent(0x41)=0x1229(AVDT_DELAY_RPT) state=3(OPEN)
+06-14 02:51:13.131  4050  4665 E bt_btif : bta_av_co_audio_delay: handle: x41, delay:0x398
+06-14 02:51:13.131  4050  4665 W bt_stack: [WARNING:a2dp_encoding.cc(2309)] is_qc_hal_enabled
+06-14 02:51:13.131  1723  1723 I vendor.qti.bluetooth@1.0-ibs_handler: DeviceWakeUp: Writing IBS_WAKE_IND
+06-14 02:51:13.131  4050  4665 W bt_stack: [WARNING:a2dp_encoding.cc(2288)] get_hal_version
+06-14 02:51:13.131  4050  4665 E bt_btif : bta_av_co_get_active_peer: active peer index: 0
+06-14 02:51:13.131  4050  4665 D bt_btif : btif_ahim_set_remote_delay: AIDL, profile: 1, delay_report: 920
+06-14 02:51:13.131  4050  4665 W bt_stack: [WARNING:a2dp_encoding.cc(2309)] is_qc_hal_enabled
+06-14 02:51:13.131  4050  4665 W bt_stack: [WARNING:a2dp_encoding.cc(2288)] get_hal_version
+06-14 02:51:13.131  4050  4665 D bt_btif : btif_ahim_set_remote_delay: QC
+06-14 02:51:13.131  4050  4665 I bt_stack: [INFO:a2dp_encoding.cc(2820)] set_remote_delay: DELAY 92 ms
+06-14 02:51:13.131  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_ACK: 0xFC
+06-14 02:51:13.131  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Signal wack_cond_
+06-14 02:51:13.131  1722 17373 I BluetoothA2dpControl: updateSinkLatency Latency update from stack: 920
+06-14 02:51:13.131  1722 17373 I BTAudioProviderSession_2_1: OnSessionParamUpdate Update Sink Latency: 920
+06-14 02:51:13.131  1723  1723 D vendor.qti.bluetooth@1.0-ibs_handler: DeviceWakeUp: Unblocked from waiting for FC, pthread_cond_timedwait ret = 0
+06-14 02:51:13.176  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54d3 went down
+06-14 02:51:13.177  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54d4 went down
+06-14 02:51:13.178  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_SLEEP_IND: 0xFE
+06-14 02:51:13.178  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54d5 went down
+06-14 02:51:13.181  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54d6 went down
+06-14 02:51:13.281  7645  7645 D NowPlayingGuardian: ✅ Now Playing metadata matches on all layers: UI/ExoPlayer/MediaSession = '-F6AjkoGad8'
+06-14 02:51:13.286  7645  7645 D AudioSessionGuardian: ✅ Audio session verified: 1641 is attached to DSP.
+06-14 02:51:13.475  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54ce went down
+06-14 02:51:13.475  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54d2 went down
+06-14 02:51:13.659  4050  4723 V Avrcp_ext: onPlaybackStateChanged: state PlaybackState {state=PLAYING(3), position=147398, buffered position=209978, speed=1.0, updated=31265755, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:13.659  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:13.660  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=147398, buffered position=209978, speed=1.0, updated=31265755, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:13.660  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:13.666  4050  4723 V Avrcp_ext: updateCurrentMediaState: mMediaController: MediaController (com.deepeye.musicpro@ca1b3a2) Lamba Lamba Ghunghat (Official Video) Ajay Hooda | Kavita Joshi | New Haryanvi Songs Haryanavi 2024, Sonotek Music, null
+06-14 02:51:13.666  4050  4723 W Avrcp_ext: isMusicActive: true getBluetoothPlayState: 1 A2dp State: 10 mAudioPlaybackIsActive: true
+06-14 02:51:13.667  4050  4723 D Avrcp_ext: isMusicActive = true mAudioPlaybackIsActive = true player state = PlaybackState {state=PLAYING(3), position=147407, buffered position=209978, speed=1.0, updated=31265764, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:13.672  4050  4723 D Avrcp_ext: overwrite album_artist :if album is blank
+06-14 02:51:13.672  4050  4723 D AvrcpBipRsp:  getImgHandle device :64:8F:DB:D5:6F:1C data :android.media.MediaMetadata@3594ceb7
+06-14 02:51:13.672  4050  4723 W AvrcpBipRsp: getImgHandle bipSm null
+06-14 02:51:13.672  4050  4723 D Avrcp_ext:  getImgHandle device:64:8F:DB:D5:6F:1C data:android.media.MediaMetadata@3594ceb7 isKeyContains true Handle 
+06-14 02:51:13.677  4050  4723 I Avrcp_ext: device found at index 0
+06-14 02:51:13.677  4050  4723 V Avrcp_ext: updateCurrentMediaState: addr: [B@ab7e0d2
+06-14 02:51:13.677  4050  4723 V Avrcp_ext: Media update: id 0➡0? [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ] : [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ]
+06-14 02:51:13.677  4050  4723 D Avrcp_ext: isPackageNameValid: browsedPackage = com.deepeye.musicproisValid = true
+06-14 02:51:13.677  4050  4723 V Avrcp_ext: isBrowseSupported for com.deepeye.musicpro: false
+06-14 02:51:13.677  4050  4723 W Avrcp_ext: updateCurrentMediaState: isInactivePlayer = false
+06-14 02:51:13.677  4050  4723 V Avrcp_ext: updatePlaybackState, state: PlaybackState {state=PLAYING(3), position=147407, buffered position=209978, speed=1.0, updated=31265764, actions=7339671, custom actions=[], active item id=0, error=null} device: null
+06-14 02:51:13.679  4050  4723 D BroadcastService: getBroadcastAddress
+06-14 02:51:13.679  4050  4723 D BroadcastService: isBroadcastActive: Broadcast is turned to off
+06-14 02:51:13.679  4050  4723 V Avrcp_ext: Device: OnePlus Nord Buds 2r : old state: PlaybackState {state=PLAYING(3), position=144407, buffered position=209978, speed=1.0, updated=31262755, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:13.679  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:13.679  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:13.679  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:13.679  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:13.679  4050  4723 V Avrcp_ext: updatePlayerStateAndPosition, old=PlaybackState {state=PLAYING(3), position=144407, buffered position=209978, speed=1.0, updated=31262755, actions=7339671, custom actions=[], active item id=0, error=null}, state=PlaybackState {state=PLAYING(3), position=147407, buffered position=209978, speed=1.0, updated=31265764, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:13.680  4050  4723 V Avrcp_ext: old state = PlaybackState {state=PLAYING(3), position=144407, buffered position=209978, speed=1.0, updated=31262755, actions=7339671, custom actions=[], active item id=0, error=null}, new state= PlaybackState {state=PLAYING(3), position=147407, buffered position=209978, speed=1.0, updated=31265764, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:13.680  4050  4723 D HeadsetService: getHeadsetService(): returning com.android.bluetooth.hfp.HeadsetService@3f5a045
+06-14 02:51:13.680  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:13.680  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:13.680  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:13.680  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:13.680  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:13.680  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:13.680  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:13.680  4050  4723 V Avrcp_ext: isPlayStateToBeUpdated device is active device
+06-14 02:51:13.680  4050  4723 I Avrcp_ext: updatePlayStatusForDevice: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:13.680  4050  4723 V Avrcp_ext: updatePlaybackState (0): old=PlaybackState {state=PLAYING(3), position=144407, buffered position=209978, speed=1.0, updated=31262755, actions=7339671, custom actions=[], active item id=0, error=null}(1), new=PlaybackState {state=PLAYING(3), position=147407, buffered position=209978, speed=1.0, updated=31265764, actions=7339671, custom actions=[], active item id=0, error=null}(1)
+06-14 02:51:13.681  4050  4723 I Avrcp_ext: Exit updatePlayStatusForDevice
+06-14 02:51:13.681  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:13.681  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:13.681  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:13.681  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:13.681  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:13.681  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:13.681  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:13.681  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:13.681  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:13.681  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:13.681  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:13.681  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:13.681  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:13.681  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:13.681  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:13.681  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:13.682  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:13.682  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:13.682  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:13.682  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:13.682  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:13.682  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:13.682  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:13.682  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:13.682  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:13.682  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:13.682  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:13.682  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:13.682  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:13.682  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:13.682  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:13.682  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:13.682  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:13.682  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:13.682  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:13.682  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:13.682  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:13.683  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:13.683  4050  4723 V Avrcp_ext: Exit updatePlayerStateAndPosition
+06-14 02:51:13.683  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: getActiveAbsoluteDevice(): device: 64:8F:DB:D5:6F:1C
+06-14 02:51:13.683  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: isStableState(): true
+06-14 02:51:13.683  4050  4723 D Avrcp_ext: isAdmStable = true activeAbsAddr = 64:8F:DB:D5:6F:1C device = null
+06-14 02:51:13.683  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:13.683  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=147407, buffered position=209978, speed=1.0, updated=31265764, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:13.683  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:13.683  4050  4723 W Avrcp_ext: updated player state = PlaybackState {state=PLAYING(3), position=147407, buffered position=209978, speed=1.0, updated=31265764, actions=7339671, custom actions=[], active item id=0, error=null}to MCP module also
+06-14 02:51:13.683  4050  4723 V Avrcp_ext:  Exit onPlaybackStateChanged
+06-14 02:51:13.782 12129 12129 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.onboardingconsent.api.ConsentManagerApiService.START dat=chimera-action:/... cmp=com.google.android.gms/.chimera.GmsApiService }
+06-14 02:51:13.876  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54d7 went down
+06-14 02:51:13.877  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54d8 went down
+06-14 02:51:13.878  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54d9 went down
+06-14 02:51:13.880  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54db went down
+06-14 02:51:13.883  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54dc went down
+06-14 02:51:13.885  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54dd went down
+06-14 02:51:14.132  1723  4668 I vendor.qti.bluetooth@1.0-ibs_handler: DeviceSleep: TX Awake, Sending SLEEP_IND
+06-14 02:51:14.132  1723  4668 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK OFF
+06-14 02:51:14.159  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1242 ms, latest timeUs 1000148400000, flags 128
+06-14 02:51:14.169  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1245 ms, latest timeUs 1000148560000
+06-14 02:51:14.263  2393 12651 D BufferPoolAccessor2.0: bufferpool2 0xb4000079dbb3fec8 : 5(20480 size) total buffers - 1(4096 size) used buffers - 22052/22057 (recycle/alloc) - 128/22056 (fetch/transfer)
+06-14 02:51:14.276  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54df went down
+06-14 02:51:14.276  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54e0 went down
+06-14 02:51:14.277  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54e1 went down
+06-14 02:51:14.281  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54e2 went down
+06-14 02:51:14.282  1723  4358 D vendor.qti.bluetooth@1.0-wake_lock: Release wakelock is released 
+06-14 02:51:14.482  4452 31863 I NearbyMediums: No BLE Fast/GATT advertisements found in the latest cycle.
+06-14 02:51:14.483  4452 31863 I NearbyMediums: Current Tracked Scanning Clients are : {NearbyConnections.EnvironmentMonitor, NearbySharing, NearbyConnections.TxAdvertisement}
+06-14 02:51:14.505  3886  3886 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+06-14 02:51:14.617  1722  4310 D DlbDap2ProcessWithIht: process() called [2211500] times with input format 0x22 and channel mask 0x3 (ProcessingMode=9), htEnable=0(0, 0, 0)
+06-14 02:51:14.979  3059  3418 D ActivityManager: unfreezing ProcessRecord{42989f 28161:udc.lenovo.com.udclient/u0a181}, reason = unfreezeTemporarily, adj = 935, adjType = cch-empty, adjSource = null
+06-14 02:51:14.981  3059  3418 D ActivityManager: sync unfroze 28161 udc.lenovo.com.udclient for 3
+06-14 02:51:15.019 28161 28161 D DataSyncUtil: postFailedRecordsToServer called
+06-14 02:51:15.023 28161 28184 D DBHelper: Cursor is NULL or cursor records count is 0
+06-14 02:51:15.026 28161 28184 D DBHelper: Cursor is NULL or cursor records count is 0
+06-14 02:51:15.028 28161 28184 D DBHelper: Cursor is NULL or cursor records count is 0
+06-14 02:51:15.279  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54da went down
+06-14 02:51:15.279  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54de went down
+06-14 02:51:15.306  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1147 ms, latest timeUs 1000149600000, flags 128
+06-14 02:51:15.309  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1139 ms, latest timeUs 1000149760000
+06-14 02:51:15.376  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54e3 went down
+06-14 02:51:15.377  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54e4 went down
+06-14 02:51:15.379  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54e5 went down
+06-14 02:51:15.380  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54e6 went down
+06-14 02:51:15.506  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_IND: 0xFD
+06-14 02:51:15.506  1723  4663 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK ON
+06-14 02:51:15.506  1723  4663 D vendor.qti.bluetooth@1.0-wake_lock: Acquire wakelock is acquired 
+06-14 02:51:15.506  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Writing IBS_WAKE_ACK
+06-14 02:51:15.507  4050  4665 E bt_avp  : avdt_ad_tc_data_ind: type: x0, tcid: 0, ccb_idx: 0
+06-14 02:51:15.507  4050  4665 D bt_btif : bta_av_ssm_execute(): AV Sevent(0x41)=0x1229(AVDT_DELAY_RPT) state=3(OPEN)
+06-14 02:51:15.507  4050  4665 E bt_btif : bta_av_co_audio_delay: handle: x41, delay:0x47e
+06-14 02:51:15.507  4050  4665 W bt_stack: [WARNING:a2dp_encoding.cc(2309)] is_qc_hal_enabled
+06-14 02:51:15.507  4050  4665 W bt_stack: [WARNING:a2dp_encoding.cc(2288)] get_hal_version
+06-14 02:51:15.508  4050  4665 E bt_btif : bta_av_co_get_active_peer: active peer index: 0
+06-14 02:51:15.508  4050  4665 D bt_btif : btif_ahim_set_remote_delay: AIDL, profile: 1, delay_report: 1150
+06-14 02:51:15.508  4050  4665 W bt_stack: [WARNING:a2dp_encoding.cc(2309)] is_qc_hal_enabled
+06-14 02:51:15.508  4050  4665 W bt_stack: [WARNING:a2dp_encoding.cc(2288)] get_hal_version
+06-14 02:51:15.508  4050  4665 D bt_btif : btif_ahim_set_remote_delay: QC
+06-14 02:51:15.508  4050  4665 I bt_stack: [INFO:a2dp_encoding.cc(2820)] set_remote_delay: DELAY 115 ms
+06-14 02:51:15.508  1723  1723 I vendor.qti.bluetooth@1.0-ibs_handler: DeviceWakeUp: Writing IBS_WAKE_IND
+06-14 02:51:15.508  1722 17373 I BluetoothA2dpControl: updateSinkLatency Latency update from stack: 1150
+06-14 02:51:15.508  1722 17373 I BTAudioProviderSession_2_1: OnSessionParamUpdate Update Sink Latency: 1150
+06-14 02:51:15.508  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_ACK: 0xFC
+06-14 02:51:15.508  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Signal wack_cond_
+06-14 02:51:15.508  1723  1723 D vendor.qti.bluetooth@1.0-ibs_handler: DeviceWakeUp: Unblocked from waiting for FC, pthread_cond_timedwait ret = 0
+06-14 02:51:15.509  3886  3886 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+06-14 02:51:15.558  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_SLEEP_IND: 0xFE
+06-14 02:51:15.601  7645  8904 D BufferPoolAccessor2.0: bufferpool2 0xb40000765fa58858 : 5(15667200 size) total buffers - 5(15667200 size) used buffers - 21552/21559 (recycle/alloc) - 15/21529 (fetch/transfer)
+06-14 02:51:15.874  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54e7 went down
+06-14 02:51:15.876  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54e8 went down
+06-14 02:51:15.876  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54e9 went down
+06-14 02:51:15.878  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54eb went down
+06-14 02:51:15.879  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54ec went down
+06-14 02:51:15.881  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54ed went down
+06-14 02:51:16.211  1826 11091 I QC2Comp : [avcD_133] Stats: Pending(4) i/p-done(0) Works: Q: 21569/Done 21566|Work-Rate: Q(25.2/s Avg=24.9/s) Done(25.197/s Avg=24.914/s)| Stream: 25.00fps 743.8Kbps
+06-14 02:51:16.211  1826 11091 I QC2Comp : [avcD_133] Mem-usage:  [In-1D: 7 bufs 20.918 MB] [1D-249: 15 bufs 0.234 MB] [2D-250: 23 bufs 8.445 MB] | Total: 29.598 MB
+06-14 02:51:16.284  7645  7645 D AudioSessionGuardian: ✅ Audio session verified: 1641 is attached to DSP.
+06-14 02:51:16.312  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 24 output frames in last 1005 ms, latest timeUs 1000150560000, flags 128
+06-14 02:51:16.318  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 24 input frames in last 1009 ms, latest timeUs 1000150720000
+06-14 02:51:16.464  7645 12650 D BufferPoolAccessor2.0: bufferpool2 0xb40000765fa9ec38 : 5(40960 size) total buffers - 1(8192 size) used buffers - 22168/22173 (recycle/alloc) - 10/22155 (fetch/transfer)
+06-14 02:51:16.509  1723  4668 I vendor.qti.bluetooth@1.0-ibs_handler: DeviceSleep: TX Awake, Sending SLEEP_IND
+06-14 02:51:16.509  1723  4668 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK OFF
+06-14 02:51:16.577  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54ef went down
+06-14 02:51:16.578  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54f0 went down
+06-14 02:51:16.579  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54f1 went down
+06-14 02:51:16.583  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54f2 went down
+06-14 02:51:16.659  1723  4358 D vendor.qti.bluetooth@1.0-wake_lock: Release wakelock is released 
+06-14 02:51:16.670  4050  4723 V Avrcp_ext: onPlaybackStateChanged: state PlaybackState {state=PLAYING(3), position=150415, buffered position=209978, speed=1.0, updated=31268766, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:16.670  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:16.670  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=150415, buffered position=209978, speed=1.0, updated=31268766, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:16.670  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:16.679  4050  4723 V Avrcp_ext: updateCurrentMediaState: mMediaController: MediaController (com.deepeye.musicpro@ca1b3a2) Lamba Lamba Ghunghat (Official Video) Ajay Hooda | Kavita Joshi | New Haryanvi Songs Haryanavi 2024, Sonotek Music, null
+06-14 02:51:16.679  4050  4723 W Avrcp_ext: isMusicActive: true getBluetoothPlayState: 1 A2dp State: 10 mAudioPlaybackIsActive: true
+06-14 02:51:16.679  4050  4723 D Avrcp_ext: isMusicActive = true mAudioPlaybackIsActive = true player state = PlaybackState {state=PLAYING(3), position=150426, buffered position=209978, speed=1.0, updated=31268777, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:16.684  4050  4723 D Avrcp_ext: overwrite album_artist :if album is blank
+06-14 02:51:16.684  4050  4723 D AvrcpBipRsp:  getImgHandle device :64:8F:DB:D5:6F:1C data :android.media.MediaMetadata@3594ceb7
+06-14 02:51:16.684  4050  4723 W AvrcpBipRsp: getImgHandle bipSm null
+06-14 02:51:16.684  4050  4723 D Avrcp_ext:  getImgHandle device:64:8F:DB:D5:6F:1C data:android.media.MediaMetadata@3594ceb7 isKeyContains true Handle 
+06-14 02:51:16.689  4050  4723 I Avrcp_ext: device found at index 0
+06-14 02:51:16.690  4050  4723 V Avrcp_ext: updateCurrentMediaState: addr: [B@3a2dd15
+06-14 02:51:16.690  4050  4723 V Avrcp_ext: Media update: id 0➡0? [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ] : [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ]
+06-14 02:51:16.690  4050  4723 D Avrcp_ext: isPackageNameValid: browsedPackage = com.deepeye.musicproisValid = true
+06-14 02:51:16.690  4050  4723 V Avrcp_ext: isBrowseSupported for com.deepeye.musicpro: false
+06-14 02:51:16.690  4050  4723 W Avrcp_ext: updateCurrentMediaState: isInactivePlayer = false
+06-14 02:51:16.690  4050  4723 V Avrcp_ext: updatePlaybackState, state: PlaybackState {state=PLAYING(3), position=150426, buffered position=209978, speed=1.0, updated=31268777, actions=7339671, custom actions=[], active item id=0, error=null} device: null
+06-14 02:51:16.692  4050  4723 D BroadcastService: getBroadcastAddress
+06-14 02:51:16.692  4050  4723 D BroadcastService: isBroadcastActive: Broadcast is turned to off
+06-14 02:51:16.692  4050  4723 V Avrcp_ext: Device: OnePlus Nord Buds 2r : old state: PlaybackState {state=PLAYING(3), position=147407, buffered position=209978, speed=1.0, updated=31265764, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:16.692  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:16.692  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:16.692  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:16.692  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:16.692  4050  4723 V Avrcp_ext: updatePlayerStateAndPosition, old=PlaybackState {state=PLAYING(3), position=147407, buffered position=209978, speed=1.0, updated=31265764, actions=7339671, custom actions=[], active item id=0, error=null}, state=PlaybackState {state=PLAYING(3), position=150426, buffered position=209978, speed=1.0, updated=31268777, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:16.693  4050  4723 V Avrcp_ext: old state = PlaybackState {state=PLAYING(3), position=147407, buffered position=209978, speed=1.0, updated=31265764, actions=7339671, custom actions=[], active item id=0, error=null}, new state= PlaybackState {state=PLAYING(3), position=150426, buffered position=209978, speed=1.0, updated=31268777, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:16.693  4050  4723 D HeadsetService: getHeadsetService(): returning com.android.bluetooth.hfp.HeadsetService@3f5a045
+06-14 02:51:16.693  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:16.693  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:16.693  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:16.693  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:16.693  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:16.693  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:16.693  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:16.693  4050  4723 V Avrcp_ext: isPlayStateToBeUpdated device is active device
+06-14 02:51:16.693  4050  4723 I Avrcp_ext: updatePlayStatusForDevice: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:16.693  4050  4723 V Avrcp_ext: updatePlaybackState (0): old=PlaybackState {state=PLAYING(3), position=147407, buffered position=209978, speed=1.0, updated=31265764, actions=7339671, custom actions=[], active item id=0, error=null}(1), new=PlaybackState {state=PLAYING(3), position=150426, buffered position=209978, speed=1.0, updated=31268777, actions=7339671, custom actions=[], active item id=0, error=null}(1)
+06-14 02:51:16.693  4050  4723 I Avrcp_ext: Exit updatePlayStatusForDevice
+06-14 02:51:16.693  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:16.693  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:16.693  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:16.693  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:16.693  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:16.693  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:16.693  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:16.693  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:16.693  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:16.693  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:16.693  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:16.693  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:16.693  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:16.693  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:16.693  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:16.693  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:16.693  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:16.693  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:16.693  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:16.693  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:16.693  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:16.693  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:16.694  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:16.694  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:16.694  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:16.694  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:16.694  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:16.694  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:16.694  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:16.694  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:16.694  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:16.694  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:16.694  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:16.694  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:16.694  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:16.694  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:16.694  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:16.694  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:16.694  4050  4723 V Avrcp_ext: Exit updatePlayerStateAndPosition
+06-14 02:51:16.694  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: getActiveAbsoluteDevice(): device: 64:8F:DB:D5:6F:1C
+06-14 02:51:16.694  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: isStableState(): true
+06-14 02:51:16.694  4050  4723 D Avrcp_ext: isAdmStable = true activeAbsAddr = 64:8F:DB:D5:6F:1C device = null
+06-14 02:51:16.694  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:16.694  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=150426, buffered position=209978, speed=1.0, updated=31268777, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:16.694  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:16.694  4050  4723 W Avrcp_ext: updated player state = PlaybackState {state=PLAYING(3), position=150426, buffered position=209978, speed=1.0, updated=31268777, actions=7339671, custom actions=[], active item id=0, error=null}to MCP module also
+06-14 02:51:16.694  4050  4723 V Avrcp_ext:  Exit onPlaybackStateChanged
+06-14 02:51:16.876  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54ea went down
+06-14 02:51:16.876  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54ee went down
+06-14 02:51:16.976  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54f3 went down
+06-14 02:51:16.978  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54f5 went down
+06-14 02:51:16.980  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54f6 went down
+06-14 02:51:16.982  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54f8 went down
+06-14 02:51:16.983  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54f9 went down
+06-14 02:51:16.985  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54fa went down
+06-14 02:51:17.259  1722  4310 D DlbDap2ProcessWithIht: process() called [2212000] times with input format 0x22 and channel mask 0x3 (ProcessingMode=9), htEnable=0(0, 0, 0)
+06-14 02:51:17.283  7645  7645 D NowPlayingGuardian: ✅ Now Playing metadata matches on all layers: UI/ExoPlayer/MediaSession = '-F6AjkoGad8'
+06-14 02:51:17.471  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1159 ms, latest timeUs 1000151760000, flags 128
+06-14 02:51:17.480  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1162 ms, latest timeUs 1000151920000
+06-14 02:51:17.684  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54fc went down
+06-14 02:51:17.685  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54fd went down
+06-14 02:51:17.686  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54fe went down
+06-14 02:51:17.689  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54ff went down
+06-14 02:51:17.985  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54f7 went down
+06-14 02:51:17.985  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 54fb went down
+06-14 02:51:18.519  3886  3886 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+06-14 02:51:18.711  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1240 ms, latest timeUs 1000152960000, flags 128
+06-14 02:51:18.721  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1240 ms, latest timeUs 1000153120000
+06-14 02:51:18.786  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5500 went down
+06-14 02:51:18.787  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5501 went down
+06-14 02:51:18.790  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5502 went down
+06-14 02:51:18.792  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5503 went down
+06-14 02:51:18.883  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5504 went down
+06-14 02:51:18.884  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5505 went down
+06-14 02:51:18.885  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5506 went down
+06-14 02:51:18.888  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5508 went down
+06-14 02:51:18.890  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5509 went down
+06-14 02:51:18.892  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 550b went down
+06-14 02:51:19.284  7645  7645 D AudioSessionGuardian: ✅ Audio session verified: 1641 is attached to DSP.
+06-14 02:51:19.672  4050  4723 V Avrcp_ext: onPlaybackStateChanged: state PlaybackState {state=PLAYING(3), position=153413, buffered position=209978, speed=1.0, updated=31271768, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:19.672  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:19.672  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=153413, buffered position=209978, speed=1.0, updated=31271768, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:19.672  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:19.677  4050  4723 V Avrcp_ext: updateCurrentMediaState: mMediaController: MediaController (com.deepeye.musicpro@ca1b3a2) Lamba Lamba Ghunghat (Official Video) Ajay Hooda | Kavita Joshi | New Haryanvi Songs Haryanavi 2024, Sonotek Music, null
+06-14 02:51:19.677  4050  4723 W Avrcp_ext: isMusicActive: true getBluetoothPlayState: 1 A2dp State: 10 mAudioPlaybackIsActive: true
+06-14 02:51:19.677  4050  4723 D Avrcp_ext: isMusicActive = true mAudioPlaybackIsActive = true player state = PlaybackState {state=PLAYING(3), position=153420, buffered position=209978, speed=1.0, updated=31271775, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:19.680  4050  4723 D Avrcp_ext: overwrite album_artist :if album is blank
+06-14 02:51:19.680  4050  4723 D AvrcpBipRsp:  getImgHandle device :64:8F:DB:D5:6F:1C data :android.media.MediaMetadata@3594ceb7
+06-14 02:51:19.680  4050  4723 W AvrcpBipRsp: getImgHandle bipSm null
+06-14 02:51:19.681  4050  4723 D Avrcp_ext:  getImgHandle device:64:8F:DB:D5:6F:1C data:android.media.MediaMetadata@3594ceb7 isKeyContains true Handle 
+06-14 02:51:19.683  4050  4723 I Avrcp_ext: device found at index 0
+06-14 02:51:19.683  4050  4723 V Avrcp_ext: updateCurrentMediaState: addr: [B@ae28364
+06-14 02:51:19.683  4050  4723 V Avrcp_ext: Media update: id 0➡0? [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ] : [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ]
+06-14 02:51:19.683  4050  4723 D Avrcp_ext: isPackageNameValid: browsedPackage = com.deepeye.musicproisValid = true
+06-14 02:51:19.683  4050  4723 V Avrcp_ext: isBrowseSupported for com.deepeye.musicpro: false
+06-14 02:51:19.683  4050  4723 W Avrcp_ext: updateCurrentMediaState: isInactivePlayer = false
+06-14 02:51:19.683  4050  4723 V Avrcp_ext: updatePlaybackState, state: PlaybackState {state=PLAYING(3), position=153420, buffered position=209978, speed=1.0, updated=31271775, actions=7339671, custom actions=[], active item id=0, error=null} device: null
+06-14 02:51:19.684  4050  4723 D BroadcastService: getBroadcastAddress
+06-14 02:51:19.684  4050  4723 D BroadcastService: isBroadcastActive: Broadcast is turned to off
+06-14 02:51:19.684  4050  4723 V Avrcp_ext: Device: OnePlus Nord Buds 2r : old state: PlaybackState {state=PLAYING(3), position=150426, buffered position=209978, speed=1.0, updated=31268777, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:19.684  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:19.684  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:19.684  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:19.684  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:19.684  4050  4723 V Avrcp_ext: updatePlayerStateAndPosition, old=PlaybackState {state=PLAYING(3), position=150426, buffered position=209978, speed=1.0, updated=31268777, actions=7339671, custom actions=[], active item id=0, error=null}, state=PlaybackState {state=PLAYING(3), position=153420, buffered position=209978, speed=1.0, updated=31271775, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:19.684  4050  4723 V Avrcp_ext: old state = PlaybackState {state=PLAYING(3), position=150426, buffered position=209978, speed=1.0, updated=31268777, actions=7339671, custom actions=[], active item id=0, error=null}, new state= PlaybackState {state=PLAYING(3), position=153420, buffered position=209978, speed=1.0, updated=31271775, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:19.684  4050  4723 D HeadsetService: getHeadsetService(): returning com.android.bluetooth.hfp.HeadsetService@3f5a045
+06-14 02:51:19.684  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:19.685  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:19.685  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:19.685  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:19.685  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:19.685  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:19.685  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:19.685  4050  4723 V Avrcp_ext: isPlayStateToBeUpdated device is active device
+06-14 02:51:19.685  4050  4723 I Avrcp_ext: updatePlayStatusForDevice: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:19.685  4050  4723 V Avrcp_ext: updatePlaybackState (0): old=PlaybackState {state=PLAYING(3), position=150426, buffered position=209978, speed=1.0, updated=31268777, actions=7339671, custom actions=[], active item id=0, error=null}(1), new=PlaybackState {state=PLAYING(3), position=153420, buffered position=209978, speed=1.0, updated=31271775, actions=7339671, custom actions=[], active item id=0, error=null}(1)
+06-14 02:51:19.685  4050  4723 I Avrcp_ext: Exit updatePlayStatusForDevice
+06-14 02:51:19.685  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:19.685  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:19.685  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:19.685  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:19.685  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:19.685  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:19.685  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:19.685  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:19.685  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:19.685  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:19.685  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:19.685  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:19.685  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:19.685  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:19.685  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:19.685  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:19.685  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:19.685  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:19.685  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:19.685  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:19.685  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:19.685  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:19.685  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:19.685  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:19.685  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:19.685  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:19.685  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:19.685  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:19.685  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:19.685  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:19.685  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:19.685  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:19.685  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:19.685  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:19.685  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:19.685  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:19.685  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:19.685  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:19.685  4050  4723 V Avrcp_ext: Exit updatePlayerStateAndPosition
+06-14 02:51:19.685  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: getActiveAbsoluteDevice(): device: 64:8F:DB:D5:6F:1C
+06-14 02:51:19.685  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: isStableState(): true
+06-14 02:51:19.685  4050  4723 D Avrcp_ext: isAdmStable = true activeAbsAddr = 64:8F:DB:D5:6F:1C device = null
+06-14 02:51:19.685  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:19.685  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=153420, buffered position=209978, speed=1.0, updated=31271775, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:19.685  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:19.685  4050  4723 W Avrcp_ext: updated player state = PlaybackState {state=PLAYING(3), position=153420, buffered position=209978, speed=1.0, updated=31271775, actions=7339671, custom actions=[], active item id=0, error=null}to MCP module also
+06-14 02:51:19.685  4050  4723 V Avrcp_ext:  Exit onPlaybackStateChanged
+06-14 02:51:19.778  2393 12651 D BufferPoolAccessor2.0: bufferpool2 0xb4000079dbb3fec8 : 5(20480 size) total buffers - 1(4096 size) used buffers - 22290/22295 (recycle/alloc) - 129/22294 (fetch/transfer)
+06-14 02:51:19.846  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1125 ms, latest timeUs 1000154320000
+06-14 02:51:19.846  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1135 ms, latest timeUs 1000154160000, flags 128
+06-14 02:51:19.884  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 550d went down
+06-14 02:51:19.885  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 550e went down
+06-14 02:51:19.885  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 550f went down
+06-14 02:51:19.888  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5510 went down
+06-14 02:51:19.938  1722  4310 D DlbDap2ProcessWithIht: process() called [2212500] times with input format 0x22 and channel mask 0x3 (ProcessingMode=9), htEnable=0(0, 0, 0)
+06-14 02:51:20.385  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5507 went down
+06-14 02:51:20.385  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 550c went down
+06-14 02:51:20.528  3886  3886 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+06-14 02:51:20.860  7645  8904 D BufferPoolAccessor2.0: bufferpool2 0xb40000765fa58858 : 5(15667200 size) total buffers - 5(15667200 size) used buffers - 21684/21691 (recycle/alloc) - 15/21661 (fetch/transfer)
+06-14 02:51:20.862  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 24 output frames in last 1015 ms, latest timeUs 1000155120000, flags 128
+06-14 02:51:20.869  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 24 input frames in last 1023 ms, latest timeUs 1000155280000
+06-14 02:51:20.985  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5511 went down
+06-14 02:51:20.985  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5512 went down
+06-14 02:51:20.986  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5513 went down
+06-14 02:51:20.989  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5514 went down
+06-14 02:51:21.212  1826 11091 I QC2Comp : [avcD_133] Stats: Pending(4) i/p-done(0) Works: Q: 21695/Done 21692|Work-Rate: Q(25.2/s Avg=24.9/s) Done(25.197/s Avg=24.916/s)| Stream: 25.00fps 612.6Kbps
+06-14 02:51:21.212  1826 11091 I QC2Comp : [avcD_133] Mem-usage:  [In-1D: 7 bufs 20.918 MB] [1D-249: 15 bufs 0.234 MB] [2D-250: 23 bufs 8.445 MB] | Total: 29.598 MB
+06-14 02:51:21.285  7645  7645 D NowPlayingGuardian: ✅ Now Playing metadata matches on all layers: UI/ExoPlayer/MediaSession = '-F6AjkoGad8'
+06-14 02:51:21.978  7645 12650 D BufferPoolAccessor2.0: bufferpool2 0xb40000765fa9ec38 : 5(40960 size) total buffers - 1(8192 size) used buffers - 22407/22412 (recycle/alloc) - 10/22394 (fetch/transfer)
+06-14 02:51:22.013  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1151 ms, latest timeUs 1000156320000, flags 128
+06-14 02:51:22.015  7645  8904 D PipelineWatcher: onInputBufferReleased: frameIndex not found (21692); ignored
+06-14 02:51:22.019  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1150 ms, latest timeUs 1000156480000
+06-14 02:51:22.092  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5515 went down
+06-14 02:51:22.093  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5516 went down
+06-14 02:51:22.094  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5517 went down
+06-14 02:51:22.096  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5518 went down
+06-14 02:51:22.286  7645  7645 D AudioSessionGuardian: ✅ Audio session verified: 1641 is attached to DSP.
+06-14 02:51:22.618  1722  4310 D DlbDap2ProcessWithIht: process() called [2213000] times with input format 0x22 and channel mask 0x3 (ProcessingMode=9), htEnable=0(0, 0, 0)
+06-14 02:51:22.677  4050  4723 V Avrcp_ext: onPlaybackStateChanged: state PlaybackState {state=PLAYING(3), position=156423, buffered position=209978, speed=1.0, updated=31274772, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:22.677  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:22.677  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=156423, buffered position=209978, speed=1.0, updated=31274772, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:22.677  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:22.684  4050  4723 V Avrcp_ext: updateCurrentMediaState: mMediaController: MediaController (com.deepeye.musicpro@ca1b3a2) Lamba Lamba Ghunghat (Official Video) Ajay Hooda | Kavita Joshi | New Haryanvi Songs Haryanavi 2024, Sonotek Music, null
+06-14 02:51:22.684  4050  4723 W Avrcp_ext: isMusicActive: true getBluetoothPlayState: 1 A2dp State: 10 mAudioPlaybackIsActive: true
+06-14 02:51:22.684  4050  4723 D Avrcp_ext: isMusicActive = true mAudioPlaybackIsActive = true player state = PlaybackState {state=PLAYING(3), position=156433, buffered position=209978, speed=1.0, updated=31274782, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:22.690  4050  4723 D Avrcp_ext: overwrite album_artist :if album is blank
+06-14 02:51:22.690  4050  4723 D AvrcpBipRsp:  getImgHandle device :64:8F:DB:D5:6F:1C data :android.media.MediaMetadata@3594ceb7
+06-14 02:51:22.690  4050  4723 W AvrcpBipRsp: getImgHandle bipSm null
+06-14 02:51:22.690  4050  4723 D Avrcp_ext:  getImgHandle device:64:8F:DB:D5:6F:1C data:android.media.MediaMetadata@3594ceb7 isKeyContains true Handle 
+06-14 02:51:22.695  4050  4723 I Avrcp_ext: device found at index 0
+06-14 02:51:22.695  4050  4723 V Avrcp_ext: updateCurrentMediaState: addr: [B@5675fef
+06-14 02:51:22.695  4050  4723 V Avrcp_ext: Media update: id 0➡0? [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ] : [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ]
+06-14 02:51:22.695  4050  4723 D Avrcp_ext: isPackageNameValid: browsedPackage = com.deepeye.musicproisValid = true
+06-14 02:51:22.695  4050  4723 V Avrcp_ext: isBrowseSupported for com.deepeye.musicpro: false
+06-14 02:51:22.695  4050  4723 W Avrcp_ext: updateCurrentMediaState: isInactivePlayer = false
+06-14 02:51:22.695  4050  4723 V Avrcp_ext: updatePlaybackState, state: PlaybackState {state=PLAYING(3), position=156433, buffered position=209978, speed=1.0, updated=31274782, actions=7339671, custom actions=[], active item id=0, error=null} device: null
+06-14 02:51:22.697  4050  4723 D BroadcastService: getBroadcastAddress
+06-14 02:51:22.697  4050  4723 D BroadcastService: isBroadcastActive: Broadcast is turned to off
+06-14 02:51:22.697  4050  4723 V Avrcp_ext: Device: OnePlus Nord Buds 2r : old state: PlaybackState {state=PLAYING(3), position=153420, buffered position=209978, speed=1.0, updated=31271775, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:22.697  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:22.697  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:22.697  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:22.697  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:22.697  4050  4723 V Avrcp_ext: updatePlayerStateAndPosition, old=PlaybackState {state=PLAYING(3), position=153420, buffered position=209978, speed=1.0, updated=31271775, actions=7339671, custom actions=[], active item id=0, error=null}, state=PlaybackState {state=PLAYING(3), position=156433, buffered position=209978, speed=1.0, updated=31274782, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:22.697  4050  4723 V Avrcp_ext: old state = PlaybackState {state=PLAYING(3), position=153420, buffered position=209978, speed=1.0, updated=31271775, actions=7339671, custom actions=[], active item id=0, error=null}, new state= PlaybackState {state=PLAYING(3), position=156433, buffered position=209978, speed=1.0, updated=31274782, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:22.698  4050  4723 D HeadsetService: getHeadsetService(): returning com.android.bluetooth.hfp.HeadsetService@3f5a045
+06-14 02:51:22.698  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:22.698  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:22.698  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:22.698  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:22.698  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:22.698  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:22.698  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:22.698  4050  4723 V Avrcp_ext: isPlayStateToBeUpdated device is active device
+06-14 02:51:22.698  4050  4723 I Avrcp_ext: updatePlayStatusForDevice: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:22.698  4050  4723 V Avrcp_ext: updatePlaybackState (0): old=PlaybackState {state=PLAYING(3), position=153420, buffered position=209978, speed=1.0, updated=31271775, actions=7339671, custom actions=[], active item id=0, error=null}(1), new=PlaybackState {state=PLAYING(3), position=156433, buffered position=209978, speed=1.0, updated=31274782, actions=7339671, custom actions=[], active item id=0, error=null}(1)
+06-14 02:51:22.698  4050  4723 I Avrcp_ext: Exit updatePlayStatusForDevice
+06-14 02:51:22.698  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:22.699  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:22.699  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:22.699  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:22.699  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:22.699  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:22.699  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:22.699  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:22.699  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:22.699  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:22.699  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:22.699  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:22.699  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:22.699  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:22.699  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:22.699  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:22.700  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:22.700  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:22.700  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:22.700  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:22.700  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:22.700  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:22.700  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:22.700  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:22.700  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:22.700  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:22.700  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:22.700  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:22.700  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:22.700  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:22.700  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:22.701  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:22.701  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:22.701  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:22.701  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:22.701  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:22.701  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:22.701  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:22.701  4050  4723 V Avrcp_ext: Exit updatePlayerStateAndPosition
+06-14 02:51:22.701  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: getActiveAbsoluteDevice(): device: 64:8F:DB:D5:6F:1C
+06-14 02:51:22.701  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: isStableState(): true
+06-14 02:51:22.701  4050  4723 D Avrcp_ext: isAdmStable = true activeAbsAddr = 64:8F:DB:D5:6F:1C device = null
+06-14 02:51:22.701  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:22.701  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=156433, buffered position=209978, speed=1.0, updated=31274782, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:22.701  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:22.701  4050  4723 W Avrcp_ext: updated player state = PlaybackState {state=PLAYING(3), position=156433, buffered position=209978, speed=1.0, updated=31274782, actions=7339671, custom actions=[], active item id=0, error=null}to MCP module also
+06-14 02:51:22.701  4050  4723 V Avrcp_ext:  Exit onPlaybackStateChanged
+06-14 02:51:23.045  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 24 output frames in last 1032 ms, latest timeUs 1000157280000, flags 128
+06-14 02:51:23.050  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 24 input frames in last 1030 ms, latest timeUs 1000157440000
+06-14 02:51:23.200  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5519 went down
+06-14 02:51:23.202  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 551a went down
+06-14 02:51:23.204  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 551b went down
+06-14 02:51:23.206  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 551c went down
+06-14 02:51:23.898  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 551d went down
+06-14 02:51:23.899  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 551e went down
+06-14 02:51:23.900  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 551f went down
+06-14 02:51:23.901  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5521 went down
+06-14 02:51:23.902  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5522 went down
+06-14 02:51:23.903  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5523 went down
+06-14 02:51:24.190  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1144 ms, latest timeUs 1000158480000, flags 128
+06-14 02:51:24.194  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1144 ms, latest timeUs 1000158640000
+06-14 02:51:24.299  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5525 went down
+06-14 02:51:24.302  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5526 went down
+06-14 02:51:24.302  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5527 went down
+06-14 02:51:24.304  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5528 went down
+06-14 02:51:24.485  4452 31863 I NearbyMediums: No BLE Fast/GATT advertisements found in the latest cycle.
+06-14 02:51:24.485  4452 31863 I NearbyMediums: Current Tracked Scanning Clients are : {NearbyConnections.EnvironmentMonitor, NearbySharing, NearbyConnections.TxAdvertisement}
+06-14 02:51:24.784  2393 12651 D BufferPoolAccessor2.0: bufferpool2 0xb4000079dbb3fec8 : 5(20480 size) total buffers - 1(4096 size) used buffers - 22505/22510 (recycle/alloc) - 129/22509 (fetch/transfer)
+06-14 02:51:24.879  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_IND: 0xFD
+06-14 02:51:24.880  1723  4663 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK ON
+06-14 02:51:24.880  1723  4663 D vendor.qti.bluetooth@1.0-wake_lock: Acquire wakelock is acquired 
+06-14 02:51:24.880  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Writing IBS_WAKE_ACK
+06-14 02:51:24.881  4050  4665 E bt_avp  : avdt_ad_tc_data_ind: type: x0, tcid: 0, ccb_idx: 0
+06-14 02:51:24.882  4050  4665 D bt_btif : bta_av_ssm_execute(): AV Sevent(0x41)=0x1229(AVDT_DELAY_RPT) state=3(OPEN)
+06-14 02:51:24.882  4050  4665 E bt_btif : bta_av_co_audio_delay: handle: x41, delay:0x564
+06-14 02:51:24.882  4050  4665 W bt_stack: [WARNING:a2dp_encoding.cc(2309)] is_qc_hal_enabled
+06-14 02:51:24.882  1723  1723 I vendor.qti.bluetooth@1.0-ibs_handler: DeviceWakeUp: Writing IBS_WAKE_IND
+06-14 02:51:24.882  4050  4665 W bt_stack: [WARNING:a2dp_encoding.cc(2288)] get_hal_version
+06-14 02:51:24.882  4050  4665 E bt_btif : bta_av_co_get_active_peer: active peer index: 0
+06-14 02:51:24.882  4050  4665 D bt_btif : btif_ahim_set_remote_delay: AIDL, profile: 1, delay_report: 1380
+06-14 02:51:24.882  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_ACK: 0xFC
+06-14 02:51:24.882  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Signal wack_cond_
+06-14 02:51:24.882  4050  4665 W bt_stack: [WARNING:a2dp_encoding.cc(2309)] is_qc_hal_enabled
+06-14 02:51:24.882  4050  4665 W bt_stack: [WARNING:a2dp_encoding.cc(2288)] get_hal_version
+06-14 02:51:24.882  1723  1723 D vendor.qti.bluetooth@1.0-ibs_handler: DeviceWakeUp: Unblocked from waiting for FC, pthread_cond_timedwait ret = 0
+06-14 02:51:24.882  4050  4665 D bt_btif : btif_ahim_set_remote_delay: QC
+06-14 02:51:24.882  4050  4665 I bt_stack: [INFO:a2dp_encoding.cc(2820)] set_remote_delay: DELAY 138 ms
+06-14 02:51:24.883  1722 17373 I BluetoothA2dpControl: updateSinkLatency Latency update from stack: 1380
+06-14 02:51:24.883  1722 17373 I BTAudioProviderSession_2_1: OnSessionParamUpdate Update Sink Latency: 1380
+06-14 02:51:24.928  1723  4663 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_SLEEP_IND: 0xFE
+06-14 02:51:24.997  3059  3510 W ProcessStats: Tracking association SourceState{50e1ff2 com.google.android.gms.persistent/10192 Fgs #78527} whose proc state 3 is better than process ProcessState{5a6feaa com.google.android.adservices.api/10357 pkg=com.google.android.adservices.api} proc state 14 (11 skipped)
+06-14 02:51:25.199  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 24 output frames in last 1009 ms, latest timeUs 1000159440000, flags 129
+06-14 02:51:25.204  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 24 input frames in last 1009 ms, latest timeUs 1000159600000
+06-14 02:51:25.257  1722  4310 D DlbDap2ProcessWithIht: process() called [2213500] times with input format 0x22 and channel mask 0x3 (ProcessingMode=9), htEnable=0(0, 0, 0)
+06-14 02:51:25.288  7645  7645 D NowPlayingGuardian: ✅ Now Playing metadata matches on all layers: UI/ExoPlayer/MediaSession = '-F6AjkoGad8'
+06-14 02:51:25.288  7645  7645 D AudioSessionGuardian: ✅ Audio session verified: 1641 is attached to DSP.
+06-14 02:51:25.405  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5529 went down
+06-14 02:51:25.408  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 552a went down
+06-14 02:51:25.410  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 552b went down
+06-14 02:51:25.413  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 552c went down
+06-14 02:51:25.678  4050  4723 V Avrcp_ext: onPlaybackStateChanged: state PlaybackState {state=PLAYING(3), position=159423, buffered position=209978, speed=1.0, updated=31277774, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:25.678  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:25.678  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=159423, buffered position=209978, speed=1.0, updated=31277774, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:25.678  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:25.683  4050  4723 V Avrcp_ext: updateCurrentMediaState: mMediaController: MediaController (com.deepeye.musicpro@ca1b3a2) Lamba Lamba Ghunghat (Official Video) Ajay Hooda | Kavita Joshi | New Haryanvi Songs Haryanavi 2024, Sonotek Music, null
+06-14 02:51:25.683  4050  4723 W Avrcp_ext: isMusicActive: true getBluetoothPlayState: 1 A2dp State: 10 mAudioPlaybackIsActive: true
+06-14 02:51:25.683  4050  4723 D Avrcp_ext: isMusicActive = true mAudioPlaybackIsActive = true player state = PlaybackState {state=PLAYING(3), position=159430, buffered position=209978, speed=1.0, updated=31277781, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:25.686  4050  4723 D Avrcp_ext: overwrite album_artist :if album is blank
+06-14 02:51:25.686  4050  4723 D AvrcpBipRsp:  getImgHandle device :64:8F:DB:D5:6F:1C data :android.media.MediaMetadata@3594ceb7
+06-14 02:51:25.686  4050  4723 W AvrcpBipRsp: getImgHandle bipSm null
+06-14 02:51:25.686  4050  4723 D Avrcp_ext:  getImgHandle device:64:8F:DB:D5:6F:1C data:android.media.MediaMetadata@3594ceb7 isKeyContains true Handle 
+06-14 02:51:25.688  4050  4723 I Avrcp_ext: device found at index 0
+06-14 02:51:25.688  4050  4723 V Avrcp_ext: updateCurrentMediaState: addr: [B@f47bfa6
+06-14 02:51:25.688  4050  4723 V Avrcp_ext: Media update: id 0➡0? [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ] : [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ]
+06-14 02:51:25.688  4050  4723 D Avrcp_ext: isPackageNameValid: browsedPackage = com.deepeye.musicproisValid = true
+06-14 02:51:25.688  4050  4723 V Avrcp_ext: isBrowseSupported for com.deepeye.musicpro: false
+06-14 02:51:25.688  4050  4723 W Avrcp_ext: updateCurrentMediaState: isInactivePlayer = false
+06-14 02:51:25.689  4050  4723 V Avrcp_ext: updatePlaybackState, state: PlaybackState {state=PLAYING(3), position=159430, buffered position=209978, speed=1.0, updated=31277781, actions=7339671, custom actions=[], active item id=0, error=null} device: null
+06-14 02:51:25.689  4050  4723 D BroadcastService: getBroadcastAddress
+06-14 02:51:25.689  4050  4723 D BroadcastService: isBroadcastActive: Broadcast is turned to off
+06-14 02:51:25.689  4050  4723 V Avrcp_ext: Device: OnePlus Nord Buds 2r : old state: PlaybackState {state=PLAYING(3), position=156433, buffered position=209978, speed=1.0, updated=31274782, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:25.689  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:25.689  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:25.689  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:25.689  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:25.689  4050  4723 V Avrcp_ext: updatePlayerStateAndPosition, old=PlaybackState {state=PLAYING(3), position=156433, buffered position=209978, speed=1.0, updated=31274782, actions=7339671, custom actions=[], active item id=0, error=null}, state=PlaybackState {state=PLAYING(3), position=159430, buffered position=209978, speed=1.0, updated=31277781, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: old state = PlaybackState {state=PLAYING(3), position=156433, buffered position=209978, speed=1.0, updated=31274782, actions=7339671, custom actions=[], active item id=0, error=null}, new state= PlaybackState {state=PLAYING(3), position=159430, buffered position=209978, speed=1.0, updated=31277781, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:25.690  4050  4723 D HeadsetService: getHeadsetService(): returning com.android.bluetooth.hfp.HeadsetService@3f5a045
+06-14 02:51:25.690  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:25.690  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:25.690  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:25.690  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:25.690  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: isPlayStateToBeUpdated device is active device
+06-14 02:51:25.690  4050  4723 I Avrcp_ext: updatePlayStatusForDevice: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: updatePlaybackState (0): old=PlaybackState {state=PLAYING(3), position=156433, buffered position=209978, speed=1.0, updated=31274782, actions=7339671, custom actions=[], active item id=0, error=null}(1), new=PlaybackState {state=PLAYING(3), position=159430, buffered position=209978, speed=1.0, updated=31277781, actions=7339671, custom actions=[], active item id=0, error=null}(1)
+06-14 02:51:25.690  4050  4723 I Avrcp_ext: Exit updatePlayStatusForDevice
+06-14 02:51:25.690  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:25.690  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:25.690  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:25.690  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:25.690  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:25.690  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:25.690  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:25.690  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:25.690  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:25.690  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:25.690  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:25.690  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:25.690  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:25.690  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:25.690  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:25.690  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:25.690  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:25.690  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:25.690  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:25.690  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:25.690  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:25.690  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:25.690  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:25.690  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:25.690  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:25.690  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:25.690  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:25.690  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:25.690  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:25.690  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:25.690  4050  4723 V Avrcp_ext: Exit updatePlayerStateAndPosition
+06-14 02:51:25.690  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: getActiveAbsoluteDevice(): device: 64:8F:DB:D5:6F:1C
+06-14 02:51:25.690  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: isStableState(): true
+06-14 02:51:25.690  4050  4723 D Avrcp_ext: isAdmStable = true activeAbsAddr = 64:8F:DB:D5:6F:1C device = null
+06-14 02:51:25.690  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:25.690  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=159430, buffered position=209978, speed=1.0, updated=31277781, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:25.690  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:25.690  4050  4723 W Avrcp_ext: updated player state = PlaybackState {state=PLAYING(3), position=159430, buffered position=209978, speed=1.0, updated=31277781, actions=7339671, custom actions=[], active item id=0, error=null}to MCP module also
+06-14 02:51:25.690  4050  4723 V Avrcp_ext:  Exit onPlaybackStateChanged
+06-14 02:51:25.882  1723  4668 I vendor.qti.bluetooth@1.0-ibs_handler: DeviceSleep: TX Awake, Sending SLEEP_IND
+06-14 02:51:25.883  1723  4668 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK OFF
+06-14 02:51:25.921  7645  8904 D BufferPoolAccessor2.0: bufferpool2 0xb40000765fa58858 : 5(15667200 size) total buffers - 5(15667200 size) used buffers - 21810/21817 (recycle/alloc) - 15/21787 (fetch/transfer)
+06-14 02:51:26.033  1723  4358 D vendor.qti.bluetooth@1.0-wake_lock: Release wakelock is released 
+06-14 02:51:26.192  3886  4502 D PowerUI : can't show warning due to - plugged: true status unknown: false
+06-14 02:51:26.192  4096  4096 D DeviceStatisticsService: onReceive: action= android.intent.action.BATTERY_CHANGED
+06-14 02:51:26.193  3059  3059 V UiModeManager: updateLocked: null action, mDockState=0, category=null
+06-14 02:51:26.193  4101  4101 D QtiCarrierConfigHelper: WARNING, no carrier configs on phone Id: 1
+06-14 02:51:26.193  3059  3059 D UiModeManager: updateConfigurationLocked: mDockState=0; mCarMode=false; mNightMode=2; mNightModeCustomType=-1; uiMode=33
+06-14 02:51:26.195  4096  4096 V DeviceStatisticsService: chargerType=2 batteryLevel=94 totalBatteryCapacity=4360900
+06-14 02:51:26.195  4096  4096 D DeviceInfoHidlClient: isRadioOn()=true
+06-14 02:51:26.195  4096  4096 I DeviceInfoHidlClient: isPowerInfoNeverSent=false batteryLevel=94 batteryLevelIndex=4 chargingMode=2 totalCapacity=4360900 powerSaveMode=false
+06-14 02:51:26.213  1826 11091 I QC2Comp : [avcD_133] Stats: Pending(4) i/p-done(0) Works: Q: 21821/Done 21818|Work-Rate: Q(25.2/s Avg=24.9/s) Done(25.196/s Avg=24.917/s)| Stream: 25.00fps 1.1Mbps
+06-14 02:51:26.213  1826 11091 I QC2Comp : [avcD_133] Mem-usage:  [In-1D: 7 bufs 20.918 MB] [1D-249: 15 bufs 0.234 MB] [2D-250: 23 bufs 8.445 MB] | Total: 29.598 MB
+06-14 02:51:26.347  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1147 ms, latest timeUs 1000160640000, flags 128
+06-14 02:51:26.356  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1152 ms, latest timeUs 1000160800000
+06-14 02:51:26.507  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 552d went down
+06-14 02:51:26.508  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 552e went down
+06-14 02:51:26.509  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 552f went down
+06-14 02:51:26.512  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5530 went down
+06-14 02:51:26.690  6029  6808 D CmdCenter: - RowBase2: sPrevModStatus: 1, modStatus: 1
+06-14 02:51:26.691  6029  6808 D CmdCenter: - RowBase2: sPrevBatStatus: 2, status: 2
+06-14 02:51:26.691  6029  6808 D CmdCenter: - RowBase2: sPrevChargeRate = 1, new = 1
+06-14 02:51:26.691  6029  6808 D CmdCenter: - RowBase2: sPrevPlugType: 2 plugType: 2
+06-14 02:51:27.377  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 24 output frames in last 1029 ms, latest timeUs 1000161600000, flags 128
+06-14 02:51:27.379  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 24 input frames in last 1022 ms, latest timeUs 1000161760000
+06-14 02:51:27.408  4028  4051 I Tethering: [BpfCoordinator] onAlertReached
+06-14 02:51:27.459  7645 12650 D BufferPoolAccessor2.0: bufferpool2 0xb40000765fa9ec38 : 5(40960 size) total buffers - 1(8192 size) used buffers - 22643/22648 (recycle/alloc) - 10/22630 (fetch/transfer)
+06-14 02:51:27.611  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5531 went down
+06-14 02:51:27.613  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5532 went down
+06-14 02:51:27.614  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5533 went down
+06-14 02:51:27.615  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5534 went down
+06-14 02:51:27.794  7645  8904 D PipelineWatcher: onInputBufferReleased: frameIndex not found (21834); ignored
+06-14 02:51:27.939  1722  4310 D DlbDap2ProcessWithIht: process() called [2214000] times with input format 0x22 and channel mask 0x3 (ProcessingMode=9), htEnable=0(0, 0, 0)
+06-14 02:51:28.216  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5520 went down
+06-14 02:51:28.216  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5524 went down
+06-14 02:51:28.287  7645  7645 D AudioSessionGuardian: ✅ Audio session verified: 1641 is attached to DSP.
+06-14 02:51:28.450  4101  5586 I QImsService: VtDataUsageProvider : onSetAlert:2097152
+06-14 02:51:28.451  4101  4101 I QImsService: ImsServiceClassTracker : updateAlertQuota:newQuota=2097152,Remaining=2097152
+06-14 02:51:28.515  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1137 ms, latest timeUs 1000162800000, flags 128
+06-14 02:51:28.523  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1143 ms, latest timeUs 1000162960000
+06-14 02:51:28.564  3886  3886 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+06-14 02:51:28.570  4164  4164 D TelephonyManager: requestModemActivityInfo: Sending result to app: ModemActivityInfo{ mTimestamp=31280667 mSleepTimeMs=8421598 mIdleTimeMs=337336 mActivityStatsTechSpecificInfo=[{mRat=UNKNOWN,mFrequencyRange=UNKNOWN,mTxTimeMs[]=[220436, 406764, 194797, 115892, 54752],mRxTimeMs=21503262}]}
+06-14 02:51:28.682  4050  4723 V Avrcp_ext: onPlaybackStateChanged: state PlaybackState {state=PLAYING(3), position=162424, buffered position=209978, speed=1.0, updated=31280777, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:28.683  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:28.683  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=162424, buffered position=209978, speed=1.0, updated=31280777, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:28.683  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:28.688  4050  4723 V Avrcp_ext: updateCurrentMediaState: mMediaController: MediaController (com.deepeye.musicpro@ca1b3a2) Lamba Lamba Ghunghat (Official Video) Ajay Hooda | Kavita Joshi | New Haryanvi Songs Haryanavi 2024, Sonotek Music, null
+06-14 02:51:28.688  4050  4723 W Avrcp_ext: isMusicActive: true getBluetoothPlayState: 1 A2dp State: 10 mAudioPlaybackIsActive: true
+06-14 02:51:28.688  4050  4723 D Avrcp_ext: isMusicActive = true mAudioPlaybackIsActive = true player state = PlaybackState {state=PLAYING(3), position=162433, buffered position=209978, speed=1.0, updated=31280786, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:28.692  4050  4723 D Avrcp_ext: overwrite album_artist :if album is blank
+06-14 02:51:28.692  4050  4723 D AvrcpBipRsp:  getImgHandle device :64:8F:DB:D5:6F:1C data :android.media.MediaMetadata@3594ceb7
+06-14 02:51:28.692  4050  4723 W AvrcpBipRsp: getImgHandle bipSm null
+06-14 02:51:28.692  4050  4723 D Avrcp_ext:  getImgHandle device:64:8F:DB:D5:6F:1C data:android.media.MediaMetadata@3594ceb7 isKeyContains true Handle 
+06-14 02:51:28.696  4050  4723 I Avrcp_ext: device found at index 0
+06-14 02:51:28.696  4050  4723 V Avrcp_ext: updateCurrentMediaState: addr: [B@d94f339
+06-14 02:51:28.697  4050  4723 V Avrcp_ext: Media update: id 0➡0? [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ] : [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ]
+06-14 02:51:28.697  4050  4723 D Avrcp_ext: isPackageNameValid: browsedPackage = com.deepeye.musicproisValid = true
+06-14 02:51:28.697  4050  4723 V Avrcp_ext: isBrowseSupported for com.deepeye.musicpro: false
+06-14 02:51:28.697  4050  4723 W Avrcp_ext: updateCurrentMediaState: isInactivePlayer = false
+06-14 02:51:28.697  4050  4723 V Avrcp_ext: updatePlaybackState, state: PlaybackState {state=PLAYING(3), position=162433, buffered position=209978, speed=1.0, updated=31280786, actions=7339671, custom actions=[], active item id=0, error=null} device: null
+06-14 02:51:28.697  4050  4723 D BroadcastService: getBroadcastAddress
+06-14 02:51:28.697  4050  4723 D BroadcastService: isBroadcastActive: Broadcast is turned to off
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: Device: OnePlus Nord Buds 2r : old state: PlaybackState {state=PLAYING(3), position=159430, buffered position=209978, speed=1.0, updated=31277781, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: updatePlayerStateAndPosition, old=PlaybackState {state=PLAYING(3), position=159430, buffered position=209978, speed=1.0, updated=31277781, actions=7339671, custom actions=[], active item id=0, error=null}, state=PlaybackState {state=PLAYING(3), position=162433, buffered position=209978, speed=1.0, updated=31280786, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: old state = PlaybackState {state=PLAYING(3), position=159430, buffered position=209978, speed=1.0, updated=31277781, actions=7339671, custom actions=[], active item id=0, error=null}, new state= PlaybackState {state=PLAYING(3), position=162433, buffered position=209978, speed=1.0, updated=31280786, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:28.698  4050  4723 D HeadsetService: getHeadsetService(): returning com.android.bluetooth.hfp.HeadsetService@3f5a045
+06-14 02:51:28.698  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:28.698  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:28.698  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:28.698  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:28.698  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: isPlayStateToBeUpdated device is active device
+06-14 02:51:28.698  4050  4723 I Avrcp_ext: updatePlayStatusForDevice: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: updatePlaybackState (0): old=PlaybackState {state=PLAYING(3), position=159430, buffered position=209978, speed=1.0, updated=31277781, actions=7339671, custom actions=[], active item id=0, error=null}(1), new=PlaybackState {state=PLAYING(3), position=162433, buffered position=209978, speed=1.0, updated=31280786, actions=7339671, custom actions=[], active item id=0, error=null}(1)
+06-14 02:51:28.698  4050  4723 I Avrcp_ext: Exit updatePlayStatusForDevice
+06-14 02:51:28.698  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:28.698  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:28.698  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:28.698  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:28.698  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:28.698  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:28.698  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:28.698  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:28.698  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:28.698  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:28.698  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:28.698  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:28.698  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:28.698  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:28.698  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:28.698  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:28.698  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:28.698  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:28.698  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:28.698  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:28.698  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:28.698  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:28.698  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:28.698  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:28.698  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:28.698  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:28.698  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:28.698  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:28.698  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:28.698  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:28.698  4050  4723 V Avrcp_ext: Exit updatePlayerStateAndPosition
+06-14 02:51:28.699  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: getActiveAbsoluteDevice(): device: 64:8F:DB:D5:6F:1C
+06-14 02:51:28.699  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: isStableState(): true
+06-14 02:51:28.699  4050  4723 D Avrcp_ext: isAdmStable = true activeAbsAddr = 64:8F:DB:D5:6F:1C device = null
+06-14 02:51:28.699  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:28.699  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=162433, buffered position=209978, speed=1.0, updated=31280786, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:28.699  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:28.699  4050  4723 W Avrcp_ext: updated player state = PlaybackState {state=PLAYING(3), position=162433, buffered position=209978, speed=1.0, updated=31280786, actions=7339671, custom actions=[], active item id=0, error=null}to MCP module also
+06-14 02:51:28.699  4050  4723 V Avrcp_ext:  Exit onPlaybackStateChanged
+06-14 02:51:28.720  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5535 went down
+06-14 02:51:28.721  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5536 went down
+06-14 02:51:28.722  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5537 went down
+06-14 02:51:28.725  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5538 went down
+06-14 02:51:29.291  7645  7645 D NowPlayingGuardian: ✅ Now Playing metadata matches on all layers: UI/ExoPlayer/MediaSession = '-F6AjkoGad8'
+06-14 02:51:29.564  3886  3886 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+06-14 02:51:29.743  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1228 ms, latest timeUs 1000164000000, flags 128
+06-14 02:51:29.753  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1229 ms, latest timeUs 1000164160000
+06-14 02:51:29.990  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5539 went down
+06-14 02:51:29.991  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 553a went down
+06-14 02:51:29.992  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 553b went down
+06-14 02:51:29.994  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 553d went down
+06-14 02:51:29.996  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 553e went down
+06-14 02:51:29.998  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 553f went down
+06-14 02:51:30.307  2393 12651 D BufferPoolAccessor2.0: bufferpool2 0xb4000079dbb3fec8 : 5(20480 size) total buffers - 1(4096 size) used buffers - 22743/22748 (recycle/alloc) - 132/22747 (fetch/transfer)
+06-14 02:51:30.617  1722  4310 D DlbDap2ProcessWithIht: process() called [2214500] times with input format 0x22 and channel mask 0x3 (ProcessingMode=9), htEnable=0(0, 0, 0)
+06-14 02:51:30.692  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5541 went down
+06-14 02:51:30.694  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5542 went down
+06-14 02:51:30.695  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5543 went down
+06-14 02:51:30.697  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5544 went down
+06-14 02:51:30.917  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1174 ms, latest timeUs 1000165200000, flags 128
+06-14 02:51:30.923  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1170 ms, latest timeUs 1000165360000
+06-14 02:51:30.993  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 553c went down
+06-14 02:51:30.993  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5540 went down
+06-14 02:51:31.123  7645  8904 D BufferPoolAccessor2.0: bufferpool2 0xb40000765fa58858 : 5(15667200 size) total buffers - 5(15667200 size) used buffers - 21942/21949 (recycle/alloc) - 15/21919 (fetch/transfer)
+06-14 02:51:31.213  1826 11091 I QC2Comp : [avcD_133] Stats: Pending(4) i/p-done(0) Works: Q: 21947/Done 21944|Work-Rate: Q(25.2/s Avg=24.9/s) Done(25.198/s Avg=24.919/s)| Stream: 25.00fps 396.4Kbps
+06-14 02:51:31.213  1826 11091 I QC2Comp : [avcD_133] Mem-usage:  [In-1D: 7 bufs 20.918 MB] [1D-249: 15 bufs 0.234 MB] [2D-250: 23 bufs 8.445 MB] | Total: 29.598 MB
+06-14 02:51:31.292  7645  7645 D AudioSessionGuardian: ✅ Audio session verified: 1641 is attached to DSP.
+06-14 02:51:31.683  4050  4723 V Avrcp_ext: onPlaybackStateChanged: state PlaybackState {state=PLAYING(3), position=165421, buffered position=209978, speed=1.0, updated=31283779, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:31.683  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:31.683  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=165421, buffered position=209978, speed=1.0, updated=31283779, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:31.683  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:31.687  4050  4723 V Avrcp_ext: updateCurrentMediaState: mMediaController: MediaController (com.deepeye.musicpro@ca1b3a2) Lamba Lamba Ghunghat (Official Video) Ajay Hooda | Kavita Joshi | New Haryanvi Songs Haryanavi 2024, Sonotek Music, null
+06-14 02:51:31.687  4050  4723 W Avrcp_ext: isMusicActive: true getBluetoothPlayState: 1 A2dp State: 10 mAudioPlaybackIsActive: true
+06-14 02:51:31.688  4050  4723 D Avrcp_ext: isMusicActive = true mAudioPlaybackIsActive = true player state = PlaybackState {state=PLAYING(3), position=165428, buffered position=209978, speed=1.0, updated=31283786, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:31.691  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5545 went down
+06-14 02:51:31.691  4050  4723 D Avrcp_ext: overwrite album_artist :if album is blank
+06-14 02:51:31.691  4050  4723 D AvrcpBipRsp:  getImgHandle device :64:8F:DB:D5:6F:1C data :android.media.MediaMetadata@3594ceb7
+06-14 02:51:31.691  4050  4723 W AvrcpBipRsp: getImgHandle bipSm null
+06-14 02:51:31.692  4050  4723 D Avrcp_ext:  getImgHandle device:64:8F:DB:D5:6F:1C data:android.media.MediaMetadata@3594ceb7 isKeyContains true Handle 
+06-14 02:51:31.693  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5546 went down
+06-14 02:51:31.693  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5547 went down
+06-14 02:51:31.694  4050  4723 I Avrcp_ext: device found at index 0
+06-14 02:51:31.694  4050  4723 V Avrcp_ext: updateCurrentMediaState: addr: [B@b3e9e18
+06-14 02:51:31.694  4050  4723 V Avrcp_ext: Media update: id 0➡0? [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ] : [MediaAttributes: L⋯4 -  by S⋯c (209978 0/0) - ]
+06-14 02:51:31.694  4050  4723 D Avrcp_ext: isPackageNameValid: browsedPackage = com.deepeye.musicproisValid = true
+06-14 02:51:31.695  4050  4723 V Avrcp_ext: isBrowseSupported for com.deepeye.musicpro: false
+06-14 02:51:31.695  4050  4723 W Avrcp_ext: updateCurrentMediaState: isInactivePlayer = false
+06-14 02:51:31.695  4050  4723 V Avrcp_ext: updatePlaybackState, state: PlaybackState {state=PLAYING(3), position=165428, buffered position=209978, speed=1.0, updated=31283786, actions=7339671, custom actions=[], active item id=0, error=null} device: null
+06-14 02:51:31.695  4050  4723 D BroadcastService: getBroadcastAddress
+06-14 02:51:31.695  4050  4723 D BroadcastService: isBroadcastActive: Broadcast is turned to off
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: Device: OnePlus Nord Buds 2r : old state: PlaybackState {state=PLAYING(3), position=162433, buffered position=209978, speed=1.0, updated=31280786, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: Device: no name: 
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: updatePlayerStateAndPosition, old=PlaybackState {state=PLAYING(3), position=162433, buffered position=209978, speed=1.0, updated=31280786, actions=7339671, custom actions=[], active item id=0, error=null}, state=PlaybackState {state=PLAYING(3), position=165428, buffered position=209978, speed=1.0, updated=31283786, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: old state = PlaybackState {state=PLAYING(3), position=162433, buffered position=209978, speed=1.0, updated=31280786, actions=7339671, custom actions=[], active item id=0, error=null}, new state= PlaybackState {state=PLAYING(3), position=165428, buffered position=209978, speed=1.0, updated=31283786, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:31.696  4050  4723 D HeadsetService: getHeadsetService(): returning com.android.bluetooth.hfp.HeadsetService@3f5a045
+06-14 02:51:31.696  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:31.696  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:31.696  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5549 went down
+06-14 02:51:31.696  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:31.696  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:31.696  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: isPlayStateToBeUpdated device is active device
+06-14 02:51:31.696  4050  4723 I Avrcp_ext: updatePlayStatusForDevice: device: 64:8F:DB:D5:6F:1C
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: updatePlaybackState (0): old=PlaybackState {state=PLAYING(3), position=162433, buffered position=209978, speed=1.0, updated=31280786, actions=7339671, custom actions=[], active item id=0, error=null}(1), new=PlaybackState {state=PLAYING(3), position=165428, buffered position=209978, speed=1.0, updated=31283786, actions=7339671, custom actions=[], active item id=0, error=null}(1)
+06-14 02:51:31.696  4050  4723 I Avrcp_ext: Exit updatePlayStatusForDevice
+06-14 02:51:31.696  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:31.696  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:31.696  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:31.696  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:31.696  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:31.696  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:31.696  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:31.696  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:31.696  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:31.696  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:31.696  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:31.696  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:31.696  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:31.696  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:31.696  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:31.696  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:31.696  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:31.696  4050  4723 D HeadsetService: isScoOrCallActive(): Call Active:falseCall is Ringing:falseSCO is Active:false
+06-14 02:51:31.696  4050  4723 E HeadsetStateMachine: returning mCurrentState as Connected
+06-14 02:51:31.696  4050  4723 D HeadsetService:  isAudioOn: The number of audio connected devices 0
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: isPlayStateTobeUpdated: device: null
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: Single connection exists
+06-14 02:51:31.696  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:31.696  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:31.696  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:31.696  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:31.696  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:31.696  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:31.696  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:31.696  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:31.696  4050  4723 D Avrcp_ext: Enter sendPlayPosNotificationRsp
+06-14 02:51:31.696  4050  4723 D Avrcp_ext: sendPlayPosNotificationRsp: Not registered or requesting.
+06-14 02:51:31.696  4050  4723 V Avrcp_ext: Exit updatePlayerStateAndPosition
+06-14 02:51:31.696  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: getActiveAbsoluteDevice(): device: 64:8F:DB:D5:6F:1C
+06-14 02:51:31.696  4050  4723 D APM: ActiveDeviceManagerServiceLegacy: isStableState(): true
+06-14 02:51:31.696  4050  4723 D Avrcp_ext: isAdmStable = true activeAbsAddr = 64:8F:DB:D5:6F:1C device = null
+06-14 02:51:31.696  4050  4723 V APM: MediaControlManager: onPlaybackStateChanged
+06-14 02:51:31.696  4050  4723 W McpService: updatePlaybackState state PlaybackState {state=PLAYING(3), position=165428, buffered position=209978, speed=1.0, updated=31283786, actions=7339671, custom actions=[], active item id=0, error=null}
+06-14 02:51:31.696  4050  4723 W McpService: updatePlaybackState mState: 1 state: 1
+06-14 02:51:31.696  4050  4723 W Avrcp_ext: updated player state = PlaybackState {state=PLAYING(3), position=165428, buffered position=209978, speed=1.0, updated=31283786, actions=7339671, custom actions=[], active item id=0, error=null}to MCP module also
+06-14 02:51:31.696  4050  4723 V Avrcp_ext:  Exit onPlaybackStateChanged
+06-14 02:51:31.697  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 554a went down
+06-14 02:51:31.699  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 554b went down
+06-14 02:51:31.791  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 554d went down
+06-14 02:51:31.791  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 554e went down
+06-14 02:51:31.792  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 554f went down
+06-14 02:51:31.793  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5550 went down
+06-14 02:51:31.973  3451  3868 D LOWI-9.0.1.68: [LOWI-Scan] wait_event:Wait done with Cmd 103
+06-14 02:51:31.973  3451  3868 D LOWI-9.0.1.68: [LOWI-Scan] do_listen_events: Rcvd valid Netlink Cmd 0 Err 0
+06-14 02:51:31.975  1740  3867 I WifiHAL : event received NL80211_CMD_VENDOR, vendor_id = 0x1374, subcmd = 0xc9
+06-14 02:51:31.977  2401  2401 I cnss-daemon: nl80211 response handler invoked
+06-14 02:51:31.977  2401  2401 I cnss-daemon: nl80211_response_handler: cmd 103, vendorID 4980, subcmd 201  received
+06-14 02:51:32.156  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1238 ms, latest timeUs 1000166400000, flags 128
+06-14 02:51:32.162  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1239 ms, latest timeUs 1000166560000
+06-14 02:51:32.498  7645 12650 D BufferPoolAccessor2.0: bufferpool2 0xb40000765fa9ec38 : 5(40960 size) total buffers - 1(8192 size) used buffers - 22860/22865 (recycle/alloc) - 10/22847 (fetch/transfer)
+06-14 02:51:32.891  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5551 went down
+06-14 02:51:32.894  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5552 went down
+06-14 02:51:32.895  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5553 went down
+06-14 02:51:32.897  1715  1959 E minksocket: MinkIPC_QRTR_Service: client with node 1 port 5554 went down
+06-14 02:51:33.260  1722  4310 D DlbDap2ProcessWithIht: process() called [2215000] times with input format 0x22 and channel mask 0x3 (ProcessingMode=9), htEnable=0(0, 0, 0)
+06-14 02:51:33.278  7645 11087 I MediaCodec: [0xb40000754fb87f50] dequeue 30 output frames in last 1122 ms, latest timeUs 1000167600000, flags 128
+06-14 02:51:33.279  7645 11087 I MediaCodec: [0xb40000754fb87f50] enqueue 30 input frames in last 1117 ms, latest timeUs 1000167760000
+06-14 02:51:33.291  7645  7645 D NowPlayingGuardian: ✅ Now Playing metadata matches on all layers: UI/ExoPlayer/MediaSession = '-F6AjkoGad8'

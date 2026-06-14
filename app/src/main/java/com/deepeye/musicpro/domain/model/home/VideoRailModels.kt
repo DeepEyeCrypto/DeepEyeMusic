@@ -15,7 +15,7 @@ data class VideoRailItem(
     val publishedAt: String,
     val isLive: Boolean = false,
     val isTrending: Boolean = false,
-    val category: VideoRailCategory
+    val category: VideoRailCategory,
 )
 
 enum class VideoRailCategory {
@@ -23,7 +23,7 @@ enum class VideoRailCategory {
     BECAUSE_YOU_WATCHED,
     NEW_FROM_ARTISTS,
     TOP_CHARTS,
-    SHORTS_VIBES
+    SHORTS_VIBES,
 }
 
 data class VideoRailState(
@@ -31,7 +31,7 @@ data class VideoRailState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val currentlyPlayingId: String? = null,
-    val activeSection: VideoRailCategory = VideoRailCategory.TRENDING_IN
+    val activeSection: VideoRailCategory = VideoRailCategory.TRENDING_IN,
 )
 
 data class VideoRailSection(
@@ -39,5 +39,5 @@ data class VideoRailSection(
     val title: String,
     val subtitle: String,
     val items: List<VideoRailItem>,
-    val accentColor: Color = Color(0xFF00E5FF)
+    val accentColor: Color = Color(0xFF00E5FF),
 )

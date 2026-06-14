@@ -20,19 +20,31 @@ import javax.inject.Inject
 data class TasteProfileUiState(
     val tasteProfile: TasteProfile = TasteProfile(),
     val localArtists: List<Artist> = emptyList(),
-    val curatedArtists: List<String> = listOf(
-        "Arijit Singh", "Shreya Ghoshal", "AP Dhillon", "Diljit Dosanjh", "Badshah",
-        "Atif Aslam", "Lata Mangeshkar", "Sidhu Moose Wala", "Kishore Kumar", "Neha Kakkar",
-        "Taylor Swift", "Ed Sheeran", "The Weeknd", "Drake", "Justin Bieber"
-    )
+    val curatedArtists: List<String> =
+        listOf(
+            "Arijit Singh", "Shreya Ghoshal", "AP Dhillon", "Diljit Dosanjh", "Badshah",
+            "Atif Aslam", "Lata Mangeshkar", "Sidhu Moose Wala", "Kishore Kumar", "Neha Kakkar",
+            "Karan Aujla", "Yo Yo Honey Singh", "Divine", "Naezy", "Kr\$na", "Emiway Bantai",
+            "Raftaar", "MC Stan", "King", "Guru Randhawa", "Harrdy Sandhu", "Jubin Nautiyal",
+            "B Praak", "Darshan Raval", "Armaan Malik", "Sonu Nigam", "Udit Narayan", 
+            "Alka Yagnik", "Kumar Sanu", "A.R. Rahman", "Mika Singh", "Sunidhi Chauhan",
+            "Mohit Chauhan", "KK", "Shaan", "Pritam", "Amit Trivedi", "Vishal-Shekhar",
+            "Shankar Mahadevan", "Kailash Kher", "Rahat Fateh Ali Khan", "Nusrat Fateh Ali Khan",
+            "Anirudh Ravichander", "S. P. Balasubrahmanyam", "Hariharan", "Asha Bhosle",
+            "Mohammed Rafi", "Mukesh", "Jagjit Singh", "Papon", "Jasleen Royal", "Neeti Mohan",
+            "Monali Thakur", "Jonita Gandhi", "Sachet Tandon", "Parampara Tandon", "Jass Manak",
+            "Dino James", "Seedhe Maut", "Fotty Seven", "Bali", "Ikka",
+            "Taylor Swift", "Ed Sheeran", "The Weeknd", "Drake", "Justin Bieber", "Post Malone",
+        ),
 )
 
 @HiltViewModel
-class TasteProfileViewModel @Inject constructor(
+class TasteProfileViewModel
+@Inject
+constructor(
     private val tasteProfileRepository: TasteProfileRepository,
-    private val musicRepository: MusicRepository
+    private val musicRepository: MusicRepository,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(TasteProfileUiState())
     val uiState: StateFlow<TasteProfileUiState> = _uiState.asStateFlow()
 
@@ -40,11 +52,11 @@ class TasteProfileViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 tasteProfileRepository.getTasteProfile(),
-                musicRepository.getAllArtists()
+                musicRepository.getAllArtists(),
             ) { profile, localArtists ->
                 TasteProfileUiState(
                     tasteProfile = profile,
-                    localArtists = localArtists
+                    localArtists = localArtists,
                 )
             }.collect { state ->
                 _uiState.value = state
@@ -88,8 +100,9 @@ class TasteProfileViewModel @Inject constructor(
         }
     }
 
+    @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
     fun completeOnboarding() {
-        viewModelScope.launch {
+        kotlinx.coroutines.GlobalScope.launch {
             tasteProfileRepository.updateOnboardingCompleted(true)
         }
     }

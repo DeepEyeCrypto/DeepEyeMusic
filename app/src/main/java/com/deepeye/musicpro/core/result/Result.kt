@@ -11,30 +11,35 @@ package com.deepeye.musicpro.core.result
  */
 sealed class Result<out T, out E> {
     data class Success<out T>(val data: T) : Result<T, Nothing>()
+
     data class Failure<out E>(val error: E) : Result<Nothing, E>()
 
     val isSuccess: Boolean get() = this is Success
     val isFailure: Boolean get() = this is Failure
 
-    fun getOrNull(): T? = when (this) {
-        is Success -> data
-        is Failure -> null
-    }
+    fun getOrNull(): T? =
+        when (this) {
+            is Success -> data
+            is Failure -> null
+        }
 
-    fun errorOrNull(): E? = when (this) {
-        is Success -> null
-        is Failure -> error
-    }
+    fun errorOrNull(): E? =
+        when (this) {
+            is Success -> null
+            is Failure -> error
+        }
 
-    inline fun <R> map(transform: (T) -> R): Result<R, E> = when (this) {
-        is Success -> Success(transform(data))
-        is Failure -> Failure(error)
-    }
+    inline fun <R> map(transform: (T) -> R): Result<R, E> =
+        when (this) {
+            is Success -> Success(transform(data))
+            is Failure -> Failure(error)
+        }
 
-    inline fun <R> flatMap(transform: (T) -> Result<R, @UnsafeVariance E>): Result<R, E> = when (this) {
-        is Success -> transform(data)
-        is Failure -> Failure(error)
-    }
+    inline fun <R> flatMap(transform: (T) -> Result<R, @UnsafeVariance E>): Result<R, E> =
+        when (this) {
+            is Success -> transform(data)
+            is Failure -> Failure(error)
+        }
 
     inline fun onSuccess(action: (T) -> Unit): Result<T, E> {
         if (this is Success) action(data)

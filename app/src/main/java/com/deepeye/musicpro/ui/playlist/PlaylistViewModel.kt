@@ -15,8 +15,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class PlaylistViewModel @Inject constructor(
-    private val repository: PlaylistRepository
+class PlaylistViewModel
+@Inject
+constructor(
+    private val repository: PlaylistRepository,
 ) : ViewModel() {
     private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
     val playlists: StateFlow<List<Playlist>> = _playlists.asStateFlow()
@@ -25,6 +27,11 @@ class PlaylistViewModel @Inject constructor(
         viewModelScope.launch { repository.getAllPlaylists().collect { _playlists.value = it } }
     }
 
-    fun createPlaylist(name: String) { viewModelScope.launch { repository.createPlaylist(name) } }
-    fun deletePlaylist(id: Long) { viewModelScope.launch { repository.deletePlaylist(id) } }
+    fun createPlaylist(name: String) {
+        viewModelScope.launch { repository.createPlaylist(name) }
+    }
+
+    fun deletePlaylist(id: Long) {
+        viewModelScope.launch { repository.deletePlaylist(id) }
+    }
 }

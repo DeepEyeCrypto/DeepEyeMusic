@@ -21,16 +21,17 @@ data class HomeUiState(
     val recentlyAdded: List<Song> = emptyList(),
     val featuredAlbums: List<Album> = emptyList(),
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
 )
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(
+class HomeViewModel
+@Inject
+constructor(
     private val getRecentlyAddedUseCase: GetRecentlyAddedUseCase,
     private val getAllAlbumsUseCase: GetAllAlbumsUseCase,
-    private val syncLibraryUseCase: SyncLibraryUseCase
+    private val syncLibraryUseCase: SyncLibraryUseCase,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
@@ -50,18 +51,20 @@ class HomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             getRecentlyAddedUseCase(20).collect { songs ->
-                _uiState.value = _uiState.value.copy(
-                    recentlyAdded = songs,
-                    isLoading = false
-                )
+                _uiState.value =
+                    _uiState.value.copy(
+                        recentlyAdded = songs,
+                        isLoading = false,
+                    )
             }
         }
 
         viewModelScope.launch {
             getAllAlbumsUseCase().collect { albums ->
-                _uiState.value = _uiState.value.copy(
-                    featuredAlbums = albums.take(10)
-                )
+                _uiState.value =
+                    _uiState.value.copy(
+                        featuredAlbums = albums.take(10),
+                    )
             }
         }
     }

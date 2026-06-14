@@ -4,15 +4,16 @@
 package com.deepeye.musicpro.dsp.engine
 
 import android.app.Application
+import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deepeye.musicpro.data.prefs.DSPKeys
 import com.deepeye.musicpro.data.prefs.dspDataStore
 import com.deepeye.musicpro.dsp.data.PresetRepository
+import com.deepeye.musicpro.dsp.model.AudioRoute
 import com.deepeye.musicpro.dsp.model.DspParams
 import com.deepeye.musicpro.dsp.model.EngineState
 import com.deepeye.musicpro.dsp.model.GainBudget
-import com.deepeye.musicpro.dsp.model.AudioRoute
 import com.deepeye.musicpro.dsp.model.RiskLevel
 import com.deepeye.musicpro.player.visualizer.VisualizerEngine
 import com.google.gson.Gson
@@ -20,7 +21,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import androidx.datastore.preferences.core.edit
 
 /**
  * UI state for the V4A DSP screen.
@@ -33,35 +33,38 @@ data class V4AUiState(
     val selectedPresetId: Long? = null,
     val sessionId: Int = 0,
     val currentRoute: AudioRoute = AudioRoute.UNKNOWN,
-    val showConflictWarning: Boolean = false
+    val showConflictWarning: Boolean = false,
 )
 
 @HiltViewModel
-class DSPViewModel @Inject constructor(
+class DSPViewModel
+@Inject
+constructor(
     private val application: Application,
     val dspEngine: DSPEngine,
     private val presetRepository: PresetRepository,
     private val visualizerEngine: VisualizerEngine,
-    private val gson: Gson
+    private val gson: Gson,
 ) : ViewModel() {
-
     private val dataStore = application.dspDataStore
 
     private val _uiState = MutableStateFlow(V4AUiState())
     val uiState: StateFlow<V4AUiState> = _uiState.asStateFlow()
 
-    val fftData = visualizerEngine.fftData.map { bytes ->
-        if (bytes.isEmpty()) FloatArray(0)
-        else {
-            val magnitudes = FloatArray(bytes.size / 2)
-            for (i in magnitudes.indices) {
-                val r = bytes[i * 2].toInt()
-                val im = bytes[i * 2 + 1].toInt()
-                magnitudes[i] = (Math.sqrt((r * r + im * im).toDouble()) / 128f).toFloat().coerceIn(0f, 1f)
+    val fftData =
+        visualizerEngine.fftData.map { bytes ->
+            if (bytes.isEmpty()) {
+                FloatArray(0)
+            } else {
+                val magnitudes = FloatArray(bytes.size / 2)
+                for (i in magnitudes.indices) {
+                    val r = bytes[i * 2].toInt()
+                    val im = bytes[i * 2 + 1].toInt()
+                    magnitudes[i] = (Math.sqrt((r * r + im * im).toDouble()) / 128f).toFloat().coerceIn(0f, 1f)
+                }
+                magnitudes
             }
-            magnitudes
-        }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FloatArray(0))
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FloatArray(0))
 
     init {
         observeEngineState()
@@ -76,7 +79,7 @@ class DSPViewModel @Inject constructor(
                 dspEngine.currentParams,
                 dspEngine.gainBudget,
                 dspEngine.currentRoute,
-                dspEngine.currentSessionId
+                dspEngine.currentSessionId,
             ) { state, params, budget, route, sid ->
                 _uiState.value.copy(
                     engineState = state,
@@ -84,7 +87,7 @@ class DSPViewModel @Inject constructor(
                     gainBudget = budget,
                     currentRoute = route,
                     sessionId = sid,
-                    showConflictWarning = params.surroundEnabled && params.convolverEnabled
+                    showConflictWarning = params.surroundEnabled && params.convolverEnabled,
                 )
             }.collect { newState ->
                 _uiState.value = newState
@@ -103,16 +106,17 @@ class DSPViewModel @Inject constructor(
         viewModelScope.launch {
             val prefs = dataStore.data.first()
             val json = prefs[DSPKeys.ACTIVE_PARAMS_JSON]
-            val params = if (!json.isNullOrBlank()) {
-                try {
-                    gson.fromJson(json, DspParams::class.java)
-                } catch (e: Exception) {
+            val params =
+                if (!json.isNullOrBlank()) {
+                    try {
+                        gson.fromJson(json, DspParams::class.java)
+                    } catch (e: Exception) {
+                        DspParams()
+                    }
+                } else {
                     DspParams()
                 }
-            } else {
-                DspParams()
-            }
-            
+
             val enabled = prefs[DSPKeys.ENABLED] ?: false
             val finalParams = params.copy(enabled = enabled)
             dspEngine.updateParams(finalParams)
@@ -122,10 +126,10 @@ class DSPViewModel @Inject constructor(
     fun updateParams(transform: (DspParams) -> DspParams) {
         val current = _uiState.value.params
         val next = transform(current)
-        
+
         // Push update to engine immediately
         dspEngine.updateParams(next)
-        
+
         // Persist to DataStore
         viewModelScope.launch {
             dataStore.edit { prefs ->
@@ -139,7 +143,10 @@ class DSPViewModel @Inject constructor(
         updateParams { it.copy(enabled = !it.enabled) }
     }
 
-    fun updateEqBand(bandIndex: Int, value: Float) {
+    fun updateEqBand(
+        bandIndex: Int,
+        value: Float,
+    ) {
         updateParams { params ->
             val newBands = params.eqBands.copyOf()
             if (bandIndex in newBands.indices) {
@@ -165,7 +172,7 @@ class DSPViewModel @Inject constructor(
             if (p.clarityEnabled) "Clarity" else null,
             if (p.hrtfEnabled) "HRTF" else null,
             if (p.speakerProtectionEnabled) "Protection" else null,
-            if (p.noiseGateEnabled) "Gate" else null
+            if (p.noiseGateEnabled) "Gate" else null,
         )
     }
 
@@ -176,9 +183,10 @@ class DSPViewModel @Inject constructor(
                 params?.let {
                     val finalParams = it.copy(enabled = _uiState.value.params.enabled)
                     updateParams { finalParams }
-                    _uiState.value = _uiState.value.copy(
-                        selectedPresetId = presetId
-                    )
+                    _uiState.value =
+                        _uiState.value.copy(
+                            selectedPresetId = presetId,
+                        )
                 }
             }
         }

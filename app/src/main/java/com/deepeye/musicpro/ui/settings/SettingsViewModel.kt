@@ -7,8 +7,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deepeye.musicpro.data.prefs.AppSettings
 import com.deepeye.musicpro.data.prefs.SettingsDataStore
-import com.deepeye.musicpro.data.prefs.ThemeMode
 import com.deepeye.musicpro.data.prefs.TasteProfile
+import com.deepeye.musicpro.data.prefs.ThemeMode
+import com.deepeye.musicpro.data.source.remote.update.AutoUpdateManager
+import com.deepeye.musicpro.data.source.remote.update.UpdateState
 import com.deepeye.musicpro.domain.repository.TasteProfileRepository
 import com.deepeye.musicpro.domain.usecase.SyncLibraryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,26 +18,25 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import com.deepeye.musicpro.data.source.remote.update.AutoUpdateManager
-import com.deepeye.musicpro.data.source.remote.update.UpdateState
 import java.io.File
+import javax.inject.Inject
 
 data class SettingsUiState(
     val settings: AppSettings = AppSettings(),
     val isRescanningLibrary: Boolean = false,
     val tasteProfile: TasteProfile = TasteProfile(),
-    val updateState: UpdateState = UpdateState.Idle
+    val updateState: UpdateState = UpdateState.Idle,
 )
 
 @HiltViewModel
-class SettingsViewModel @Inject constructor(
+class SettingsViewModel
+@Inject
+constructor(
     private val settingsDataStore: SettingsDataStore,
     private val syncLibraryUseCase: SyncLibraryUseCase,
     private val tasteProfileRepository: TasteProfileRepository,
-    private val autoUpdateManager: AutoUpdateManager
+    private val autoUpdateManager: AutoUpdateManager,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
@@ -61,7 +62,10 @@ class SettingsViewModel @Inject constructor(
         autoUpdateManager.checkForUpdate()
     }
 
-    fun downloadUpdate(apkUrl: String, version: String) {
+    fun downloadUpdate(
+        apkUrl: String,
+        version: String,
+    ) {
         autoUpdateManager.downloadUpdate(apkUrl, version)
     }
 
@@ -73,11 +77,25 @@ class SettingsViewModel @Inject constructor(
         autoUpdateManager.resetState()
     }
 
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch { settingsDataStore.setThemeMode(mode) }
+    }
 
-    fun setThemeMode(mode: ThemeMode) { viewModelScope.launch { settingsDataStore.setThemeMode(mode) } }
-    fun setDynamicColor(enabled: Boolean) { viewModelScope.launch { settingsDataStore.setDynamicColor(enabled) } }
-    fun setCrossfadeDuration(seconds: Int) { viewModelScope.launch { settingsDataStore.setCrossfadeDuration(seconds) } }
-    fun setShowVisualizer(enabled: Boolean) { viewModelScope.launch { settingsDataStore.setShowVisualizer(enabled) } }
+    fun setDynamicColor(enabled: Boolean) {
+        viewModelScope.launch { settingsDataStore.setDynamicColor(enabled) }
+    }
+
+    fun setAmoledMode(enabled: Boolean) {
+        viewModelScope.launch { settingsDataStore.setAmoledMode(enabled) }
+    }
+
+    fun setCrossfadeDuration(seconds: Int) {
+        viewModelScope.launch { settingsDataStore.setCrossfadeDuration(seconds) }
+    }
+
+    fun setShowVisualizer(enabled: Boolean) {
+        viewModelScope.launch { settingsDataStore.setShowVisualizer(enabled) }
+    }
 
     fun setPreferredLanguages(languages: Set<String>) {
         viewModelScope.launch {
@@ -94,7 +112,10 @@ class SettingsViewModel @Inject constructor(
     fun rescanLibrary() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRescanningLibrary = true)
-            try { syncLibraryUseCase() } catch (_: Exception) { }
+            try {
+                syncLibraryUseCase()
+            } catch (_: Exception) {
+            }
             _uiState.value = _uiState.value.copy(isRescanningLibrary = false)
         }
     }

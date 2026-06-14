@@ -18,102 +18,135 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
+/**
+ * 32-Bar Mirror Spectrum Visualizer with spring dynamics.
+ *
+ * Uses spring physical animation model (stiffness=300, damping=15) for
+ * smooth, natural bar movement. Bars mirror from center for symmetry.
+ * Includes Bezier waveform underneath for ambient flow effect.
+ */
 @Composable
 fun NowPlayingVisualizerOverlay(
     fftData: FloatArray,
     dominantColor: Color,
     isPlaying: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    barCount: Int = 32,
 ) {
     val alpha by animateFloatAsState(
-        targetValue = if (isPlaying) 1f else 0.2f,
-        animationSpec = tween(500),
-        label = "visAlpha"
+        targetValue = if (isPlaying) 1f else 0.15f,
+        animationSpec = tween(400),
+        label = "visAlpha",
     )
+
+    // Spring-animated bar heights for natural physical feel
+    val animatedHeights = remember(barCount) {
+        List(barCount) { Animatable(0f) }
+    }
+
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(fftData, isPlaying) {
+        if (!isPlaying || fftData.isEmpty()) return@LaunchedEffect
+        val step = (fftData.size.toFloat() / barCount).coerceAtLeast(1f)
+        for (i in 0 until barCount) {
+            val dataIndex = (i * step).toInt().coerceIn(0, fftData.size - 1)
+            // Apply power curve for better low/mid frequency visualization
+            val raw = fftData[dataIndex].coerceIn(0f, 1f)
+            val targetHeight = Math.pow(raw.toDouble(), 0.85).toFloat().coerceIn(0f, 1f)
+            scope.launch {
+                animatedHeights[i].animateTo(
+                    targetValue = targetHeight,
+                    animationSpec = spring(
+                        dampingRatio = 0.55f, // ~15 damping equivalent
+                        stiffness = 300f,
+                    )
+                )
+            }
+        }
+    }
 
     val visualizerGradient = remember(dominantColor) {
         Brush.verticalGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.9f),
-                dominantColor.copy(alpha = 0.7f),
-                Color.Transparent
-            )
+                Color.White.copy(alpha = 0.85f),
+                dominantColor.copy(alpha = 0.6f),
+                Color.Transparent,
+            ),
+        )
+    }
+
+    val waveGlow = remember(dominantColor) {
+        Brush.verticalGradient(
+            colors = listOf(dominantColor.copy(alpha = 0.25f), Color.Transparent),
         )
     }
 
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(160.dp)
-            .alpha(alpha)
+            .height(140.dp)
+            .alpha(alpha),
     ) {
-        val barCount = 32
         val barWidth = size.width / (barCount * 2.5f)
-        val gap = barWidth * 0.8f
+        val gap = barWidth * 0.7f
         val centerX = size.width / 2f
 
         // ── Smooth Bezier Waveform ──
         if (fftData.isNotEmpty()) {
             val path = Path()
-            val points = fftData.size / 4
+            val points = (fftData.size / 4).coerceAtLeast(2)
             val step = size.width / points
 
             path.moveTo(0f, size.height)
-            
+
             var prevX = 0f
             var prevY = size.height
-            
+
             for (i in 0 until points) {
                 val mag = fftData[i.coerceIn(0, fftData.size - 1)]
-                val y = size.height - (mag * size.height * 0.5f) - 10.dp.toPx()
+                val y = size.height - (mag * size.height * 0.4f) - 8.dp.toPx()
                 val x = i * step
-                
+
                 if (i == 0) {
                     path.lineTo(x, y)
                 } else {
-                    // Cubic Bezier curve for smooth flowing wave
                     path.quadraticBezierTo(
-                        prevX + (x - prevX) / 2f, prevY, 
-                        x, y
+                        prevX + (x - prevX) / 2f,
+                        prevY,
+                        x,
+                        y,
                     )
                 }
                 prevX = x
                 prevY = y
             }
-            
-            // Draw translucent gradient wave under the line
+
+            // Fill under the wave
             val waveFill = Path().apply {
                 addPath(path)
                 lineTo(size.width, size.height)
                 lineTo(0f, size.height)
                 close()
             }
-            drawPath(
-                path = waveFill,
-                brush = Brush.verticalGradient(
-                    colors = listOf(dominantColor.copy(alpha = 0.3f), Color.Transparent)
-                )
-            )
-            
-            // Draw the glowing wave line
+            drawPath(path = waveFill, brush = waveGlow)
+
+            // Glowing wave stroke
             drawPath(
                 path = path,
-                color = dominantColor.copy(alpha = 0.8f),
-                style = Stroke(width = 3.dp.toPx())
+                color = dominantColor.copy(alpha = 0.7f),
+                style = Stroke(width = 2.dp.toPx()),
             )
         }
 
-        // ── Mirror FFT Bars ──
+        // ── Mirror FFT Bars (Spring-animated) ──
         for (i in 0 until barCount) {
-            val magnitude = if (fftData.isNotEmpty()) {
-                val fftIndex = (i * (fftData.size / barCount)).coerceIn(0, fftData.size - 1)
-                // Slight curve mapping for better visualization of low/mid frequencies
-                Math.pow(fftData[fftIndex].toDouble(), 1.2).toFloat().coerceIn(0f, 1f)
-            } else 0f
+            val magnitude = animatedHeights.getOrNull(i)?.value ?: 0f
 
-            val baseHeight = 4.dp.toPx()
-            val barHeight = baseHeight + (magnitude * size.height * 0.8f)
+            val baseHeight = 3.dp.toPx()
+            val barHeight = baseHeight + (magnitude * size.height * 0.75f)
 
             // Mirror X relative to center
             val xRight = centerX + i * (barWidth + gap)
@@ -125,7 +158,7 @@ fun NowPlayingVisualizerOverlay(
                         brush = visualizerGradient,
                         topLeft = Offset(x, size.height - barHeight),
                         size = Size(barWidth, barHeight),
-                        cornerRadius = CornerRadius(barWidth / 2f)
+                        cornerRadius = CornerRadius(barWidth / 2f),
                     )
                 }
             }

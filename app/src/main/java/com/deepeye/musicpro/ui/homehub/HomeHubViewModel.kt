@@ -3,39 +3,42 @@
 
 package com.deepeye.musicpro.ui.homehub
 
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.deepeye.musicpro.data.repository.HomeFeedRepository
+import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.home.HomeFeedState
-import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
+import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.dsp.engine.DSPEngine
+import com.deepeye.musicpro.player.controller.PlayerController
+import com.deepeye.musicpro.player.visualizer.VisualizerEngine
+import com.deepeye.musicpro.domain.repository.MusicRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import android.util.Log
 import javax.inject.Inject
-import androidx.navigation.NavController
-import com.deepeye.musicpro.player.visualizer.VisualizerEngine
-import com.deepeye.musicpro.player.controller.PlayerController
-import com.deepeye.musicpro.domain.model.MediaItem
-import android.net.Uri
 
 @HiltViewModel
-class HomeHubViewModel @Inject constructor(
+class HomeHubViewModel
+@Inject
+constructor(
     private val feedRepo: HomeFeedRepository,
     private val dspEngine: DSPEngine,
     private val visualizerEngine: VisualizerEngine,
-    private val playerController: PlayerController
+    private val playerController: PlayerController,
+    private val musicRepository: MusicRepository,
 ) : ViewModel() {
-
     private val _feedState = MutableStateFlow(HomeFeedState(isLoading = true))
     val feedState: StateFlow<HomeFeedState> = _feedState.asStateFlow()
+
+    val isDspAttached = dspEngine.engineState
 
     init {
         loadFeed()
@@ -54,30 +57,65 @@ class HomeHubViewModel @Inject constructor(
     }
 
     fun playVideo(video: HomeVideoItem) {
-        val mediaItem = MediaItem.Remote(
-            id = video.id,
-            title = video.title,
-            artist = video.channelName,
-            artworkUri = Uri.parse(video.thumbnailUrl),
-            duration = video.duration * 1000L,
-            isVideo = true
-        )
+        val mediaItem =
+            MediaItem.Remote(
+                id = video.id,
+                title = video.title,
+                artist = video.channelName,
+                artworkUri = Uri.parse(video.thumbnailUrl),
+                duration = video.duration * 1000L,
+                isVideo = true,
+            )
         playerController.playMedia(mediaItem)
     }
 
     fun playMusic(music: HomeMusicItem) {
-        val mediaItem = MediaItem.Remote(
-            id = music.id,
-            title = music.title,
-            artist = music.artist,
-            artworkUri = Uri.parse(music.thumbnailUrl),
-            duration = music.duration * 1000L,
-            isVideo = false
-        )
+        val mediaItem =
+            MediaItem.Remote(
+                id = music.id,
+                title = music.title,
+                artist = music.artist,
+                artworkUri = Uri.parse(music.thumbnailUrl),
+                duration = music.duration * 1000L,
+                isVideo = false,
+            )
         playerController.playMedia(mediaItem)
     }
 
     fun openV4A(navController: NavController) {
         navController.navigate("dsp")
+    }
+
+    fun onMoodClick(moodQuery: String) {
+        // Trigger a search-based feed for the selected mood
+        viewModelScope.launch {
+            try {
+                // Mood results will be handled in the next iteration
+                Log.d("HomeHubVM", "Mood search: $moodQuery")
+            } catch (e: Exception) {
+                Log.e("HomeHubVM", "Mood search failed: ${e.message}")
+            }
+        }
+    }
+
+    fun playContinueWatchingItem(video: com.deepeye.musicpro.domain.model.home.HomeVideoItem) {
+        playVideo(video)
+    }
+
+    fun playContinueListeningItem(music: com.deepeye.musicpro.domain.model.home.HomeMusicItem) {
+        playMusic(music)
+    }
+
+    fun playLocalResume(music: com.deepeye.musicpro.domain.model.home.HomeMusicItem) {
+        val songId = music.id.toLongOrNull() ?: return
+        viewModelScope.launch {
+            try {
+                musicRepository.getSongById(songId).first()?.let { song ->
+                    playerController.playMedia(MediaItem.Local(song))
+                }
+            } catch (e: Exception) {
+                Log.e("HomeHubVM", "Failed to resolve local resume song $songId: ${e.message}")
+            }
+        }
     }
 }

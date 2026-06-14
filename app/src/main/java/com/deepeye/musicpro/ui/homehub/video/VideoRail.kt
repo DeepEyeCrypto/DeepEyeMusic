@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.WifiOff
@@ -39,7 +40,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun VideoRail(
     modifier: Modifier = Modifier,
     viewModel: VideoRailViewModel = hiltViewModel(),
-    onNavigateToVideo: (String) -> Unit = {}
+    onNavigateToVideo: (String) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val expandedId by viewModel.expandedCardId.collectAsState()
@@ -49,13 +50,12 @@ fun VideoRail(
     val activeSections = state.sections
 
     Column(modifier.fillMaxWidth()) {
-
         // ── Section filter pills ────────────────
         if (activeSections.isNotEmpty()) {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = 12.dp),
             ) {
                 items(activeSections) { section ->
                     val isActive = section.category == activeSection
@@ -66,29 +66,32 @@ fun VideoRail(
                             Text(
                                 section.title,
                                 fontSize = 12.sp,
-                                fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
+                                fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
                             )
                         },
-                        colors = FilterChipDefaults.filterChipColors(
+                        colors =
+                        FilterChipDefaults.filterChipColors(
                             selectedContainerColor = section.accentColor.copy(alpha = 0.2f),
                             selectedLabelColor = section.accentColor,
-                            selectedLeadingIconColor = section.accentColor
+                            selectedLeadingIconColor = section.accentColor,
                         ),
-                        border = FilterChipDefaults.filterChipBorder(
+                        border =
+                        FilterChipDefaults.filterChipBorder(
                             enabled = true,
                             selected = isActive,
                             selectedBorderColor = section.accentColor.copy(0.4f),
-                            borderColor = Color.White.copy(0.08f)
+                            borderColor = Color.White.copy(0.08f),
                         ),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(20.dp),
                     )
                 }
             }
         }
 
         // ── Active section row ──────────────────
-        val currentSection = activeSections.find { it.category == activeSection }
-            ?: activeSections.firstOrNull()
+        val currentSection =
+            activeSections.find { it.category == activeSection }
+                ?: activeSections.firstOrNull()
 
         currentSection?.let { section ->
             // Section header
@@ -97,26 +100,26 @@ fun VideoRail(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column {
                     Text(
                         section.title,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
                         section.subtitle,
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(0.4f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(0.4f),
                     )
                 }
                 TextButton(onClick = { /* see all */ }) {
                     Text(
                         "See all",
                         color = section.accentColor,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
                     )
                 }
             }
@@ -126,12 +129,14 @@ fun VideoRail(
             // Video cards
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(
+                // Composite key (index + videoId) avoids "Key was already used"
+                // crashes if a section returns the same videoId twice.
+                itemsIndexed(
                     section.items,
-                    key = { it.videoId }
-                ) { item ->
+                    key = { index, item -> "$index-${item.videoId}" },
+                ) { _, item ->
                     VideoRailCard(
                         item = item,
                         isExpanded = expandedId == item.videoId,
@@ -139,7 +144,7 @@ fun VideoRail(
                         onExpandedTap = {
                             viewModel.onExpandedCardTap(item.videoId)
                             onNavigateToVideo(item.videoId)
-                        }
+                        },
                     )
                 }
             }
@@ -150,7 +155,7 @@ fun VideoRail(
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.height(160.dp)
+                modifier = Modifier.height(160.dp),
             ) {
                 items(6) { ShimmerVideoCard(Modifier.width(180.dp)) }
             }
@@ -161,16 +166,18 @@ fun VideoRail(
             Row(
                 Modifier.padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    Icons.Rounded.WifiOff, null,
-                    tint = Color.White.copy(0.3f), modifier = Modifier.size(16.dp)
+                    Icons.Rounded.WifiOff,
+                    null,
+                    tint = MaterialTheme.colorScheme.onSurface.copy(0.3f),
+                    modifier = Modifier.size(16.dp),
                 )
                 Text(
                     error,
-                    color = Color.White.copy(0.3f),
-                    fontSize = 12.sp
+                    color = MaterialTheme.colorScheme.onSurface.copy(0.3f),
+                    fontSize = 12.sp,
                 )
                 TextButton(onClick = { viewModel.loadRail() }) {
                     Text("Retry", color = Color(0xFF00E5FF), fontSize = 12.sp)

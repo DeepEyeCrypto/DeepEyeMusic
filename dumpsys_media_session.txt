@@ -1,0 +1,50 @@
+MEDIA SESSION SERVICE (dumpsys media_session)
+
+7 sessions listeners.
+Global priority session is com.android.server.telecom/HeadsetMediaButton (userId=0)
+  HeadsetMediaButton com.android.server.telecom/HeadsetMediaButton (userId=0)
+    ownerPid=3062, ownerUid=1000, userId=0
+    package=com.android.server.telecom
+    launchIntent=null
+    mediaButtonReceiver=null
+    active=false
+    flags=65537
+    rating type=0
+    controllers: 0
+    state=null
+    audioAttrs=AudioAttributes: usage=USAGE_VOICE_COMMUNICATION content=CONTENT_TYPE_SPEECH flags=0x800 tags= bundle=null
+    volumeType=LOCAL, controlType=ABSOLUTE, max=0, current=0, volumeControlId=null
+    metadata: null
+    queueTitle=null, size=0
+User Records:
+Record for full_user=0
+  Volume key long-press listener: null
+  Volume key long-press listener package: 
+  Media key listener: null
+  Media key listener package: 
+  OnMediaKeyEventDispatchedListener: added 0 listener(s)
+  OnMediaKeyEventSessionChangedListener: added 1 listener(s)
+    from com.android.bluetooth
+  Last MediaButtonReceiver: null
+  Media button session is com.deepeye.musicpro.debug/androidx.media3.session.id. (userId=0)
+  Sessions Stack - have 1 sessions:
+    androidx.media3.session.id. com.deepeye.musicpro.debug/androidx.media3.session.id. (userId=0)
+      ownerPid=15737, ownerUid=10522, userId=0
+      package=com.deepeye.musicpro.debug
+      launchIntent=PendingIntent{e60bfc9: PendingIntentRecord{44ec4f9 com.deepeye.musicpro.debug startActivity (allowlist: fc8e8d5:+30s0ms/0/NOTIFICATION_SERVICE/NotificationManagerService)}}
+      mediaButtonReceiver=null
+      active=true
+      flags=7
+      rating type=0
+      controllers: 6
+      state=PlaybackState {state=PAUSED(2), position=4303, buffered position=52416, speed=0.0, updated=142263351, actions=7339671, custom actions=[], active item id=0, error=null}
+      audioAttrs=AudioAttributes: usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC flags=0x800 tags= bundle=null
+      volumeType=LOCAL, controlType=ABSOLUTE, max=0, current=0, volumeControlId=null
+      metadata: size=8, description=Baby Blows Out the Candle | Happy Birthday to You | Baby ChaCha Nursery Rhymes & Kids Songs, Baby ChaCha - Nursery Rhymes & Baby Songs, null
+      queueTitle=null, size=1
+Audio playback (lastly played comes first)
+  uid=10522 packages=com.deepeye.musicpro.debug 
+Media session config:
+  media_button_receiver_fgs_allowlist_duration_ms: [cur: 10000, def: 10000]
+  media_session_calback_fgs_allowlist_duration_ms: [cur: 10000, def: 10000]
+  media_session_callback_fgs_while_in_use_temp_allow_duration_ms: [cur: 10000, def: 10000]

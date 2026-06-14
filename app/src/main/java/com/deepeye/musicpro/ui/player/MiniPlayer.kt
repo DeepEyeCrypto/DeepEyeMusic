@@ -3,13 +3,13 @@
 
 package com.deepeye.musicpro.ui.player
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,66 +21,71 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
+import com.deepeye.musicpro.ui.components.GlassCard
 
 @Composable
 fun MiniPlayer(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: PlayerViewModel = hiltViewModel()
+    viewModel: PlayerViewModel = hiltViewModel(),
 ) {
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
     val currentItem = playerState.currentItem ?: return
+    val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
 
-    Surface(
+    GlassCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
             .height(64.dp)
-            .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = onClick),
-        color = MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
-        tonalElevation = 4.dp,
-        shadowElevation = 8.dp
+        tintColor = dominantColor.copy(alpha = 0.12f),
+        cornerRadius = 18.dp,
+        refractionHeight = 0.25f
     ) {
-        Column {
+        Column(modifier = Modifier.fillMaxSize()) {
             // Linear Progress at the very top of mini player
-            val progress = if (playerState.duration > 0) {
-                playerState.position.toFloat() / playerState.duration.toFloat()
-            } else 0f
-            
+            val progress =
+                if (playerState.duration > 0) {
+                    playerState.position.toFloat() / playerState.duration.toFloat()
+                } else {
+                    0f
+                }
+
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth().height(2.dp),
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = Color.Transparent
+                trackColor = Color.Transparent,
             )
 
             Row(
-                modifier = Modifier
+                modifier =
+                Modifier
                     .fillMaxSize()
                     .padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Artwork
                 Box(contentAlignment = Alignment.Center) {
                     AsyncImage(
                         model = currentItem.artworkUri,
                         contentDescription = null,
-                        modifier = Modifier
+                        modifier =
+                        Modifier
                             .size(44.dp)
                             .clip(RoundedCornerShape(8.dp)),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
                     )
-                    
+
                     if (playerState.isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
                             strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
@@ -94,14 +99,15 @@ fun MiniPlayer(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        color = Color.White,
                     )
                     Text(
                         text = currentItem.artist,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Color.White.copy(alpha = 0.7f),
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
 
@@ -111,7 +117,17 @@ fun MiniPlayer(
                         imageVector = if (playerState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Play/Pause",
                         modifier = Modifier.size(28.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = Color.White,
+                    )
+                }
+
+                // Next Button
+                IconButton(onClick = { viewModel.next() }) {
+                    Icon(
+                        imageVector = Icons.Default.SkipNext,
+                        contentDescription = "Next",
+                        modifier = Modifier.size(28.dp),
+                        tint = Color.White,
                     )
                 }
             }
