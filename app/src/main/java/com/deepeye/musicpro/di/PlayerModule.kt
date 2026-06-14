@@ -91,8 +91,14 @@ object PlayerModule {
                 "sec-ch-ua-platform" to "\"Android\""
             ))
         val dataSourceFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpDataSourceFactory)
+
+        // Enable DRM (including L1 Widevine) support
+        val drmSessionManagerProvider = androidx.media3.exoplayer.drm.DefaultDrmSessionManagerProvider()
+        drmSessionManagerProvider.setDrmHttpDataSourceFactory(httpDataSourceFactory)
+
         val mediaSourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(context)
             .setDataSourceFactory(dataSourceFactory)
+            .setDrmSessionManagerProvider(drmSessionManagerProvider)
 
         val player = ExoPlayer.Builder(context)
             .setRenderersFactory(renderersFactory)
