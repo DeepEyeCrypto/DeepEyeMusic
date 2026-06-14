@@ -349,12 +349,22 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: android.content.Intent?) {
-        if (intent?.action == android.content.Intent.ACTION_SEND && intent.type == "text/plain") {
-            val sharedText = intent.getStringExtra(android.content.Intent.EXTRA_TEXT) ?: return
-            
-            // Extract YouTube video ID (handles youtu.be, youtube.com/watch?v=, youtube.com/shorts/, etc)
+        val action = intent?.action
+        
+        // Handle YouTube links (either via Share Sheet text OR clicked URL)
+        var youtubeUrl: String? = null
+        if (action == android.content.Intent.ACTION_SEND && intent.type == "text/plain") {
+            youtubeUrl = intent.getStringExtra(android.content.Intent.EXTRA_TEXT)
+        } else if (action == android.content.Intent.ACTION_VIEW && intent.data != null) {
+            val uriStr = intent.data.toString()
+            if (uriStr.contains("youtube.com") || uriStr.contains("youtu.be")) {
+                youtubeUrl = uriStr
+            }
+        }
+
+        if (youtubeUrl != null) {
             val youtubeUrlRegex = Regex("(?:youtube\\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\\.be/|youtube\\.com/shorts/)([^\"&?/\\s]{11})")
-            val match = youtubeUrlRegex.find(sharedText)
+            val match = youtubeUrlRegex.find(youtubeUrl)
             
             if (match != null) {
                 val videoId = match.groups[1]?.value ?: return
@@ -382,8 +392,8 @@ class MainActivity : ComponentActivity() {
                         android.util.Log.e("MainActivity", "Error handling shared YouTube link", e)
                     }
                 }
+                return
             }
-            return
         }
 
         if (intent?.action == android.content.Intent.ACTION_VIEW || intent?.action == android.content.Intent.ACTION_SEND) {
