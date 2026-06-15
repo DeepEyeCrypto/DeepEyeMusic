@@ -40,3 +40,4 @@ leakcanary-deobfuscation-mapping/
 scratch/
 bugreport_out/
 full_logcat.txt
+google-services.json

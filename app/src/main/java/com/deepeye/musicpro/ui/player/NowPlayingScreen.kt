@@ -212,7 +212,7 @@ fun NowPlayingScreen(
     }
 
         if (!isInPipMode) {
-            // Static Glassy Mesh Background
+            // Refined Clear Glass Mesh Background
             Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
                 // Top-left glow
                 Box(
@@ -351,26 +351,27 @@ private fun AudioNowPlayingLayout(
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = 32.dp) // Premium symmetric padding
     ) {
         // Header
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onNavigateBack, modifier = Modifier.size(44.dp)) {
-                Icon(Icons.Default.KeyboardArrowDown, "Close", tint = headerColor, modifier = Modifier.size(28.dp))
+                Icon(Icons.Default.KeyboardArrowDown, "Close", tint = headerColor, modifier = Modifier.size(32.dp))
             }
             Text(
                 text = playerState.currentItem?.title?.uppercase() ?: "NOW PLAYING",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp,
-                color = headerColor.copy(alpha = 0.8f),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 4.sp,
+                color = headerColor.copy(alpha = 0.85f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f).padding(horizontal = 16.dp)
+                modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+                textAlign = TextAlign.Center
             )
             IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(44.dp)) {
                 Icon(Icons.Default.Settings, "Settings", tint = headerColor, modifier = Modifier.size(24.dp))
@@ -455,7 +456,7 @@ private fun AudioNowPlayingLayout(
 
         // Metadata & Controls
         Column(
-            modifier = Modifier.fillMaxWidth().weight(0.5f).padding(top = 16.dp, bottom = 12.dp),
+            modifier = Modifier.fillMaxWidth().weight(0.5f).padding(top = 24.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.SpaceEvenly
         ) {
             // Title & Artist
@@ -468,21 +469,22 @@ private fun AudioNowPlayingLayout(
                     com.deepeye.musicpro.ui.components.DynamicLabel(
                         text = playerState.currentItem?.title ?: "No Track Playing",
                         backgroundColor = finalBgColor,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.ExtraBold,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         useVibrancy = true
                     )
+                    Spacer(Modifier.height(4.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         val artistText = playerState.currentItem?.artist?.takeIf { it != "<unknown>" && it.isNotBlank() } ?: "Unknown Artist"
                         com.deepeye.musicpro.ui.components.SecondaryLabel(
                             text = artistText,
                             backgroundColor = finalBgColor,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false),
@@ -631,19 +633,19 @@ private fun VideoNowPlayingLayout(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                .padding(start = 32.dp, end = 32.dp, top = 16.dp, bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(Icons.Default.KeyboardArrowDown, "Close", tint = MaterialTheme.colorScheme.onSurface)
+            IconButton(onClick = onNavigateBack, modifier = Modifier.size(44.dp)) {
+                Icon(Icons.Default.KeyboardArrowDown, "Close", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(32.dp))
             }
             Text(
                 text = "YOUTUBE VIDEO PLAYER",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 4.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
             )
             IconButton(onClick = onNavigateToSettings) {
                 Icon(Icons.Default.Settings, "Settings", tint = MaterialTheme.colorScheme.onSurface)
@@ -659,11 +661,17 @@ private fun VideoNowPlayingLayout(
         } else {
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 32.dp)
                 .aspectRatio(16 / 9f)
+                .shadow(
+                    elevation = 24.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    spotColor = finalAccentColor,
+                    ambientColor = finalAccentColor
+                )
                 .clip(RoundedCornerShape(24.dp))
-                .border(1.dp, finalAccentColor.copy(alpha = 0.3f), RoundedCornerShape(24.dp))
-                .background(Color.Black)
+                .border(1.5.dp, finalAccentColor.copy(alpha = 0.35f), RoundedCornerShape(24.dp))
+                .background(Color.Transparent)
         }
 
         Box(
@@ -691,21 +699,21 @@ private fun VideoNowPlayingLayout(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 32.dp)
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Spacer(Modifier.height(8.dp))
-
 
             // Video Metadata Card
             val currentItem = playerState.currentItem
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .shadow(12.dp, RoundedCornerShape(24.dp), spotColor = Color.Black, ambientColor = Color.Black)
                     .clip(RoundedCornerShape(24.dp))
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.15f))
-                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f), RoundedCornerShape(24.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f), RoundedCornerShape(24.dp))
                     .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -713,15 +721,15 @@ private fun VideoNowPlayingLayout(
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         text = currentItem?.title ?: "Unknown Video",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.ExtraBold,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = "1.2M views • 2 days ago",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                     )
                 }
@@ -1248,13 +1256,13 @@ private fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit, accentColor
             )
         }
         Box(
-            modifier = Modifier.size(80.dp).clip(CircleShape).background(accentColor).clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
+            modifier = Modifier.size(92.dp).clip(CircleShape).background(accentColor).clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                 contentDescription = "Play/Pause",
-                modifier = Modifier.size(48.dp),
+                modifier = Modifier.size(56.dp),
                 tint = Color.Black // Contrast against accent color
             )
         }

@@ -114,6 +114,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":extractor-bridge"))
     // Firebase BOM & Analytics & Auth
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
     implementation("com.google.firebase:firebase-analytics")
@@ -234,4 +235,16 @@ android {
             isIncludeAndroidResources = true
         }
     }
+}
+
+tasks.register<Copy>("copyPluginApk") {
+    dependsOn(":extractor-plugin:assembleDebug")
+    from(project(":extractor-plugin").layout.buildDirectory.dir("outputs/apk/debug"))
+    into(project.layout.projectDirectory.dir("src/main/assets/plugins"))
+    include("*.apk")
+    rename { "extractor-plugin.apk" }
+}
+
+tasks.named("preBuild") {
+    dependsOn("copyPluginApk")
 }

@@ -720,7 +720,7 @@ constructor(
                 is MediaItem.Remote -> streamUri ?: Uri.EMPTY
             }
 
-        return Media3Item.Builder()
+        val builder = Media3Item.Builder()
             .setUri(uri)
             .setMediaId(id)
             .setMediaMetadata(
@@ -730,7 +730,16 @@ constructor(
                     .setArtworkUri(artworkUri)
                     .build(),
             )
-            .build()
+            
+        // Help ExoPlayer correctly identify adaptive streams when URLs lack standard extensions
+        val uriStr = uri.toString()
+        if (uriStr.contains("manifest/dash") || uriStr.contains(".mpd")) {
+            builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_MPD)
+        } else if (uriStr.contains("manifest/hls") || uriStr.contains(".m3u8") || uriStr.contains("m3u8")) {
+            builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_M3U8)
+        }
+
+        return builder.build()
     }
 
     private fun recordCurrentTrackPlayStats(finishedSuccessfully: Boolean) {

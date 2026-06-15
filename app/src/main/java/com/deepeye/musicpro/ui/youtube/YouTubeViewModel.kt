@@ -74,7 +74,7 @@ constructor(
         }
     }
 
-    private var nextPageToken: org.schabi.newpipe.extractor.Page? = null
+    private var nextPageToken: String? = null
     private var currentActiveQuery: String = ""
     private var suggestionsJob: kotlinx.coroutines.Job? = null
 
@@ -174,12 +174,12 @@ constructor(
             _uiState.update { it.copy(isLoading = true, error = null, hasMore = false) }
             try {
                 val result = youtubeRemoteDataSource.searchVideosFirstPage(query)
-                nextPageToken = result.nextPage
+                nextPageToken = result.nextPageUrl
                 _uiState.update {
                     it.copy(
                         videos = result.items,
                         isLoading = false,
-                        hasMore = result.nextPage != null,
+                        hasMore = result.nextPageUrl != null,
                     )
                 }
             } catch (e: Exception) {
@@ -196,12 +196,12 @@ constructor(
             _uiState.update { it.copy(isMoreLoading = true) }
             try {
                 val result = youtubeRemoteDataSource.searchVideosNextPage(currentActiveQuery, token)
-                nextPageToken = result.nextPage
+                nextPageToken = result.nextPageUrl
                 _uiState.update { state ->
                     state.copy(
                         videos = state.videos + result.items,
                         isMoreLoading = false,
-                        hasMore = result.nextPage != null,
+                        hasMore = result.nextPageUrl != null,
                     )
                 }
             } catch (e: Exception) {

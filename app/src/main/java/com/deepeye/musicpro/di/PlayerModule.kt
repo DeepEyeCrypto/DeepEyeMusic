@@ -61,8 +61,12 @@ object PlayerModule {
         val trackSelector = androidx.media3.exoplayer.trackselection.DefaultTrackSelector(context)
         trackSelector.setParameters(
             trackSelector.buildUponParameters()
-                .setPreferredVideoMimeTypes("video/av01", "video/vp9") // Prefer AV1 via dav1d
+                .setPreferredVideoMimeTypes("video/av01", "video/vp9") // Prefer AV1/VP9 for highest quality
                 .setTunnelingEnabled(true)
+                .setForceHighestSupportedBitrate(true) // Always pick highest quality track
+                .setMaxVideoSize(Integer.MAX_VALUE, Integer.MAX_VALUE) // Absolute No resolution cap
+                .clearViewportSizeConstraints() // IGNORE screen size limitations (force 4K on 1080p screen for premium sharpness)
+                .setAllowVideoNonSeamlessAdaptiveness(true)
         )
 
         // Custom load control for music streaming (low latency startup & low sync lag)

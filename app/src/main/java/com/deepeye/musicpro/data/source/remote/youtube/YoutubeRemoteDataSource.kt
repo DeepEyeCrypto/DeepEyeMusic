@@ -6,15 +6,7 @@ package com.deepeye.musicpro.data.source.remote.youtube
 import android.util.Log
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
-import org.schabi.newpipe.extractor.InfoItem
-import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.Page
-import org.schabi.newpipe.extractor.ServiceList
-import org.schabi.newpipe.extractor.StreamingService
-import org.schabi.newpipe.extractor.localization.ContentCountry
-import org.schabi.newpipe.extractor.localization.Localization
-import org.schabi.newpipe.extractor.stream.StreamInfo
-import org.schabi.newpipe.extractor.stream.StreamInfoItem
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,7 +18,7 @@ import javax.inject.Singleton
 class YoutubeRemoteDataSource
 @Inject
 constructor(
-    private val downloader: NewPipeDownloader,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
     private val client: okhttp3.OkHttpClient,
     private val rankingManager: com.deepeye.musicpro.diagnostics.ExtractionRankingManager,
     private val headlessExtractor: HeadlessWebViewExtractor,
@@ -41,25 +33,14 @@ constructor(
             .build()
     }
 
-    private val yt: StreamingService by lazy {
-        NewPipe.init(downloader, Localization.DEFAULT, ContentCountry.DEFAULT)
-        ServiceList.YouTube
-    }
-
     // 🔍 Search videos
     suspend fun searchVideos(query: String): List<HomeVideoItem> = searchVideosFirstPage(query).items
 
     suspend fun searchVideosFirstPage(query: String): SearchResultPage =
         withContext(ioDispatcher) {
             try {
-                val extractor = yt.getSearchExtractor(query)
-                extractor.fetchPage()
-                val page = extractor.initialPage
-                val infoItems: List<InfoItem> = page.items
-                val videos =
-                    infoItems.filterIsInstance<StreamInfoItem>()
-                        .map { item: StreamInfoItem -> item.toHomeVideoItem() }
-                SearchResultPage(videos, page.nextPage)
+                val page = com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).searchVideosFirstPage(query)
+                SearchResultPage(page.videos.map { it.toHomeVideoItem() }, page.nextPageUrl)
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "searchVideosFirstPage failed: ${e.message}")
                 SearchResultPage(emptyList(), null)
@@ -68,49 +49,34 @@ constructor(
 
     suspend fun searchVideosNextPage(
         query: String,
-        nextPageToken: Page,
+        nextPageUrl: String,
     ): SearchResultPage =
         withContext(ioDispatcher) {
             try {
-                val extractor = yt.getSearchExtractor(query)
-                extractor.fetchPage() // fetchPage initialization
-                val page = extractor.getPage(nextPageToken)
-                val infoItems: List<InfoItem> = page.items
-                val videos =
-                    infoItems.filterIsInstance<StreamInfoItem>()
-                        .map { item: StreamInfoItem -> item.toHomeVideoItem() }
-                SearchResultPage(videos, page.nextPage)
+                val page = com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).searchVideosNextPage(query, nextPageUrl)
+                SearchResultPage(page.videos.map { it.toHomeVideoItem() }, page.nextPageUrl)
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "searchVideosNextPage failed: ${e.message}")
                 SearchResultPage(emptyList(), null)
             }
         }
 
-    // 📈 Trending (Using search as a more reliable fallback for KMP fork)
+    // 📈 Trending
     suspend fun getTrending(): List<HomeVideoItem> =
         withContext(ioDispatcher) {
             try {
-                searchVideos("trending music")
+                com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).getTrending().map { it.toHomeVideoItem() }
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "getTrending failed: ${e.message}")
                 emptyList()
             }
         }
 
-    // 🎵 Music search (YouTube Music filter)
+    // 🎵 Music search
     suspend fun searchMusic(query: String): List<HomeMusicItem> =
         withContext(ioDispatcher) {
             try {
-                val extractor =
-                    yt.getSearchExtractor(
-                        query,
-                        listOf("music_songs"),
-                        "",
-                    )
-                extractor.fetchPage()
-                val infoItems: List<InfoItem> = extractor.initialPage.items
-                infoItems.filterIsInstance<StreamInfoItem>()
-                    .map { item: StreamInfoItem -> item.toHomeMusicItem() }
+                com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).searchMusic(query).map { it.toHomeMusicItem() }
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "searchMusic failed: ${e.message}", e)
                 throw e
@@ -224,32 +190,13 @@ constructor(
         }
 
     private suspend fun extractNewPipe(videoId: String, preferVideo: Boolean): StreamResult? {
-        val url = "https://www.youtube.com/watch?v=$videoId"
-        val info = StreamInfo.getInfo(yt, url)
-
-        if (preferVideo) {
-            val streamUrl = info.dashMpdUrl?.takeIf { it.isNotEmpty() }
-                ?: info.hlsUrl?.takeIf { it.isNotEmpty() }
-            if (streamUrl != null) {
-                return StreamResult(streamUrl, isVideo = true)
+        return try {
+            com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).extractStream(videoId, preferVideo)?.let {
+                StreamResult(it.url, isVideo = it.container != "audio", isAdaptive = it.container == "adaptive")
             }
-            val audioFallback = info.audioStreams.maxByOrNull { it.bitrate }?.content
-            if (audioFallback != null) {
-                return StreamResult(audioFallback, isVideo = false)
-            }
-            throw RuntimeException("NewPipe returned no DASH/HLS or audio stream URLs for $videoId")
-        } else {
-            val audio = info.audioStreams.maxByOrNull { it.bitrate }
-                ?: info.audioStreams.firstOrNull()
-            if (audio != null) {
-                return StreamResult(audio.content, isVideo = false)
-            }
-            val dashOrHls = info.dashMpdUrl?.takeIf { it.isNotEmpty() }
-                ?: info.hlsUrl?.takeIf { it.isNotEmpty() }
-            if (dashOrHls != null) {
-                return StreamResult(dashOrHls, isVideo = false)
-            }
-            throw RuntimeException("NewPipe returned no audio or DASH/HLS stream URLs for $videoId")
+        } catch (e: Exception) {
+            Log.e("YoutubeDS", "NewPipe extract failed", e)
+            null
         }
     }
 
@@ -478,17 +425,13 @@ constructor(
     ): List<com.deepeye.musicpro.domain.model.MediaItem.Remote> =
         withContext(ioDispatcher) {
             try {
-                // Search for related music using title and artist
-                val query = "related to $title $artist"
-                val relatedItems = searchMusic(query)
-
-                relatedItems.map { item ->
+                com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).getRelatedMusic("$title $artist").map { item ->
                     com.deepeye.musicpro.domain.model.MediaItem.Remote(
                         id = item.id,
                         title = item.title,
                         artist = item.artist,
                         artworkUri = android.net.Uri.parse(item.thumbnailUrl),
-                        duration = item.duration * 1000L, // Seconds to ms
+                        duration = item.duration * 1000L,
                         isVideo = isVideo,
                     )
                 }
@@ -502,13 +445,7 @@ constructor(
     suspend fun getShorts(): List<HomeVideoItem> =
         withContext(ioDispatcher) {
             try {
-                val extractor = yt.getSearchExtractor("shorts #trending")
-                extractor.fetchPage()
-                val infoItems: List<InfoItem> = extractor.initialPage.items
-                infoItems.filterIsInstance<StreamInfoItem>()
-                    .filter { it.duration in 1..60 }
-                    .take(12)
-                    .map { item: StreamInfoItem -> item.toHomeVideoItem(isShort = true) }
+                com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).getShorts().map { it.toHomeVideoItem() }
             } catch (e: Exception) {
                 emptyList()
             }
@@ -517,30 +454,8 @@ constructor(
     // 💡 Search Suggestions
     suspend fun getSearchSuggestions(query: String): List<String> =
         withContext(ioDispatcher) {
-            if (query.trim().isEmpty()) return@withContext emptyList()
             try {
-                val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
-                val request =
-                    okhttp3.Request.Builder()
-                        .url(
-                            "https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=$encodedQuery"
-                        )
-                        .build()
-                val response = client.newCall(request).execute()
-                val body = response.body?.string() ?: ""
-
-                // Parse the response: ["query", ["suggestion1", "suggestion2", ...]]
-                // Regex matches: ["query",["s1","s2",...]] or ["query",["s1","s2",...],...]
-                val regex = """\["([^"]+)"\s*,\s*\[([^\]]+)\]""".toRegex()
-                val match = regex.find(body)
-                if (match != null) {
-                    val arrayPart = match.groupValues[2]
-                    arrayPart.split(",")
-                        .map { it.replace("\"", "").trim() }
-                        .filter { it.isNotEmpty() }
-                } else {
-                    emptyList()
-                }
+                com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).getSearchSuggestions(query)
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "getSearchSuggestions failed: ${e.message}")
                 emptyList()
@@ -548,28 +463,22 @@ constructor(
         }
 
     // Mappers
-    private fun StreamInfoItem.toHomeVideoItem(isShort: Boolean = false) =
-        HomeVideoItem(
-            id = url.extractVideoId(),
-            title = name ?: "Unknown",
-            channelName = uploaderName ?: "Unknown",
-            channelId = uploaderName ?: "",
-            thumbnailUrl = thumbnails.lastOrNull()?.url ?: "",
-            duration = duration,
-            viewCount = 0L,
-            uploadDate = "",
-            isShort = isShort || duration in 1..60,
-        )
+    private fun com.deepeye.musicpro.extractor.bridge.ExtractorVideoItem.toHomeVideoItem() = HomeVideoItem(
+        id = id,
+        title = title,
+        channelName = artist,
+        thumbnailUrl = thumbnailUrl,
+        duration = duration,
+        isShort = isShort
+    )
 
-    private fun StreamInfoItem.toHomeMusicItem() =
-        HomeMusicItem(
-            id = url.extractVideoId(),
-            title = name ?: "Unknown",
-            artist = uploaderName ?: "Unknown Artist",
-            thumbnailUrl = thumbnails.lastOrNull()?.url ?: "",
-            duration = duration,
-            playCount = 0L,
-        )
+    private fun com.deepeye.musicpro.extractor.bridge.ExtractorMusicItem.toHomeMusicItem() = HomeMusicItem(
+        id = id,
+        title = title,
+        artist = artist,
+        thumbnailUrl = thumbnailUrl,
+        duration = duration
+    )
 
     private fun String.extractVideoId(): String {
         val id =
@@ -588,9 +497,10 @@ constructor(
 data class StreamResult(
     val url: String,
     val isVideo: Boolean,
+    val isAdaptive: Boolean = false,
 )
 
 data class SearchResultPage(
     val items: List<HomeVideoItem>,
-    val nextPage: Page?,
+    val nextPageUrl: String?,
 )

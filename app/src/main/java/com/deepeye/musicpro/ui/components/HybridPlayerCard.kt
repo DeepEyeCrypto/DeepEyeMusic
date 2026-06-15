@@ -67,6 +67,7 @@ fun VideoPlayerView(
             val view = android.view.LayoutInflater.from(context).inflate(com.deepeye.musicpro.R.layout.custom_player_view, null, false)
             val pv = view as androidx.media3.ui.PlayerView
             pv.keepScreenOn = true
+            pv.resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
             pv
         }
 
@@ -141,6 +142,15 @@ fun HybridPlayerCard(
     // PiP mode awareness
     val isInPipMode = LocalPipMode.current
     val context = androidx.compose.ui.platform.LocalContext.current
+
+    // VLC Gesture OSD States
+    var volumeOsd by remember { mutableStateOf<Int?>(null) }
+    var brightnessOsd by remember { mutableStateOf<Int?>(null) }
+    var seekOsd by remember { mutableStateOf<Long?>(null) }
+    var isDragging by remember { mutableStateOf(false) }
+    
+    val audioManager = remember { context.getSystemService(android.content.Context.AUDIO_SERVICE) as android.media.AudioManager }
+    val activity = context as? android.app.Activity
 
     // WebView player removed. ExoPlayer handles all video track rendering natively.
 
@@ -263,25 +273,99 @@ fun HybridPlayerCard(
                                 .fillMaxSize()
                                 .pointerInput(isFullscreen) {
                                     if (!isFullscreen) return@pointerInput
+                                    var initialBrightness = 0f
+                                    var initialVolume = 0
+                                    var initialSeek = 0L
+                                    var maxVolume = audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
+                                    var dragDirection: Int? = null // 1: Horizontal (Seek), 2: Vertical Left (Brightness), 3: Vertical Right (Volume), 4: Exit
+                                    
                                     awaitEachGesture {
-                                        val down = awaitFirstDown(
-                                            requireUnconsumed = false,
-                                            pass = PointerEventPass.Final
-                                        )
+                                        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Main)
                                         val slopThreshold = viewConfiguration.touchSlop
+                                        val screenWidth = size.width
+                                        val screenHeight = size.height
+                                        
+                                        initialBrightness = activity?.window?.attributes?.screenBrightness ?: -1f
+                                        if (initialBrightness < 0f) initialBrightness = 0.5f // fallback
+                                        initialVolume = audioManager.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)
+                                        initialSeek = player.currentPosition
+                                        dragDirection = null
+                                        isDragging = false
+
                                         while (true) {
-                                            val event = awaitPointerEvent(PointerEventPass.Final)
+                                            val event = awaitPointerEvent(PointerEventPass.Main)
                                             val change = event.changes.firstOrNull { it.id == down.id }
-                                            if (change == null || !change.pressed) break
+                                            if (change == null || !change.pressed) {
+                                                if (isDragging) {
+                                                    // Apply Seek if it was a seek drag
+                                                    seekOsd?.let { 
+                                                        player.seekTo(it) 
+                                                        onSeekTo(it)
+                                                    }
+                                                    volumeOsd = null
+                                                    brightnessOsd = null
+                                                    seekOsd = null
+                                                    isDragging = false
+                                                }
+                                                break
+                                            }
+
                                             val dy = change.position.y - down.position.y
                                             val dx = change.position.x - down.position.x
-                                            // Only consume if clearly vertical (2:1 ratio)
-                                            if (kotlin.math.abs(dy) > slopThreshold * 2 &&
-                                                kotlin.math.abs(dy) > kotlin.math.abs(dx) * 2f
-                                            ) {
-                                                if (dy > 50f) {
-                                                    fullscreenMode.exit()
-                                                    break
+                                            
+                                            // Determine direction if not locked yet
+                                            if (dragDirection == null) {
+                                                if (kotlin.math.abs(dy) > slopThreshold * 2 || kotlin.math.abs(dx) > slopThreshold * 2) {
+                                                    isDragging = true
+                                                    if (kotlin.math.abs(dy) > kotlin.math.abs(dx) * 1.5f) {
+                                                        // Vertical drag
+                                                        if (dy > 50f && down.position.y < screenHeight * 0.2f) {
+                                                            // Pull down from top -> Exit Fullscreen
+                                                            dragDirection = 4
+                                                        } else if (down.position.x < screenWidth / 2) {
+                                                            // Left side vertical -> Brightness
+                                                            dragDirection = 2
+                                                        } else {
+                                                            // Right side vertical -> Volume
+                                                            dragDirection = 3
+                                                        }
+                                                    } else {
+                                                        // Horizontal drag -> Seek
+                                                        dragDirection = 1
+                                                    }
+                                                }
+                                            }
+
+                                            // Apply Gesture
+                                            if (dragDirection != null) {
+                                                change.consume() // Consume drag so children don't tap
+                                                resetTimer()
+                                                when (dragDirection) {
+                                                    1 -> { // Seek
+                                                        val seekDeltaMs = ((dx / screenWidth) * 90000f).toLong() // Max 90s swipe per screen width
+                                                        val targetSeek = (initialSeek + seekDeltaMs).coerceIn(0L, player.duration.coerceAtLeast(0L))
+                                                        seekOsd = targetSeek
+                                                    }
+                                                    2 -> { // Brightness
+                                                        val deltaB = -(dy / screenHeight) * 1.5f // Negative because up is minus Y
+                                                        val newBrightness = (initialBrightness + deltaB).coerceIn(0.01f, 1f)
+                                                        activity?.window?.attributes = activity?.window?.attributes?.apply {
+                                                            screenBrightness = newBrightness
+                                                        }
+                                                        brightnessOsd = (newBrightness * 100).toInt()
+                                                    }
+                                                    3 -> { // Volume
+                                                        val deltaV = -(dy / screenHeight) * maxVolume * 1.5f
+                                                        val newVolume = (initialVolume + deltaV).toInt().coerceIn(0, maxVolume)
+                                                        audioManager.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, newVolume, 0)
+                                                        volumeOsd = ((newVolume.toFloat() / maxVolume) * 100).toInt()
+                                                    }
+                                                    4 -> { // Exit
+                                                        if (dy > 50f) {
+                                                            fullscreenMode.exit()
+                                                            break
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -747,6 +831,40 @@ fun HybridPlayerCard(
                                                 modifier = Modifier.size(18.dp),
                                             )
                                         }
+                                    }
+                                }
+                            }
+                        }
+
+                        // VLC GESTURE OSD OVERLAY
+                        AnimatedVisibility(
+                            visible = isDragging && (brightnessOsd != null || volumeOsd != null || seekOsd != null),
+                            enter = fadeIn(),
+                            exit = fadeOut(),
+                            modifier = Modifier.align(Alignment.Center)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = Color.Black.copy(alpha = 0.65f),
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (brightnessOsd != null) {
+                                        Icon(imageVector = Icons.Default.Speed, contentDescription = null, tint = Color.White) // Fallback icon
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(text = "${brightnessOsd}%", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+                                    } else if (volumeOsd != null) {
+                                        Icon(imageVector = if (volumeOsd!! == 0) Icons.AutoMirrored.Filled.VolumeMute else Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = Color.White)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(text = "${volumeOsd}%", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+                                    } else if (seekOsd != null) {
+                                        val delta = seekOsd!! - player.currentPosition
+                                        val sign = if (delta > 0) "+" else ""
+                                        Text(text = "$sign${delta / 1000}s", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(text = "[${com.deepeye.musicpro.core.utils.TimeFormatter.formatDuration(seekOsd!!)}]", color = Color.White.copy(alpha = 0.75f), style = MaterialTheme.typography.bodyLarge)
                                     }
                                 }
                             }

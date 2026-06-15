@@ -235,7 +235,7 @@ class HeadlessWebViewExtractor @Inject constructor(
                 val onCapturedLocal = { url: String ->
                     if (!isResumed) {
                         isResumed = true
-                        Log.i(tag, "✅ Intercepted stream URL for $videoId (Audio/Video URL: $url)")
+                        Log.i(tag, "✅ Intercepted stream URL for $videoId (URL: $url)")
                         handler.removeCallbacks(timeoutRunnable)
                         handler.post {
                             activeSession = null
@@ -308,14 +308,23 @@ class HeadlessWebViewExtractor @Inject constructor(
                         if (url.contains(".googlevideo.com/videoplayback")) {
                             val uriParam = Uri.parse(url)
                             val mime = uriParam.getQueryParameter("mime")
-                            Log.d(tag, "🎥 Intercepted videoplayback request: $url (mime: $mime, preferVideo: $preferVideo)")
-                            val isAudio = mime?.startsWith("audio") == true || url.contains("mime=audio")
-                            // Accept any valid media stream (audio or video). 
-                            // Progressive fallback often serves itag=18 (video/mp4) containing both audio and video.
-                            if (mime?.startsWith("audio") == true || mime?.startsWith("video") == true) {
-                                val reqHeaders = request?.requestHeaders ?: HashMap()
-                                Log.i(tag, "🎥 Intercepted videoplayback request headers for $videoId: $reqHeaders")
-                                onCapturedLocal(url)
+                            val itag = uriParam.getQueryParameter("itag")
+                            Log.d(tag, "🎥 Intercepted videoplayback: itag=$itag mime=$mime preferVideo=$preferVideo")
+                            
+                            if (preferVideo) {
+                                // For video mode: accept any video mime stream (adaptive or progressive)
+                                if (mime?.startsWith("video") == true) {
+                                    val reqHeaders = request?.requestHeaders ?: HashMap()
+                                    Log.i(tag, "🎥 Intercepted videoplayback request headers for $videoId: $reqHeaders")
+                                    onCapturedLocal(url)
+                                }
+                            } else {
+                                // For audio mode: accept audio streams
+                                if (mime?.startsWith("audio") == true) {
+                                    val reqHeaders = request?.requestHeaders ?: HashMap()
+                                    Log.i(tag, "🎥 Intercepted audio request headers for $videoId: $reqHeaders")
+                                    onCapturedLocal(url)
+                                }
                             }
                         }
                         return super.shouldInterceptRequest(view, request)
@@ -324,7 +333,11 @@ class HeadlessWebViewExtractor @Inject constructor(
                     override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                         super.onPageStarted(view, url, favicon)
                         // Force progressive stream by disabling MSE early
-                        view?.evaluateJavascript("window.MediaSource = undefined; window.webkitMediaSource = undefined;", null)
+                        view?.evaluateJavascript("""
+                            window.MediaSource = undefined;
+                            window.webkitMediaSource = undefined;
+                        """.trimIndent(), null)
+                        Log.d(tag, "Page started: $url (MediaSource disabled, progressive mode)")
                     }
 
                     override fun onPageFinished(view: WebView?, url: String?) {
