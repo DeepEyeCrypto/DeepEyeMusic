@@ -225,7 +225,7 @@ fun DeepEyeMusicApp(
 
         // Hide bottom nav on full-screen destinations AND in PiP mode
         val showBottomBar =
-            !isInPipMode && currentDestination?.hierarchy?.any { dest ->
+            !isInPipMode && !fullscreenMode.isFullscreen && currentDestination?.hierarchy?.any { dest ->
                 bottomNavItems.any { it.route == dest.route }
             } == true
 
@@ -398,9 +398,9 @@ fun DeepEyeMusicApp(
                             }
                         },
                         backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.25f),
-                        indicatorColor = androidx.compose.ui.graphics.Color(0xFF7B3FE4),
-                        activeIconColor = androidx.compose.ui.graphics.Color(0xFF8B0000),
-                        inactiveIconColor = androidx.compose.ui.graphics.Color.Yellow,
+                        indicatorColor = androidx.compose.ui.graphics.Color(0xFF00E5C3).copy(alpha = 0.2f),
+                        activeIconColor = androidx.compose.ui.graphics.Color(0xFF00E5C3), // Cyan accent
+                        inactiveIconColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
                         surfaceColor = androidx.compose.ui.graphics.Color.Transparent,
                         modifier = Modifier
                             .navigationBarsPadding()
@@ -409,33 +409,35 @@ fun DeepEyeMusicApp(
                 }
             }
 
-            // Status Bar Glass Overlay
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
-                    .align(Alignment.TopCenter)
-                    .background(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.25f))
-            )
-
-        // Global Update Banner
-        if (settingsUiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.UpdateAvailable || 
-            settingsUiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.Downloading ||
-            settingsUiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.Downloaded) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
-                    .align(Alignment.TopCenter)
-            ) {
-                com.deepeye.musicpro.ui.settings.UpdateBanner(
-                    state = settingsUiState.updateState,
-                    onDownloadClick = { url, version -> settingsViewModel.downloadUpdate(url, version) },
-                    onInstallClick = { file -> settingsViewModel.installApk(file) },
-                    onDismissClick = { settingsViewModel.resetUpdateState() }
+            if (!fullscreenMode.isFullscreen) {
+                // Status Bar Glass Overlay
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
+                        .align(Alignment.TopCenter)
+                        .background(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.25f))
                 )
+
+                // Global Update Banner
+                if (settingsUiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.UpdateAvailable || 
+                    settingsUiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.Downloading ||
+                    settingsUiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.Downloaded) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
+                            .align(Alignment.TopCenter)
+                    ) {
+                        com.deepeye.musicpro.ui.settings.UpdateBanner(
+                            state = settingsUiState.updateState,
+                            onDownloadClick = { url, version -> settingsViewModel.downloadUpdate(url, version) },
+                            onInstallClick = { file -> settingsViewModel.installApk(file) },
+                            onDismissClick = { settingsViewModel.resetUpdateState() }
+                        )
+                    }
+                }
             }
-        }
         
         // Overlay AnchoredMiniPlayer (Outside the scaffold conditional, so it covers everything)
         if (playerState.currentItem != null && !isInPipMode) {

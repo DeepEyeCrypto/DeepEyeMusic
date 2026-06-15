@@ -96,8 +96,8 @@ fun MagicNavigationBar(
         cornerRadius = 32.dp,
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-            .height(76.dp)
+            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
+            .height(56.dp)
             .onGloballyPositioned { coords ->
                 totalWidthPx = coords.size.width
             }
@@ -170,7 +170,7 @@ fun MagicNavigationBar(
                         contentDescription = item.label,
                         tint = tint.copy(alpha = animatedAlpha),
                         modifier = Modifier
-                            .size(26.dp)
+                            .size(20.dp)
                             .graphicsLayer {
                                 scaleX = scale
                                 scaleY = scale

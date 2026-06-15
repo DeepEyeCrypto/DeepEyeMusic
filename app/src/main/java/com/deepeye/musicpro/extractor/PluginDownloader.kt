@@ -1,4 +1,4 @@
-package com.deepeye.musicpro.extractor.plugin
+package com.deepeye.musicpro.extractor
 
 import org.schabi.newpipe.extractor.downloader.Downloader
 import org.schabi.newpipe.extractor.downloader.Request

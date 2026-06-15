@@ -626,7 +626,7 @@ private fun VideoNowPlayingLayout(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .let { if (!isFullscreen) it.statusBarsPadding().navigationBarsPadding() else it }
+            .then(if (!isFullscreen) Modifier.statusBarsPadding().navigationBarsPadding() else Modifier)
     ) {
         // 1. Header Row
         if (!isFullscreen) {
@@ -654,28 +654,28 @@ private fun VideoNowPlayingLayout(
         }
 
         // 2. Video Player Section (WebView) - Fixed 16:9 Aspect Ratio
-        val videoModifier = if (isFullscreen) {
-            Modifier
-                .fillMaxSize()
-                .background(Color.Black)
-        } else {
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 32.dp)
-                .aspectRatio(16 / 9f)
-                .shadow(
-                    elevation = 24.dp,
-                    shape = RoundedCornerShape(24.dp),
-                    spotColor = finalAccentColor,
-                    ambientColor = finalAccentColor
-                )
-                .clip(RoundedCornerShape(24.dp))
-                .border(1.5.dp, finalAccentColor.copy(alpha = 0.35f), RoundedCornerShape(24.dp))
-                .background(Color.Transparent)
-        }
-
         Box(
-            modifier = videoModifier
+            modifier = Modifier.then(
+                if (isFullscreen) {
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black)
+                } else {
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
+                        .aspectRatio(16 / 9f)
+                        .shadow(
+                            elevation = 24.dp,
+                            shape = RoundedCornerShape(24.dp),
+                            spotColor = finalAccentColor,
+                            ambientColor = finalAccentColor
+                        )
+                        .clip(RoundedCornerShape(24.dp))
+                        .border(1.5.dp, finalAccentColor.copy(alpha = 0.35f), RoundedCornerShape(24.dp))
+                        .background(Color.Transparent)
+                }
+            )
         ) {
             val innerItem = playerState.currentItem
             if (innerItem != null) {

@@ -313,18 +313,18 @@ fun HeroSection() {
     com.deepeye.musicpro.ui.components.GlassCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 24.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         tintColor = ElectricViolet.copy(alpha = 0.1f),
-        cornerRadius = 32.dp,
+        cornerRadius = 24.dp,
         refractionHeight = 0.4f
     ) {
         Box(
-            modifier = Modifier.padding(32.dp)
+            modifier = Modifier.padding(20.dp)
         ) {
         Column {
             Text(
                 text = "$btcPrice • $timeString",
-                style = MaterialTheme.typography.headlineMedium.copy(
+                style = MaterialTheme.typography.titleMedium.copy(
                     brush = gradientBrush
                 ),
                 fontWeight = FontWeight.ExtraBold,
@@ -371,8 +371,8 @@ fun RecommendationRowUI(
                     DynamicLabel(
                         text = row.title,
                         backgroundColor = Color.Black,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.ExtraBold,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
                         
                     )
                     if (row.subtitle.isNotBlank()) {
@@ -416,12 +416,7 @@ fun RecommendationRowUI(
             itemsIndexed(row.items, key = { index, video -> "$index-${video.videoId}" }) { _, video ->
                 VideoRecommendationCard(
                     video = video,
-                    cardWidth =
-                    when (windowSizeClass.widthSizeClass) {
-                        WindowWidthSizeClass.Compact -> 140.dp
-                        WindowWidthSizeClass.Medium -> 170.dp
-                        else -> 200.dp
-                    },
+                    cardWidth = 100.dp,
                     onClick = { onVideoClick(video) },
                 )
             }
@@ -505,7 +500,7 @@ fun VideoRecommendationCard(
         DynamicLabel(
             text = video.title,
             backgroundColor = Color.Black,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -515,7 +510,7 @@ fun VideoRecommendationCard(
         SecondaryLabel(
             text = video.artist,
             backgroundColor = Color.Black,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             

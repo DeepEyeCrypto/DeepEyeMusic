@@ -78,10 +78,10 @@ private fun MoodChip(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(32.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(accentColor.copy(alpha = 0.2f))
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
         Row(

@@ -150,7 +150,7 @@ fun HybridPlayerCard(
     var isDragging by remember { mutableStateOf(false) }
     
     val audioManager = remember { context.getSystemService(android.content.Context.AUDIO_SERVICE) as android.media.AudioManager }
-    val activity = context as? android.app.Activity
+    val activity = remember { context.findActivity() }
 
     // WebView player removed. ExoPlayer handles all video track rendering natively.
 
@@ -224,7 +224,112 @@ fun HybridPlayerCard(
             contentAlignment = Alignment.Center,
         ) {
             if (isVideo) {
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(isFullscreen) {
+                            if (!isFullscreen) return@pointerInput
+                            var initialBrightness = 0f
+                            var initialVolume = 0
+                            var initialSeek = 0L
+                            var maxVolume = audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
+                            var dragDirection: Int? = null // 1: Horizontal (Seek), 2: Vertical Left (Brightness), 3: Vertical Right (Volume), 4: Exit
+                            
+                            awaitEachGesture {
+                                val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                                val slopThreshold = viewConfiguration.touchSlop
+                                val screenWidth = size.width
+                                val screenHeight = size.height
+                                
+                                android.util.Log.e("VLC_GESTURE", "pointerInput started")
+                                initialBrightness = activity?.window?.attributes?.screenBrightness ?: -1f
+                                if (initialBrightness < 0f) initialBrightness = 0.5f // fallback
+                                initialVolume = audioManager.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)
+                                initialSeek = player.currentPosition
+                                dragDirection = null
+                                isDragging = false
+
+                                while (true) {
+                                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                                    val change = event.changes.firstOrNull { it.id == down.id }
+                                    if (change == null || !change.pressed) {
+                                        if (isDragging) {
+                                            // Apply Seek if it was a seek drag
+                                            seekOsd?.let { 
+                                                player.seekTo(it) 
+                                                onSeekTo(it)
+                                            }
+                                            volumeOsd = null
+                                            brightnessOsd = null
+                                            seekOsd = null
+                                            isDragging = false
+                                        }
+                                        break
+                                    }
+
+                                    val dy = change.position.y - down.position.y
+                                    val dx = change.position.x - down.position.x
+                                    
+                                    // Determine direction if not locked yet
+                                    if (dragDirection == null) {
+                                        if (kotlin.math.abs(dy) > slopThreshold || kotlin.math.abs(dx) > slopThreshold) {
+                                            isDragging = true
+                                            android.util.Log.e("VLC_GESTURE", "Drag detected. dx=$dx, dy=$dy, slop=$slopThreshold")
+                                            if (kotlin.math.abs(dy) > kotlin.math.abs(dx) * 1.5f) {
+                                                // Vertical drag
+                                                if (dy > 50f && down.position.y < screenHeight * 0.2f) {
+                                                    dragDirection = 4
+                                                    android.util.Log.e("VLC_GESTURE", "Exit Fullscreen")
+                                                } else if (down.position.x < screenWidth / 2) {
+                                                    dragDirection = 2
+                                                    android.util.Log.e("VLC_GESTURE", "Brightness")
+                                                } else {
+                                                    dragDirection = 3
+                                                    android.util.Log.e("VLC_GESTURE", "Volume")
+                                                }
+                                            } else {
+                                                dragDirection = 1
+                                                android.util.Log.e("VLC_GESTURE", "Seek")
+                                            }
+                                        }
+                                    }
+
+                                    // Apply Gesture
+                                    if (dragDirection != null) {
+                                        change.consume() // Consume drag so children don't tap
+                                        resetTimer()
+                                        when (dragDirection) {
+                                            1 -> { // Seek
+                                                val seekDeltaMs = ((dx / screenWidth) * 90000f).toLong() // Max 90s swipe per screen width
+                                                val targetSeek = (initialSeek + seekDeltaMs).coerceIn(0L, player.duration.coerceAtLeast(0L))
+                                                seekOsd = targetSeek
+                                            }
+                                            2 -> { // Brightness
+                                                val deltaB = -(dy / screenHeight) * 1.5f // Negative because up is minus Y
+                                                val newBrightness = (initialBrightness + deltaB).coerceIn(0.01f, 1f)
+                                                activity?.window?.attributes = activity?.window?.attributes?.apply {
+                                                    screenBrightness = newBrightness
+                                                }
+                                                brightnessOsd = (newBrightness * 100).toInt()
+                                            }
+                                            3 -> { // Volume
+                                                val deltaV = -(dy / screenHeight) * maxVolume * 1.5f
+                                                val newVolume = (initialVolume + deltaV).toInt().coerceIn(0, maxVolume)
+                                                audioManager.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, newVolume, 0)
+                                                volumeOsd = ((newVolume.toFloat() / maxVolume) * 100).toInt()
+                                            }
+                                            4 -> { // Exit
+                                                if (dy > 50f) {
+                                                    fullscreenMode.exit()
+                                                    break
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                ) {
                     VideoPlayerView(
                         player = player,
                         modifier = Modifier.fillMaxSize()
@@ -264,114 +369,10 @@ fun HybridPlayerCard(
 
                     // GESTURE SKIP ZONES + OVERLAYS: Hidden in PiP for clean view
                     if (!isInPipMode) {
-                        // Vertical drag overlay for fullscreen exit — uses Final pass
-                        // so child tap zones (which use Main pass) get priority.
-                        // Only consumes clearly vertical drags; taps and horizontal
-                        // movements pass through uninterrupted.
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .pointerInput(isFullscreen) {
-                                    if (!isFullscreen) return@pointerInput
-                                    var initialBrightness = 0f
-                                    var initialVolume = 0
-                                    var initialSeek = 0L
-                                    var maxVolume = audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
-                                    var dragDirection: Int? = null // 1: Horizontal (Seek), 2: Vertical Left (Brightness), 3: Vertical Right (Volume), 4: Exit
-                                    
-                                    awaitEachGesture {
-                                        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Main)
-                                        val slopThreshold = viewConfiguration.touchSlop
-                                        val screenWidth = size.width
-                                        val screenHeight = size.height
-                                        
-                                        initialBrightness = activity?.window?.attributes?.screenBrightness ?: -1f
-                                        if (initialBrightness < 0f) initialBrightness = 0.5f // fallback
-                                        initialVolume = audioManager.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)
-                                        initialSeek = player.currentPosition
-                                        dragDirection = null
-                                        isDragging = false
+                        // Vertical drag overlay for fullscreen exit — uses Initial pass
+                        // VLC-style gesture overlay has been moved to the parent Box above
+                        // to ensure it gets hit events BEFORE the sibling Tap Zones row.
 
-                                        while (true) {
-                                            val event = awaitPointerEvent(PointerEventPass.Main)
-                                            val change = event.changes.firstOrNull { it.id == down.id }
-                                            if (change == null || !change.pressed) {
-                                                if (isDragging) {
-                                                    // Apply Seek if it was a seek drag
-                                                    seekOsd?.let { 
-                                                        player.seekTo(it) 
-                                                        onSeekTo(it)
-                                                    }
-                                                    volumeOsd = null
-                                                    brightnessOsd = null
-                                                    seekOsd = null
-                                                    isDragging = false
-                                                }
-                                                break
-                                            }
-
-                                            val dy = change.position.y - down.position.y
-                                            val dx = change.position.x - down.position.x
-                                            
-                                            // Determine direction if not locked yet
-                                            if (dragDirection == null) {
-                                                if (kotlin.math.abs(dy) > slopThreshold * 2 || kotlin.math.abs(dx) > slopThreshold * 2) {
-                                                    isDragging = true
-                                                    if (kotlin.math.abs(dy) > kotlin.math.abs(dx) * 1.5f) {
-                                                        // Vertical drag
-                                                        if (dy > 50f && down.position.y < screenHeight * 0.2f) {
-                                                            // Pull down from top -> Exit Fullscreen
-                                                            dragDirection = 4
-                                                        } else if (down.position.x < screenWidth / 2) {
-                                                            // Left side vertical -> Brightness
-                                                            dragDirection = 2
-                                                        } else {
-                                                            // Right side vertical -> Volume
-                                                            dragDirection = 3
-                                                        }
-                                                    } else {
-                                                        // Horizontal drag -> Seek
-                                                        dragDirection = 1
-                                                    }
-                                                }
-                                            }
-
-                                            // Apply Gesture
-                                            if (dragDirection != null) {
-                                                change.consume() // Consume drag so children don't tap
-                                                resetTimer()
-                                                when (dragDirection) {
-                                                    1 -> { // Seek
-                                                        val seekDeltaMs = ((dx / screenWidth) * 90000f).toLong() // Max 90s swipe per screen width
-                                                        val targetSeek = (initialSeek + seekDeltaMs).coerceIn(0L, player.duration.coerceAtLeast(0L))
-                                                        seekOsd = targetSeek
-                                                    }
-                                                    2 -> { // Brightness
-                                                        val deltaB = -(dy / screenHeight) * 1.5f // Negative because up is minus Y
-                                                        val newBrightness = (initialBrightness + deltaB).coerceIn(0.01f, 1f)
-                                                        activity?.window?.attributes = activity?.window?.attributes?.apply {
-                                                            screenBrightness = newBrightness
-                                                        }
-                                                        brightnessOsd = (newBrightness * 100).toInt()
-                                                    }
-                                                    3 -> { // Volume
-                                                        val deltaV = -(dy / screenHeight) * maxVolume * 1.5f
-                                                        val newVolume = (initialVolume + deltaV).toInt().coerceIn(0, maxVolume)
-                                                        audioManager.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, newVolume, 0)
-                                                        volumeOsd = ((newVolume.toFloat() / maxVolume) * 100).toInt()
-                                                    }
-                                                    4 -> { // Exit
-                                                        if (dy > 50f) {
-                                                            fullscreenMode.exit()
-                                                            break
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                        )
 
                         Row(
                             modifier = Modifier.fillMaxSize(),
@@ -1071,4 +1072,13 @@ fun MediaInfoOverlay(player: ExoPlayer) {
             }
         }
     }
+}
+
+fun android.content.Context.findActivity(): android.app.Activity? {
+    var context = this
+    while (context is android.content.ContextWrapper) {
+        if (context is android.app.Activity) return context
+        context = context.baseContext
+    }
+    return null
 }

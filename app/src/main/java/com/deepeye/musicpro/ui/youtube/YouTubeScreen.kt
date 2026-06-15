@@ -1032,7 +1032,7 @@ fun VideoGridContent(
     when {
         isLoading -> {
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 180.dp),
+                columns = GridCells.Fixed(2),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
@@ -1055,7 +1055,7 @@ fun VideoGridContent(
             LazyVerticalGrid(
                 state = gridState,
                 modifier = Modifier.premiumScrollHaptics(gridState),
-                columns = GridCells.Adaptive(minSize = 180.dp),
+                columns = GridCells.Fixed(2),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(start = 12.dp, top = 12.dp, end = 12.dp, bottom = 180.dp)

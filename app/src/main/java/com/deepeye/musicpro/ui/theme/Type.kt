@@ -18,87 +18,87 @@ val AppTypography = Typography(
     // Display (For massive headers like Hero banners)
     displayLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontSize = 42.sp,
+        fontSize = 34.sp,
         fontWeight = FontWeight.ExtraBold,
-        lineHeight = 48.sp,
+        lineHeight = 40.sp,
         letterSpacing = (-1.0).sp,
     ),
     displayMedium = TextStyle(
         fontFamily = FontFamily.Default,
-        fontSize = 36.sp,
+        fontSize = 28.sp,
         fontWeight = FontWeight.Bold,
-        lineHeight = 42.sp,
+        lineHeight = 34.sp,
         letterSpacing = (-0.8).sp,
     ),
     
     // Headlines (For standard screen titles)
     headlineLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontSize = 28.sp,
+        fontSize = 24.sp,
         fontWeight = FontWeight.Bold,
-        lineHeight = 34.sp,
+        lineHeight = 30.sp,
         letterSpacing = (-0.5).sp,
     ),
     headlineMedium = TextStyle(
         fontFamily = FontFamily.Default,
-        fontSize = 24.sp,
+        fontSize = 20.sp,
         fontWeight = FontWeight.SemiBold,
-        lineHeight = 30.sp,
+        lineHeight = 26.sp,
         letterSpacing = (-0.3).sp,
     ),
     
     // Titles (For section headers, prominent list items like Song Titles)
     titleLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontSize = 20.sp,
+        fontSize = 18.sp,
         fontWeight = FontWeight.SemiBold,
-        lineHeight = 26.sp,
+        lineHeight = 24.sp,
         letterSpacing = (-0.2).sp,
     ),
     titleMedium = TextStyle(
         fontFamily = FontFamily.Default,
-        fontSize = 16.sp,
+        fontSize = 15.sp,
         fontWeight = FontWeight.SemiBold, // Bumped to SemiBold for premium feel
-        lineHeight = 22.sp,
+        lineHeight = 20.sp,
         letterSpacing = 0.sp,
     ),
     
     // Body (For descriptions, settings descriptions)
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontSize = 15.sp,
+        fontSize = 14.sp,
         fontWeight = FontWeight.Normal,
-        lineHeight = 22.sp,
+        lineHeight = 20.sp,
         letterSpacing = 0.1.sp,
     ),
     bodyMedium = TextStyle(
         fontFamily = FontFamily.Default,
-        fontSize = 14.sp,
+        fontSize = 13.sp,
         fontWeight = FontWeight.Normal,
-        lineHeight = 20.sp,
+        lineHeight = 18.sp,
         letterSpacing = 0.1.sp,
     ),
     
     // Labels (For buttons, small badges, Artist names under songs)
     labelLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Medium,
-        lineHeight = 18.sp,
-        letterSpacing = 0.2.sp,
-    ),
-    labelMedium = TextStyle(
-        fontFamily = FontFamily.Default,
         fontSize = 12.sp,
         fontWeight = FontWeight.Medium,
         lineHeight = 16.sp,
         letterSpacing = 0.2.sp,
     ),
-    labelSmall = TextStyle( // Captions, tiny metadata
+    labelMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontSize = 11.sp,
         fontWeight = FontWeight.Medium,
         lineHeight = 14.sp,
+        letterSpacing = 0.2.sp,
+    ),
+    labelSmall = TextStyle( // Captions, tiny metadata
+        fontFamily = FontFamily.Default,
+        fontSize = 10.sp,
+        fontWeight = FontWeight.Medium,
+        lineHeight = 12.sp,
         letterSpacing = 0.3.sp,
     )
 )

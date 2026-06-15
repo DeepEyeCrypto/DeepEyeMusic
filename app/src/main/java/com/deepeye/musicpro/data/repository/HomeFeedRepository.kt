@@ -182,14 +182,30 @@ constructor(
             )
         }
 
-    private fun buildMoodMixes(): List<MoodMix> = listOf(
-        MoodMix(MoodCategory.CHILL, "Chill Vibes", "lofi chill beats relax", "🧊", 0xFF00BCD4),
-        MoodMix(MoodCategory.ENERGETIC, "Energy Boost", "upbeat workout motivation", "⚡", 0xFFFF5722),
-        MoodMix(MoodCategory.ROMANTIC, "Romance", "romantic hindi bollywood", "❤️", 0xFFE91E63),
-        MoodMix(MoodCategory.FOCUS, "Deep Focus", "instrumental focus study", "🎯", 0xFF2196F3),
-        MoodMix(MoodCategory.SAD, "In My Feels", "sad emotional hindi songs", "🥺", 0xFF607D8B),
-        MoodMix(MoodCategory.PARTY, "Party Mode", "party dance punjabi hindi", "🎉", 0xFFFF9800),
-        MoodMix(MoodCategory.WORKOUT, "Gym Beast", "gym workout bass heavy", "💪", 0xFF4CAF50),
-        MoodMix(MoodCategory.SLEEP, "Sleep", "sleep ambient calm piano", "😴", 0xFF3F51B5),
-    )
+    private fun buildMoodMixes(): List<MoodMix> {
+        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+        
+        val baseMoods = listOf(
+            MoodMix(MoodCategory.CHILL, "Chill Vibes", "lofi chill beats relax", "🧊", 0xFF00BCD4),
+            MoodMix(MoodCategory.ENERGETIC, "Energy Boost", "upbeat workout motivation", "⚡", 0xFFFF5722),
+            MoodMix(MoodCategory.ROMANTIC, "Romance", "romantic hindi bollywood", "❤️", 0xFFE91E63),
+            MoodMix(MoodCategory.FOCUS, "Deep Focus", "instrumental focus study", "🎯", 0xFF2196F3),
+            MoodMix(MoodCategory.SAD, "In My Feels", "sad emotional hindi songs", "🥺", 0xFF607D8B),
+            MoodMix(MoodCategory.PARTY, "Party Mode", "party dance punjabi hindi", "🎉", 0xFFFF9800),
+            MoodMix(MoodCategory.WORKOUT, "Gym Beast", "gym workout bass heavy", "💪", 0xFF4CAF50),
+            MoodMix(MoodCategory.SLEEP, "Sleep", "sleep ambient calm piano", "😴", 0xFF3F51B5),
+        )
+        
+        // Prioritize moods based on time of day
+        return baseMoods.sortedByDescending { mood ->
+            when (mood.mood) {
+                MoodCategory.ENERGETIC, MoodCategory.WORKOUT -> if (hour in 6..10) 10 else 0
+                MoodCategory.FOCUS -> if (hour in 10..17) 10 else 0
+                MoodCategory.PARTY -> if (hour in 18..23) 10 else 0
+                MoodCategory.CHILL, MoodCategory.ROMANTIC -> if (hour in 19..23) 5 else 0
+                MoodCategory.SLEEP -> if (hour >= 22 || hour <= 4) 10 else 0
+                else -> 1
+            }
+        }
+    }
 }

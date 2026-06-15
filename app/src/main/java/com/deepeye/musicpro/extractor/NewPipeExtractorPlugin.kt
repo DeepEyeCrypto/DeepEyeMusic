@@ -1,6 +1,6 @@
-package com.deepeye.musicpro.extractor.plugin
+package com.deepeye.musicpro.extractor
 
-import com.deepeye.musicpro.extractor.bridge.*
+
 import org.schabi.newpipe.extractor.InfoItem
 import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.Page

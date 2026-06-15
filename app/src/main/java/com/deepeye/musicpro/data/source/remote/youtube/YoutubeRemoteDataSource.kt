@@ -23,6 +23,7 @@ constructor(
     private val rankingManager: com.deepeye.musicpro.diagnostics.ExtractionRankingManager,
     private val headlessExtractor: HeadlessWebViewExtractor,
 ) {
+    private val extractor = com.deepeye.musicpro.extractor.NewPipeExtractorPlugin()
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
     private val fastClient: okhttp3.OkHttpClient by lazy {
@@ -39,7 +40,7 @@ constructor(
     suspend fun searchVideosFirstPage(query: String): SearchResultPage =
         withContext(ioDispatcher) {
             try {
-                val page = com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).searchVideosFirstPage(query)
+                val page = extractor.searchVideosFirstPage(query)
                 SearchResultPage(page.videos.map { it.toHomeVideoItem() }, page.nextPageUrl)
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "searchVideosFirstPage failed: ${e.message}")
@@ -53,7 +54,7 @@ constructor(
     ): SearchResultPage =
         withContext(ioDispatcher) {
             try {
-                val page = com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).searchVideosNextPage(query, nextPageUrl)
+                val page = extractor.searchVideosNextPage(query, nextPageUrl)
                 SearchResultPage(page.videos.map { it.toHomeVideoItem() }, page.nextPageUrl)
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "searchVideosNextPage failed: ${e.message}")
@@ -65,7 +66,7 @@ constructor(
     suspend fun getTrending(): List<HomeVideoItem> =
         withContext(ioDispatcher) {
             try {
-                com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).getTrending().map { it.toHomeVideoItem() }
+                extractor.getTrending().map { it.toHomeVideoItem() }
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "getTrending failed: ${e.message}")
                 emptyList()
@@ -76,7 +77,7 @@ constructor(
     suspend fun searchMusic(query: String): List<HomeMusicItem> =
         withContext(ioDispatcher) {
             try {
-                com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).searchMusic(query).map { it.toHomeMusicItem() }
+                extractor.searchMusic(query).map { it.toHomeMusicItem() }
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "searchMusic failed: ${e.message}", e)
                 throw e
@@ -191,7 +192,7 @@ constructor(
 
     private suspend fun extractNewPipe(videoId: String, preferVideo: Boolean): StreamResult? {
         return try {
-            com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).extractStream(videoId, preferVideo)?.let {
+            extractor.extractStream(videoId, preferVideo)?.let {
                 StreamResult(it.url, isVideo = it.container != "audio", isAdaptive = it.container == "adaptive")
             }
         } catch (e: Exception) {
@@ -425,7 +426,7 @@ constructor(
     ): List<com.deepeye.musicpro.domain.model.MediaItem.Remote> =
         withContext(ioDispatcher) {
             try {
-                com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).getRelatedMusic("$title $artist").map { item ->
+                extractor.getRelatedMusic("$title $artist").map { item ->
                     com.deepeye.musicpro.domain.model.MediaItem.Remote(
                         id = item.id,
                         title = item.title,
@@ -445,7 +446,7 @@ constructor(
     suspend fun getShorts(): List<HomeVideoItem> =
         withContext(ioDispatcher) {
             try {
-                com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).getShorts().map { it.toHomeVideoItem() }
+                extractor.getShorts().map { it.toHomeVideoItem() }
             } catch (e: Exception) {
                 emptyList()
             }
@@ -455,7 +456,7 @@ constructor(
     suspend fun getSearchSuggestions(query: String): List<String> =
         withContext(ioDispatcher) {
             try {
-                com.deepeye.musicpro.core.plugins.PluginManager.getExtractor(context).getSearchSuggestions(query)
+                extractor.getSearchSuggestions(query)
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "getSearchSuggestions failed: ${e.message}")
                 emptyList()
@@ -463,7 +464,7 @@ constructor(
         }
 
     // Mappers
-    private fun com.deepeye.musicpro.extractor.bridge.ExtractorVideoItem.toHomeVideoItem() = HomeVideoItem(
+    private fun com.deepeye.musicpro.extractor.ExtractorVideoItem.toHomeVideoItem() = HomeVideoItem(
         id = id,
         title = title,
         channelName = artist,
@@ -472,7 +473,7 @@ constructor(
         isShort = isShort
     )
 
-    private fun com.deepeye.musicpro.extractor.bridge.ExtractorMusicItem.toHomeMusicItem() = HomeMusicItem(
+    private fun com.deepeye.musicpro.extractor.ExtractorMusicItem.toHomeMusicItem() = HomeMusicItem(
         id = id,
         title = title,
         artist = artist,

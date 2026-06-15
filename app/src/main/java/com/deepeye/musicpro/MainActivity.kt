@@ -205,9 +205,11 @@ class MainActivity : ComponentActivity() {
             val useDynamicColor = appSettings.dynamicColor
 
             val currentDensity = androidx.compose.ui.platform.LocalDensity.current
+            // Force a slimmer UI by clamping max density and applying a reduction scale (0.85x)
+            val targetDensity = (currentDensity.density * 0.85f).coerceAtMost(2.5f)
             val clampedDensity = androidx.compose.ui.unit.Density(
-                density = currentDensity.density.coerceAtMost(3.0f), // Don't let layout scale too extremely either
-                fontScale = 1.0f // STRICTLY enforce 1.0x font scaling for editor-grade UI stability
+                density = targetDensity,
+                fontScale = currentDensity.fontScale.coerceAtMost(1.0f) // Prevent massive fonts
             )
 
             androidx.compose.runtime.CompositionLocalProvider(
@@ -267,7 +269,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-            }
+            } // Close CompositionLocalProvider
         }
         
         handleIntent(intent)

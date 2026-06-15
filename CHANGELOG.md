@@ -1,25 +1,28 @@
-# DeepEye Music Pro — Version Changelog (STAGE 15)
+## v1.0.0 (2026-06-15)
 
-This document tracks all features added, improvements implemented, and deprecated legacy code retired in DeepEye Music Pro.
+### 🎉 Features
+- **Onboarding**: Language/Singer/Genre/Mood selection
+- **Autoplay**: 4-Layer Recommendation Engine (InnerTube + History + Scoring)
+- **Gamification**: Daily streaks, 8 badges, reward points system
+- **AI Radio**: Voice prompt bar + time-aware mood curation
+- **Premium UI**: Liquid Glass + Material 3 Expressive design
 
----
+### 🔥 Addiction Triggers
+- Instant autoplay (no pause = no thinking)
+- Daily streak progress bar + flame icon
+- Achievement popups with Instagram share
+- Time-aware mood auto-curation (morning=energy, night=chill)
+- AI voice: "play romantic Hindi songs for rain"
 
-## [Unreleased] — v2.0-Unified
+### 🛠 Technical
+- Minified + obfuscated (R8)
+- Hilt + Jetpack Compose optimized
+- DataStore persistence
+- Media3 playback stack
 
-### Added
-* **Native Video Rendering**: Integrated `androidx.media3.ui.PlayerView` Compose wrapper for native video playback in the YouTube/Music tab.
-* **Dynamic Resolution Capping**: Wired native track selection capping parameter settings in ExoPlayer for video quality selector (1080p, 720p, 480p).
-* **Audiophile USB DAC Preset**: Added a new built-in preset styled for clean dynamics and headroom on external USB audio interfaces.
-* **USB DAC Route Auto-detection**: Hardened `AudioRouteReceiver.kt` using `AudioManager.GET_DEVICES_OUTPUTS` checks to auto-apply the DAC preset when plugged in.
-* **Defensive DSP Release**: Added try-catch auto-release handler in `DSPEngine.kt` to clean up partially allocated effects on session initialization failures.
-* **History JSON Backup Restoring**: Implemented fully asynchronous JSON backup imports inside `HistoryRepository.kt`.
+## v1.0.1 (2026-06-16)
 
-### Changed
-* **Single Playback Engine**: Unified both video and audio streams directly under the single ExoPlayer instance, eliminating the legacy muted WebView and audio intercept proxy patterns.
-* **Simplified MediaSession Service**: Removed the complex video mock overrides inside `ForwardingPlayer` wrapper, letting Media3 natively handle state synchronization.
-* **Standardized Notification Controls**: Replaced custom manual notifications with native Media3 system media notifications for both audio and video modes.
-
-### Removed
-* **Retired YouTubeVideoPlayer WebView**: Deleted the legacy WebView-based player implementation entirely.
-* **Retired StreamTeeProxy & TeeProxyInputStream**: Removed the unused local proxy server code.
-* **Retired Unused Player Toggles**: Removed dead focus abandonment and player muting methods inside `PlayerController.kt`.
+### 🚀 Performance & Architecture
+- **Statically Linked Extractor**: Merged NewPipe extractor directly into the core app, eliminating dynamic DexClassLoader overhead.
+- **Zero Reflection Overhead**: Faster boot times and instantaneous search loading.
+- **Improved Stability**: Removed complex module bridge architecture to prevent class mismatch errors.

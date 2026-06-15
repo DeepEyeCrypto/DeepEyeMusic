@@ -57,6 +57,7 @@ constructor(
     private val audioSessionGuardian: com.deepeye.musicpro.diagnostics.AudioSessionGuardian,
     private val forensics: com.deepeye.musicpro.diagnostics.ExoPlayerForensics,
     private val dspProfileManager: com.deepeye.musicpro.dsp.profile.DspProfileManager,
+    private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -783,6 +784,15 @@ constructor(
                 )
 
             scope.launch(Dispatchers.IO) {
+                // Gamification update
+                gamificationEngine.checkAndUpdateStreak()
+                if (duration > 0) {
+                    val ratio = played.toFloat() / duration.toFloat()
+                    gamificationEngine.updateSongCompletion(duration, ratio)
+                    val minutes = (played / 60000).toInt()
+                    gamificationEngine.updateDailyListeningMinutes(minutes)
+                }
+
                 tasteProfileRepository.recordPlayEvent(event)
 
                 val isVideo = (currentItem as? MediaItem.Remote)?.isVideo == true

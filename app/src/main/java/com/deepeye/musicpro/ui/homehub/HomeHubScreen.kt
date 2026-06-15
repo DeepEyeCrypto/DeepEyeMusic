@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.*
@@ -64,8 +65,27 @@ fun HomeHubScreen(
     val recs by recommendationViewModel.recommendations.collectAsStateWithLifecycle()
     val isRecsLoading by recommendationViewModel.isRefreshing.collectAsStateWithLifecycle()
     val dspEngineState by viewModel.isDspAttached.collectAsStateWithLifecycle()
+    val gamificationState by viewModel.gamificationState.collectAsStateWithLifecycle()
 
     val isExpanded = windowSizeClass.widthSizeClass == androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
+
+    var showGamificationSheet by remember { mutableStateOf(false) }
+
+    if (showGamificationSheet) {
+        @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+        androidx.compose.material3.ModalBottomSheet(
+            onDismissRequest = { showGamificationSheet = false },
+            containerColor = Color(0xFF1E1E1E)
+        ) {
+            com.deepeye.musicpro.ui.gamification.GamificationBottomSheet(
+                streak = gamificationState.streak,
+                rewardPoints = gamificationState.rewardPoints,
+                unlockedBadges = gamificationState.unlockedBadges,
+                lockedBadges = gamificationState.lockedBadges,
+                onClaimReward = { showGamificationSheet = false }
+            )
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -73,6 +93,35 @@ fun HomeHubScreen(
             .background(Color.Transparent),
         contentAlignment = Alignment.TopCenter,
     ) {
+        var achievementToShow by remember { mutableStateOf<com.deepeye.musicpro.domain.gamification.UserAchievement?>(null) }
+        val context = androidx.compose.ui.platform.LocalContext.current
+        
+        LaunchedEffect(Unit) {
+            viewModel.achievementEvents.collect { event ->
+                // Find badge in state
+                val badge = gamificationState.unlockedBadges.find { it.requirement == event.requirement }
+                if (badge != null) {
+                    achievementToShow = badge
+                }
+            }
+        }
+
+        achievementToShow?.let { badge ->
+            com.deepeye.musicpro.ui.gamification.AchievementUnlockedPopup(
+                badge = badge,
+                onDismiss = { achievementToShow = null },
+                onShare = {
+                    achievementToShow = null
+                    // MOCK Instagram share
+                    android.widget.Toast.makeText(
+                        context,
+                        "Sharing to Instagram Stories...",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+            )
+        }
+
         LazyColumn(
             modifier =
             Modifier
@@ -83,11 +132,52 @@ fun HomeHubScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp),
             contentPadding = PaddingValues(
                 start = if (isExpanded) 32.dp else 0.dp,
-                top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 90.dp,
+                top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 130.dp,
                 end = if (isExpanded) 32.dp else 0.dp,
                 bottom = 260.dp, // Increased from 200.dp to ensure no overlap with Dock & Mini-Player
             ),
         ) {
+            item {
+                HomeGreetingHeader(onNavigateToSettings = onNavigateToSettings)
+            }
+
+            // Phase 3: Gamification UI
+            item {
+                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    com.deepeye.musicpro.ui.gamification.StreakProgressBar(
+                        currentStreak = gamificationState.streak.currentStreak,
+                        targetStreak = 7
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth().clickable { 
+                            showGamificationSheet = true
+                        },
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFD700).copy(alpha = 0.15f)),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = androidx.compose.material.icons.Icons.Default.Favorite,
+                                tint = Color(0xFFFFD700),
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "${gamificationState.rewardPoints.totalPoints} Reward Points",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFFD700)
+                            )
+                        }
+                    }
+                }
+            }
+
 
             // 1b. Featured Premium Audio Hero Card (AEOS Premium Feature)
             val featuredMusic = feedState.featuredMusic
@@ -136,7 +226,7 @@ fun HomeHubScreen(
                         moods = feedState.moodMixes,
                         onMoodClick = { mood -> 
                             android.widget.Toast.makeText(context, "Generating playlist for ${mood.label}...", android.widget.Toast.LENGTH_SHORT).show()
-                            viewModel.onMoodClick(mood.query) 
+                            viewModel.onMoodClick(mood) 
                         },
                     )
                 }
@@ -144,6 +234,19 @@ fun HomeHubScreen(
                 item {
                     android.util.Log.d("HomeHubScreen", "MoodMixes is empty!")
                 }
+            }
+
+            // Phase 4: AI Prompt Bar
+            item {
+                val isGenerating by viewModel.isAIGenerating.collectAsStateWithLifecycle()
+                val context = androidx.compose.ui.platform.LocalContext.current
+                AIPromptBar(
+                    isGenerating = isGenerating,
+                    onSubmitPrompt = { prompt ->
+                        android.widget.Toast.makeText(context, "AI is curating based on: $prompt", android.widget.Toast.LENGTH_SHORT).show()
+                        viewModel.onAIPromptSubmitted(prompt)
+                    }
+                )
             }
 
             // 6. DSP Quick Panel (Phase 7)
@@ -244,9 +347,6 @@ fun HomeHubScreen(
                 }
             }
         }
-
-        // Fixed BTC Ticker Overlay
-        HomeGreetingHeader(onNavigateToSettings = onNavigateToSettings)
     }
 }
 
@@ -276,18 +376,18 @@ private fun HomeGreetingHeader(onNavigateToSettings: () -> Unit) {
         }
     }
 
-    Box(
-        modifier = Modifier
-            .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 8.dp)
-            .padding(horizontal = 24.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(32.dp))
-            .background(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.25f)) // Clear dock background
-            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(32.dp))
-            .padding(horizontal = 24.dp, vertical = 20.dp), // Increased vertical padding for bigger text
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
+    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .padding(bottom = 8.dp)
+                .wrapContentWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color.Black.copy(alpha = 0.4f)) // Premium dark pill
+                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp))
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
             text = buildAnnotatedString {
                 withStyle(SpanStyle(color = Color(0xFFFFD700))) { // Gold for Bitcoin icon
                     append("₿ ")
@@ -296,10 +396,11 @@ private fun HomeGreetingHeader(onNavigateToSettings: () -> Unit) {
                     append(btcPrice.replace("₿ ", ""))
                 }
             },
-            style = MaterialTheme.typography.displaySmall, // Much bigger text
-            fontWeight = FontWeight.Black
+            style = MaterialTheme.typography.titleMedium, // Much smaller, professional
+            fontWeight = FontWeight.Bold
         )
     }
+}
 }
 
 @Composable

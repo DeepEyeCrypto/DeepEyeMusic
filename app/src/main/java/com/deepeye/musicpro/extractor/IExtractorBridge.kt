@@ -1,4 +1,4 @@
-package com.deepeye.musicpro.extractor.bridge
+package com.deepeye.musicpro.extractor
 
 data class ExtractorVideoItem(
     val id: String,

@@ -209,6 +209,11 @@ fun AnchoredMiniPlayer(
                                     dragDirection = null
                                     break
                                 }
+                                if (change.isConsumed) {
+                                    // A child consumed this event (e.g. VLC gestures in fullscreen).
+                                    // Abort the mini player drag completely.
+                                    return@awaitEachGesture
+                                }
 
                                 val dx = change.position.x - down.position.x
                                 val dy = change.position.y - down.position.y

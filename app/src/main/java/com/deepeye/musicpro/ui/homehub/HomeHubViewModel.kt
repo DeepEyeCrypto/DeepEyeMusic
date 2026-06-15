@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -34,14 +35,26 @@ constructor(
     private val visualizerEngine: VisualizerEngine,
     private val playerController: PlayerController,
     private val musicRepository: MusicRepository,
+    private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
+    private val gamificationRepository: com.deepeye.musicpro.domain.repository.GamificationRepository,
+    private val aiRadioEngine: com.deepeye.musicpro.domain.ai.AIRadioEngine,
 ) : ViewModel() {
     private val _feedState = MutableStateFlow(HomeFeedState(isLoading = true))
     val feedState: StateFlow<HomeFeedState> = _feedState.asStateFlow()
+
+    val gamificationState = gamificationRepository.getGamificationState().stateIn(
+        scope = viewModelScope,
+        started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+        initialValue = com.deepeye.musicpro.domain.gamification.GamificationState()
+    )
+
+    val achievementEvents = gamificationEngine.achievementEvents
 
     val isDspAttached = dspEngine.engineState
 
     init {
         loadFeed()
+        viewModelScope.launch { gamificationEngine.checkAndUpdateStreak() }
     }
 
     fun loadFeed() {
@@ -86,14 +99,24 @@ constructor(
         navController.navigate("dsp")
     }
 
-    fun onMoodClick(moodQuery: String) {
-        // Trigger a search-based feed for the selected mood
+    val isAIGenerating = aiRadioEngine.isGenerating
+
+    fun onMoodClick(mood: com.deepeye.musicpro.domain.model.home.MoodMix) {
         viewModelScope.launch {
             try {
-                // Mood results will be handled in the next iteration
-                Log.d("HomeHubVM", "Mood search: $moodQuery")
+                aiRadioEngine.playMoodMix(mood)
             } catch (e: Exception) {
                 Log.e("HomeHubVM", "Mood search failed: ${e.message}")
+            }
+        }
+    }
+
+    fun onAIPromptSubmitted(prompt: String) {
+        viewModelScope.launch {
+            try {
+                aiRadioEngine.generateRadioFromPrompt(prompt)
+            } catch (e: Exception) {
+                Log.e("HomeHubVM", "AI radio generation failed: ${e.message}")
             }
         }
     }

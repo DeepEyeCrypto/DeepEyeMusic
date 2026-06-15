@@ -786,7 +786,10 @@ fun UpdateBanner(
                 modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    // Added solid background to avoid unreadable overlapping with HeroSection
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f), RoundedCornerShape(16.dp))
+                    .border(1.dp, tealGlow.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                    .padding(16.dp),
             ) {
                 when (state) {
                     is UpdateState.Checking -> {
@@ -797,7 +800,7 @@ fun UpdateBanner(
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
                                 strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = tealGlow,
                             )
                             Spacer(Modifier.width(16.dp))
                             Text(
@@ -813,9 +816,13 @@ fun UpdateBanner(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    "Update Available: v${state.version}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    "New Update: v${state.version}",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                                            colors = listOf(tealGlow, purpleGlow)
+                                        )
+                                    ),
+                                    fontWeight = FontWeight.ExtraBold,
                                 )
                                 if (state.releaseNotes.isNotBlank()) {
                                     Spacer(Modifier.height(4.dp))
@@ -823,17 +830,26 @@ fun UpdateBanner(
                                         state.releaseNotes,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 3,
+                                        maxLines = 2,
                                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                     )
                                 }
                             }
                             Spacer(Modifier.width(8.dp))
+                            IconButton(onClick = onDismissClick, modifier = Modifier.size(36.dp)) {
+                                Icon(Icons.Default.Close, contentDescription = "Dismiss", modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Spacer(Modifier.width(8.dp))
                             Button(
                                 onClick = { onDownloadClick(state.apkUrl, state.version) },
                                 shape = RoundedCornerShape(12.dp),
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                    containerColor = tealGlow,
+                                    contentColor = Color.Black
+                                ),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                             ) {
-                                Text("Download")
+                                Text("Download", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
