@@ -148,7 +148,7 @@ class HeadlessWebViewExtractor @Inject constructor(
                         settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                     }
                     settings.userAgentString =
-                        "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36"
+                        "Mozilla/5.0 (Linux; Android 14; motorola edge 30 pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.112 Mobile Safari/537.36"
                 }.also { pooledWebView = it }
 
                 // Reset webview state before reuse
@@ -230,7 +230,7 @@ class HeadlessWebViewExtractor @Inject constructor(
                 }
 
                 val handler = android.os.Handler(android.os.Looper.getMainLooper())
-                handler.postDelayed(timeoutRunnable, 10000L) // 10s timeout
+                handler.postDelayed(timeoutRunnable, 25000L) // 25s timeout
 
                 val onCapturedLocal = { url: String ->
                     if (!isResumed) {
@@ -332,12 +332,7 @@ class HeadlessWebViewExtractor @Inject constructor(
 
                     override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                         super.onPageStarted(view, url, favicon)
-                        // Force progressive stream by disabling MSE early
-                        view?.evaluateJavascript("""
-                            window.MediaSource = undefined;
-                            window.webkitMediaSource = undefined;
-                        """.trimIndent(), null)
-                        Log.d(tag, "Page started: $url (MediaSource disabled, progressive mode)")
+                        Log.d(tag, "Page started: $url (Using direct web extraction)")
                     }
 
                     override fun onPageFinished(view: WebView?, url: String?) {
@@ -364,21 +359,25 @@ class HeadlessWebViewExtractor @Inject constructor(
                                 }
 
                                 function tryPlay() {
+                                    // Accept Google Consent dialogs automatically
+                                    var consentForms = document.querySelectorAll('form[action*="consent"] button, button[aria-label="Accept all"], button[aria-label="Reject all"], .eom-button-row button');
+                                    for (var i = 0; i < consentForms.length; i++) {
+                                        consentForms[i].click();
+                                    }
+
                                     var currentVideo = document.querySelector('video');
-                                    var currentPlayBtn = document.querySelector('.ytp-large-play-button') || document.querySelector('.ytp-play-button');
+                                    var playButtons = document.querySelectorAll('.ytp-large-play-button, .ytp-play-button, button.icon-button, .player-container, ytm-custom-control, .player-control-play-pause-icon, .ytp-unmute');
                                     
                                     console.log("HeadlessExtractorJS: Polling check. Video: " + !!currentVideo + 
                                                 ", Src: " + (currentVideo ? currentVideo.src : 'N/A') +
                                                 ", Paused: " + (currentVideo ? currentVideo.paused : 'N/A') + 
-                                                ", CurrentTime: " + (currentVideo ? currentVideo.currentTime : 'N/A') +
-                                                ", ReadyState: " + (currentVideo ? currentVideo.readyState : 'N/A') +
-                                                ", PlayBtn: " + !!currentPlayBtn);
+                                                ", PlayBtns found: " + playButtons.length);
                                                 
-                                    if (currentPlayBtn) {
-                                        console.log("HeadlessExtractorJS: Clicking play button...");
-                                        currentPlayBtn.click();
+                                    for (var j = 0; j < playButtons.length; j++) {
+                                        playButtons[j].click();
                                     }
-                                    if (currentVideo) {
+
+                                    if (currentVideo && currentVideo.paused) {
                                         currentVideo.play().then(function() {
                                             console.log("HeadlessExtractorJS: play() resolved successfully");
                                         }).catch(function(err) {
@@ -393,7 +392,7 @@ class HeadlessWebViewExtractor @Inject constructor(
                                 setTimeout(function() {
                                     console.log("HeadlessExtractorJS: Polling timeout reached.");
                                     clearInterval(playInterval);
-                                }, 8000);
+                                }, 20000);
                             })();
                         """.trimIndent()
                         view?.evaluateJavascript(js, null)
@@ -421,10 +420,10 @@ class HeadlessWebViewExtractor @Inject constructor(
                     }
                 }
 
-                Log.d(tag, "Loading YouTube mobile watch page directly for videoId: $videoId")
+                Log.d(tag, "Loading YouTube embed page to bypass bot checks for videoId: $videoId")
                 val headers = HashMap<String, String>()
-                headers["Referer"] = "https://m.youtube.com"
-                webView.loadUrl("https://m.youtube.com/watch?v=$videoId", headers)
+                headers["Referer"] = "https://www.youtube.com"
+                webView.loadUrl("https://www.youtube.com/embed/$videoId?autoplay=1", headers)
             }
         }
     }

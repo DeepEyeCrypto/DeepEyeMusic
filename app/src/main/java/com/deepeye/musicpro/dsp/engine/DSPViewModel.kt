@@ -34,6 +34,7 @@ data class V4AUiState(
     val sessionId: Int = 0,
     val currentRoute: AudioRoute = AudioRoute.UNKNOWN,
     val showConflictWarning: Boolean = false,
+    val activePreset: com.deepeye.musicpro.dsp.model.DSPPreset = com.deepeye.musicpro.dsp.model.DSPPreset.DEFAULT,
 )
 
 @HiltViewModel
@@ -45,6 +46,8 @@ constructor(
     private val presetRepository: PresetRepository,
     private val visualizerEngine: VisualizerEngine,
     private val gson: Gson,
+    private val dspProfileManager: com.deepeye.musicpro.dsp.profile.DspProfileManager,
+    private val playerController: com.deepeye.musicpro.player.controller.PlayerController,
 ) : ViewModel() {
     private val dataStore = application.dspDataStore
 
@@ -143,6 +146,11 @@ constructor(
         updateParams { it.copy(enabled = !it.enabled) }
     }
 
+    fun applyDSPPreset(preset: com.deepeye.musicpro.dsp.model.DSPPreset) {
+        updateParams { preset.params.copy(enabled = it.enabled) }
+        _uiState.value = _uiState.value.copy(activePreset = preset)
+    }
+
     fun updateEqBand(
         bandIndex: Int,
         value: Float,
@@ -204,6 +212,18 @@ constructor(
             presetRepository.deletePreset(presetId)
             if (_uiState.value.selectedPresetId == presetId) {
                 _uiState.value = _uiState.value.copy(selectedPresetId = null)
+            }
+        }
+    }
+
+    fun saveProfileForCurrentTrack() {
+        viewModelScope.launch {
+            val trackId = playerController.playerState.value.currentItem?.id
+            if (trackId != null) {
+                dspProfileManager.saveProfileForTrack(trackId, _uiState.value.params)
+                android.widget.Toast.makeText(application, "Saved DSP profile for this track", android.widget.Toast.LENGTH_SHORT).show()
+            } else {
+                android.widget.Toast.makeText(application, "No track currently playing", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
     }

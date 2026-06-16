@@ -3,11 +3,8 @@
 
 package com.deepeye.musicpro.data.source.remote.update
 
-import android.app.DownloadManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -61,45 +58,12 @@ constructor(
     private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val updateState: StateFlow<UpdateState> = _updateState.asStateFlow()
 
-    private val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-    private var activeDownloadId: Long = -1L
-    private var latestUpdateVersion: String = ""
+            private var latestUpdateVersion: String = ""
     private var progressJob: Job? = null
     private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
 
-    private val downloadReceiver =
-        object : BroadcastReceiver() {
-            override fun onReceive(
-                context: Context,
-                intent: Intent,
-            ) {
-                val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
-                if (id == activeDownloadId && id != -1L) {
-                    progressJob?.cancel()
-                    val file =
-                        File(
-                            context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                            "DeepEyeMusicPro-$latestUpdateVersion.apk"
-                        )
-                    if (file.exists()) {
-                        _updateState.value = UpdateState.Downloaded(file, latestUpdateVersion)
-                    } else {
-                        _updateState.value = UpdateState.Error("Downloaded file not found")
-                    }
-                }
-            }
-        }
-
-    init {
-        val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        ContextCompat.registerReceiver(
-            context,
-            downloadReceiver,
-            filter,
-            ContextCompat.RECEIVER_EXPORTED
-        )
-    }
-
+    
+    
     fun checkForUpdate() {
         if (_updateState.value is UpdateState.Checking) return
         _updateState.value = UpdateState.Checking
@@ -185,7 +149,7 @@ constructor(
         }
     }
 
-    fun downloadUpdate(
+        fun downloadUpdate(
         apkUrl: String,
         version: String,
     ) {
@@ -202,125 +166,64 @@ constructor(
                         context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
                         "DeepEyeMusicPro-$version.apk"
                     )
-                try {
-                    context.assets.open("mock_update_2.0.0.apk").use { input ->
-                        dummyFile.outputStream().use { output ->
-                            input.copyTo(output)
-                        }
-                    }
-                    android.util.Log.d(
-                        "AutoUpdateManager",
-                        "Successfully copied mock update APK from assets: ${dummyFile.length()} bytes",
-                    )
-                } catch (e: Exception) {
-                    android.util.Log.e(
-                        "AutoUpdateManager",
-                        "Failed to copy mock update from assets, falling back to current APK copy",
-                        e,
-                    )
-                    try {
-                        val currentApk = File(context.packageCodePath)
-                        currentApk.inputStream().use { input ->
-                            dummyFile.outputStream().use { output ->
-                                input.copyTo(output)
-                            }
-                        }
-                        android.util.Log.d(
-                            "AutoUpdateManager",
-                            "Successfully copied current APK: ${dummyFile.length()} bytes"
-                        )
-                    } catch (ex: Exception) {
-                        android.util.Log.e(
-                            "AutoUpdateManager",
-                            "Failed to copy APK, falling back to empty file",
-                            ex
-                        )
-                        if (!dummyFile.exists()) {
-                            dummyFile.createNewFile()
-                        }
-                    }
-                }
+                if (!dummyFile.exists()) dummyFile.createNewFile()
                 _updateState.value = UpdateState.Downloaded(dummyFile, version)
             }
             return
         }
 
-        try {
-            latestUpdateVersion = version
-            _updateState.value = UpdateState.Downloading(0f)
+        scope.launch(Dispatchers.IO) {
+            try {
+                latestUpdateVersion = version
+                _updateState.value = UpdateState.Downloading(0f)
 
-            // Remove any existing file with the same name first to avoid collision
-            val file =
-                File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "DeepEyeMusicPro-$version.apk")
-            if (file.exists()) {
-                file.delete()
-            }
-
-            val request =
-                DownloadManager.Request(Uri.parse(apkUrl)).apply {
-                    setTitle("DeepEye Music Pro v$version")
-                    setDescription("Downloading premium update...")
-                    setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                    setDestinationInExternalFilesDir(
-                        context,
-                        Environment.DIRECTORY_DOWNLOADS,
-                        "DeepEyeMusicPro-$version.apk",
-                    )
+                val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "DeepEyeMusicPro-$version.apk")
+                if (file.exists()) {
+                    file.delete()
                 }
 
-            activeDownloadId = downloadManager.enqueue(request)
-            startProgressPolling(activeDownloadId)
-        } catch (e: Exception) {
-            _updateState.value = UpdateState.Error("Failed to start download: ${e.message}")
-        }
-    }
+                val request = Request.Builder().url(apkUrl).build()
+                val response = okHttpClient.newCall(request).execute()
 
-    private fun startProgressPolling(downloadId: Long) {
-        progressJob?.cancel()
-        progressJob =
-            scope.launch {
-                val query = DownloadManager.Query().setFilterById(downloadId)
-                var downloading = true
-                while (downloading) {
-                    val cursor = downloadManager.query(query)
-                    if (cursor.moveToFirst()) {
-                        val statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                        if (statusIndex != -1) {
-                            val status = cursor.getInt(statusIndex)
-                            if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                                downloading = false
-                                val file = File(
-                                    context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                                    "DeepEyeMusicPro-$latestUpdateVersion.apk"
-                                )
-                                if (file.exists()) {
-                                    _updateState.value = UpdateState.Downloaded(file, latestUpdateVersion)
-                                } else {
-                                    _updateState.value = UpdateState.Error("Downloaded file not found")
-                                }
-                            } else if (status == DownloadManager.STATUS_FAILED) {
-                                downloading = false
-                                _updateState.value = UpdateState.Error("Download failed")
-                            } else {
-                                val downloadedIndex = cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
-                                val totalIndex = cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
-                                if (downloadedIndex != -1 && totalIndex != -1) {
-                                    val bytesDownloaded = cursor.getInt(downloadedIndex)
-                                    val bytesTotal = cursor.getInt(totalIndex)
-                                    if (bytesTotal > 0) {
-                                        val progress = bytesDownloaded.toFloat() / bytesTotal.toFloat()
-                                        _updateState.value = UpdateState.Downloading(progress)
-                                    }
-                                }
+                if (!response.isSuccessful) {
+                    _updateState.value = UpdateState.Error("Download failed: ${response.code}")
+                    return@launch
+                }
+
+                val body = response.body
+                if (body == null) {
+                    _updateState.value = UpdateState.Error("Empty response body")
+                    return@launch
+                }
+
+                val contentLength = body.contentLength()
+                body.byteStream().use { input ->
+                    file.outputStream().use { output ->
+                        val buffer = ByteArray(8 * 1024)
+                        var bytesCopied = 0L
+                        var bytes = input.read(buffer)
+                        var lastEmitTime = System.currentTimeMillis()
+                        
+                        while (bytes >= 0) {
+                            output.write(buffer, 0, bytes)
+                            bytesCopied += bytes
+                            
+                            val currentTime = System.currentTimeMillis()
+                            if (contentLength > 0 && currentTime - lastEmitTime > 100) {
+                                val progress = bytesCopied.toFloat() / contentLength.toFloat()
+                                _updateState.value = UpdateState.Downloading(progress)
+                                lastEmitTime = currentTime
                             }
+                            bytes = input.read(buffer)
                         }
-                    } else {
-                        downloading = false
                     }
-                    cursor.close()
-                    delay(500)
                 }
+                
+                _updateState.value = UpdateState.Downloaded(file, version)
+            } catch (e: Exception) {
+                _updateState.value = UpdateState.Error("Failed to download: ${e.message}")
             }
+        }
     }
 
     fun canRequestPackageInstalls(): Boolean {

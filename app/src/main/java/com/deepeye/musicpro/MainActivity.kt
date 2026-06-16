@@ -289,6 +289,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (!isInPictureInPictureMode) {
+                if (::playerController.isInitialized && playerController.playerState.value.isVideo) {
+                    playerController.player.pause()
+                }
+            }
+        } else {
+            if (::playerController.isInitialized && playerController.playerState.value.isVideo) {
+                playerController.player.pause()
+            }
+        }
+    }
+
     /**
      * System callback when PiP mode changes.
      */
@@ -301,6 +316,13 @@ class MainActivity : ComponentActivity() {
 
         if (::pipEngine.isInitialized) {
             pipEngine.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        }
+
+        if (isInPictureInPictureMode) {
+            if (::playerController.isInitialized) {
+                playerController.player.prepare()
+                // ExoPlayer handles audio focus internally when playing
+            }
         }
     }
 

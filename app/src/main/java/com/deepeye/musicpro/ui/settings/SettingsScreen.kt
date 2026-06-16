@@ -65,12 +65,6 @@ fun SettingsScreen(
     val isExpanded = windowSizeClass.widthSizeClass == androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
 
     Column(modifier = Modifier.fillMaxSize().statusBarsPadding().imePadding()) {
-        UpdateBanner(
-            state = uiState.updateState,
-            onDownloadClick = { url, ver -> viewModel.downloadUpdate(url, ver) },
-            onInstallClick = { file -> viewModel.installApk(file) },
-            onDismissClick = { viewModel.resetUpdateState() },
-        )
 
         if (isExpanded) {
             var selectedCategory by remember { mutableStateOf(0) }

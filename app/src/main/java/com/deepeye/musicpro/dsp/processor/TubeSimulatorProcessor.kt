@@ -7,22 +7,20 @@ package com.deepeye.musicpro.dsp.processor
 
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.AudioFormat
-import javax.inject.Inject
-import javax.inject.Singleton
+import com.deepeye.musicpro.dsp.model.TubeMode
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.math.tanh
 
 /**
- * Custom ExoPlayer AudioProcessor that performs real-time Vocal Isolation/Removal.
- * It uses the "OOPS" (Out Of Phase Stereo) method by subtracting the right channel 
- * from the left channel to cancel out center-panned audio (typically lead vocals).
- *
- * - **Video Playback Fixes:** Fixed a critical bug where `ExoPlayer` would crash with an `IllegalArgumentException` and `IllegalStateException` due to custom `AudioProcessor`s returning `AudioFormat.NOT_SET` while maintaining an `isActive() == true` state. Implemented proper buffer empty checks and soft-bypasses across `TubeSimulatorProcessor`, `CrossfeedProcessor`, and `VocalRemoverProcessor` to allow seamless toggling of effects without causing audio dropouts or breaking video playback.
- * - **DSPEngine Module Connectivity Fix:** Re-injected `TubeSimulatorProcessor`, `CrossfeedProcessor`, and `VocalRemoverProcessor` into `DSPEngine` and properly bound them to parameter updates (`DspParams`), resolving the issue where these processors would not activate or update when toggled from the UI.
-- **Viper Bass UI Modernization:** Replaced hardware-style rotary knobs with sleek, linear sliders (`DspSliderRow`) for Sub Cutoff and Sub-Bass parameters to ensure visual consistency across the DSP panel and improve usability.
+ * Custom ExoPlayer AudioProcessor that simulates Vacuum Tube harmonic distortion.
+ * - Triode Mode: Asymmetric clipping (adds warm even-order harmonics).
+ * - Pentode Mode: Symmetric clipping (adds punchy odd-order harmonics).
  */
 @Singleton
-class VocalRemoverProcessor @Inject constructor() : AudioProcessor {
+class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
 
     private var active = false
     private var inputAudioFormat = AudioFormat.NOT_SET
@@ -31,11 +29,14 @@ class VocalRemoverProcessor @Inject constructor() : AudioProcessor {
     private var outputBuffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
     private var inputEnded = false
 
-    fun setEnabled(enabled: Boolean) {
-        if (active != enabled) {
-            active = enabled
-            flush()
-        }
+    private var tubeMode = TubeMode.TRIODE
+    private var drive = 1.0f
+
+    fun setConfig(enabled: Boolean, mode: TubeMode, drivePercent: Int) {
+        active = enabled
+        tubeMode = mode
+        // Map 0-100% to 1.0x - 4.0x drive
+        drive = 1.0f + (drivePercent / 100f) * 3.0f
     }
 
     override fun configure(inputAudioFormat: AudioFormat): AudioFormat {
@@ -43,13 +44,13 @@ class VocalRemoverProcessor @Inject constructor() : AudioProcessor {
             throw AudioProcessor.UnhandledAudioFormatException(inputAudioFormat)
         }
         this.inputAudioFormat = inputAudioFormat
-        
-        // We output the same format. If mono, we can't do OOPS, so we just act as a pass-through.
         this.outputAudioFormat = inputAudioFormat
         return outputAudioFormat
     }
 
     override fun isActive(): Boolean {
+        // ALWAYS return true so ExoPlayer keeps it in the pipeline
+        // We will do a soft-bypass in queueInput if !active
         return inputAudioFormat.channelCount != androidx.media3.common.Format.NO_VALUE
     }
 
@@ -69,27 +70,40 @@ class VocalRemoverProcessor @Inject constructor() : AudioProcessor {
             buffer.clear()
         }
 
-        if (!active || inputAudioFormat.channelCount != 2) {
+        if (!active) {
             // Bypass mode: direct copy
             buffer.put(inputBuffer)
         } else {
-            // Processing 16-bit PCM: Out Of Phase Stereo (L - R)
             while (inputBuffer.position() < limit) {
-                val left = inputBuffer.short.toInt()
-                val right = inputBuffer.short.toInt()
+                // Read 16-bit PCM sample
+                var sample = inputBuffer.short.toFloat() / 32768f
 
-                // OOPS: (L - R) / 2 to prevent clipping
-                val diff = (left - right) / 2
+                // Apply Tube distortion
+                sample *= drive
+                if (tubeMode == TubeMode.TRIODE) {
+                    // Asymmetric clipping: affects positive peaks differently from negative peaks
+                    if (sample > 0) {
+                        sample = tanh(sample)
+                    } else {
+                        sample = -1f + 1f / (1f - sample) // softer negative clipping
+                    }
+                } else {
+                    // Pentode: Symmetric clipping
+                    sample = tanh(sample)
+                }
 
-                // Output the diff to both channels (creating a mono track centered)
-                buffer.putShort(diff.toShort())
-                buffer.putShort(diff.toShort())
+                // Bring back to output level
+                sample /= drive
+                
+                // Convert back to 16-bit
+                val outSample = (sample * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
+                buffer.putShort(outSample)
             }
         }
 
         inputBuffer.position(limit)
         buffer.flip()
-        outputBuffer = buffer
+        outputBuffer = this.buffer
     }
 
     override fun queueEndOfStream() {

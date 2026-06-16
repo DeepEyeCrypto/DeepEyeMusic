@@ -29,7 +29,8 @@ class DSPEngine
 constructor(
     private val bassProcessor: com.deepeye.musicpro.dsp.bass.BassProcessor,
     private val vocalRemoverProcessor: com.deepeye.musicpro.dsp.processor.VocalRemoverProcessor,
-    private val crossfeedProcessor: com.deepeye.musicpro.dsp.processor.CrossfeedProcessor
+    private val crossfeedProcessor: com.deepeye.musicpro.dsp.processor.CrossfeedProcessor,
+    private val tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor
 ) {
     companion object {
         private const val TAG = "DSPEngine"
@@ -73,7 +74,7 @@ constructor(
     }
 
     fun attachSession(sessionId: Int, force: Boolean = false) {
-        if (sessionId == 0 || (!force && this.audioSessionId == sessionId)) return
+        if (sessionId <= 0 || (!force && this.audioSessionId == sessionId)) return
         Log.d(TAG, "Attaching DSP Engine to Session: $sessionId")
 
         releaseSession()
@@ -119,12 +120,25 @@ constructor(
                             DynamicsProcessing.Config.Builder(
                                 DynamicsProcessing.VARIANT_FAVOR_FREQUENCY_RESOLUTION,
                                 1, // Channels
-                                true, 0, // PreEQ
+                                true, 2, // PreEQ: 2 bands (Sub-bass, Mid-bass)
                                 true, 0, // MultiBandCompressor
                                 true, 0, // PostEQ
                                 true, // Limiter
                             )
-                        DynamicsProcessing(EFFECT_PRIORITY, sessionId, builder.build())
+                        DynamicsProcessing(EFFECT_PRIORITY, sessionId, builder.build()).also { dp ->
+                            // Initialize the PreEQ bands for BassProcessor
+                            val preEq = DynamicsProcessing.Eq(true, true, 2)
+                            
+                            // Band 0: Sub-bass (40Hz)
+                            preEq.getBand(0).cutoffFrequency = 60f
+                            preEq.getBand(0).isEnabled = true
+                            
+                            // Band 1: Mid-bass (120Hz)
+                            preEq.getBand(1).cutoffFrequency = 250f
+                            preEq.getBand(1).isEnabled = true
+
+                            dp.setPreEqAllChannelsTo(preEq)
+                        }
                     } catch (e: Exception) {
                         Log.e(TAG, "Failed to create DynamicsProcessing", e)
                         null
@@ -184,11 +198,21 @@ constructor(
 
             val bassConfig = com.deepeye.musicpro.dsp.bass.BassProcessor.BassConfig(
                 subBassGain = if (params.viperBassEnabled) params.viperBassGain else 0f,
+                subBassCutoff = params.viperBassFreq.toFloat(),
                 midBassGain = if (params.bassBoostEnabled) (params.bassBoostStrength / 1000f) * 12f else 0f,
                 harmonicSaturation = if (params.viperBassMode == com.deepeye.musicpro.dsp.model.ViperBassMode.PURE) 0.5f else 0.2f,
                 limiterEnabled = params.limiterEnabled,
                 limiterThreshold = params.limiterThreshold
             )
+
+            // ── Custom Audio Processors (ExoPlayer Pipeline) ──
+            tubeSimulatorProcessor.setConfig(
+                enabled = isEnabled && params.tubeEnabled,
+                mode = params.tubeMode,
+                drivePercent = params.tubeDrive
+            )
+            vocalRemoverProcessor.setEnabled(isEnabled && params.karaokeModeEnabled)
+            crossfeedProcessor.setEnabled(isEnabled && params.crossfeedEnabled)
 
             // ── Equalizer ──
             equalizer?.let { eq ->

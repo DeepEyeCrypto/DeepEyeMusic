@@ -68,6 +68,7 @@ fun AnchoredMiniPlayer(
     bottomBarHeight: androidx.compose.ui.unit.Dp = 0.dp,
     expandedContent: @Composable () -> Unit,
 ) {
+    val isInPipMode = com.deepeye.musicpro.ui.LocalPipMode.current
     BoxWithConstraints(Modifier.fillMaxSize().padding(bottom = bottomBarHeight)) {
         val density = LocalDensity.current
         val containerHeightPx = constraints.maxHeight.toFloat()
@@ -158,7 +159,7 @@ fun AnchoredMiniPlayer(
                     }
                 )
                 .offset {
-                    val yOffset = draggableState.offset.takeIf { !it.isNaN() } ?: collapsedAnchor
+                    val yOffset = if (isInPipMode) 0f else (draggableState.offset.takeIf { !it.isNaN() } ?: collapsedAnchor)
                     IntOffset(0, yOffset.roundToInt())
                 }
                 .pointerInput(sheetState.isGestureLocked, bottomBarHeightPx) {

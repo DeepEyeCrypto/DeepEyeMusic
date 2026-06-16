@@ -23,7 +23,7 @@ constructor(
     private val rankingManager: com.deepeye.musicpro.diagnostics.ExtractionRankingManager,
     private val headlessExtractor: HeadlessWebViewExtractor,
 ) {
-    private val extractor = com.deepeye.musicpro.extractor.NewPipeExtractorPlugin()
+    private val extractor by lazy { com.deepeye.musicpro.extractor.NewPipeExtractorPlugin() }
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
     private val fastClient: okhttp3.OkHttpClient by lazy {
@@ -106,7 +106,7 @@ constructor(
             if (rankedLayers.isNotEmpty()) {
                 Log.d("YoutubeDS", "Running parallel extraction for video ID: $cleanId")
                 try {
-                    finalResult = kotlinx.coroutines.withTimeoutOrNull(15000L) { // Increased timeout to 15s for WebView fallback
+                    finalResult = kotlinx.coroutines.withTimeoutOrNull(30000L) { // Increased timeout to 30s for WebView fallback
                         kotlinx.coroutines.supervisorScope {
                             val scope = this
                             val channel = kotlinx.coroutines.channels.Channel<StreamResult?>(rankedLayers.size)
@@ -176,7 +176,7 @@ constructor(
                         }
                     }
                     if (finalResult == null) {
-                        Log.w("YoutubeDS", "⚠️ Parallel extraction timed out after 15000ms for $cleanId")
+                        Log.w("YoutubeDS", "⚠️ Parallel extraction timed out after 30000ms for $cleanId")
                     }
                 } catch (e: Exception) {
                     Log.w("YoutubeDS", "⚠️ Parallel extraction failed with error: ${e.message}")
@@ -233,12 +233,12 @@ constructor(
     private suspend fun extractPiped(videoId: String, preferVideo: Boolean): StreamResult? = kotlinx.coroutines.coroutineScope {
         Log.d("YoutubeDS", "Piped API: extracting $videoId...")
         val pipedInstances = listOf(
-            "https://api.piped.privacydev.net",
-            "https://piped-api.garudalinux.org",
+            "https://api.piped.private.coffee",
+            "https://pipedapi.kavin.rocks",
+            "https://pipedapi.us.projectsegfau.lt",
+            "https://pipedapi.lunar.icu",
             "https://api-piped.mha.fi",
-            "https://pipedapi.colt.top",
-            "https://pipedapi.leptons.xyz",
-            "https://pipedapi.ox.ci"
+            "https://pipedapi.colt.top"
         ).shuffled().take(3) // Race 3 random instances for lowest latency
 
         val channel = kotlinx.coroutines.channels.Channel<StreamResult?>(pipedInstances.size)
@@ -335,11 +335,12 @@ constructor(
     private suspend fun extractInvidious(videoId: String, preferVideo: Boolean): StreamResult? = kotlinx.coroutines.coroutineScope {
         Log.d("YoutubeDS", "Invidious API: extracting $videoId...")
         val invidiousInstances = listOf(
+            "https://invidious.protokolla.fi",
+            "https://invidious.poast.org",
+            "https://inv.zzls.xyz",
+            "https://invidious.epicsite.app",
             "https://yewtu.be",
-            "https://invidious.projectsegfau.lt",
-            "https://inv.tux.im",
-            "https://invidious.privacydev.net",
-            "https://invidious.lunar.icu"
+            "https://invidious.projectsegfau.lt"
         ).shuffled().take(3)
 
         val channel = kotlinx.coroutines.channels.Channel<StreamResult?>(invidiousInstances.size)

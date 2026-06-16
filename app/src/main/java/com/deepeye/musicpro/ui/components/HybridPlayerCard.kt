@@ -338,7 +338,7 @@ fun HybridPlayerCard(
                     // Close / Exit Fullscreen Button Overlay (top right)
                     if (isFullscreen && !isInPipMode) {
                         AnimatedVisibility(
-                            visible = controlsVisible,
+                            visible = controlsVisible && !isInPipMode,
                             enter = fadeIn(),
                             exit = fadeOut(),
                         ) {
@@ -558,7 +558,7 @@ fun HybridPlayerCard(
 
                         // CENTER PLAY OVERLAY when player is paused
                         AnimatedVisibility(
-                            visible = controlsVisible && !isPlaying,
+                            visible = controlsVisible && !isPlaying && !isInPipMode,
                             enter = fadeIn(),
                             exit = fadeOut(),
                             modifier = Modifier.align(Alignment.Center),
@@ -584,7 +584,7 @@ fun HybridPlayerCard(
 
                         // BOTTOM GLASSMORPHIC QUICK MEDIA CONTROL PANEL OVERLAY
                         AnimatedVisibility(
-                            visible = controlsVisible,
+                            visible = controlsVisible && !isInPipMode,
                             enter = fadeIn(),
                             exit = fadeOut(),
                             modifier = Modifier.align(Alignment.BottomCenter),

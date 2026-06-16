@@ -88,13 +88,19 @@ class AutoplayScorer {
         // 7. Session similarity
         val recentHistory = history.takeLast(5)
         if (recentHistory.isNotEmpty()) {
-            val recentCompletion = recentHistory.map { it.completionRatio }.average().toFloat()
-            if (recentCompletion > 0.85f) {
-                // user is happy, keep it similar
-                score += candidate.similarityToLastTrack * 0.25f
-            } else if (autoplayState.skipStreak >= 2) {
-                // user is bored, diversify
-                score += candidate.discoveryScore * 0.25f
+            val validHistory = recentHistory.filter { !it.completionRatio.isNaN() }
+            if (validHistory.isNotEmpty()) {
+                val recentCompletion = validHistory.map { it.completionRatio }.average().toFloat()
+                if (recentCompletion > 0.85f) {
+                    // user is happy, keep it similar
+                    score += candidate.similarityToLastTrack * 0.25f
+                } else if (autoplayState.skipStreak >= 2) {
+                    // user is bored, diversify
+                    score += candidate.discoveryScore * 0.25f
+                }
+            } else {
+                // fallback if all completion ratios are NaN
+                score += candidate.discoveryScore * 0.10f
             }
         } else {
             score += candidate.discoveryScore * 0.10f
@@ -126,7 +132,7 @@ class AutoplayScorer {
         val skipRate = recentHistory.count { it.wasSkipped } / recentHistory.size.toFloat()
         return when {
             state.skipStreak >= 2 || skipRate >= 0.6f -> AutoplayMode.DISCOVERY
-            recentHistory.takeLast(3).all { it.completionRatio > 0.8f } -> AutoplayMode.FAMILIAR
+            recentHistory.takeLast(3).all { !it.completionRatio.isNaN() && it.completionRatio > 0.8f } -> AutoplayMode.FAMILIAR
             state.likeStreak >= 3 -> AutoplayMode.FAMILIAR_PLUS
             else -> AutoplayMode.BALANCED
         }

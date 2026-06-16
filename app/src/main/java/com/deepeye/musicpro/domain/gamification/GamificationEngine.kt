@@ -23,7 +23,7 @@ class GamificationEngine @Inject constructor(
     val achievementEvents = _achievementEvents.asSharedFlow()
 
     suspend fun checkAndUpdateStreak() {
-        val today = LocalDate.now()
+        val today = LocalDate.now(java.time.ZoneOffset.UTC)
         repository.updatePreferences { prefs ->
             val lastDateMs = prefs[GamificationPreferences.LAST_LISTENING_DATE] ?: 0L
             val currentStreak = prefs[GamificationPreferences.CURRENT_STREAK] ?: 0
@@ -38,7 +38,7 @@ class GamificationEngine @Inject constructor(
                 return@updatePreferences
             }
 
-            val lastDate = Instant.ofEpochMilli(lastDateMs).atZone(ZoneId.systemDefault()).toLocalDate()
+            val lastDate = Instant.ofEpochMilli(lastDateMs).atZone(java.time.ZoneOffset.UTC).toLocalDate()
 
             when {
                 lastDate == today -> {

@@ -53,21 +53,21 @@ class CrossfeedProcessor @Inject constructor() : AudioProcessor {
         }
         this.inputAudioFormat = inputAudioFormat
         this.outputAudioFormat = inputAudioFormat
-        return if (active && inputAudioFormat.channelCount == 2) outputAudioFormat else AudioFormat.NOT_SET
+        return outputAudioFormat
     }
 
     override fun isActive(): Boolean {
-        return active && inputAudioFormat.channelCount == 2
+        return inputAudioFormat.channelCount != androidx.media3.common.Format.NO_VALUE
     }
 
     override fun queueInput(inputBuffer: ByteBuffer) {
-        if (!isActive) {
-            return
-        }
-
         val limit = inputBuffer.limit()
         val position = inputBuffer.position()
         val frameCount = (limit - position) / inputAudioFormat.bytesPerFrame
+
+        if (!inputBuffer.hasRemaining()) {
+            return
+        }
 
         val requiredBufferSize = frameCount * outputAudioFormat.bytesPerFrame
         if (buffer.capacity() < requiredBufferSize) {
@@ -75,6 +75,11 @@ class CrossfeedProcessor @Inject constructor() : AudioProcessor {
         } else {
             buffer.clear()
         }
+
+        if (!active || inputAudioFormat.channelCount != 2) {
+            // Bypass mode: direct copy
+            buffer.put(inputBuffer)
+        } else {
 
         // Processing 16-bit PCM: Crossfeed
         // delay length based on sample rate. 300us = 0.0003s. 0.0003 * 44100 = ~13 samples.
@@ -110,6 +115,7 @@ class CrossfeedProcessor @Inject constructor() : AudioProcessor {
 
             buffer.putShort(outL.toInt().coerceIn(-32768, 32767).toShort())
             buffer.putShort(outR.toInt().coerceIn(-32768, 32767).toShort())
+        }
         }
 
         inputBuffer.position(limit)

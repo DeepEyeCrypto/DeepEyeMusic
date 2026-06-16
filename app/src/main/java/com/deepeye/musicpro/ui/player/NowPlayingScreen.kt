@@ -211,9 +211,8 @@ fun NowPlayingScreen(
         }
     }
 
-        if (!isInPipMode) {
-            // Refined Clear Glass Mesh Background
-            Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
+        // Refined Clear Glass Mesh Background
+        Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
                 // Top-left glow
                 Box(
                     modifier = Modifier
@@ -262,7 +261,6 @@ fun NowPlayingScreen(
                     )
                 }
             }
-        }
 
     if (showDspSheet) {
         ModalBottomSheet(
@@ -344,9 +342,12 @@ private fun AudioNowPlayingLayout(
 ) {
     val isHiRes = remember(playerState.currentItem?.id) { (playerState.currentItem?.id.hashCode() % 3) == 0 }
     val bitrate = remember(playerState.currentItem?.id) { if (isHiRes) "24bit • 48kHz" else "16bit • 44.1kHz" }
+
     val headerColor = if (finalBgColor.luminance() > 0.5f) Color.Black else Color.White
+    val isInPipMode = com.deepeye.musicpro.ui.LocalPipMode.current
     
     Column(
+
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
@@ -354,6 +355,7 @@ private fun AudioNowPlayingLayout(
             .padding(horizontal = 32.dp) // Premium symmetric padding
     ) {
         // Header
+        if (!isInPipMode) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -376,6 +378,7 @@ private fun AudioNowPlayingLayout(
             IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(44.dp)) {
                 Icon(Icons.Default.Settings, "Settings", tint = headerColor, modifier = Modifier.size(24.dp))
             }
+        }
         }
 
         // Pager Artwork Area
@@ -621,7 +624,7 @@ private fun VideoNowPlayingLayout(
     val libraryViewModel: com.deepeye.musicpro.ui.library.LibraryViewModel = hiltViewModel()
 
     val context = LocalContext.current
-    val isFullscreen = LocalFullscreenMode.current.isFullscreen
+    val isFullscreen = LocalFullscreenMode.current.isFullscreen || com.deepeye.musicpro.ui.LocalPipMode.current
     
     Column(
         modifier = Modifier

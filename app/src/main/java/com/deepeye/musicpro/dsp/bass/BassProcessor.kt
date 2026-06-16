@@ -37,6 +37,7 @@ class BassProcessor @Inject constructor() {
      */
     data class BassConfig(
         val subBassGain: Float = 0f,          // 20–60Hz, range -12..+12 dB
+        val subBassCutoff: Float = 60f,       // Configurable cutoff frequency (e.g. 30Hz - 120Hz)
         val midBassGain: Float = 0f,          // 60–250Hz, range -12..+12 dB
         val harmonicSaturation: Float = 0f,   // 0.0..1.0 intensity
         val limiterEnabled: Boolean = true,
@@ -99,6 +100,22 @@ class BassProcessor @Inject constructor() {
                     0f,                      // postGain
                 )
                 dp.setLimiterAllChannelsTo(limiter)
+            }
+
+            // Apply Hardware Sub-Bass and Mid-Bass using PreEQ
+            val preEq = dp.getPreEqByChannelIndex(0)
+            if (preEq != null && preEq.bandCount >= 2) {
+                val subBassBand = preEq.getBand(0)
+                subBassBand.gain = config.subBassGain
+                subBassBand.cutoffFrequency = config.subBassCutoff
+                preEq.setBand(0, subBassBand)
+
+                val midBassBand = preEq.getBand(1)
+                midBassBand.gain = config.midBassGain
+                midBassBand.cutoffFrequency = config.subBassCutoff + 150f // Keep mid-bass relatively above sub
+                preEq.setBand(1, midBassBand)
+
+                dp.setPreEqAllChannelsTo(preEq)
             }
 
             dp.enabled = true

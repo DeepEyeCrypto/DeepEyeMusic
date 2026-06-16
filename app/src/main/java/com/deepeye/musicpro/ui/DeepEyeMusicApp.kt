@@ -440,7 +440,7 @@ fun DeepEyeMusicApp(
             }
         
         // Overlay AnchoredMiniPlayer (Outside the scaffold conditional, so it covers everything)
-        if (playerState.currentItem != null && !isInPipMode) {
+        if (playerState.currentItem != null) {
             androidx.activity.compose.BackHandler(
                 enabled = sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.EXPANDED ||
                     sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.HALF_EXPANDED

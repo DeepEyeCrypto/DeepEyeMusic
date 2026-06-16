@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -130,12 +131,18 @@ fun DSPScreen(
 
                         GainBudgetCard(gainBudget = uiState.gainBudget)
 
+                        com.deepeye.musicpro.ui.dsp.components.DSPPresetSelector(
+                            currentPreset = uiState.activePreset,
+                            onPresetChanged = viewModel::applyDSPPreset
+                        )
+
                         PresetsCard(
                             presets = uiState.presets,
                             selectedPresetId = uiState.selectedPresetId,
                             onPresetSelect = viewModel::loadPreset,
                             onPresetDelete = viewModel::deletePreset,
                             onSaveClick = { showSaveDialog = true },
+                            onSaveForTrackClick = viewModel::saveProfileForCurrentTrack,
                         )
 
                         DspDebugCard(
@@ -172,11 +179,17 @@ fun DSPScreen(
 
                     GainBudgetCard(gainBudget = uiState.gainBudget)
 
+                    com.deepeye.musicpro.ui.dsp.components.DSPPresetSelector(
+                        currentPreset = uiState.activePreset,
+                        onPresetChanged = viewModel::applyDSPPreset
+                    )
+
                     PresetsRow(
                         presets = uiState.presets,
                         selectedPresetId = uiState.selectedPresetId,
                         onPresetSelect = viewModel::loadPreset,
                         onSaveClick = { showSaveDialog = true },
+                        onSaveForTrackClick = viewModel::saveProfileForCurrentTrack,
                     )
 
                     ModulesColumn(
@@ -215,6 +228,7 @@ fun PresetsCard(
     onPresetSelect: (Long) -> Unit,
     onPresetDelete: (Long) -> Unit,
     onSaveClick: () -> Unit,
+    onSaveForTrackClick: () -> Unit,
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -229,8 +243,13 @@ fun PresetsCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("Presets", style = MaterialTheme.typography.titleMedium, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface)
-                IconButton(onClick = onSaveClick) {
-                    Icon(Icons.Default.Add, contentDescription = "Save Custom Preset", tint = Color(0xFF00E5FF))
+                Row {
+                    IconButton(onClick = onSaveForTrackClick) {
+                        Icon(Icons.Default.Star, contentDescription = "Link to Track", tint = Color(0xFFFFD700))
+                    }
+                    IconButton(onClick = onSaveClick) {
+                        Icon(Icons.Default.Add, contentDescription = "Save Custom Preset", tint = Color(0xFF00E5FF))
+                    }
                 }
             }
             Spacer(Modifier.height(8.dp))
@@ -273,6 +292,7 @@ fun PresetsRow(
     selectedPresetId: Long?,
     onPresetSelect: (Long) -> Unit,
     onSaveClick: () -> Unit,
+    onSaveForTrackClick: () -> Unit,
 ) {
     Row(
         modifier =
@@ -291,6 +311,9 @@ fun PresetsRow(
             )
         }
 
+        IconButton(onClick = onSaveForTrackClick) {
+            Icon(Icons.Default.Star, contentDescription = "Link to Track", tint = Color(0xFFFFD700))
+        }
         IconButton(onClick = onSaveClick) {
             Icon(Icons.Default.Add, contentDescription = "Save Preset", tint = Color(0xFF00E5FF))
         }
@@ -754,37 +777,34 @@ fun ViperBassCard(
 
         Spacer(Modifier.height(16.dp))
 
-        // Hardware style side-by-side Knobs
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            DspKnobControl(
-                label = "Frequency",
-                value = params.viperBassFreq.toFloat(),
-                valueRange = 30f..120f,
-                onValueChange = { v -> onUpdateParams { it.copy(viperBassFreq = v.toInt()) } },
-                valueFormatter = { "${it.toInt()} Hz" },
-            )
-            DspKnobControl(
-                label = "Bass Gain",
-                value = params.viperBassGain,
-                valueRange = 0f..18f,
-                onValueChange = { v -> onUpdateParams { it.copy(viperBassGain = v) } },
-                valueFormatter = { "${"%.1f".format(it)} dB" },
-            )
-        }
+        // Hardware style side-by-side Knobs (Removed as per user request)
+        DspSliderRow(
+            label = "Sub Cutoff",
+            value = params.viperBassFreq.toFloat(),
+            valueRange = 30f..120f,
+            onValueChange = { v -> onUpdateParams { it.copy(viperBassFreq = v.toInt()) } },
+            valueFormatter = { "${it.toInt()} Hz" },
+        )
+        
+        Spacer(Modifier.height(8.dp))
+        
+        DspSliderRow(
+            label = "Sub-Bass Gain",
+            value = params.viperBassGain,
+            valueRange = 0f..18f,
+            onValueChange = { v -> onUpdateParams { it.copy(viperBassGain = v) } },
+            valueFormatter = { "${"%.1f".format(it)} dB" },
+        )
 
         Spacer(Modifier.height(16.dp))
 
-        // Native Bass Boost Strength
+        // Mid-Bass Strength (Uses Bass Boost parameter internally)
         DspSliderRow(
-            label = "Bass Boost Strength",
+            label = "Mid-Bass Punch",
             value = params.bassBoostStrength.toFloat(),
             valueRange = 0f..1000f,
             onValueChange = { v -> onUpdateParams { it.copy(bassBoostStrength = v.toInt()) } },
-            valueFormatter = { "${it.toInt()} / 1000" },
+            valueFormatter = { "${(it / 10f).toInt()}%" },
         )
     }
 }

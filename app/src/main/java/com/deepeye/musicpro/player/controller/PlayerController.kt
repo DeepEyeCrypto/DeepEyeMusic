@@ -58,6 +58,8 @@ constructor(
     private val forensics: com.deepeye.musicpro.diagnostics.ExoPlayerForensics,
     private val dspProfileManager: com.deepeye.musicpro.dsp.profile.DspProfileManager,
     private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
+    private val tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor,
+    private val dspController: com.deepeye.musicpro.dsp.controller.DSPController,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -101,6 +103,17 @@ constructor(
                 
             } catch (e: Exception) {
                 android.util.Log.e("PlayerController", "Failed to init DSP profile", e)
+            }
+        }
+
+        // Configure software processors from DSPEngine params
+        scope.launch {
+            dspEngine.currentParams.collectLatest { params ->
+                tubeSimulatorProcessor.setConfig(
+                    enabled = params.enabled && params.tubeEnabled,
+                    mode = params.tubeMode,
+                    drivePercent = params.tubeDrive
+                )
             }
         }
 
@@ -844,5 +857,9 @@ constructor(
             return if (item.song.genre.isNotEmpty()) item.song.genre else "Local"
         }
         return "English"
+    }
+
+    fun applyDSPPreset(preset: com.deepeye.musicpro.dsp.model.DSPPreset) {
+        dspController.applyPreset(preset)
     }
 }

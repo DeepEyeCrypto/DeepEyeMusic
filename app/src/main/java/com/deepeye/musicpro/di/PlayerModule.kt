@@ -39,7 +39,8 @@ object PlayerModule {
         @ApplicationContext context: Context,
         audioAttributes: AudioAttributes,
         vocalRemoverProcessor: com.deepeye.musicpro.dsp.processor.VocalRemoverProcessor,
-        crossfeedProcessor: com.deepeye.musicpro.dsp.processor.CrossfeedProcessor
+        crossfeedProcessor: com.deepeye.musicpro.dsp.processor.CrossfeedProcessor,
+        tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor
     ): ExoPlayer {
         val renderersFactory = object : androidx.media3.exoplayer.DefaultRenderersFactory(context) {
             override fun buildAudioSink(
@@ -50,7 +51,7 @@ object PlayerModule {
                 return androidx.media3.exoplayer.audio.DefaultAudioSink.Builder(context)
                     .setEnableFloatOutput(enableFloatOutput)
                     .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
-                    .setAudioProcessors(arrayOf(vocalRemoverProcessor, crossfeedProcessor))
+                    .setAudioProcessors(arrayOf(vocalRemoverProcessor, crossfeedProcessor, tubeSimulatorProcessor))
                     .build()
             }
         }
@@ -62,10 +63,8 @@ object PlayerModule {
         trackSelector.setParameters(
             trackSelector.buildUponParameters()
                 .setPreferredVideoMimeTypes("video/av01", "video/vp9") // Prefer AV1/VP9 for highest quality
-                .setTunnelingEnabled(true)
-                .setForceHighestSupportedBitrate(true) // Always pick highest quality track
-                .setMaxVideoSize(Integer.MAX_VALUE, Integer.MAX_VALUE) // Absolute No resolution cap
-                .clearViewportSizeConstraints() // IGNORE screen size limitations (force 4K on 1080p screen for premium sharpness)
+                .setTunnelingEnabled(false) // Tunneling breaks AudioProcessors and causes video failure on many devices
+                .setForceHighestSupportedBitrate(false) // Don't force highest, let ExoPlayer adapt to network and device decoding limits
                 .setAllowVideoNonSeamlessAdaptiveness(true)
         )
 
