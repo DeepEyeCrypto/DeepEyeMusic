@@ -27,6 +27,7 @@ import kotlinx.coroutines.tasks.await
 import java.security.MessageDigest
 import java.util.UUID
 import javax.inject.Inject
+import com.deepeye.musicpro.domain.ranking.RankingRepository
 
 sealed class AuthState {
     object Idle : AuthState()
@@ -36,7 +37,9 @@ sealed class AuthState {
 }
 
 @HiltViewModel
-class AuthViewModel @Inject constructor() : ViewModel() {
+class AuthViewModel @Inject constructor(
+    private val rankingRepository: RankingRepository
+) : ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
@@ -122,6 +125,7 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                 val user = authResult.user
                 if (user != null) {
                     _authState.value = AuthState.Success(user)
+                    rankingRepository.initializeUserIfNew()
                 } else {
                     _authState.value = AuthState.Error("Firebase user is null after credential sign in.")
                 }
@@ -145,6 +149,7 @@ class AuthViewModel @Inject constructor() : ViewModel() {
                 val result = auth.signInWithEmailAndPassword(email, pass).await()
                 if (result.user != null) {
                     _authState.value = AuthState.Success(result.user!!)
+                    rankingRepository.initializeUserIfNew()
                 } else {
                     _authState.value = AuthState.Error("User not found")
                 }

@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.sp
 import com.deepeye.musicpro.domain.gamification.ListeningStreak
 import com.deepeye.musicpro.domain.gamification.RewardPoints
 import com.deepeye.musicpro.domain.gamification.UserAchievement
+import com.deepeye.musicpro.ui.components.glassCard
+import com.deepeye.musicpro.ui.components.hoverable
 
 @Composable
 fun GamificationBottomSheet(
@@ -38,21 +40,21 @@ fun GamificationBottomSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .glassCard(elevation = 12.dp, cornerRadius = 24.dp)
             .padding(24.dp)
     ) {
         // Points Header
         Text(
             text = "${rewardPoints.totalPoints} pts",
-            fontSize = 48.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFFFD700), // Gold
+            style = MaterialTheme.typography.displayLarge,
+            color = MaterialTheme.colorScheme.primary, // Gold
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         
         Text(
             text = "Reward Points",
-            fontSize = 16.sp,
-            color = Color.Gray,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         
@@ -60,36 +62,35 @@ fun GamificationBottomSheet(
         
         // Streak Card
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(Color(0xFF1E1E1E)),
-            shape = RoundedCornerShape(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .glassCard(elevation = 8.dp),
+            colors = CardDefaults.cardColors(Color.Transparent)
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.LocalFireDepartment,
-                        tint = Color(0xFFFF6B35),
+                        tint = MaterialTheme.colorScheme.secondary, // Orange
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = "Current Streak",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "${streak.currentStreak} days",
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFF6B35)
+                    style = MaterialTheme.typography.displayMedium,
+                    color = MaterialTheme.colorScheme.secondary
                 )
                 Text(
                     text = "Longest: ${streak.longestStreak} days",
-                    fontSize = 14.sp,
-                    color = Color.Gray
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -99,9 +100,8 @@ fun GamificationBottomSheet(
         // Badges Grid
         Text(
             text = "Your Badges",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onBackground
         )
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -126,11 +126,16 @@ fun GamificationBottomSheet(
             onClick = onClaimReward,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(Color(0xFFFFD700)),
+                .height(56.dp)
+                .hoverable(scale = 1.02f),
+            colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text("Claim Daily Reward", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+            Text(
+                "Claim Daily Reward", 
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
         }
     }
 }
@@ -140,11 +145,10 @@ fun BadgeCard(badge: UserAchievement, isLocked: Boolean) {
     Card(
         modifier = Modifier
             .padding(8.dp)
-            .aspectRatio(1f),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isLocked) Color(0xFF2A2A2A) else Color(0xFF1E1E1E)
-        ),
-        shape = RoundedCornerShape(12.dp)
+            .aspectRatio(1f)
+            .glassCard(elevation = 6.dp, cornerRadius = 12.dp)
+            .hoverable(scale = 1.05f),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Column(
             modifier = Modifier
@@ -156,14 +160,14 @@ fun BadgeCard(badge: UserAchievement, isLocked: Boolean) {
             if (isLocked) {
                 Icon(
                     imageVector = Icons.Default.Lock,
-                    tint = Color.Gray,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     contentDescription = null,
                     modifier = Modifier.size(40.dp)
                 )
             } else {
                 Icon(
                     painter = painterResource(id = badge.iconResId),
-                    tint = Color(0xFFFFD700),
+                    tint = MaterialTheme.colorScheme.primary, // Gold
                     contentDescription = null,
                     modifier = Modifier.size(40.dp)
                 )
@@ -171,10 +175,9 @@ fun BadgeCard(badge: UserAchievement, isLocked: Boolean) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = badge.title,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.labelMedium,
                 textAlign = TextAlign.Center,
-                color = if (isLocked) Color.Gray else Color.White,
+                color = if (isLocked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onBackground,
                 maxLines = 2
             )
         }

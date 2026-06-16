@@ -66,6 +66,7 @@ import com.deepeye.musicpro.ui.LocalFullscreenMode
 import com.deepeye.musicpro.ui.LocalPipMode
 import com.deepeye.musicpro.ui.components.GlassButton
 import com.deepeye.musicpro.ui.components.GlassPill
+import com.deepeye.musicpro.ui.components.glassCard
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -713,10 +714,7 @@ private fun VideoNowPlayingLayout(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .shadow(12.dp, RoundedCornerShape(24.dp), spotColor = Color.Black, ambientColor = Color.Black)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.15f))
-                    .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f), RoundedCornerShape(24.dp))
+                    .glassCard(elevation = 12.dp, cornerRadius = 24.dp)
                     .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {

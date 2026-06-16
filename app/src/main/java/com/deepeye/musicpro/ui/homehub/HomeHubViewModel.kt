@@ -38,6 +38,8 @@ constructor(
     private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
     private val gamificationRepository: com.deepeye.musicpro.domain.repository.GamificationRepository,
     private val aiRadioEngine: com.deepeye.musicpro.domain.ai.AIRadioEngine,
+    val rankingRepository: com.deepeye.musicpro.domain.ranking.RankingRepository,
+    val rankingEngine: com.deepeye.musicpro.domain.ranking.RankingEngine,
 ) : ViewModel() {
     private val _feedState = MutableStateFlow(HomeFeedState(isLoading = true))
     val feedState: StateFlow<HomeFeedState> = _feedState.asStateFlow()

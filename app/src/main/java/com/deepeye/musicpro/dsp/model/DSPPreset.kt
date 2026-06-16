@@ -6,7 +6,8 @@ package com.deepeye.musicpro.dsp.model
 enum class DSPPreset(
     val presetName: String,
     val description: String,
-    val params: DspParams
+    val params: DspParams,
+    val requiredRank: Int = 999999
 ) {
     PREMIUM_BASS(
         presetName = "Premium Bass",
@@ -59,5 +60,42 @@ enum class DSPPreset(
         presetName = "Default Tuning",
         description = "Balanced sound",
         params = DspParams()
+    ),
+
+    // Rank Exclusives
+    LEGEND_BASS(
+        presetName = "Legend Bass",
+        description = "Exclusive +15dB bass + harmony (Top 10 only)",
+        params = DspParams(
+            viperBassEnabled = true,
+            viperBassGain = 15f,
+            viperBassFreq = 80,
+            viperBassMode = ViperBassMode.DYNAMIC,
+            bassBoostEnabled = true,
+            bassBoostStrength = 1000
+        ),
+        requiredRank = 10
+    ),
+
+    ELITE_WARMTH(
+        presetName = "Elite Warmth",
+        description = "Enhanced tube sim (Top 100 only)",
+        params = DspParams(
+            tubeEnabled = true,
+            tubeMode = TubeMode.PENTODE,
+            tubeDrive = 90
+        ),
+        requiredRank = 100
+    ),
+
+    RISING_AUDIO(
+        presetName = "Rising 3D Audio",
+        description = "Balanced 3D spatial (Top 1000 only)",
+        params = DspParams(
+            crossfeedEnabled = true,
+            virtualizerEnabled = true,
+            virtualizerStrength = 750
+        ),
+        requiredRank = 1000
     )
 }

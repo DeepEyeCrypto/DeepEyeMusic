@@ -59,3 +59,14 @@ val DeepEyeSecondary = NeonCyan
 val AmoledBlack = Color(0xFF000000)
 val AmoledSurface = Color(0xFF0A0A0E)
 val AmoledSurface2 = Color(0xFF111118)
+
+// ─── Material 3 Expressive Premium Palette ──────────────────────────────────
+val ExpressivePrimary = Color(0xFFFFD700) // Gold
+val ExpressivePrimaryVariant = Color(0xFFFFC400) // Darker Gold
+val ExpressiveSecondary = Color(0xFFFF6B35) // Orange
+val ExpressiveTertiary = Color(0xFF2196F3) // Blue
+val ExpressiveBackground = Color(0xFF0A0A0A) // Deep black
+val ExpressiveSurface = Color(0xFF1E1E1E) // Dark gray
+val ExpressiveSurfaceVariant = Color(0xFF2A2A2A) // Lighter dark gray
+val ExpressiveOnPrimary = Color(0xFF000000) // Black
+val ExpressiveOnBackground = Color(0xFFFFFFFF) // White

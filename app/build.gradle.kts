@@ -19,8 +19,8 @@ android {
         applicationId = "com.deepeye.musicpro"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.0.0"
+        versionCode = 3
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -114,10 +114,12 @@ android {
 }
 
 dependencies {
-    // Firebase BOM & Analytics & Auth
+    // Firebase BOM & Analytics & Auth & Firestore & Messaging
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-messaging")
 
     // Credential Manager for Google Sign-In
     implementation("androidx.credentials:credentials:1.3.0")
@@ -236,4 +238,7 @@ android {
     }
 }
 
-
+configurations.all {
+    exclude(group = "com.google.protobuf", module = "protobuf-lite")
+    exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+}

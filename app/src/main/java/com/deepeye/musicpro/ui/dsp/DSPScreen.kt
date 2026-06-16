@@ -51,6 +51,7 @@ fun DSPScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val fftData by viewModel.fftData.collectAsState()
+    val userRank by viewModel.userRankFlow.collectAsState()
     val isEnabled = uiState.params.enabled
     val isWideScreen = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
 
@@ -133,6 +134,7 @@ fun DSPScreen(
 
                         com.deepeye.musicpro.ui.dsp.components.DSPPresetSelector(
                             currentPreset = uiState.activePreset,
+                            userRank = userRank,
                             onPresetChanged = viewModel::applyDSPPreset
                         )
 
@@ -181,6 +183,7 @@ fun DSPScreen(
 
                     com.deepeye.musicpro.ui.dsp.components.DSPPresetSelector(
                         currentPreset = uiState.activePreset,
+                        userRank = userRank,
                         onPresetChanged = viewModel::applyDSPPreset
                     )
 

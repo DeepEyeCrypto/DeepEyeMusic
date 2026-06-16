@@ -48,6 +48,8 @@ import com.deepeye.musicpro.ui.components.premium.PremiumHeroCard
 import com.deepeye.musicpro.ui.components.premium.SplitMediaHero
 import com.deepeye.musicpro.ui.components.premium.DotMatrixClock
 import com.deepeye.musicpro.ui.theme.GlassBorder
+import com.deepeye.musicpro.ui.components.glassCard
+import com.deepeye.musicpro.ui.components.hoverable
 
 @Composable
 fun HomeHubScreen(
@@ -70,6 +72,7 @@ fun HomeHubScreen(
     val isExpanded = windowSizeClass.widthSizeClass == androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
 
     var showGamificationSheet by remember { mutableStateOf(false) }
+    var showRankingSheet by remember { mutableStateOf(false) }
 
     if (showGamificationSheet) {
         @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -85,6 +88,14 @@ fun HomeHubScreen(
                 onClaimReward = { showGamificationSheet = false }
             )
         }
+    }
+
+    if (showRankingSheet) {
+        com.deepeye.musicpro.ui.ranking.RankingBottomSheet(
+            rankingRepository = viewModel.rankingRepository,
+            rankingEngine = viewModel.rankingEngine,
+            onDismissRequest = { showRankingSheet = false }
+        )
     }
 
     Box(
@@ -144,35 +155,80 @@ fun HomeHubScreen(
             // Phase 3: Gamification UI
             item {
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    com.deepeye.musicpro.ui.gamification.StreakProgressBar(
-                        currentStreak = gamificationState.streak.currentStreak,
-                        targetStreak = 7
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
                     Card(
-                        modifier = Modifier.fillMaxWidth().clickable { 
-                            showGamificationSheet = true
-                        },
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFD700).copy(alpha = 0.15f)),
-                        shape = RoundedCornerShape(16.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .glassCard(elevation = 10.dp)
+                            .padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(Color.Transparent)
                     ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        com.deepeye.musicpro.ui.gamification.StreakProgressBar(
+                            currentStreak = gamificationState.streak.currentStreak,
+                            targetStreak = 7
+                        )
+                    }
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .weight(1f)
+                                .glassCard(elevation = 10.dp)
+                                .clickable { showGamificationSheet = true }
+                                .hoverable(scale = 1.02f),
+                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                         ) {
-                            Icon(
-                                imageVector = androidx.compose.material.icons.Icons.Default.Favorite,
-                                tint = Color(0xFFFFD700),
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = "${gamificationState.rewardPoints.totalPoints} Reward Points",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFFFD700)
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = androidx.compose.material.icons.Icons.Default.Favorite,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "${gamificationState.rewardPoints.totalPoints} Pts",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
+                        Card(
+                            modifier = Modifier
+                                .weight(1f)
+                                .glassCard(elevation = 10.dp)
+                                .clickable { showRankingSheet = true }
+                                .hoverable(scale = 1.02f),
+                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "🏆",
+                                    fontSize = 20.sp
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Ranking",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
                         }
                     }
                 }

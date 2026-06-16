@@ -90,16 +90,16 @@ fun DeepEyeMusicTheme(
             else ->
                 if (darkTheme) {
                     darkColorScheme(
-                        primary = TealGlow,
-                        secondary = AccentHot,
-                        tertiary = AccentPink,
-                        background = if (amoledMode) AmoledBlack else DeepBg,
-                        surface = if (amoledMode) AmoledSurface else DeepSurface,
-                        surfaceVariant = if (amoledMode) AmoledSurface2 else DeepSurface2,
-                        onPrimary = Color.Black,
-                        onSecondary = Color.Black,
-                        onBackground = TextPrimary,
-                        onSurface = TextPrimary,
+                        primary = ExpressivePrimary,
+                        secondary = ExpressiveSecondary,
+                        tertiary = ExpressiveTertiary,
+                        background = if (amoledMode) AmoledBlack else ExpressiveBackground,
+                        surface = if (amoledMode) AmoledSurface else ExpressiveSurface,
+                        surfaceVariant = if (amoledMode) AmoledSurface2 else ExpressiveSurfaceVariant,
+                        onPrimary = ExpressiveOnPrimary,
+                        onSecondary = ExpressiveOnPrimary,
+                        onBackground = ExpressiveOnBackground,
+                        onSurface = ExpressiveOnBackground,
                     )
                 } else {
                     lightColorScheme(

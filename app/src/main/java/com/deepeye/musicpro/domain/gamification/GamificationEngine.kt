@@ -15,9 +15,14 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
+import com.deepeye.musicpro.domain.ranking.RankingRepository
+import com.deepeye.musicpro.domain.ranking.RankingEngine
+
 @Singleton
 class GamificationEngine @Inject constructor(
-    private val repository: GamificationRepository
+    private val repository: GamificationRepository,
+    private val rankingRepository: RankingRepository,
+    private val rankingEngine: RankingEngine
 ) {
     private val _achievementEvents = MutableSharedFlow<AchievementUnlockedEvent>()
     val achievementEvents = _achievementEvents.asSharedFlow()
@@ -67,6 +72,7 @@ class GamificationEngine @Inject constructor(
                 }
             }
         }
+        syncToFirestore()
     }
 
     suspend fun updateSongCompletion(durationMs: Long, completionRatio: Float) {
@@ -86,6 +92,7 @@ class GamificationEngine @Inject constructor(
                 unlockBadgeInternal(prefs, AchievementRequirement.SONGS_LISTENED_100)
             }
         }
+        syncToFirestore()
     }
 
     suspend fun updateDailyListeningMinutes(minutesAdded: Int) {
@@ -107,6 +114,7 @@ class GamificationEngine @Inject constructor(
                 }
             }
         }
+        syncToFirestore()
     }
 
     private fun unlockBadgeInternal(prefs: androidx.datastore.preferences.core.MutablePreferences, requirement: AchievementRequirement) {
@@ -119,6 +127,39 @@ class GamificationEngine @Inject constructor(
             kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
                 _achievementEvents.emit(AchievementUnlockedEvent(requirement))
             }
+        }
+    }
+
+    private suspend fun syncToFirestore() {
+        try {
+            val state = repository.getGamificationState().first()
+            val score = rankingEngine.calculateTotalScore(
+                points = state.rewardPoints.totalPoints,
+                streak = state.streak.currentStreak,
+                songsListened = 0, // This needs to be fetched, but totalSongs is not exposed in GamificationState. We need to add it or skip for now. Wait, GamificationState doesn't have totalSongsListened?
+                activeDays = state.dailyGoalCompletedCount
+            )
+            // Wait, we need totalSongs from GamificationPreferences
+            repository.updatePreferences { prefs ->
+                val songsListened = prefs[GamificationPreferences.TOTAL_SONGS_LISTENED] ?: 0
+                val points = prefs[GamificationPreferences.REWARD_POINTS] ?: 0
+                val streak = prefs[GamificationPreferences.CURRENT_STREAK] ?: 0
+                val completedCount = prefs[GamificationPreferences.DAILY_GOAL_COMPLETED_COUNT] ?: 0
+                
+                val currentScore = rankingEngine.calculateTotalScore(points, streak, songsListened, completedCount)
+                
+                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                    rankingRepository.syncGamificationState(
+                        points = points,
+                        streak = streak,
+                        songsListened = songsListened,
+                        activeDays = completedCount,
+                        score = currentScore
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }
