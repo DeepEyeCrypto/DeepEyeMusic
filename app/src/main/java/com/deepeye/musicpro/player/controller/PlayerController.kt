@@ -82,6 +82,12 @@ constructor(
     private val recentAutoplayTrackIds = mutableListOf<String>()
     private var playRetryCount = 0
 
+    var isBackgroundPlaybackEnabled = false
+
+    fun enableBackgroundPlayback(enable: Boolean) {
+        isBackgroundPlaybackEnabled = enable
+    }
+
     init {
         // Register diagnostics
         playbackPathEnforcer.registerPlayer(player)

@@ -50,6 +50,7 @@ import com.deepeye.musicpro.ui.components.premium.DotMatrixClock
 import com.deepeye.musicpro.ui.theme.GlassBorder
 import com.deepeye.musicpro.ui.components.glassCard
 import com.deepeye.musicpro.ui.components.hoverable
+import com.deepeye.musicpro.ui.gamification.Top3LeaderboardCard
 
 @Composable
 fun HomeHubScreen(
@@ -68,6 +69,7 @@ fun HomeHubScreen(
     val isRecsLoading by recommendationViewModel.isRefreshing.collectAsStateWithLifecycle()
     val dspEngineState by viewModel.isDspAttached.collectAsStateWithLifecycle()
     val gamificationState by viewModel.gamificationState.collectAsStateWithLifecycle()
+    val top3Users by viewModel.top3Users.collectAsStateWithLifecycle()
 
     val isExpanded = windowSizeClass.widthSizeClass == androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
 
@@ -152,88 +154,17 @@ fun HomeHubScreen(
                 HomeGreetingHeader(onNavigateToSettings = onNavigateToSettings)
             }
 
-            // Phase 3: Gamification UI
+            // Phase 3: Unified Gamification + Leaderboard Card
             item {
-                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .glassCard(elevation = 10.dp)
-                            .padding(bottom = 16.dp),
-                        colors = CardDefaults.cardColors(Color.Transparent)
-                    ) {
-                        com.deepeye.musicpro.ui.gamification.StreakProgressBar(
-                            currentStreak = gamificationState.streak.currentStreak,
-                            targetStreak = 7
-                        )
-                    }
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Card(
-                            modifier = Modifier
-                                .weight(1f)
-                                .glassCard(elevation = 10.dp)
-                                .clickable { showGamificationSheet = true }
-                                .hoverable(scale = 1.02f),
-                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .fillMaxWidth()
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    imageVector = androidx.compose.material.icons.Icons.Default.Favorite,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "${gamificationState.rewardPoints.totalPoints} Pts",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-
-                        Card(
-                            modifier = Modifier
-                                .weight(1f)
-                                .glassCard(elevation = 10.dp)
-                                .clickable { showRankingSheet = true }
-                                .hoverable(scale = 1.02f),
-                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = "🏆",
-                                    fontSize = 20.sp
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Ranking",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            }
-                        }
-                    }
-                }
+                Top3LeaderboardCard(
+                    top3Users = top3Users,
+                    currentStreak = gamificationState.streak.currentStreak,
+                    totalPoints = gamificationState.rewardPoints.totalPoints,
+                    onMoreClick = { showRankingSheet = true },
+                    onPointsClick = { showGamificationSheet = true },
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
             }
-
 
             // 1b. Featured Premium Audio Hero Card (AEOS Premium Feature)
             val featuredMusic = feedState.featuredMusic

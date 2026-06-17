@@ -482,4 +482,27 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onPause() {
+        super.onPause()
+        if (!playerController.isBackgroundPlaybackEnabled) {
+            if (!isInPictureInPictureMode) {
+                playerController.pause()
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Audio focus is re-requested automatically by ExoPlayer when playback resumes,
+        // or we can manually trigger it if needed, but since we use AudioSessionManager,
+        // the playerController handles it via MediaSession.
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        if (!playerController.playerState.value.isPlaying) {
+            playerController.player.clearVideoSurface()
+        }
+    }
 }

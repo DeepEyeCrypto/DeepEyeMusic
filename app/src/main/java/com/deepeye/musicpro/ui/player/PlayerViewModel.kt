@@ -56,6 +56,14 @@ constructor(
 
     val sleepTimerRemainingMs: StateFlow<Long?> = sleepTimerManager.timeRemainingMs
 
+    private val _isBackgroundPlaybackEnabled = MutableStateFlow(false)
+    val isBackgroundPlaybackEnabled: StateFlow<Boolean> = _isBackgroundPlaybackEnabled.asStateFlow()
+
+    fun enableBackgroundPlayback() {
+        _isBackgroundPlaybackEnabled.value = true
+        playerController.enableBackgroundPlayback(true)
+    }
+
     val fftData =
         visualizerEngine.fftData.map { bytes ->
             if (bytes.isEmpty()) {

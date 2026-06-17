@@ -25,7 +25,7 @@ import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PictureInPicture
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -574,7 +574,7 @@ fun HybridPlayerCard(
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.PlayArrow,
+                                    imageVector = Icons.Default.PlayCircle,
                                     contentDescription = "Play",
                                     tint = Color.White,
                                     modifier = Modifier.size(28.dp),
@@ -704,7 +704,7 @@ fun HybridPlayerCard(
                                                 .background(Color.White.copy(alpha = 0.15f), CircleShape),
                                         ) {
                                             Icon(
-                                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayCircle,
                                                 contentDescription = "Play/Pause",
                                                 tint = Color.White,
                                                 modifier = Modifier.size(16.dp),
@@ -989,7 +989,7 @@ fun HybridPlayerCard(
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
-                                imageVector = if (isPlayingAudio) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                imageVector = if (isPlayingAudio) Icons.Default.Pause else Icons.Default.PlayCircle,
                                 contentDescription = "Play/Pause",
                                 tint = Color.White,
                                 modifier = Modifier.size(24.dp),

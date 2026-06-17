@@ -1261,7 +1261,7 @@ private fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit, accentColor
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayCircle,
                 contentDescription = "Play/Pause",
                 modifier = Modifier.size(56.dp),
                 tint = Color.Black // Contrast against accent color

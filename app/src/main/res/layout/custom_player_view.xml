@@ -9,4 +9,5 @@
     app:surface_type="surface_view"
     app:use_artwork="false"
     app:show_buffering="when_playing"
+    android:hardwareAccelerated="true"
     android:keepScreenOn="true" />

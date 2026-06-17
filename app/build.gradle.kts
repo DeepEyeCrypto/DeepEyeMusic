@@ -17,8 +17,8 @@ android {
 
     defaultConfig {
         applicationId = "com.deepeye.musicpro"
-        minSdk = 26
-        targetSdk = 34
+        minSdk = 24
+        targetSdk = 35
         versionCode = 4
         versionName = "1.0.3"
 
@@ -170,11 +170,11 @@ dependencies {
     ksp(libs.room.compiler)
 
     // Media3 / ExoPlayer
-    implementation(libs.media3.exoplayer)
-    implementation(libs.media3.exoplayer.dash)
-    implementation(libs.media3.exoplayer.hls)
-    implementation(libs.media3.session)
-    implementation(libs.media3.ui)
+    implementation("androidx.media3:media3-exoplayer:1.3.0")
+    implementation("androidx.media3:media3-exoplayer-dash:1.3.0")
+    implementation("androidx.media3:media3-exoplayer-hls:1.3.0")
+    implementation("androidx.media3:media3-session:1.3.0")
+    implementation("androidx.media3:media3-ui:1.3.0")
     implementation("androidx.media:media:1.7.0")
 
     // Coroutines & Collections
@@ -240,5 +240,7 @@ android {
 
 configurations.all {
     exclude(group = "com.google.protobuf", module = "protobuf-lite")
-    exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    resolutionStrategy {
+        force("com.google.protobuf:protobuf-javalite:3.22.3")
+    }
 }

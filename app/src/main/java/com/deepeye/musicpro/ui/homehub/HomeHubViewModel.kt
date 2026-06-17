@@ -54,6 +54,12 @@ constructor(
 
     val isDspAttached = dspEngine.engineState
 
+    val top3Users = rankingRepository.getTopUsers(3).stateIn(
+        scope = viewModelScope,
+        started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
     init {
         loadFeed()
         viewModelScope.launch { gamificationEngine.checkAndUpdateStreak() }

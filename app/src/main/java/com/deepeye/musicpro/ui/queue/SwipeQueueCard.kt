@@ -12,7 +12,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -90,7 +90,7 @@ fun SwipeQueueCard(
                     contentAlignment = Alignment.CenterStart,
                 ) {
                     Icon(
-                        imageVector = if (offsetX > 220f) Icons.Default.PlayArrow else Icons.Default.PushPin,
+                        imageVector = if (offsetX > 220f) Icons.Default.PlayCircle else Icons.Default.PushPin,
                         contentDescription = "Action",
                         tint = Color.White,
                     )

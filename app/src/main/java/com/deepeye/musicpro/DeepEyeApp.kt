@@ -34,6 +34,29 @@ class DeepEyeApp : Application(), Configuration.Provider, SingletonImageLoader.F
 
     override fun onCreate() {
         super.onCreate()
+        // Force OpenGL renderer on Vivo + Android 16
+        if (com.deepeye.musicpro.util.DeviceCompat.isVivo && com.deepeye.musicpro.util.DeviceCompat.isAndroid16) {
+            System.setProperty("debug.hwui.renderer", "OpenGL_ES")
+        }
+
+        // Disable hardware overlay on low RAM devices
+        if (com.deepeye.musicpro.util.DeviceCompat.isLowRamDevice(this)) {
+            System.setProperty("debug.hwui.overlays", "false")
+        }
+
+        // Request battery optimization ignore
+        if (com.deepeye.musicpro.util.DeviceCompat.isVivo) {
+            val intent = android.content.Intent(
+                android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+            ).setData(android.net.Uri.parse("package:$packageName"))
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                startActivity(intent)
+            } catch (e: Exception) {
+                // Ignore if not supported
+            }
+        }
+
         applicationScope.launch {
             presetRepository.seedBuiltinPresets()
         }
@@ -109,6 +132,7 @@ class DeepEyeApp : Application(), Configuration.Provider, SingletonImageLoader.F
     override fun newImageLoader(context: PlatformContext): ImageLoader {
         return ImageLoader.Builder(context)
             .components {
+                add(coil3.network.okhttp.OkHttpNetworkFetcherFactory())
                 add(coil3.video.VideoFrameDecoder.Factory())
             }
             .memoryCache {

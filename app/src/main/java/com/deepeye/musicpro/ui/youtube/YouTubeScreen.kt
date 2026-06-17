@@ -781,7 +781,7 @@ fun YouTubeScreen(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        imageVector = Icons.Default.PlayArrow,
+                        imageVector = Icons.Default.PlayCircle,
                         contentDescription = null,
                         tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(28.dp),
@@ -794,7 +794,7 @@ fun YouTubeScreen(
                     listOf(
                         SidebarTabItem("Home", Icons.Default.Home),
                         SidebarTabItem("Search", Icons.Default.Search),
-                        SidebarTabItem("Music", Icons.Default.PlayArrow),
+                        SidebarTabItem("Music", Icons.Default.PlayCircle),
                         SidebarTabItem("Gaming", Icons.Default.Star),
                         SidebarTabItem("News", Icons.Default.Info),
                         SidebarTabItem("SponsorBlock", Icons.Default.Settings),
@@ -896,7 +896,7 @@ fun YouTubeScreen(
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            imageVector = Icons.Default.PlayArrow,
+                            imageVector = Icons.Default.PlayCircle,
                             contentDescription = null,
                             tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(20.dp),
@@ -904,7 +904,7 @@ fun YouTubeScreen(
                     }
                     Spacer(Modifier.width(10.dp))
                     Text(
-                        text = "SmartTube Edition",
+                        text = "DeepEyeMusicPro",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
@@ -931,7 +931,7 @@ fun YouTubeScreen(
             }
 
             // Top Horizontal category ribbon
-            val tabs = listOf("Home", "Search", "Music", "Gaming", "News", "SponsorBlock")
+            val tabs = listOf("Home", "Search", "Music", "Movies", "Gaming", "News", "SponsorBlock")
             LazyRow(
                 modifier =
                 Modifier
@@ -1282,7 +1282,7 @@ fun SmartTubeVideoCard(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Default.PlayArrow,
+                        imageVector = Icons.Default.PlayCircle,
                         contentDescription = null,
                         tint = neonCyan,
                         modifier = Modifier.size(11.dp),

@@ -143,6 +143,7 @@ constructor(
                 when (category) {
                     "Home" -> "trending music"
                     "Music" -> "official music video songs hits"
+                    "Movies" -> "full movies action thriller comedy romance"
                     "Gaming" -> "gaming gameplay walkthrough let's play"
                     "News" -> "news highlights live report world news"
                     else -> return@launch // Search / SponsorBlock handle separately
