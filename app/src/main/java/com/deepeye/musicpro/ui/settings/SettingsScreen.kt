@@ -119,14 +119,6 @@ fun SettingsScreen(
                     ) {
                         when (selectedCategory) {
                             0 -> {
-                                item {
-                                    UpdateBanner(
-                                        state = uiState.updateState,
-                                        onDownloadClick = { url, version -> viewModel.downloadUpdate(url, version) },
-                                        onInstallClick = { file -> viewModel.installApk(file) },
-                                        onDismissClick = { viewModel.resetUpdateState() }
-                                    )
-                                }
                                 item { SectionHeader("Appearance") }
                                 item { AppearanceSettingsCard(settings, viewModel) }
                             }
@@ -169,14 +161,6 @@ fun SettingsScreen(
                     )
                 }
 
-                item {
-                    UpdateBanner(
-                        state = uiState.updateState,
-                        onDownloadClick = { url, version -> viewModel.downloadUpdate(url, version) },
-                        onInstallClick = { file -> viewModel.installApk(file) },
-                        onDismissClick = { viewModel.resetUpdateState() }
-                    )
-                }
 
                 item { SectionHeader("Appearance") }
                 item { AppearanceSettingsCard(settings, viewModel) }
@@ -257,14 +241,23 @@ fun PremiumProfileCard(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        val firstLetter = currentUser?.email?.firstOrNull()?.uppercase() ?: "U"
-                        Text(
-                            text = firstLetter,
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF7B3FE4),
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.SansSerif
-                        )
+                        if (currentUser?.photoUrl != null) {
+                            coil3.compose.AsyncImage(
+                                model = currentUser?.photoUrl.toString(),
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                            )
+                        } else {
+                            val firstLetter = currentUser?.email?.firstOrNull()?.uppercase() ?: "U"
+                            Text(
+                                text = firstLetter,
+                                fontSize = 26.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color(0xFF7B3FE4),
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.SansSerif
+                            )
+                        }
                     }
 
                     // User details

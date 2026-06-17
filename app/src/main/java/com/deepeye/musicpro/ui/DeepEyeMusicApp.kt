@@ -429,7 +429,7 @@ fun DeepEyeMusicApp(
                             .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
                             .align(Alignment.TopCenter)
                     ) {
-                        com.deepeye.musicpro.ui.settings.UpdateBanner(
+                        com.deepeye.musicpro.ui.update.UpdateDialog(
                             state = settingsUiState.updateState,
                             onDownloadClick = { url, version -> settingsViewModel.downloadUpdate(url, version) },
                             onInstallClick = { file -> settingsViewModel.installApk(file) },
