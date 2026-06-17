@@ -1,0 +1,2 @@
+app/src/main/java/com/deepeye/musicpro/dsp/engine/DSPEngine.kt:    fun attachSession(sessionId: Int, force: Boolean = false) {
+app/src/main/java/com/deepeye/musicpro/dsp/session/AudioSessionManager.kt:                dspEngine.attachSession(newSessionId, force = force)

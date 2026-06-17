@@ -1,31 +1,19 @@
 import urllib.request
 import json
-import socket
 
-instances = [
+piped_instances = [
+    "https://api.piped.private.coffee",
     "https://pipedapi.kavin.rocks",
     "https://pipedapi.us.projectsegfau.lt",
-    "https://api.piped.privacydev.net",
-    "https://pipedapi.smnz.de",
-    "https://api.piped.yt",
-    "https://piped-api.lunar.icu",
-    "https://pipedapi.in.projectsegfau.lt",
-    "https://pipedapi.adminforge.de",
-    "https://piped-api.garudalinux.org",
-    "https://pipedapi.tokhmi.xyz"
+    "https://pipedapi.lunar.icu"
 ]
 
-socket.setdefaulttimeout(3)
-
-for url in instances:
-    api = f"{url}/streams/ZvXN0TcZLfQ"
+for url in piped_instances:
     try:
-        req = urllib.request.Request(api, headers={"User-Agent": "Mozilla/5.0"})
-        res = urllib.request.urlopen(req)
-        data = json.loads(res.read())
-        if "audioStreams" in data:
-            print(f"✅ WORKS: {url}")
-        else:
-            print(f"❌ FAILED: {url} (No audioStreams)")
+        req = urllib.request.Request(f"{url}/streams/kcQC0VuxtDg", headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=3) as response:
+            if response.status == 200:
+                print(f"SUCCESS: {url}")
+                break
     except Exception as e:
-        print(f"❌ ERROR: {url} -> {e}")
+        print(f"FAILED: {url} - {e}")
