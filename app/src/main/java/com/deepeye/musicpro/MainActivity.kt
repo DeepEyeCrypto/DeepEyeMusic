@@ -291,17 +291,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            if (!isInPictureInPictureMode) {
-                if (::playerController.isInitialized && playerController.playerState.value.isVideo) {
-                    playerController.player.pause()
-                }
-            }
-        } else {
-            if (::playerController.isInitialized && playerController.playerState.value.isVideo) {
-                playerController.player.pause()
-            }
-        }
+        // Removed explicit pause to allow background audio playback for videos when screen locks
     }
 
     /**
@@ -483,14 +473,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        if (!playerController.isBackgroundPlaybackEnabled) {
-            if (!isInPictureInPictureMode) {
-                playerController.pause()
-            }
-        }
-    }
 
     override fun onResume() {
         super.onResume()
