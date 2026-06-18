@@ -55,6 +55,7 @@ fun Modifier.hoverable(
         }
 }
 
+@Suppress("DEPRECATION")
 fun hapticVibrate(view: View, type: Int = HapticFeedbackConstants.CONTEXT_CLICK) {
     view.performHapticFeedback(type, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING)
 }

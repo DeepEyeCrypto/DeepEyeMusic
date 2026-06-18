@@ -41,3 +41,5 @@ scratch/
 bugreport_out/
 full_logcat.txt
 google-services.json
+
+testsprite_tests/tmp/config.json

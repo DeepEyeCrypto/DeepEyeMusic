@@ -58,7 +58,6 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeChild
 import com.deepeye.musicpro.ui.LocalHazeState
 
 /**
@@ -174,7 +173,7 @@ fun GlassContainer(
                         .clip(resolvedShape)
                         .run {
                             if (hazeState != null) {
-                                this.hazeChild(
+                                this.hazeEffect(
                                     state = hazeState,
                                     style = HazeStyle(
                                         tint = HazeTint(tintColor.copy(alpha = tintColor.alpha.coerceAtMost(0.4f))),
@@ -205,7 +204,7 @@ fun GlassContainer(
                         }
                         .run {
                             if (hazeState != null) {
-                                this.hazeChild(
+                                this.hazeEffect(
                                     state = hazeState,
                                     style = HazeStyle(
                                         tint = HazeTint(tintColor.copy(alpha = tintColor.alpha.coerceAtMost(0.4f))),

@@ -71,9 +71,7 @@ class MainActivity : ComponentActivity() {
             windowInsetsController.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
             // Fix for SurfaceView edge-to-edge black bar bug on Android 14+
             window.attributes.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                window.setDecorFitsSystemWindows(false)
-            }
+            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
         }
         onExitFullscreen = {
             // Restore to unspecified so the user can freely rotate again
@@ -136,12 +134,15 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             window.attributes.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
+        @Suppress("DEPRECATION")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isNavigationBarContrastEnforced = false
             window.isStatusBarContrastEnforced = false
         }
         window.setBackgroundDrawableResource(android.R.color.transparent)
+        @Suppress("DEPRECATION")
         window.statusBarColor = android.graphics.Color.TRANSPARENT
+        @Suppress("DEPRECATION")
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         pipEngine = com.deepeye.musicpro.player.controller.PipEngine(this, playerController)

@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.ksp)
     id("io.gitlab.arturbosch.detekt")
     id("com.google.gms.google-services")
+    id("jacoco")
 }
 
 android {
@@ -19,8 +20,8 @@ android {
         applicationId = "com.deepeye.musicpro"
         minSdk = 24
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.0.3"
+        versionCode = 6
+        versionName = "1.0.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -216,23 +217,39 @@ dependencies {
     implementation("androidx.profileinstaller:profileinstaller:1.4.1")
 
     // Testing
-    testImplementation(libs.junit)
-    testImplementation(libs.coroutines.test)
+    testImplementation("junit:junit:4.13.2")
     testImplementation(libs.mockk)
+    testImplementation("org.mockito:mockito-core:5.7.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("org.robolectric:robolectric:4.12")
     testImplementation("org.json:json:20231013")
-    testImplementation(libs.robolectric)
+    
+    // Instrumented tests
+    androidTestImplementation("androidx.test:core:1.6.1")
+    androidTestImplementation("androidx.test:runner:1.6.1")
+    androidTestImplementation("androidx.test:rules:1.6.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    androidTestImplementation("androidx.test.espresso:espresso-contrib:3.6.1")
+    androidTestImplementation("org.mockito:mockito-android:5.7.0")
+    androidTestImplementation("com.google.android.apps.mousewheel:mousewheel:1.0.0")
+    
+    // Compose Testing
     testImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.test.manifest)
     androidTestImplementation(composeBom)
     androidTestImplementation(libs.compose.ui.test.junit4)
     androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
-    androidTestImplementation("androidx.test:runner:1.6.1")
-    androidTestImplementation("androidx.test:rules:1.6.1")
 }
 
 android {
     testOptions {
         unitTests {
+            all {
+                it.jvmArgs("-noverify")
+            }
+            isReturnDefaultValues = true
             isIncludeAndroidResources = true
         }
     }

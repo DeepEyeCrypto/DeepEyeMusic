@@ -4,6 +4,7 @@ import org.schabi.newpipe.extractor.downloader.Downloader
 import org.schabi.newpipe.extractor.downloader.Request
 import org.schabi.newpipe.extractor.downloader.Response
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 import java.io.IOException
 
@@ -30,7 +31,7 @@ class PluginDownloader : Downloader() {
         }
 
         if (httpMethod == "POST" || httpMethod == "PUT") {
-            val body = okhttp3.RequestBody.create(null, dataToSend ?: ByteArray(0))
+            val body = (dataToSend ?: ByteArray(0)).toRequestBody(null)
             reqBuilder.method(httpMethod, body)
         } else if (httpMethod == "HEAD" || httpMethod == "OPTIONS" || httpMethod == "TRACE") {
             reqBuilder.method(httpMethod, null)

@@ -205,7 +205,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Divider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.1f))
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.1f))
                 Text(
                     text = "OR",
                     color = Color.White.copy(alpha = 0.3f),
@@ -213,7 +213,7 @@ fun LoginScreen(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
-                Divider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.1f))
+                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.1f))
             }
 
             Spacer(modifier = Modifier.height(32.dp))

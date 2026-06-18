@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.ThumbDown
@@ -135,7 +136,7 @@ fun NowPlayingScreen(
     fun ArtworkOrVideoSection(modifier: Modifier = Modifier) {
         val innerItem = playerState.currentItem
         val innerIsVideo = innerItem is MediaItem.Remote && playerState.isVideo
-        if (innerIsVideo && innerItem != null) {
+        if (innerIsVideo) {
             com.deepeye.musicpro.ui.components.HybridPlayerCard(
                 item = innerItem,
                 player = viewModel.player,
@@ -596,7 +597,7 @@ private fun AudioNowPlayingLayout(
                     Icon(Icons.Default.Tune, "DSP", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
                 }
                 IconButton(onClick = onOpenQueue) {
-                    Icon(Icons.Default.QueueMusic, "Queue", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+                    Icon(Icons.AutoMirrored.Filled.QueueMusic, "Queue", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
                 }
             }
         }

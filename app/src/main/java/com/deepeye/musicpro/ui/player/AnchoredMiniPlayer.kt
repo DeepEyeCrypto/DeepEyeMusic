@@ -55,6 +55,7 @@ import kotlin.math.roundToInt
  * - All gesture state resets cleanly on cancellation — no stuck anchors.
  * - Pointer events are intercepted at `PointerEventPass.Initial` to beat child composables.
  */
+@Suppress("DEPRECATION")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AnchoredMiniPlayer(

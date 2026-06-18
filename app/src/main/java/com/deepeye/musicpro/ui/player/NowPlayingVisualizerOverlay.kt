@@ -113,7 +113,7 @@ fun NowPlayingVisualizerOverlay(
                 if (i == 0) {
                     path.lineTo(x, y)
                 } else {
-                    path.quadraticBezierTo(
+                    path.quadraticTo(
                         prevX + (x - prevX) / 2f,
                         prevY,
                         x,

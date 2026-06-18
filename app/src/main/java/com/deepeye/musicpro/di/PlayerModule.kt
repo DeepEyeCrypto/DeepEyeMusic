@@ -114,7 +114,7 @@ object PlayerModule {
             .build()
             
         // Enable detailed logging for debugging DRM and playback issues
-        player.addAnalyticsListener(androidx.media3.exoplayer.util.EventLogger(trackSelector))
+        player.addAnalyticsListener(androidx.media3.exoplayer.util.EventLogger())
         // Register global WebViewCookieHandler to delegate JVM-level requests to Android WebView's CookieManager
         try {
             CookieHandler.setDefault(WebViewCookieHandler())

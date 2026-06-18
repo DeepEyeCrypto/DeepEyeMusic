@@ -142,7 +142,6 @@ class HeadlessWebViewExtractor @Inject constructor(
                     clearCache(true)
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
-                    settings.databaseEnabled = true
                     settings.mediaPlaybackRequiresUserGesture = false
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                         settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW

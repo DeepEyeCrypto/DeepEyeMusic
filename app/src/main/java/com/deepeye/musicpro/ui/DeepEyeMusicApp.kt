@@ -116,7 +116,7 @@ fun DeepEyeMusicApp(
         val currentItem = playerState.currentItem
         val isVideo = currentItem is com.deepeye.musicpro.domain.model.MediaItem.Remote && playerState.isVideo
 
-        if (isVideo && sharedWebView != null) {
+        if (isVideo) {
             val videoId = currentItem.id
             val updateState =
                 sharedWebView.tag as? com.deepeye.musicpro.ui.components.YouTubePlayerState
@@ -154,7 +154,7 @@ fun DeepEyeMusicApp(
                 "if (typeof setSpeed === 'function') setSpeed(${playerState.playbackSpeed});",
                 null
             )
-        } else if (sharedWebView != null) {
+        } else {
             // Only pause WebView when explicitly switching AWAY from a video track.
             // Don't pause during navigation/recomposition transients — prevents the
             // "video stops when navigating to Settings" bug.
@@ -170,7 +170,7 @@ fun DeepEyeMusicApp(
         val currentItem = playerState.currentItem
         val isVideo = currentItem is com.deepeye.musicpro.domain.model.MediaItem.Remote && playerState.isVideo
 
-        if (isVideo && sharedWebView != null) {
+        if (isVideo) {
             val updateState =
                 sharedWebView.tag as? com.deepeye.musicpro.ui.components.YouTubePlayerState
                     ?: com.deepeye.musicpro.ui.components.YouTubePlayerState().also { sharedWebView.tag = it }

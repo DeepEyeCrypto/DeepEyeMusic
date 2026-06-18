@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 @file:androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+@file:Suppress("DEPRECATION")
 
 package com.deepeye.musicpro.dsp.engine
 

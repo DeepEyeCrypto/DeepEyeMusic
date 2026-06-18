@@ -95,6 +95,7 @@ class PremiumHaptics(private val context: Context, private val isEnabled: Boolea
 }
 
 object HapticPatterns {
+    @Suppress("DEPRECATION")
     fun isHapticsDisabled(context: Context): Boolean {
         return try {
             Settings.System.getInt(
