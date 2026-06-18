@@ -1,0 +1,66 @@
+--------- beginning of main
+05-25 10:31:07.430  3992 18536 V Avrcp_ext: onPlaybackStateChanged: state PlaybackState {state=ERROR(7), position=0, buffered position=0, speed=1.0, updated=1508056576, actions=7339703, custom actions=[], active item id=0, error=Source error}
+05-25 10:31:07.431  3992 18536 V APM: MediaControlManager: onPlaybackStateChanged
+05-25 10:31:07.431  3992 18536 W McpService: updatePlaybackState state PlaybackState {state=ERROR(7), position=0, buffered position=0, speed=1.0, updated=1508056576, actions=7339703, custom actions=[], active item id=0, error=Source error}
+05-25 10:31:07.431  3992 18536 W McpService: updatePlaybackState mState: 1 state: -1
+05-25 10:31:07.435  3992 18536 V Avrcp_ext: updateCurrentMediaState: mMediaController: MediaController (com.deepeye.musicpro.debug@693bfa2) Chaand Baaliyan – Aditya A. | Trending Song | Official Video, Sony Music India, null
+05-25 10:31:07.435  3992 18536 W Avrcp_ext: isMusicActive: false getBluetoothPlayState: 1 A2dp State: 11 mAudioPlaybackIsActive: false
+05-25 10:31:07.436  3992 18536 D Avrcp_ext: isMusicActive = false mAudioPlaybackIsActive = false player state = PlaybackState {state=ERROR(7), position=0, buffered position=0, speed=1.0, updated=1508056576, actions=7339703, custom actions=[], active item id=0, error=Source error}
+05-25 10:31:07.436  3992 18536 D Avrcp_ext: overwrite album_artist :if album is blank
+05-25 10:31:07.437  3992 18536 V Avrcp_ext: Media update: id 0➡0? [MediaAttributes: C⋯o -  by S⋯a (0 0/0) - ] : [MediaAttributes: C⋯o -  by S⋯a (0 0/0) - ]
+05-25 10:31:07.438  3992 18536 D Avrcp_ext: isPackageNameValid: browsedPackage = com.deepeye.musicpro.debugisValid = true
+05-25 10:31:07.438  3992 18536 V Avrcp_ext: isBrowseSupported for com.deepeye.musicpro.debug: false
+05-25 10:31:07.438  3992 18536 W Avrcp_ext: updateCurrentMediaState: isInactivePlayer = false
+05-25 10:31:07.438  3992 18536 I Avrcp_ext: Players updated current playback state is error, skip updating playback state
+05-25 10:31:07.438  3992 18536 V Avrcp_ext:  Exit onPlaybackStateChanged
+05-25 10:31:08.284  1770 26063 E WifiHAL : WLAN_DIAG_TYPE_CONFIG - possible buffer over access, length=1472 count=1452 hdr_size=8 payload len=1439
+05-25 10:31:08.734  3077  3729 D WifiStaIfaceHidlImpl: getCachedScanData is not implemented by HIDL
+05-25 10:31:08.737  3077  3789 D MotoSxfService: unknown touch type
+05-25 10:31:08.739  3077  3077 D EnhancedConnectivityController: Wifi onCapabilitiesChanged
+05-25 10:31:08.740  3077  3077 D EnhancedConnectivityController: Default net onCapabilitiesChanged
+05-25 10:31:08.741  6458  7001 I ModemStats: [DataStallDetectService] onCapabilitiesChanged networkCapabilities=[ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED LinkUpBandwidth>=12321Kbps LinkDnBandwidth>=15606Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /192.168.1.9, Security type: 2, Supplicant state: COMPLETED, Wi-Fi standard: 11n, RSSI: -49, Link speed: 81Mbps, Tx Link speed: 81Mbps, Max Supported Tx Link speed: 300Mbps, Rx Link speed: 81Mbps, Max Supported Rx Link speed: 300Mbps, Frequency: 2412MHz, Net ID: -1, Metered hint: false, score: 100, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -49 UnderlyingNetworks: Null]
+05-25 10:31:08.741  6458  7001 I ModemStats: [DataStallDetectService] onCapabilitiesChanged NET_CAPABILITY_VALIDATED=true
+05-25 10:31:08.741  6458  7001 I ModemStats: [DataStallDetectService] onCapabilitiesChanged mDataStallManager.mDataStallInstance=null
+05-25 10:31:08.741  6458  7001 I ModemStats: [DataStallDetectService] onCapabilitiesChanged mDataStallSmart5gManager.mDataStallInstance=null
+05-25 10:31:08.741  4019  4769 D QCNEJ/NativeHalConnector: -> SND notifyDefaultNetworkChanged(1)
+05-25 10:31:08.746  3077  3077 D EnhancedConnectivityController: updateDefaultNet:882
+05-25 10:31:08.748  3077  3077 D EnhancedConnectivityController: mayUpdateNotification: shouldShow=false,UidsBlocked=false, net info=net:882,ifName=wlan0,securityType=2,isDefault=true,ssid="Airtel_Siddhanth's wifi",notificationId=0
+05-25 10:31:08.751  3077  3729 I HalDevMgr: bestIfaceCreationProposal is null, requestIface=STA, existingIface=[name=ap_br_wlan2 type=AP_BRIDGE, name=wlan0 type=STA]
+05-25 10:31:08.758  4774  4788 I NullBinder: NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0
+--------- beginning of system
+05-25 10:31:08.758  4774  4788 W Binder  : reply too large data on java level: InterfaceDescriptor = null, code = 1
+05-25 10:31:08.758  4774  4788 W .gms.persistent: Large reply transaction of 1056768 bytes, interface descriptor , code 1
+05-25 10:31:09.250  4774 24844 I NearbySharing: Network state changed: NetworkState(isRestricted=false, isOnline=true, isCongested=false, isMetered=false, isWifiConnected=true)
+05-25 10:31:09.550  3077  3726 D PowerManagerService: nativeAcquireSuspendBlocker name:PowerManagerService.WakeLocks duration ms: 1
+05-25 10:31:09.593  3077  3726 D PowerManagerService: nativeReleaseSuspendBlocker name:PowerManagerService.WakeLocks duration ms: 0
+05-25 10:31:09.594  4049 24120 I QImsService: VtDataUsageProvider : onSetAlert:2097152
+05-25 10:31:09.594  4049  4049 I QImsService: ImsServiceClassTracker : updateAlertQuota:newQuota=2097152,Remaining=2097152
+05-25 10:31:10.442  3992 18536 V Avrcp_ext: onPlaybackStateChanged: state PlaybackState {state=ERROR(7), position=0, buffered position=0, speed=1.0, updated=1508059586, actions=7339703, custom actions=[], active item id=0, error=Source error}
+05-25 10:31:10.442  3992 18536 V APM: MediaControlManager: onPlaybackStateChanged
+05-25 10:31:10.443  3992 18536 W McpService: updatePlaybackState state PlaybackState {state=ERROR(7), position=0, buffered position=0, speed=1.0, updated=1508059586, actions=7339703, custom actions=[], active item id=0, error=Source error}
+05-25 10:31:10.443  3992 18536 W McpService: updatePlaybackState mState: 1 state: -1
+05-25 10:31:10.445  3992 18536 V Avrcp_ext: updateCurrentMediaState: mMediaController: MediaController (com.deepeye.musicpro.debug@693bfa2) Chaand Baaliyan – Aditya A. | Trending Song | Official Video, Sony Music India, null
+05-25 10:31:10.446  3992 18536 W Avrcp_ext: isMusicActive: false getBluetoothPlayState: 1 A2dp State: 11 mAudioPlaybackIsActive: false
+05-25 10:31:10.446  3992 18536 D Avrcp_ext: isMusicActive = false mAudioPlaybackIsActive = false player state = PlaybackState {state=ERROR(7), position=0, buffered position=0, speed=1.0, updated=1508059586, actions=7339703, custom actions=[], active item id=0, error=Source error}
+05-25 10:31:10.447  3992 18536 D Avrcp_ext: overwrite album_artist :if album is blank
+05-25 10:31:10.448  3992 18536 V Avrcp_ext: Media update: id 0➡0? [MediaAttributes: C⋯o -  by S⋯a (0 0/0) - ] : [MediaAttributes: C⋯o -  by S⋯a (0 0/0) - ]
+05-25 10:31:10.449  3992 18536 D Avrcp_ext: isPackageNameValid: browsedPackage = com.deepeye.musicpro.debugisValid = true
+05-25 10:31:10.449  3992 18536 V Avrcp_ext: isBrowseSupported for com.deepeye.musicpro.debug: false
+05-25 10:31:10.449  3992 18536 W Avrcp_ext: updateCurrentMediaState: isInactivePlayer = false
+05-25 10:31:10.449  3992 18536 I Avrcp_ext: Players updated current playback state is error, skip updating playback state
+05-25 10:31:10.449  3992 18536 V Avrcp_ext:  Exit onPlaybackStateChanged
+05-25 10:31:11.765  3077  3729 D WifiStaIfaceHidlImpl: getCachedScanData is not implemented by HIDL
+05-25 10:31:11.770  3077  3077 D EnhancedConnectivityController: Wifi onCapabilitiesChanged
+05-25 10:31:11.770  3077  3077 D EnhancedConnectivityController: Default net onCapabilitiesChanged
+05-25 10:31:11.770  3077  3077 D EnhancedConnectivityController: updateDefaultNet:882
+05-25 10:31:11.770  3077  3077 D EnhancedConnectivityController: mayUpdateNotification: shouldShow=false,UidsBlocked=false, net info=net:882,ifName=wlan0,securityType=2,isDefault=true,ssid="Airtel_Siddhanth's wifi",notificationId=0
+05-25 10:31:11.772  6458  7001 I ModemStats: [DataStallDetectService] onCapabilitiesChanged networkCapabilities=[ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED LinkUpBandwidth>=12321Kbps LinkDnBandwidth>=15606Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /192.168.1.9, Security type: 2, Supplicant state: COMPLETED, Wi-Fi standard: 11n, RSSI: -49, Link speed: 108Mbps, Tx Link speed: 108Mbps, Max Supported Tx Link speed: 300Mbps, Rx Link speed: 81Mbps, Max Supported Rx Link speed: 300Mbps, Frequency: 2412MHz, Net ID: -1, Metered hint: false, score: 100, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -49 UnderlyingNetworks: Null]
+05-25 10:31:11.773  4019  4769 D QCNEJ/NativeHalConnector: -> SND notifyDefaultNetworkChanged(1)
+05-25 10:31:11.773  6458  7001 I ModemStats: [DataStallDetectService] onCapabilitiesChanged NET_CAPABILITY_VALIDATED=true
+05-25 10:31:11.773  6458  7001 I ModemStats: [DataStallDetectService] onCapabilitiesChanged mDataStallManager.mDataStallInstance=null
+05-25 10:31:11.773  6458  7001 I ModemStats: [DataStallDetectService] onCapabilitiesChanged mDataStallSmart5gManager.mDataStallInstance=null
+05-25 10:31:11.778  3077  3729 I HalDevMgr: bestIfaceCreationProposal is null, requestIface=STA, existingIface=[name=ap_br_wlan2 type=AP_BRIDGE, name=wlan0 type=STA]
+05-25 10:31:11.781  4774  4788 I NullBinder: NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0
+05-25 10:31:11.781  4774  4788 W Binder  : reply too large data on java level: InterfaceDescriptor = null, code = 1
+05-25 10:31:11.781  4774  4788 W .gms.persistent: Large reply transaction of 1056768 bytes, interface descriptor , code 1
+05-25 10:31:12.287  4774 24844 I NearbySharing: Network state changed: NetworkState(isRestricted=false, isOnline=true, isCongested=false, isMetered=false, isWifiConnected=true)

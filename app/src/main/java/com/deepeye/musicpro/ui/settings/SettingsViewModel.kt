@@ -36,6 +36,7 @@ constructor(
     private val syncLibraryUseCase: SyncLibraryUseCase,
     private val tasteProfileRepository: TasteProfileRepository,
     private val autoUpdateManager: AutoUpdateManager,
+    private val cloudSyncManager: com.deepeye.musicpro.domain.sync.CloudSyncManager
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -117,6 +118,12 @@ constructor(
             } catch (_: Exception) {
             }
             _uiState.value = _uiState.value.copy(isRescanningLibrary = false)
+        }
+    }
+
+    fun forceCloudSync() {
+        viewModelScope.launch {
+            cloudSyncManager.syncAllData()
         }
     }
 }

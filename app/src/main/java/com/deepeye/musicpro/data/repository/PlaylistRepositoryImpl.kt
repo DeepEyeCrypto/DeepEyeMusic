@@ -12,6 +12,7 @@ import com.deepeye.musicpro.domain.model.Song
 import com.deepeye.musicpro.domain.repository.PlaylistRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -99,4 +100,39 @@ constructor(
             dateAdded = dateAdded,
             dateModified = dateModified,
         )
+
+    // ── Backup & Restore ──
+    override suspend fun exportToJson(): String {
+        val gson = com.google.gson.Gson()
+        val playlists = playlistDao.getAllPlaylists().first()
+        val crossRefs = mutableListOf<com.deepeye.musicpro.data.db.PlaylistSongCrossRef>()
+        
+        for (playlist in playlists) {
+            val refs = playlistDao.getPlaylistCrossRefs(playlist.id)
+            crossRefs.addAll(refs)
+        }
+
+        val backup = PlaylistBackupData(
+            playlists = playlists,
+            crossRefs = crossRefs
+        )
+        return gson.toJson(backup)
+    }
+
+    override suspend fun importFromJson(jsonString: String) {
+        try {
+            val gson = com.google.gson.Gson()
+            val backup = gson.fromJson(jsonString, PlaylistBackupData::class.java)
+
+            for (playlist in backup.playlists) {
+                playlistDao.insertPlaylist(playlist)
+            }
+
+            for (crossRef in backup.crossRefs) {
+                playlistDao.addSongToPlaylist(crossRef)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("PlaylistRepositoryImpl", "Failed to restore playlists", e)
+        }
+    }
 }

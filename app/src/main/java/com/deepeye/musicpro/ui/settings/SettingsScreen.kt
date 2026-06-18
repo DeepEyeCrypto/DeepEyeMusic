@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -173,6 +174,9 @@ fun SettingsScreen(
 
                 item { SectionHeader("Library") }
                 item { LibrarySettingsCard(uiState, viewModel) }
+
+                item { SectionHeader("Cloud Sync") }
+                item { CloudSyncSettingsCard(viewModel) }
 
                 item { SectionHeader("About") }
                 item { AboutSettingsCard(viewModel) }
@@ -952,5 +956,36 @@ private fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
         refractionHeight = 0.2f
     ) {
         Column(Modifier.padding(20.dp), content = content)
+    }
+}
+
+@Composable
+fun CloudSyncSettingsCard(viewModel: SettingsViewModel) {
+    SettingsCard {
+        Text("Force Cloud Sync", style = MaterialTheme.typography.titleSmall)
+        Spacer(Modifier.height(4.dp))
+        Text(
+            "Manually push your current settings, playlists, and history to the cloud.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            OutlinedButton(
+                onClick = { viewModel.forceCloudSync() },
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+            ) {
+                androidx.compose.material3.Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text("Sync Now")
+            }
+        }
     }
 }

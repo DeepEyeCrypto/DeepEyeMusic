@@ -41,4 +41,9 @@ interface PlaylistRepository {
         fromIndex: Int,
         toIndex: Int,
     )
+
+    // ── Backup & Restore ──
+    suspend fun exportToJson(): String
+
+    suspend fun importFromJson(jsonString: String)
 }

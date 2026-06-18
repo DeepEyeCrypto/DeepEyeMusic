@@ -1,0 +1,1178 @@
+--------- beginning of system
+05-25 10:36:42.376 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:38:28.583 E/ActivityThread(28347): Failed to find provider info for subscribedfeeds
+05-25 10:41:08.036 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:41:09.889 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:41:12.483 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:41:14.178 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 10:46:16.152 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.161 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.182 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.608 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.610 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.611 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.613 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.622 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:46:16.624 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 10:53:19.838 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:53:19.838 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:53:19.838 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:53:19.838 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 10:53:21.048 E/ShortcutService( 3077): Invalid icon type in shortcut 66791137099963@lid. Bitmaps are not allowed in long-lived shortcuts. Use Resource icons, or Uri-based icons instead.
+05-25 10:55:47.302 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:55:47.302 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:55:47.302 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:55:47.302 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 10:57:21.262 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:57:21.262 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:57:21.262 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:57:21.262 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 10:58:21.381 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:58:21.381 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:58:21.381 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:58:21.381 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 10:59:34.365 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'INTERFACE' not found
+05-25 10:59:34.365 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'STATE' not found
+05-25 10:59:34.365 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'TIME_NS' not found
+05-25 10:59:34.365 E/NetlinkEvent( 1603): NetlinkEvent::FindParam(): Parameter 'UID' not found
+05-25 11:00:33.367 E/ActivityTaskManager( 3077): Abort background activity starts from 10376
+05-25 11:00:33.392 E/ActivityTaskManager( 3077): Abort background activity starts from 10376
+05-25 11:00:33.529 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 11:03:52.797 E/NotificationService( 3077): Muting recently noisy 0|in.rebase.app|1|null|10471
+05-25 11:04:33.685 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.686 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.686 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.716 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.720 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.725 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.744 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.759 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+05-25 11:04:33.775 E/AppOps  ( 3077): attributionTag VCN not declared in manifest of android
+--------- beginning of main
+05-25 11:06:59.299 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:06:59.299 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:06:59.359 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:06:59.359 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:06:59.420 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:06:59.421 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:06:59.483 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:06:59.484 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:06:59.545 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:06:59.545 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:06:59.599 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:06:59.599 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:06:59.663 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:06:59.664 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:06:59.726 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:06:59.726 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:06:59.781 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:06:59.782 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:06:59.842 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:06:59.842 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:06:59.929 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:06:59.930 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:06:59.960 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:06:59.960 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.080 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.081 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.082 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.082 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.145 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.145 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.201 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.201 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.293 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.293 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.319 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.319 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.441 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.441 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.471 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.471 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.501 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.502 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.563 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.564 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.620 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.620 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.683 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.684 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.775 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.775 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.800 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.801 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.865 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.866 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.923 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.924 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:00.985 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:00.985 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.042 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.043 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.102 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.102 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.162 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.163 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.223 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.224 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.283 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.284 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.340 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.341 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.404 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.405 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.460 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.460 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.522 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.522 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.614 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.615 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.639 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.640 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.705 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.705 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.761 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.761 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.822 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.823 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.879 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.879 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:01.941 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:01.942 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:02.004 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:02.004 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:02.060 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:02.060 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:02.123 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:02.124 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:02.180 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:02.181 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:02.208 E/LogUtils(18746): 释放
+05-25 11:07:02.214 E/LogUtils(18746): ----------->writeCharacteristic result =true
+05-25 11:07:02.571 E/bt_stack( 3992): [ERROR:pacs_client.cc(978)] OnConnectionUpdateComplete: Skipping unknown device, conn_id=0x000a
+05-25 11:07:02.571 E/bt_stack( 3992): [ERROR:ascs_client.cc(1133)] Skipping unknown device, conn_id=0x000b
+05-25 11:07:02.573 E/LogSync (18746): ------------->onConnectionUpdated status = 0,interval =24,latency =0,timeout =500
+05-25 11:07:02.601 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:02.601 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:02.633 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:02.633 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:02.660 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:02.660 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:02.669 E/LogUtils(18746): 释放
+05-25 11:07:02.677 E/LogUtils(18746): ----------->writeCharacteristic result =true
+05-25 11:07:02.722 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:02.722 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:02.780 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:02.780 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:02.840 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:02.840 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:02.902 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:02.902 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:02.964 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:02.964 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.025 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.026 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.082 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.082 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.144 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.144 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.203 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.204 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.261 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.262 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.354 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.354 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.380 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.380 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.444 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.445 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.500 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.501 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.560 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.560 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.620 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.621 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.683 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.684 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.744 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.744 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.800 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.801 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.861 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.861 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.921 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.921 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:03.980 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:03.980 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.044 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.044 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.099 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.100 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.160 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.161 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.221 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.221 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.284 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.285 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.342 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.342 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.403 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.404 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.462 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.463 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.521 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.521 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.581 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.581 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.640 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.640 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.704 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.704 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.762 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.762 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.822 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.822 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.881 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.882 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:04.941 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:04.941 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.000 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.000 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.062 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.062 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.120 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.120 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.186 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.186 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.241 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.241 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.303 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.303 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.361 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.362 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.421 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.422 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.481 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.482 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.540 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.541 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.602 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.603 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.660 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.660 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.721 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.721 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.785 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.785 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.844 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.845 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.903 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.903 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:05.962 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:05.962 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.023 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.024 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.081 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.081 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.141 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.142 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.202 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.202 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.322 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.323 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.324 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.324 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.385 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.385 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.444 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.444 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.502 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.502 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.561 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.562 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.622 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.623 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.681 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.681 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.740 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.741 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.799 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.800 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.861 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.861 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.924 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.925 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:06.981 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:06.981 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.042 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.042 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.101 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.101 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.160 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.161 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.219 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.219 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.281 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.281 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.340 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.340 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.401 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.401 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.464 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.464 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.469 E/LogUtils(18746): 释放
+05-25 11:07:07.479 E/LogUtils(18746): ----------->writeCharacteristic result =true
+05-25 11:07:07.553 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.554 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.612 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.613 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.672 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.672 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.676 E/LogUtils(18746): 释放
+05-25 11:07:07.685 E/LogUtils(18746): ----------->writeCharacteristic result =true
+05-25 11:07:07.732 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.733 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.757 E/LogUtils(18746): 释放
+05-25 11:07:07.767 E/LogUtils(18746): ----------->writeCharacteristic result =true
+05-25 11:07:07.821 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.821 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.851 E/LogUtils(18746): 释放
+05-25 11:07:07.862 E/LogUtils(18746): ----------->writeCharacteristic result =true
+05-25 11:07:07.910 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.910 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.913 E/LogUtils(18746): 释放
+05-25 11:07:07.920 E/LogUtils(18746): ----------->writeCharacteristic result =true
+05-25 11:07:07.971 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:07.971 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:07.974 E/LogUtils(18746): 释放
+05-25 11:07:07.981 E/LogUtils(18746): ----------->writeCharacteristic result =true
+05-25 11:07:08.064 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:08.064 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:08.068 E/LogUtils(18746): 释放
+05-25 11:07:08.074 E/LogUtils(18746): ----------->writeCharacteristic result =true
+05-25 11:07:08.120 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:08.120 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:08.124 E/LogUtils(18746): 释放
+05-25 11:07:08.132 E/LogUtils(18746): ----------->writeCharacteristic result =true
+05-25 11:07:08.183 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:08.184 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:08.208 E/LogUtils(18746): 释放
+05-25 11:07:08.217 E/LogUtils(18746): ----------->writeCharacteristic result =true
+05-25 11:07:08.272 E/bt_stack( 3992): [ERROR:bta_gattc_act.cc(1897)] bta_gattc_process_indicate conn_id 4 gatt_if 
+05-25 11:07:08.273 E/bt_btif ( 3992): bta_gattc_process_indicate, ignore HID ind/notificiation
+05-25 11:07:08.297 E/LogUtils(18746): 释放
+05-25 11:07:16.080 E/ANDR-PERF-LM( 1849): MetaMeter: handleAsync() 166: AdaptLaunch Invalid Async
+05-25 11:07:16.080 E/ANDR-PERF-LM( 1849): MetaMeter: handleAsync() 166: AdaptLaunch Invalid Async
+05-25 11:07:16.108 E/ANDR-PERF-LM( 1849): MetaMeter: handleAsync() 166: AdaptLaunch Invalid Async
+05-25 11:07:16.114 E/OpenGLRenderer( 7709): Unable to match the desired swap behavior.
+05-25 11:07:16.156 E/QTI PowerHAL( 1767): Failed to acquire lock for hint_id: 10A5.
+05-25 11:07:16.168 E/ANDR-PERF-LM( 1849): MetaMeter: handleAsync() 166: AdaptLaunch Invalid Async
+05-25 11:07:17.022 E/AudioSessionManager(27537): attachToPlayer called with player: androidx.media3.exoplayer.ExoPlayerImpl@42eb09b
+05-25 11:07:17.022 E/AudioSessionManager(27537): Handling session change: 0 -> 42249
+05-25 11:07:17.119 E/ANDR-PERF-LM( 1849): VmRssMeter:: start() 358: Could not find pid, can not collect vmrss data
+05-25 11:07:17.119 E/ANDR-PERF-LM( 1849): AdaptiveLaunch: writeToDataBase() 64: Meter aborted or could not get meter data for this run
+05-25 11:07:17.120 E/ANDR-PERF-LM( 1849): VmRssMeter:: start() 358: Could not find pid, can not collect vmrss data
+05-25 11:07:17.270 E/chromium(27537): [0525/110717.269892:ERROR:android_webview/browser/variations/variations_seed_loader.cc:39] Seed missing signature.
+05-25 11:07:17.304 E/libc    (27588): SetHeapTaggingLevel: re-enabling tagging after it was disabled is not supported
+05-25 11:07:17.535 E/OpenGLRenderer(27537): Unable to match the desired swap behavior.
+05-25 11:07:18.972 D/YoutubeDS(27537): Extracted Video ID: 7c3-Gei5j4w from https://www.youtube.com/watch?v=7c3-Gei5j4w
+05-25 11:07:18.972 D/YoutubeDS(27537): Extracted Video ID: CP7GY11pmG0 from https://www.youtube.com/watch?v=CP7GY11pmG0
+05-25 11:07:18.972 D/YoutubeDS(27537): Extracted Video ID: hOyn0bCydZo from https://www.youtube.com/watch?v=hOyn0bCydZo
+05-25 11:07:18.972 D/YoutubeDS(27537): Extracted Video ID: -MPHg4wPiyg from https://www.youtube.com/watch?v=-MPHg4wPiyg
+05-25 11:07:18.972 D/YoutubeDS(27537): Extracted Video ID: rIt4pBtu0QA from https://www.youtube.com/watch?v=rIt4pBtu0QA
+05-25 11:07:18.972 D/YoutubeDS(27537): Extracted Video ID: Hi-uxR2Bq3c from https://www.youtube.com/watch?v=Hi-uxR2Bq3c
+05-25 11:07:18.972 D/YoutubeDS(27537): Extracted Video ID: uV3cillyhLk from https://www.youtube.com/watch?v=uV3cillyhLk
+05-25 11:07:18.973 D/YoutubeDS(27537): Extracted Video ID: LuzXr3He9NI from https://www.youtube.com/watch?v=LuzXr3He9NI
+05-25 11:07:18.973 D/YoutubeDS(27537): Extracted Video ID: 27QmkvKQLDk from https://www.youtube.com/watch?v=27QmkvKQLDk
+05-25 11:07:18.973 D/YoutubeDS(27537): Extracted Video ID: hGOBIaGWoPk from https://www.youtube.com/watch?v=hGOBIaGWoPk
+05-25 11:07:18.973 D/YoutubeDS(27537): Extracted Video ID: aw5NWcHpEPc from https://www.youtube.com/watch?v=aw5NWcHpEPc
+05-25 11:07:18.973 D/YoutubeDS(27537): Extracted Video ID: RsvEk-dVI_g from https://www.youtube.com/watch?v=RsvEk-dVI_g
+05-25 11:07:18.973 D/YoutubeDS(27537): Extracted Video ID: fgAo0fEwlyY from https://www.youtube.com/watch?v=fgAo0fEwlyY
+05-25 11:07:18.973 D/YoutubeDS(27537): Extracted Video ID: 1yX9EMVQ-4U from https://www.youtube.com/watch?v=1yX9EMVQ-4U
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: 5XTxuz-_myg from https://music.youtube.com/watch?v=5XTxuz-_myg
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: NJAv_7lHUIU from https://music.youtube.com/watch?v=NJAv_7lHUIU
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: 0hg3Y0YOaa8 from https://music.youtube.com/watch?v=0hg3Y0YOaa8
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: J7p4bzqLvCw from https://music.youtube.com/watch?v=J7p4bzqLvCw
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: YALvuUpY_b0 from https://music.youtube.com/watch?v=YALvuUpY_b0
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: o-TTwijwArY from https://music.youtube.com/watch?v=o-TTwijwArY
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: q1uPPBJ2tcI from https://music.youtube.com/watch?v=q1uPPBJ2tcI
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: 68RLvhxk_4g from https://music.youtube.com/watch?v=68RLvhxk_4g
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: GqWYJT-iMTw from https://music.youtube.com/watch?v=GqWYJT-iMTw
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: PVDPkS4v8FQ from https://music.youtube.com/watch?v=PVDPkS4v8FQ
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: WMK3JXG3Fx0 from https://music.youtube.com/watch?v=WMK3JXG3Fx0
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: BciS5krYL80 from https://music.youtube.com/watch?v=BciS5krYL80
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: 9nRvqemGydw from https://music.youtube.com/watch?v=9nRvqemGydw
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: COatCg74F70 from https://music.youtube.com/watch?v=COatCg74F70
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: BdMTcZwCokI from https://music.youtube.com/watch?v=BdMTcZwCokI
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: dZxW83XtbGg from https://music.youtube.com/watch?v=dZxW83XtbGg
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: xTvyyoF_LZY from https://music.youtube.com/watch?v=xTvyyoF_LZY
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: bpXyk6sxsh4 from https://music.youtube.com/watch?v=bpXyk6sxsh4
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: lmG0kY9FtRY from https://music.youtube.com/watch?v=lmG0kY9FtRY
+05-25 11:07:18.975 D/YoutubeDS(27537): Extracted Video ID: FXxuVh9KIPs from https://music.youtube.com/watch?v=FXxuVh9KIPs
+05-25 11:07:29.954 E/PlayerController(27537): playMedia called with item: Remote(id=7c3-Gei5j4w, title=Chaand Baaliyan – Aditya A. | Trending Song | Official Video, artist=Sony Music India, artworkUri=https://i.ytimg.com/vi/7c3-Gei5j4w/hq720.jpg?sqp=-oaymwEcCNAFEJQDSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLC4g6eQMG5eZgivYA73UaxnR7Lnaw, duration=122000, streamUri=null, isVideo=true)
+05-25 11:07:30.180 E/PlayerController(27537): Remote item: Chaand Baaliyan – Aditya A. | Trending Song | Official Video, id: 7c3-Gei5j4w, streamUri: null
+05-25 11:07:30.180 E/PlayerController(27537): streamUri is null or empty, fetching getStreamUrl...
+05-25 11:07:31.894 D/YoutubeDS(27537): Video stream extraction for 7c3-Gei5j4w: DASH=false, HLS=false
+05-25 11:07:31.894 W/YoutubeDS(27537): getStreamUrl: No valid DASH/HLS URL found for 7c3-Gei5j4w. Falling back to audio stream.
+05-25 11:07:31.894 E/PlayerController(27537): First extraction fetched: StreamResult(url=https://rr1---sn-ci5gup-qxall.googlevideo.com/videoplayback?expire=1779709051&ei=G-ATavOHMZKcjMwPkYLYkQY&ip=2401%3A4900%3A8811%3Af77a%3Afe41%3A79f3%3Add62%3Ac22d&id=o-AJ0uE8cZ5Ehgss9tQeMiP1dNVY6nGTOLFu0QqzgL2W5r&itag=251&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=886&met=1779687451%2C&mh=99&mm=31%2C26&mn=sn-ci5gup-qxall%2Csn-cvh7knze&ms=au%2Conr&mv=m&mvi=1&pl=49&rms=au%2Cau&initcwndbps=1906250&bui=AbKmrwob6VUZGsW08v1M7MpaPHgun1hYN0ksi6eWcjFF0gkUYR9B7w8WMIKByE37KaNFeeTaa5Low0sr&spc=96Xrv6plS55tYXg2xQxLu8hMn7hw0ZxK-g1fiWliiHXA7CFO_JthWxXR4wu3NWLH&vprv=1&svpuc=1&mime=audio%2Fwebm&rqh=1&gir=yes&clen=2046844&dur=121.521&lmt=1754048026479896&mt=1779687176&fvip=4&keepalive=yes&fexp=51565115%2C51565682&c=ANDROID&txp=4532534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AHEqNM4wRQIgeAKirymaz8KjundJPc5f67aar4R2nqAnTMRj1CSz2vACIQCfA7IBQfvUIPSc_7m6OmtBkTDDlcri4x0Q-ttFltxNmg%3D%3D&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRgIhAN1mIxumtWfbh9HKrCQgrz3y4DlZiHhXzVon10Cz1G_rAiEA7_8izr9Em0lpL2wvUdDCmJiagKv4wtO0o2d60XVi1RE%3D&cpn=Cc-dt70X5xOhnc8V, isVideo=false)
+05-25 11:07:32.597 E/system_server( 3077): updateValue is called with a value {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, which is lower than the previous value {0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 499, 0, 0, 0, 0, 0, 0, 11, 63, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+05-25 11:07:32.669 D/SponsorBlock(27537): Found 1 segments for 7c3-Gei5j4w
+05-25 11:07:32.721 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.722 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.722 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.722 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.723 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.723 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.723 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.723 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.724 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.724 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.724 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.724 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.724 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.724 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.725 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.725 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.725 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.725 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.725 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.726 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.729 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.729 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.729 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.729 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.730 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.731 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.731 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.731 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.731 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.731 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.731 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.731 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.731 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/AudioSessionManager(27537): attachToPlayer called with player: androidx.media3.exoplayer.ExoPlayerImpl@42eb09b
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.741 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.742 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.742 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.742 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.742 E/BluetoothAvrcpServiceJni( 3992): updatePlayStatusToStack
+05-25 11:07:32.742 E/bt_btif ( 3992): update_play_status_to_stack:invalid index,remote suspend not set
+05-25 11:07:32.742 E/BluetoothAvrcpServiceJni( 3992): updatePlayStatusToStack: status: 1
+05-25 11:07:32.746 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.746 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.746 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.746 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.746 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.747 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.747 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.747 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.747 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.747 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.748 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.748 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.748 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.748 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.748 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.748 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.749 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.749 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.749 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.749 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.751 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.751 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.751 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.751 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.756 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.758 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.951 E/HybridPlayerCard(27537): LaunchedEffect: controlsVisible=true, isPlaying=true, interactionCount=0
+05-25 11:07:32.952 E/YouTubeVideoPlayer(27537): LaunchedEffect triggered - videoId: 7c3-Gei5j4w, isPlaying: true, muteWebViewAudio: true
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.952 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.953 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.953 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.953 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.953 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.953 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.953 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.956 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.956 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.956 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.956 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.956 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.956 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.957 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.960 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.961 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:32.961 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.097 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.098 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.098 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.098 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.098 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.098 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.099 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.099 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.099 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.099 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.099 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.099 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.099 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.099 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.099 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.099 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.100 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.100 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.100 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.100 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.102 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.105 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.105 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.105 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.105 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.105 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.105 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.105 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.105 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.105 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.105 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.105 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.160 E/Codec2-ComponentInterface( 2447): We have a failed config
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.569 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:33.590 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7daf went down
+05-25 11:07:33.591 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7db0 went down
+05-25 11:07:33.591 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7db1 went down
+05-25 11:07:33.592 E/Diag_Lib( 1753): diag: Diag_LSM_Init: invoked for pid: 1753 with init_count: 0
+05-25 11:07:33.592 E/Diag_Lib( 1753): diag:failed to connect to diag socket
+05-25 11:07:33.592 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7db2 went down
+05-25 11:07:33.592 E/Diag_Lib( 1753):  Diag_LSM_Init: Failed to open handle to diag driver, error = 13
+05-25 11:07:33.672 E/RemoteProvisionSysSvc( 3077): RKP not allowed. Key 10207 for client 124651923
+05-25 11:07:33.672 E/keystore2( 1354): system/security/keystore2/src/rkpd_client.rs:172 - IGetKeyCallback failed: Device doesnot support RKP
+05-25 11:07:33.679 E/QC-time-services( 1269): Receive Passed == base = 13, unit = 1, operation = 2, result = 0
+05-25 11:07:33.679 E/QC-time-services( 1573): Daemon: Time-services: Waiting to acceptconnection
+05-25 11:07:33.683 E/QC-time-services( 1573): Daemon: Time-services: Waiting to acceptconnection
+05-25 11:07:33.722 E/minksocket( 1748): MinkIPC_QRTR_Service: client with node 1 port 7db3 went down
+05-25 11:07:33.950 E/QConfig ( 1822): failed to find module QModKey_Static_VppFilter
+05-25 11:07:33.951 E/QConfig ( 1822): failed to find module QModKey_Static_VppFilter
+05-25 11:07:33.951 E/QConfig ( 1822): failed to find module QModKey_Dynamic_VppFilter
+05-25 11:07:33.952 E/QConfig ( 1822): failed to find module QModKey_Dynamic_VppFilter
+05-25 11:07:33.997 E/QC2V4l2Codec( 1859): [vp9D_1523]  ? is not a supported pixel format!
+05-25 11:07:34.003 E/ACDB    ( 1830): AcdbCmdGetGraphAlias:4153 Error[19]: Graph Alias chunk data does not exist. Is it enabled?.
+05-25 11:07:34.003 E/gsl     ( 1830): gsl_get_graph_alias:2191 acdb get graph alias failed 19, len 255
+05-25 11:07:34.004 E/QC2Interface( 1859): Few parameters failed to configure
+05-25 11:07:34.006 E/gsl     ( 1830): gsl_graph_send_nonpersist_cal:790 send non-perist cal failed 3
+05-25 11:07:34.006 E/ACDB    ( 1830): AcdbCmdGetProcSubgraphCalDataPersist:8416 Error[19]: No calibration found
+05-25 11:07:34.016 E/ACDB    ( 1830): AcdbCmdGetGraphAlias:4153 Error[19]: Graph Alias chunk data does not exist. Is it enabled?.
+05-25 11:07:34.016 E/gsl     ( 1830): gsl_get_graph_alias:2191 acdb get graph alias failed 19, len 255
+05-25 11:07:34.026 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.026 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.026 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.026 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.026 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.026 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.027 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.030 E/QC2V4l2Driver( 1859): [vp9D_1523] failed to set format on port:OUT
+05-25 11:07:34.030 E/QC2V4l2Codec( 1859): [vp9D_1523] Failed to set resolution and buffer size for OUT port
+05-25 11:07:34.030 E/QC2Comp ( 1859): [vp9D_1523] handleQueue: Codec failed to configure !!
+05-25 11:07:34.034 E/ACDB    ( 1830): AcdbCmdGetProcSubgraphCalDataPersist:8416 Error[19]: No calibration found
+05-25 11:07:34.034 E/ACDB    ( 1830): AcdbCmdGetProcSubgraphCalDataPersist:8416 Error[19]: No calibration found
+05-25 11:07:34.034 E/ACDB    ( 1830): AcdbCmdGetProcSubgraphCalDataPersist:8416 Error[19]: No calibration found
+05-25 11:07:34.034 E/ACDB    ( 1830): AcdbCmdGetProcSubgraphCalDataPersist:8416 Error[19]: No calibration found
+05-25 11:07:34.042 E/AGM: graph( 1830): configure_buffer_params: 298 Unsupported buffer mode : 0, Default to Blocking
+05-25 11:07:34.050 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.050 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.050 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.050 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.051 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.073 E/chromium(27537): [ERROR:media/gpu/android/frame_info_helper.cc:231] Guessed coded size incorrectly. Expected 856x480, got 854x480
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.081 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.082 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.082 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.082 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.082 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.103 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.103 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.103 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.103 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.103 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.103 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.103 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.103 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.103 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.103 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.103 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.103 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.104 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.117 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.118 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.118 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.118 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.118 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.118 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.118 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.131 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.131 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.131 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.131 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.131 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.131 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.131 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.131 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.132 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.132 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.132 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.132 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.132 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.132 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.132 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.132 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.132 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.132 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.132 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.132 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.147 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.157 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.157 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.157 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.157 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.157 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.157 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.157 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.157 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.157 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.157 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.157 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.157 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.158 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.158 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.158 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.158 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.158 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.158 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.158 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.158 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.201 E/HybridPlayerCard(27537): LaunchedEffect: controlsVisible=true, isPlaying=false, interactionCount=0
+05-25 11:07:34.202 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.202 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.202 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.202 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.203 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.203 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.203 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.203 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.203 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.203 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.203 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.203 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.203 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.203 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.204 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.204 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.204 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.204 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.204 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.204 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.222 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.222 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.222 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.222 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:34.248 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:37.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:38.142 E/OrchestrationWorker(19712): [Offline] Controller for Entity [164] Action [OFFLINE_ORCHESTRATION_ACTION_TYPE_REFRESH] timed out
+05-25 11:07:38.218 E/NotificationsErrorLogge(19712): YTN: The custom payload could not be unpacked.
+05-25 11:07:39.309 E/CommandUtil(19712): java.lang.IllegalStateException: Expected only one extension, saw 0
+05-25 11:07:39.309 E/CommandUtil(19712): java.lang.IllegalStateException: Expected only one extension, saw 0
+05-25 11:07:39.309 E/CommandUtil(19712): 	at awrd.d(PG:74)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at ahnp.a(PG:1)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at ahnp.e(PG:80)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at ahnj.f(PG:1)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at ahnh.h(PG:16)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at ahnh.c(PG:144)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at arkl.r(PG:312)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at wvn.h(PG:997)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at wvn.i(PG:304)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at wvd.b(PG:21)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at bqph.es(PG:11)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at bqvu.run(PG:107)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at tlf.run(PG:7)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at aviv.run(PG:44)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at txm.run(PG:863)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at fea.run(PG:1104)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at java.lang.Thread.run(Thread.java:1564)
+05-25 11:07:39.309 E/CommandUtil(19712): 	at tma.run(PG:61)
+05-25 11:07:39.310 E/NotificationsErrorLogge(19712): YTN: InteractionLoggingScreen missing for logging event.
+05-25 11:07:39.930 E/OpenGLRenderer( 7709): Unable to match the desired swap behavior.
+05-25 11:07:39.973 E/QuickAccessWalletKeyguardQuickAffordanceConfig( 7709): Wallet card retrieval error, message: "null"
+05-25 11:07:39.978 E/QuickAccessWalletKeyguardQuickAffordanceConfig( 7709): Wallet card retrieval error, message: "null"
+05-25 11:07:39.979 E/QuickAccessWalletKeyguardQuickAffordanceConfig( 7709): Wallet card retrieval error, message: "null"
+05-25 11:07:40.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.219 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:40.220 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.227 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.227 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.227 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.228 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.228 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.228 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.228 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.228 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.229 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.229 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.229 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.229 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.229 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.229 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:43.230 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.223 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:44.224 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.235 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.235 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.235 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.235 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.235 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.235 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.236 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.236 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.237 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.237 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.237 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.237 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.238 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.238 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.238 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.238 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.238 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.238 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.238 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:46.238 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.232 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.232 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.232 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.232 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.232 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.232 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.232 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.232 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.232 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.232 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.233 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.233 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.233 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.233 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.233 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.233 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.233 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.233 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.233 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:49.233 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.249 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.250 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.251 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.251 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.251 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.251 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.251 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.251 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.251 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.251 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:52.251 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.259 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.259 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.259 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.260 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.260 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.260 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.260 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.260 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.261 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.262 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.262 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.262 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:55.262 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.253 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.253 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.253 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.253 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:07:58.254 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.258 E/HeadsetStateMachine( 3992): returning mCurrentState as Disconnected
+05-25 11:08:01.587 E/WifiHAL ( 1770): WLAN_DIAG_TYPE_CONFIG - possible buffer over access, length=1476 count=1288 hdr_size=8 payload len=63772
+05-25 11:08:03.803 E/bt_stack( 3992): [ERROR:pacs_client.cc(978)] OnConnectionUpdateComplete: Skipping unknown device, conn_id=0x000a
+05-25 11:08:03.803 E/bt_stack( 3992): [ERROR:ascs_client.cc(1133)] Skipping unknown device, conn_id=0x000b
+05-25 11:08:03.804 E/LogSync (18746): ------------->onConnectionUpdated status = 0,interval =240,latency =0,timeout =500
+05-25 11:08:18.654 E/RIL-MOTEXT( 2502): qcrilUpdRegRAT, called , rat =5
+05-25 11:08:18.696 E/RIL-MOTEXT( 2502): qcrilUpdateOperator, called

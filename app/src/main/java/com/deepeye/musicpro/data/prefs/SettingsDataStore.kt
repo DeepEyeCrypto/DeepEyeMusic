@@ -14,6 +14,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -98,5 +99,32 @@ constructor(
 
     suspend fun setAmoledMode(enabled: Boolean) {
         context.dataStore.edit { it[KEY_AMOLED] = enabled }
+    }
+
+    // ── Backup & Restore ──
+    suspend fun exportToJson(): String {
+        val gson = com.google.gson.Gson()
+        val currentSettings = settings.first()
+        return gson.toJson(currentSettings)
+    }
+
+    suspend fun importFromJson(jsonString: String) {
+        try {
+            val gson = com.google.gson.Gson()
+            val imported = gson.fromJson(jsonString, AppSettings::class.java)
+            
+            context.dataStore.edit { prefs ->
+                prefs[KEY_THEME] = imported.themeMode.name
+                prefs[KEY_DYNAMIC_COLOR] = imported.dynamicColor
+                prefs[KEY_AMOLED] = imported.amoledMode
+                prefs[KEY_CROSSFADE] = imported.crossfadeDuration
+                prefs[KEY_SAMPLE_RATE] = imported.sampleRate
+                prefs[KEY_BIT_DEPTH] = imported.bitDepth
+                prefs[KEY_AUTO_SCAN] = imported.autoScanOnLaunch
+                prefs[KEY_SHOW_VISUALIZER] = imported.showVisualizer
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("SettingsDataStore", "Failed to restore settings", e)
+        }
     }
 }

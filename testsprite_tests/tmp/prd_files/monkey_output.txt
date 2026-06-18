@@ -1,0 +1,78 @@
+  bash arg: -p
+  bash arg: com.deepeye.musicpro.debug
+  bash arg: --pct-touch
+  bash arg: 70
+  bash arg: --pct-motion
+  bash arg: 20
+  bash arg: --throttle
+  bash arg: 50
+  bash arg: -v
+  bash arg: 1000
+:Monkey: seed=1780748466034 count=1000
+:AllowPackage: com.deepeye.musicpro.debug
+:IncludeCategory: android.intent.category.LAUNCHER
+:IncludeCategory: android.intent.category.MONKEY
+// Event percentages:
+//   0: 70.0%
+//   1: 20.0%
+//   2: 0.26666668%
+//   3: 2.0%
+//   4: -0.0%
+//   5: -0.0%
+//   6: 3.3333335%
+//   7: 2.0%
+//   8: 0.26666668%
+//   9: 0.26666668%
+//   10: 0.13333334%
+//   11: 1.7333335%
+:Switch: #Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;launchFlags=0x10200000;component=com.deepeye.musicpro.debug/com.deepeye.musicpro.MainActivity;end
+    // Allowing start of Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] cmp=com.deepeye.musicpro.debug/com.deepeye.musicpro.MainActivity } in package com.deepeye.musicpro.debug
+:Sending Touch (ACTION_DOWN): 0:(482.0,135.0)
+:Sending Touch (ACTION_UP): 0:(480.91504,124.32031)
+:Sending Touch (ACTION_DOWN): 0:(284.0,1560.0)
+:Sending Touch (ACTION_UP): 0:(288.7256,1559.9062)
+:Sending Touch (ACTION_DOWN): 0:(457.0,535.0)
+:Sending Touch (ACTION_UP): 0:(461.70117,551.5117)
+:Sending Touch (ACTION_DOWN): 0:(340.0,1468.0)
+:Sending Touch (ACTION_UP): 0:(339.11426,1451.8213)
+:Sending Touch (ACTION_DOWN): 0:(655.0,1216.0)
+:Sending Touch (ACTION_UP): 0:(669.2285,1223.5352)
+:Sending Touch (ACTION_DOWN): 0:(892.0,1400.0)
+:Sending Touch (ACTION_UP): 0:(892.2422,1401.1094)
+:Sending Touch (ACTION_DOWN): 0:(896.0,1154.0)
+:Sending Touch (ACTION_UP): 0:(849.6904,1102.3066)
+:Sending Touch (ACTION_DOWN): 0:(414.0,798.0)
+:Sending Touch (ACTION_UP): 0:(419.7871,806.98145)
+:Sending Touch (ACTION_DOWN): 0:(425.0,444.0)
+:Sending Touch (ACTION_UP): 0:(438.75098,434.86133)
+:Sending Touch (ACTION_DOWN): 0:(842.0,1437.0)
+:Sending Touch (ACTION_UP): 0:(837.8447,1442.0557)
+:Sending Touch (ACTION_DOWN): 0:(338.0,1299.0)
+:Sending Touch (ACTION_UP): 0:(341.23535,1304.3447)
+:Sending Touch (ACTION_DOWN): 0:(833.0,928.0)
+:Sending Touch (ACTION_UP): 0:(829.13086,937.40137)
+:Sending Touch (ACTION_DOWN): 0:(774.0,1687.0)
+:Sending Touch (ACTION_UP): 0:(774.0625,1717.0703)
+:Sending Touch (ACTION_DOWN): 0:(15.0,583.0)
+:Sending Touch (ACTION_UP): 0:(28.376953,579.01074)
+:Sending Touch (ACTION_DOWN): 0:(1075.0,288.0)
+:Sending Touch (ACTION_UP): 0:(1071.6064,289.46582)
+:Sending Touch (ACTION_DOWN): 0:(311.0,1041.0)
+:Sending Touch (ACTION_UP): 0:(304.667,1041.3994)
+:Sending Touch (ACTION_DOWN): 0:(1042.0,1176.0)
+:Sending Touch (ACTION_UP): 0:(1041.3867,1174.1357)
+:Sending Touch (ACTION_DOWN): 0:(730.0,1057.0)
+:Sending Touch (ACTION_UP): 0:(730.7412,1054.9434)
+:Sending Touch (ACTION_DOWN): 0:(378.0,1565.0)
+:Sending Touch (ACTION_UP): 0:(378.34375,1567.8379)
+:Sending Touch (ACTION_DOWN): 0:(884.0,1668.0)
+:Sending Touch (ACTION_UP): 0:(874.6465,1661.6934)
+:Sending Touch (ACTION_DOWN): 0:(1042.0,1504.0)
+:Sending Touch (ACTION_UP): 0:(1080.0,1414.8115)
+:Sending Flip keyboardOpen=false
+Got IOException performing flipjava.io.FileNotFoundException: /dev/input/event0: open failed: EACCES (Permission denied)
+    // Injection Failed
+:Sending Touch (ACTION_DOWN): 0:(423.0,390.0)
+:Sending Touch (ACTION_UP): 0:(432.09668,389.87305)
+:Sending Touch (ACTION_DOWN): 0:(884.0,102.0)
+:Sending Touch (ACTION_UP): 0:(896.4463,89.77344)

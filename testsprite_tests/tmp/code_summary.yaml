@@ -1,0 +1,23 @@
+version: "2"
+type: backend
+tech_stack:
+  - Python
+  - Kotlin
+features:
+  - name: YouTube Player API proxy
+    description: Fetches YouTube video formats and streaming data
+    files:
+      - test_api.py
+    endpoints:
+      - method: POST
+        path: /youtubei/v1/player
+        description: Get video formats
+        auth_required: false
+        request_schema:
+          body:
+            context: object
+            videoId: string
+        response_schema:
+          "200": object
+    depends_on: []
+known_limitations: []

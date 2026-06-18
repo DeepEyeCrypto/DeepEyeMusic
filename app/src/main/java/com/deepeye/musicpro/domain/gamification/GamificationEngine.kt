@@ -191,4 +191,8 @@ class GamificationEngine @Inject constructor(
             e.printStackTrace()
         }
     }
+
+    suspend fun forceSyncToFirestore() {
+        syncToFirestore()
+    }
 }

@@ -105,7 +105,7 @@ class RankingRepository @Inject constructor() {
             .limit(limit.toLong())
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    android.util.Log.e("RankingRepository", "Listen failed.", error)
                     return@addSnapshotListener
                 }
                 
@@ -114,11 +114,11 @@ class RankingRepository @Inject constructor() {
                         userId = doc.id,
                         displayName = doc.getString("displayName") ?: "User",
                         photoUrl = doc.getString("photoUrl"),
-                        points = doc.getLong("points")?.toInt() ?: 0,
-                        streak = doc.getLong("streak")?.toInt() ?: 0,
-                        songsListened = doc.getLong("songsListened")?.toInt() ?: 0,
-                        dailyActiveDays = doc.getLong("dailyActiveDays")?.toInt() ?: 0,
-                        score = doc.getDouble("score")?.toFloat() ?: 0f,
+                        points = (doc.get("points") as? Number)?.toInt() ?: 0,
+                        streak = (doc.get("streak") as? Number)?.toInt() ?: 0,
+                        songsListened = (doc.get("songsListened") as? Number)?.toInt() ?: 0,
+                        dailyActiveDays = (doc.get("dailyActiveDays") as? Number)?.toInt() ?: 0,
+                        score = (doc.get("score") as? Number)?.toFloat() ?: 0f,
                         rank = index + 1
                     )
                 } ?: emptyList()
@@ -132,7 +132,7 @@ class RankingRepository @Inject constructor() {
     fun observeUserRank(userId: String): Flow<UserRank?> = callbackFlow {
         val subscription = usersCollection.document(userId).addSnapshotListener { snapshot, error ->
             if (error != null) {
-                close(error)
+                android.util.Log.e("RankingRepository", "Listen failed.", error)
                 return@addSnapshotListener
             }
             
@@ -141,14 +141,14 @@ class RankingRepository @Inject constructor() {
                     userId = snapshot.id,
                     displayName = snapshot.getString("displayName") ?: "User",
                     photoUrl = snapshot.getString("photoUrl"),
-                    points = snapshot.getLong("points")?.toInt() ?: 0,
-                    streak = snapshot.getLong("streak")?.toInt() ?: 0,
-                    songsListened = snapshot.getLong("songsListened")?.toInt() ?: 0,
-                    dailyActiveDays = snapshot.getLong("dailyActiveDays")?.toInt() ?: 0,
-                    score = snapshot.getDouble("score")?.toFloat() ?: 0f,
+                    points = (snapshot.get("points") as? Number)?.toInt() ?: 0,
+                    streak = (snapshot.get("streak") as? Number)?.toInt() ?: 0,
+                    songsListened = (snapshot.get("songsListened") as? Number)?.toInt() ?: 0,
+                    dailyActiveDays = (snapshot.get("dailyActiveDays") as? Number)?.toInt() ?: 0,
+                    score = (snapshot.get("score") as? Number)?.toFloat() ?: 0f,
                     // Note: Real-time global rank requires a separate cloud function calculation.
                     // Client side, we might poll this separately.
-                    rank = snapshot.getLong("rank")?.toInt() ?: 999999 
+                    rank = (snapshot.get("rank") as? Number)?.toInt() ?: 999999 
                 )
                 trySend(user)
             } else {
