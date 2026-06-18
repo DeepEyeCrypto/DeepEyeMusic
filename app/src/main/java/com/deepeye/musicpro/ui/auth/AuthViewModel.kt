@@ -38,7 +38,8 @@ sealed class AuthState {
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val rankingRepository: RankingRepository
+    private val rankingRepository: RankingRepository,
+    private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine
 ) : ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -125,7 +126,7 @@ class AuthViewModel @Inject constructor(
                 val user = authResult.user
                 if (user != null) {
                     _authState.value = AuthState.Success(user)
-                    rankingRepository.initializeUserIfNew()
+                    gamificationEngine.restoreFromFirestore()
                 } else {
                     _authState.value = AuthState.Error("Firebase user is null after credential sign in.")
                 }
@@ -149,7 +150,7 @@ class AuthViewModel @Inject constructor(
                 val result = auth.signInWithEmailAndPassword(email, pass).await()
                 if (result.user != null) {
                     _authState.value = AuthState.Success(result.user!!)
-                    rankingRepository.initializeUserIfNew()
+                    gamificationEngine.restoreFromFirestore()
                 } else {
                     _authState.value = AuthState.Error("User not found")
                 }

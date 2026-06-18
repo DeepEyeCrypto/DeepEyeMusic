@@ -74,6 +74,17 @@ class RankingRepository @Inject constructor() {
         }
     }
 
+    suspend fun getUserGamificationData(): Map<String, Any>? {
+        val userId = getCurrentUserId() ?: return null
+        return try {
+            val doc = usersCollection.document(userId).get().await()
+            if (doc.exists()) doc.data else null
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     suspend fun getUserRank(userId: String): Int {
         try {
             val userDoc = usersCollection.document(userId).get().await()

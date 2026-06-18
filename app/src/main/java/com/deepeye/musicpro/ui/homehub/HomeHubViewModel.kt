@@ -62,7 +62,10 @@ constructor(
 
     init {
         loadFeed()
-        viewModelScope.launch { gamificationEngine.checkAndUpdateStreak() }
+        viewModelScope.launch { 
+            gamificationEngine.restoreFromFirestore()
+            gamificationEngine.checkAndUpdateStreak() 
+        }
     }
 
     fun loadFeed() {

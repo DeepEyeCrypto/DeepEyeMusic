@@ -8,6 +8,18 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 303,
+                versionName = "3.0.0.4",
+                releaseDate = "June 2026",
+                title = "Gamification Cloud Sync ☁️",
+                highlight = true,
+                items =
+                    listOf(
+                        "Your points, streak, and badges now permanently sync to your Google Account!",
+                        "Fixed a massive issue where points would reset upon reinstalling the app.",
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 302,
                 versionName = "3.0.0.3",
                 releaseDate = "June 2026",

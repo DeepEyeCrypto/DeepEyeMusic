@@ -162,4 +162,33 @@ class GamificationEngine @Inject constructor(
             e.printStackTrace()
         }
     }
+
+    suspend fun restoreFromFirestore() {
+        try {
+            val data = rankingRepository.getUserGamificationData()
+            if (data != null) {
+                repository.updatePreferences { prefs ->
+                    val points = (data["points"] as? Number)?.toInt() ?: 0
+                    val streak = (data["streak"] as? Number)?.toInt() ?: 0
+                    val songsListened = (data["songsListened"] as? Number)?.toInt() ?: 0
+                    val activeDays = (data["dailyActiveDays"] as? Number)?.toInt() ?: 0
+
+                    prefs[GamificationPreferences.REWARD_POINTS] = points
+                    prefs[GamificationPreferences.CURRENT_STREAK] = streak
+                    prefs[GamificationPreferences.TOTAL_SONGS_LISTENED] = songsListened
+                    prefs[GamificationPreferences.DAILY_GOAL_COMPLETED_COUNT] = activeDays
+
+                    // Update longest streak if current is greater
+                    val longestStreak = prefs[GamificationPreferences.LONGEST_STREAK] ?: 0
+                    if (streak > longestStreak) {
+                        prefs[GamificationPreferences.LONGEST_STREAK] = streak
+                    }
+                }
+            } else {
+                rankingRepository.initializeUserIfNew()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }
