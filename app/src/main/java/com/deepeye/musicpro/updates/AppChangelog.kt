@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 302,
+                versionName = "3.0.0.3",
+                releaseDate = "June 2026",
+                title = "Glassmorphic Updates & Zero Warnings 🚀",
+                highlight = true,
+                items =
+                    listOf(
+                        "Completely redesigned the update popup with a stunning glass-morphic aesthetic.",
+                        "Fixed profile picture rendering in the Settings screen.",
+                        "Massive under-the-hood engine upgrades and deprecation cleanups for extreme stability.",
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 209,
                 versionName = "2.0.9",
                 releaseDate = "June 2026",
