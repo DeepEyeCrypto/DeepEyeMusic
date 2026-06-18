@@ -307,14 +307,14 @@ fun Top3LeaderboardCard(
                     ) {
                         Icon(
                             Icons.Default.WorkspacePremium,
-                            contentDescription = "Top Gamers",
+                            contentDescription = "Top Players",
                             tint = GoldPrimary,
                             modifier = Modifier.size(22.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Top Gamers",
+                        text = "Top Players",
                         color = Color.White,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,

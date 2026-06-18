@@ -8,7 +8,7 @@ import org.junit.runner.RunWith
 class Top3LeaderboardCardTest {
 
     @Test
-    fun `Top3Card should display top gamers`() {
+    fun `Top3Card should display top players`() {
         // Test display logic
     }
 }

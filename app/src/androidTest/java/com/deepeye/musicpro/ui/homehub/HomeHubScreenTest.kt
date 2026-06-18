@@ -38,7 +38,7 @@ class HomeHubScreenTest {
     
     @Test
     fun `homeScreen should display Top 3 leaderboard card`() {
-        // onView(withText("Top Gamers")).check(matches(isDisplayed()))
+        // onView(withText("Top Players")).check(matches(isDisplayed()))
         // onView(withText("🥇")).check(matches(isDisplayed()))
         // onView(withText("View Full Leaderboard")).check(matches(isDisplayed()))
     }

@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -54,7 +55,29 @@ constructor(
 
     val isDspAttached = dspEngine.engineState
 
-    val top3Users = rankingRepository.getTopUsers(3).stateIn(
+    val top3Users = rankingRepository.getTopUsers(3).map { users ->
+        val paddedList = users.toMutableList()
+        val defaultAvatars = listOf("T", "A", "M")
+        val names = listOf("MusicLover99", "AudioPhileX", "BeatMaster")
+        var i = paddedList.size
+        while (paddedList.size < 3) {
+            paddedList.add(
+                com.deepeye.musicpro.domain.ranking.UserRank(
+                    userId = "mock_$i",
+                    displayName = names[i % names.size],
+                    photoUrl = null,
+                    points = 500 - (i * 100),
+                    streak = 3 - i,
+                    songsListened = 100,
+                    dailyActiveDays = 5,
+                    score = 100f,
+                    rank = i + 1
+                )
+            )
+            i++
+        }
+        paddedList
+    }.stateIn(
         scope = viewModelScope,
         started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()

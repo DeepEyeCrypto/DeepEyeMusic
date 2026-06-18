@@ -8,6 +8,18 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 304,
+                versionName = "3.0.0.5",
+                releaseDate = "June 2026",
+                title = "Leaderboard Glow Up 🏆",
+                highlight = true,
+                items =
+                    listOf(
+                        "Renamed 'Top Gamers' to 'Top Players'.",
+                        "Added default placeholders so the Leaderboard always proudly displays 3 ranks even if you are early to the party!",
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 303,
                 versionName = "3.0.0.4",
                 releaseDate = "June 2026",
