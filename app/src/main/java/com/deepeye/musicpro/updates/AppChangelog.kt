@@ -8,6 +8,17 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 305,
+                versionName = "3.0.0.6",
+                releaseDate = "June 2026",
+                title = "Real Players Only 🏆",
+                highlight = false,
+                items =
+                    listOf(
+                        "Removed fake placeholder players from the leaderboard. You will only see real players now!",
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 304,
                 versionName = "3.0.0.5",
                 releaseDate = "June 2026",
