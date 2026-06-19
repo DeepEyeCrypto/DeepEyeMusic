@@ -134,6 +134,7 @@ class DeepEyeApp : Application(), Configuration.Provider, SingletonImageLoader.F
             .components {
                 add(coil3.network.okhttp.OkHttpNetworkFetcherFactory())
                 add(coil3.video.VideoFrameDecoder.Factory())
+                add(com.deepeye.musicpro.util.HighResAlbumArtInterceptor(context))
             }
             .memoryCache {
                 MemoryCache.Builder()
