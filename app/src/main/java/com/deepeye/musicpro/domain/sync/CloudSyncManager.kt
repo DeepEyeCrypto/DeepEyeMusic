@@ -5,6 +5,7 @@ package com.deepeye.musicpro.domain.sync
 
 import android.util.Log
 import com.deepeye.musicpro.data.prefs.SettingsDataStore
+import com.deepeye.musicpro.data.prefs.TasteProfileDataStore
 import com.deepeye.musicpro.domain.repository.HistoryRepository
 import com.deepeye.musicpro.domain.repository.PlaylistRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -20,6 +21,7 @@ class CloudSyncManager @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
     private val settingsDataStore: SettingsDataStore,
+    private val tasteProfileDataStore: TasteProfileDataStore,
     private val playlistRepository: PlaylistRepository,
     private val historyRepository: HistoryRepository
 ) {
@@ -56,9 +58,37 @@ class CloudSyncManager @Inject constructor(
                 firestore.collection("users").document(uid).collection("sync").document("history")
                     .set(historyData, SetOptions.merge())
 
+                // 4. Sync Taste Profile
+                val tasteProfileJson = tasteProfileDataStore.exportToJson()
+                val tasteProfileData = mapOf(
+                    "taste_profile" to tasteProfileJson,
+                    "last_synced" to System.currentTimeMillis()
+                )
+                firestore.collection("users").document(uid).collection("sync").document("taste_profile")
+                    .set(tasteProfileData, SetOptions.merge())
+
                 Log.d("CloudSync", "Successfully synced all data to cloud for user $uid")
             } catch (e: Exception) {
                 Log.e("CloudSync", "Failed to sync data to cloud", e)
+            }
+        }
+    }
+
+    suspend fun syncTasteProfile() {
+        withContext(Dispatchers.IO) {
+            val user = auth.currentUser ?: return@withContext
+            val uid = user.uid
+            try {
+                val tasteProfileJson = tasteProfileDataStore.exportToJson()
+                val tasteProfileData = mapOf(
+                    "taste_profile" to tasteProfileJson,
+                    "last_synced" to System.currentTimeMillis()
+                )
+                firestore.collection("users").document(uid).collection("sync").document("taste_profile")
+                    .set(tasteProfileData, SetOptions.merge())
+                Log.d("CloudSync", "Successfully synced Taste Profile to cloud for user $uid")
+            } catch (e: Exception) {
+                Log.e("CloudSync", "Failed to sync Taste Profile to cloud", e)
             }
         }
     }

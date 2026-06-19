@@ -19,8 +19,7 @@ constructor(
     private val cacheManager: CacheManager,
     private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
 ) {
-    // In-memory search history (LRU, max 20 entries)
-    private val searchHistory = mutableListOf<String>()
+    // In-memory search history is no longer used here; HistoryRepository manages it.
     suspend fun search(
         query: String,
         filter: SearchFilter,
@@ -179,20 +178,5 @@ constructor(
         return base.distinct().take(12)
     }
 
-    suspend fun getRecentSearches(): List<String> {
-        return searchHistory.toList()
-    }
 
-    fun saveRecentSearch(query: String) {
-        if (query.isBlank()) return
-        searchHistory.remove(query)
-        searchHistory.add(0, query)
-        if (searchHistory.size > 20) {
-            searchHistory.removeAt(searchHistory.lastIndex)
-        }
-    }
-
-    fun clearSearchHistory() {
-        searchHistory.clear()
-    }
 }

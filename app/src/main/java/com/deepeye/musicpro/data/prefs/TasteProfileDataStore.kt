@@ -14,6 +14,9 @@ import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -33,7 +36,10 @@ constructor(
         private val KEY_PREFERRED_MOOD = stringPreferencesKey("preferred_mood")
         private val KEY_AUTOPLAY_ENABLED = booleanPreferencesKey("autoplay_enabled")
         private val KEY_PERSONALIZED_MIX_ENABLED = booleanPreferencesKey("personalized_mix_enabled")
+        private val KEY_RECENT_SEARCHES = stringPreferencesKey("recent_searches")
     }
+
+    private val gson = Gson()
 
     val tasteProfile: Flow<TasteProfile> =
         context.tasteDataStore.data.map { prefs ->
@@ -45,6 +51,14 @@ constructor(
                 preferredMood = prefs[KEY_PREFERRED_MOOD] ?: "Balanced",
                 autoplayEnabled = prefs[KEY_AUTOPLAY_ENABLED] ?: true,
                 personalizedMixEnabled = prefs[KEY_PERSONALIZED_MIX_ENABLED] ?: true,
+                recentSearches = prefs[KEY_RECENT_SEARCHES]?.let { 
+                    try {
+                        val type = object : TypeToken<List<String>>() {}.type
+                        gson.fromJson(it, type)
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                } ?: emptyList(),
             )
         }
 
@@ -75,6 +89,35 @@ constructor(
     suspend fun setPersonalizedMixEnabled(enabled: Boolean) {
         context.tasteDataStore.edit { it[KEY_PERSONALIZED_MIX_ENABLED] = enabled }
     }
+
+    suspend fun setRecentSearches(searches: List<String>) {
+        context.tasteDataStore.edit { it[KEY_RECENT_SEARCHES] = gson.toJson(searches) }
+    }
+
+    suspend fun exportToJson(): String {
+        val currentProfile = tasteProfile.first()
+        return gson.toJson(currentProfile)
+    }
+
+    suspend fun importFromJson(json: String) {
+        try {
+            val importedProfile = gson.fromJson(json, TasteProfile::class.java)
+            if (importedProfile != null) {
+                context.tasteDataStore.edit { prefs ->
+                    prefs[KEY_ONBOARDING_COMPLETED] = importedProfile.hasCompletedOnboarding
+                    prefs[KEY_PREFERRED_LANGUAGES] = importedProfile.preferredLanguages
+                    prefs[KEY_FAVORITE_ARTISTS] = importedProfile.favoriteArtists
+                    prefs[KEY_PREFERRED_GENRES] = importedProfile.preferredGenres
+                    prefs[KEY_PREFERRED_MOOD] = importedProfile.preferredMood
+                    prefs[KEY_AUTOPLAY_ENABLED] = importedProfile.autoplayEnabled
+                    prefs[KEY_PERSONALIZED_MIX_ENABLED] = importedProfile.personalizedMixEnabled
+                    prefs[KEY_RECENT_SEARCHES] = gson.toJson(importedProfile.recentSearches)
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("TasteProfileDataStore", "Failed to import from JSON", e)
+        }
+    }
 }
 
 data class TasteProfile(
@@ -85,4 +128,5 @@ data class TasteProfile(
     val preferredMood: String = "Balanced",
     val autoplayEnabled: Boolean = true,
     val personalizedMixEnabled: Boolean = true,
+    val recentSearches: List<String> = emptyList(),
 )

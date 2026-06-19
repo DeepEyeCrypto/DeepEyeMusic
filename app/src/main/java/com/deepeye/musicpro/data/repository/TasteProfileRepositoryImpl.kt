@@ -12,6 +12,8 @@ import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.repository.TasteProfileRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import com.deepeye.musicpro.domain.sync.CloudSyncManager
+import dagger.Lazy
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,35 +23,43 @@ class TasteProfileRepositoryImpl
 constructor(
     private val tasteProfileDataStore: TasteProfileDataStore,
     private val tasteDao: TasteDao,
+    private val cloudSyncManager: Lazy<CloudSyncManager>,
 ) : TasteProfileRepository {
     override fun getTasteProfile(): Flow<TasteProfile> = tasteProfileDataStore.tasteProfile
 
     override suspend fun updateOnboardingCompleted(completed: Boolean) {
         tasteProfileDataStore.setOnboardingCompleted(completed)
+        cloudSyncManager.get().syncTasteProfile()
     }
 
     override suspend fun updatePreferredLanguages(langs: Set<String>) {
         tasteProfileDataStore.setPreferredLanguages(langs)
+        cloudSyncManager.get().syncTasteProfile()
     }
 
     override suspend fun updateFavoriteArtists(artists: Set<String>) {
         tasteProfileDataStore.setFavoriteArtists(artists)
+        cloudSyncManager.get().syncTasteProfile()
     }
 
     override suspend fun updatePreferredGenres(genres: Set<String>) {
         tasteProfileDataStore.setPreferredGenres(genres)
+        cloudSyncManager.get().syncTasteProfile()
     }
 
     override suspend fun updatePreferredMood(mood: String) {
         tasteProfileDataStore.setPreferredMood(mood)
+        cloudSyncManager.get().syncTasteProfile()
     }
 
     override suspend fun updateAutoplayEnabled(enabled: Boolean) {
         tasteProfileDataStore.setAutoplayEnabled(enabled)
+        cloudSyncManager.get().syncTasteProfile()
     }
 
     override suspend fun updatePersonalizedMixEnabled(enabled: Boolean) {
         tasteProfileDataStore.setPersonalizedMixEnabled(enabled)
+        cloudSyncManager.get().syncTasteProfile()
     }
 
     override suspend fun recordPlayEvent(event: PlayEvent) {

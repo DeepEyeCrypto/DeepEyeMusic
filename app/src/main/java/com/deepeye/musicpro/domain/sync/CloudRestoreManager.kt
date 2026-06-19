@@ -5,6 +5,7 @@ package com.deepeye.musicpro.domain.sync
 
 import android.util.Log
 import com.deepeye.musicpro.data.prefs.SettingsDataStore
+import com.deepeye.musicpro.data.prefs.TasteProfileDataStore
 import com.deepeye.musicpro.domain.repository.HistoryRepository
 import com.deepeye.musicpro.domain.repository.PlaylistRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -20,6 +21,7 @@ class CloudRestoreManager @Inject constructor(
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
     private val settingsDataStore: SettingsDataStore,
+    private val tasteProfileDataStore: TasteProfileDataStore,
     private val playlistRepository: PlaylistRepository,
     private val historyRepository: HistoryRepository
 ) {
@@ -56,6 +58,16 @@ class CloudRestoreManager @Inject constructor(
                     if (historyJson != null) {
                         historyRepository.importFromJson(historyJson)
                         Log.d("CloudRestore", "Successfully restored history")
+                    }
+                }
+
+                // 4. Restore Taste Profile
+                val tasteProfileDoc = firestore.collection("users").document(uid).collection("sync").document("taste_profile").get().await()
+                if (tasteProfileDoc.exists()) {
+                    val tasteProfileJson = tasteProfileDoc.getString("taste_profile")
+                    if (tasteProfileJson != null) {
+                        tasteProfileDataStore.importFromJson(tasteProfileJson)
+                        Log.d("CloudRestore", "Successfully restored Taste Profile")
                     }
                 }
 

@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30014,
+                versionName = "3.0.1.4",
+                releaseDate = "June 2026",
+                title = "Music Personalization Sync ☁️",
+                highlight = true,
+                items =
+                    listOf(
+                        "Fixed issue where music personalization (languages, genres, artists) was lost on app reinstall.",
+                        "Search history and music tastes now securely sync with your Google account.",
+                        "Instant cloud backup whenever you update your music preferences.",
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30013,
                 versionName = "3.0.1.3",
                 releaseDate = "June 2026",
