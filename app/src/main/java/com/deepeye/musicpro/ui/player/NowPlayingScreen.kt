@@ -34,6 +34,8 @@ import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -84,7 +86,6 @@ fun NowPlayingScreen(
 ) {
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
     val sheetState by sheetViewModel.state.collectAsStateWithLifecycle()
-    var showPlaylistSheet by remember { mutableStateOf(false) }
     val fftData by viewModel.fftData.collectAsStateWithLifecycle()
     val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
     val extractedColors by viewModel.extractedColors.collectAsStateWithLifecycle()
@@ -625,6 +626,7 @@ private fun VideoNowPlayingLayout(
     var selectedAudioTrack by remember { mutableStateOf("Stereo (Original)") }
     var showAudioTrackMenu by remember { mutableStateOf(false) }
     var showAllComments by remember { mutableStateOf(false) }
+    var showPlaylistSheet by remember { mutableStateOf(false) }
 
     val libraryViewModel: com.deepeye.musicpro.ui.library.LibraryViewModel = hiltViewModel()
 

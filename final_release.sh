@@ -3,12 +3,12 @@ set -e
 
 # Commit changes
 git add .
-git commit -m "feat: UX improvements, premium search, and playlist flow" || echo "No changes to commit"
+git commit -m "fix: correctly scope showPlaylistSheet"
 git push origin release/v1.0.0-new
 
 # Update main branch
 git checkout main
-git merge release/v1.0.0-new -m "Merge release into main" || echo "Merge failed or already up to date"
+git merge release/v1.0.0-new -m "Merge fix into main" || echo "Merge failed or already up to date"
 git push origin main
 git checkout release/v1.0.0-new
 
