@@ -8,6 +8,18 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30013,
+                versionName = "3.0.1.3",
+                releaseDate = "June 2026",
+                title = "Library & Album Art Fixes 🎵",
+                highlight = true,
+                items =
+                    listOf(
+                        "Fixed scrolling and clipping issues in the Library section.",
+                        "Resolved blurry album artworks by forcing high-resolution images.",
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 305,
                 versionName = "3.0.0.6",
                 releaseDate = "June 2026",
