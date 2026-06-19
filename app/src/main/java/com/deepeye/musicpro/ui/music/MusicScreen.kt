@@ -96,6 +96,7 @@ fun MusicScreen(
                             )
                         )
                     )
+                    .statusBarsPadding()
             ) {
                 // Premium Header Section
                 Column(
@@ -156,10 +157,10 @@ fun MusicScreen(
             }
         },
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+        Box(modifier = Modifier.fillMaxSize()) {
             when (selectedTab) {
-                0 -> DiscoveryTab(uiState, viewModel, onNavigateToNowPlaying)
-                1 -> LibraryTab(uiState, viewModel, onNavigateToNowPlaying)
+                0 -> DiscoveryTab(uiState, viewModel, onNavigateToNowPlaying, paddingValues)
+                1 -> LibraryTab(uiState, viewModel, onNavigateToNowPlaying, paddingValues)
             }
         }
     }
@@ -252,11 +253,12 @@ private fun DiscoveryTab(
     uiState: MusicUiState,
     viewModel: MusicViewModel,
     onNavigateToNowPlaying: (String) -> Unit,
+    paddingValues: PaddingValues,
 ) {
     if (uiState.isLoading) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 180.dp),
+            contentPadding = PaddingValues(start = 16.dp, top = paddingValues.calculateTopPadding() + 12.dp, end = 16.dp, bottom = 180.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
@@ -321,7 +323,7 @@ private fun DiscoveryTab(
             state = gridState,
             columns = GridCells.Fixed(2),
             modifier = Modifier.fillMaxSize().premiumScrollHaptics(gridState),
-            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 180.dp, top = 8.dp),
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 180.dp, top = paddingValues.calculateTopPadding() + 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
@@ -363,6 +365,7 @@ private fun LibraryTab(
     uiState: MusicUiState,
     viewModel: MusicViewModel,
     onNavigateToNowPlaying: (String) -> Unit,
+    paddingValues: PaddingValues,
 ) {
     if (uiState.localSongs.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -390,7 +393,7 @@ private fun LibraryTab(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize().premiumScrollHaptics(listState),
-            contentPadding = PaddingValues(top = 4.dp, bottom = 180.dp),
+            contentPadding = PaddingValues(top = paddingValues.calculateTopPadding() + 4.dp, bottom = 180.dp),
         ) {
             // Song count header
             item {
