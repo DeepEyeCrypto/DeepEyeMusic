@@ -1,0 +1,21 @@
+#!/bin/bash
+set -e
+
+# Update main branch
+git fetch origin
+git checkout main
+git merge release/v1.0.0-new -m "Merge release into main" || echo "Merge failed or already up to date"
+git push origin main
+git checkout release/v1.0.0-new
+
+# Build APK
+echo "Building APK..."
+./gradlew assembleRelease
+
+# Create GitHub Release
+echo "Creating GitHub Release..."
+gh release create v3.0.0.9 app/build/outputs/apk/release/app-release.apk \
+  --title "DeepEye Music Pro v3.0.0.9" \
+  --notes "UX improvements, Premium Search, and Playlist Flow fixes."
+
+echo "Release complete!"

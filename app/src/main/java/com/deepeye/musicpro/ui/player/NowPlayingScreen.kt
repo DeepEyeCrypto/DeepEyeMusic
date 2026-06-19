@@ -216,24 +216,6 @@ fun NowPlayingScreen(
         }
     }
 
-    if (showPlaylistSheet) {
-        val playlistViewModel: PlaylistViewModel = hiltViewModel()
-        PlaylistSelectionBottomSheet(
-            onDismissRequest = { showPlaylistSheet = false },
-            onPlaylistSelected = { playlist ->
-                val currentItem = playerState.currentItem
-                if (currentItem is MediaItem.Local) {
-                    val songId = currentItem.id.toLongOrNull()
-                    if (songId != null) {
-                        playlistViewModel.addSongToPlaylist(playlist.id, songId)
-                    }
-                }
-                showPlaylistSheet = false
-            },
-            viewModel = playlistViewModel
-        )
-    }
-
         // Refined Clear Glass Mesh Background
         Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
                 // Top-left glow
@@ -1121,6 +1103,24 @@ private fun VideoNowPlayingLayout(
                 }
             }
         }
+    }
+
+    if (showPlaylistSheet) {
+        val playlistViewModel: PlaylistViewModel = hiltViewModel()
+        PlaylistSelectionBottomSheet(
+            onDismissRequest = { showPlaylistSheet = false },
+            onPlaylistSelected = { playlist ->
+                val currentItem = playerState.currentItem
+                if (currentItem is MediaItem.Local) {
+                    val songId = currentItem.id.toLongOrNull()
+                    if (songId != null) {
+                        playlistViewModel.addSongToPlaylist(playlist.id, songId)
+                    }
+                }
+                showPlaylistSheet = false
+            },
+            viewModel = playlistViewModel
+        )
     }
 }
 
