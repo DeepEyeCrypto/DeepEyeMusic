@@ -217,7 +217,6 @@ fun DeepEyeMusicApp(
                         Icons.Filled.LibraryMusic,
                         Icons.Outlined.LibraryMusic
                     ),
-                    BottomNavItem(Routes.Search.route, "Search", Icons.Filled.Search, Icons.Outlined.Search),
                     BottomNavItem(Routes.DSP.route, "DSP", Icons.Filled.GraphicEq, Icons.Outlined.GraphicEq),
                     BottomNavItem(Routes.Settings.route, "Profile", Icons.Filled.Person, Icons.Outlined.Person),
                 )

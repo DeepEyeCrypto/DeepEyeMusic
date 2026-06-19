@@ -598,7 +598,7 @@ private fun playRecMusic(
                 id = it.videoId,
                 title = it.title,
                 artist = it.artist,
-                artworkUri = android.net.Uri.parse("https://i.ytimg.com/vi/${it.videoId}/mqdefault.jpg"),
+                artworkUri = android.net.Uri.parse("https://i.ytimg.com/vi/${it.videoId}/hqdefault.jpg"),
                 duration = 180000L, // Mock duration
                 isVideo = false,
             )

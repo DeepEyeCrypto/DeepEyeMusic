@@ -97,8 +97,18 @@ fun MusicScreen(
                         )
                     )
             ) {
-                CenterAlignedTopAppBar(
-                    title = {
+                // Premium Header Section
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Top Row: Title and Actions
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -107,49 +117,33 @@ fun MusicScreen(
                                 Icons.Rounded.GraphicEq,
                                 contentDescription = null,
                                 tint = NeonCyan,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                             Text(
                                 "Music",
                                 fontWeight = FontWeight.Black,
-                                fontSize = 22.sp,
+                                fontSize = 26.sp,
                                 letterSpacing = (-0.5).sp,
                                 color = TextPrimary
                             )
                         }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.Transparent,
-                        scrolledContainerColor = Color.Transparent
-                    ),
-                    actions = {
-                        // Search button with glow
-                        IconButton(onClick = onNavigateToSearch) {
-                            Icon(
-                                Icons.Default.Search,
-                                "Search Music",
-                                tint = TextSecondary
-                            )
-                        }
+
+                        // Refresh button
                         if (selectedTab == 0) {
                             IconButton(onClick = { viewModel.loadRecommendations() }) {
-                                Icon(
-                                    Icons.Default.Refresh,
-                                    "Refresh",
-                                    tint = TextSecondary
-                                )
+                                Icon(Icons.Default.Refresh, "Refresh", tint = TextSecondary)
                             }
                         } else {
                             IconButton(onClick = { viewModel.syncLibrary() }) {
-                                Icon(
-                                    Icons.Default.Refresh,
-                                    "Sync Library",
-                                    tint = TextSecondary
-                                )
+                                Icon(Icons.Default.Refresh, "Sync Library", tint = TextSecondary)
                             }
                         }
-                    },
-                )
+                    }
+
+                    // Premium Search Bar (Clickable Entry Point)
+                    PremiumSearchBar(onClick = onNavigateToSearch)
+                    Spacer(Modifier.height(8.dp))
+                }
 
                 // Premium segmented tab bar
                 PremiumTabBar(
@@ -928,4 +922,66 @@ private fun formatDuration(ms: Long): String {
     val sec = (ms / 1000) % 60
     val min = (ms / (1000 * 60)) % 60
     return "%d:%02d".format(min, sec)
+}
+
+// ─── Premium Search Bar ──────────────────────────────────────────────────────
+@Composable
+fun PremiumSearchBar(onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "searchBarScale"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(50))
+            .background(
+                Brush.horizontalGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.08f),
+                        Color.White.copy(alpha = 0.03f)
+                    )
+                )
+            )
+            .border(
+                width = 0.5.dp,
+                brush = Brush.horizontalGradient(
+                    listOf(
+                        NeonCyan.copy(alpha = 0.3f),
+                        ElectricViolet.copy(alpha = 0.3f)
+                    )
+                ),
+                shape = RoundedCornerShape(50)
+            )
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = "Search",
+                tint = TextSecondary,
+                modifier = Modifier.size(22.dp)
+            )
+            Text(
+                "Search artists, songs, playlists...",
+                color = TextSecondary,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
 }

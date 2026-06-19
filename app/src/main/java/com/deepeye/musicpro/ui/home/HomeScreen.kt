@@ -261,7 +261,7 @@ private fun playMusic(
                 id = it.videoId,
                 title = it.title,
                 artist = it.artist,
-                artworkUri = Uri.parse("https://i.ytimg.com/vi/${it.videoId}/mqdefault.jpg"),
+                artworkUri = Uri.parse("https://i.ytimg.com/vi/${it.videoId}/hqdefault.jpg"),
                 duration = 180000L, // Mock duration
                 isVideo = false,
             )

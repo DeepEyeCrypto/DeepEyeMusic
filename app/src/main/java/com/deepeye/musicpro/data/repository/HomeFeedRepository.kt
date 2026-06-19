@@ -101,7 +101,7 @@ constructor(
                                     title = stats.title,
                                     channelName = stats.artist,
                                     channelId = stats.channelId,
-                                    thumbnailUrl = "https://i.ytimg.com/vi/${stats.videoId}/mqdefault.jpg",
+                                    thumbnailUrl = "https://i.ytimg.com/vi/${stats.videoId}/hqdefault.jpg",
                                     progressPercent = stats.avgCompletion,
                                 )
                             }
@@ -125,7 +125,7 @@ constructor(
                                     id = stats.videoId,
                                     title = stats.title,
                                     artist = stats.artist,
-                                    thumbnailUrl = "https://i.ytimg.com/vi/${stats.videoId}/mqdefault.jpg",
+                                    thumbnailUrl = "https://i.ytimg.com/vi/${stats.videoId}/hqdefault.jpg",
                                     lastPlayedAt = stats.lastPlayed,
                                 )
                             }

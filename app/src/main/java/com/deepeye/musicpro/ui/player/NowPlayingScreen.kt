@@ -61,6 +61,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.core.utils.TimeFormatter
 import com.deepeye.musicpro.domain.model.MediaItem
+import com.deepeye.musicpro.ui.playlist.PlaylistSelectionBottomSheet
+import com.deepeye.musicpro.ui.playlist.PlaylistViewModel
 import com.deepeye.musicpro.ui.motion.premiumScrollHaptics
 import com.deepeye.musicpro.domain.model.PlayerState
 import com.deepeye.musicpro.ui.LocalFullscreenMode
@@ -82,6 +84,7 @@ fun NowPlayingScreen(
 ) {
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
     val sheetState by sheetViewModel.state.collectAsStateWithLifecycle()
+    var showPlaylistSheet by remember { mutableStateOf(false) }
     val fftData by viewModel.fftData.collectAsStateWithLifecycle()
     val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
     val extractedColors by viewModel.extractedColors.collectAsStateWithLifecycle()
@@ -211,6 +214,24 @@ fun NowPlayingScreen(
                 }
             }
         }
+    }
+
+    if (showPlaylistSheet) {
+        val playlistViewModel: PlaylistViewModel = hiltViewModel()
+        PlaylistSelectionBottomSheet(
+            onDismissRequest = { showPlaylistSheet = false },
+            onPlaylistSelected = { playlist ->
+                val currentItem = playerState.currentItem
+                if (currentItem is MediaItem.Local) {
+                    val songId = currentItem.id.toLongOrNull()
+                    if (songId != null) {
+                        playlistViewModel.addSongToPlaylist(playlist.id, songId)
+                    }
+                }
+                showPlaylistSheet = false
+            },
+            viewModel = playlistViewModel
+        )
     }
 
         // Refined Clear Glass Mesh Background
@@ -836,7 +857,7 @@ private fun VideoNowPlayingLayout(
                         android.widget.Toast.makeText(context, "Downloading...", android.widget.Toast.LENGTH_SHORT).show()
                     })
                     InteractionButton(icon = Icons.Default.Add, label = "Save", onClick = {
-                        android.widget.Toast.makeText(context, "Saved to Playlist", android.widget.Toast.LENGTH_SHORT).show()
+                        showPlaylistSheet = true
                     })
                 }
             }

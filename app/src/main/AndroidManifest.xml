@@ -53,11 +53,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Intent filter to handle opening audio files from file managers (when they provide mimeType) -->
+            <!-- Audio intent filter for VIEW (e.g. from File Manager) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <action android:name="android.intent.action.SEND" />
-                <action android:name="android.intent.action.SEND_MULTIPLE" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="file" />
@@ -68,15 +66,24 @@
                 <data android:mimeType="application/itunes" />
             </intent-filter>
 
+            <!-- Audio intent filter for SEND/SEND_MULTIPLE (e.g. Share Sheet) -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="audio/*" />
+                <data android:mimeType="application/ogg" />
+                <data android:mimeType="application/x-ogg" />
+                <data android:mimeType="application/itunes" />
+            </intent-filter>
+
             <!-- Intent filter for file managers that don't provide proper MIME types, just extensions -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="file" />
                 <data android:scheme="content" />
-                <data android:host="*" />
+                <data android:scheme="file" />
+                <data android:mimeType="*/*" />
                 <data android:pathPattern=".*\\.mp3" />
                 <data android:pathPattern=".*\\.m4a" />
                 <data android:pathPattern=".*\\.wav" />

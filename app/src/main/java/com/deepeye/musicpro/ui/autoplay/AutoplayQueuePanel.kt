@@ -107,7 +107,7 @@ fun QueueItemRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
-            model = "https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg",
+            model = "https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg",
             contentDescription = null,
             modifier =
             Modifier

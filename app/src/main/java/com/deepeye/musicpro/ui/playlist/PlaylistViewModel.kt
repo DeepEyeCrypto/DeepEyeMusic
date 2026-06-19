@@ -34,4 +34,8 @@ constructor(
     fun deletePlaylist(id: Long) {
         viewModelScope.launch { repository.deletePlaylist(id) }
     }
+
+    fun addSongToPlaylist(playlistId: Long, songId: Long) {
+        viewModelScope.launch { repository.addSongToPlaylist(playlistId, songId) }
+    }
 }
