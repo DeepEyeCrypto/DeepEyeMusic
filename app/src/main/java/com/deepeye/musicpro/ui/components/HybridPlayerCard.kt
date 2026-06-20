@@ -56,18 +56,22 @@ import com.deepeye.musicpro.ui.LocalPipMode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@androidx.compose.runtime.Stable
+class StablePlayerHolder(val player: ExoPlayer)
+
 @Composable
 fun VideoPlayerView(
-    player: ExoPlayer,
+    playerHolder: StablePlayerHolder,
     modifier: Modifier = Modifier,
 ) {
+    val player = playerHolder.player
     val context = androidx.compose.ui.platform.LocalContext.current
     val playerView =
         remember {
             val view = android.view.LayoutInflater.from(context).inflate(com.deepeye.musicpro.R.layout.custom_player_view, null, false)
             val pv = view as androidx.media3.ui.PlayerView
             pv.keepScreenOn = true
-            pv.resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+            pv.resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
             pv
         }
 
@@ -84,6 +88,23 @@ fun VideoPlayerView(
         onDispose {
             player.removeListener(listener)
             playerView.player = null
+        }
+    }
+
+    val isInPipMode = LocalPipMode.current
+
+    LaunchedEffect(isInPipMode) {
+        if (!isInPipMode) {
+            // When exiting PiP mode, SurfaceView can sometimes freeze its visual frame
+            // because the window resize interrupts the native surface buffers.
+            // The most robust fix for ExoPlayer is to briefly detach and re-attach the player
+            // which forces a clean Surface re-bind without interrupting audio playback.
+            kotlinx.coroutines.delay(150)
+            val currentPlayer = playerView.player
+            if (currentPlayer != null) {
+                playerView.player = null
+                playerView.player = currentPlayer
+            }
         }
     }
 
@@ -338,8 +359,9 @@ fun HybridPlayerCard(
                             }
                         }
                 ) {
+                    val stablePlayer = remember(player) { StablePlayerHolder(player) }
                     VideoPlayerView(
-                        player = player,
+                        playerHolder = stablePlayer,
                         modifier = Modifier.fillMaxSize()
                     )
 

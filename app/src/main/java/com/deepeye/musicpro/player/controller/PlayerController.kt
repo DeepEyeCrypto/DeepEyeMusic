@@ -306,7 +306,12 @@ constructor(
                     val oldCurrentItem = _playerState.value.currentItem
                     // Immediately pause old track and show new track info with loading spinner
                     player.pause()
-                    updateState { it.copy(isLoading = true, currentItem = item, isPlaying = false) }
+                    updateState { it.copy(
+                        isLoading = true, 
+                        currentItem = item, 
+                        isPlaying = false,
+                        isVideo = item is MediaItem.Remote && item.isVideo
+                    ) }
 
                     val finalItem =
                         when (item) {
