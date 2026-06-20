@@ -112,7 +112,7 @@ constructor(
             videoId = this.videoId,
             title = this.title,
             channelName = this.artist,
-            thumbnailUrl = "https://i.ytimg.com/vi/${this.videoId}/hqdefault.jpg",
+            thumbnailUrl = "https://i.ytimg.com/vi/${this.videoId}/maxresdefault.jpg",
             duration = "3:45", // Mock since VideoItem doesn't have it
             viewCount = "1M views", // Mock
             publishedAt = "Recently", // Mock

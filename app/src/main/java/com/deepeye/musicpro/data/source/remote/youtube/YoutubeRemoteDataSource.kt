@@ -432,7 +432,7 @@ constructor(
                         id = item.id,
                         title = item.title,
                         artist = item.artist,
-                        artworkUri = android.net.Uri.parse(item.thumbnailUrl),
+                        artworkUri = android.net.Uri.parse(item.thumbnailUrl.upgradeResolution()),
                         duration = item.duration * 1000L,
                         isVideo = isVideo,
                     )
@@ -469,7 +469,7 @@ constructor(
         id = id,
         title = title,
         channelName = artist,
-        thumbnailUrl = thumbnailUrl,
+        thumbnailUrl = thumbnailUrl.upgradeResolution(),
         duration = duration,
         isShort = isShort
     )
@@ -478,9 +478,14 @@ constructor(
         id = id,
         title = title,
         artist = artist,
-        thumbnailUrl = thumbnailUrl,
+        thumbnailUrl = thumbnailUrl.upgradeResolution(),
         duration = duration
     )
+
+    private fun String.upgradeResolution(): String {
+        return this.replace(Regex("(?<!maxres)(hqdefault|sddefault|mqdefault|default)\\.jpg"), "maxresdefault.jpg")
+            .replace(Regex("=w\\d+-h\\d+([a-zA-Z0-9\\-]*)"), "=w1080-h1080$1")
+    }
 
     private fun String.extractVideoId(): String {
         val id =

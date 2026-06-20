@@ -27,6 +27,7 @@ constructor(
     private val lyricsRepository: com.deepeye.musicpro.domain.repository.LyricsRepository,
     private val sleepTimerManager: com.deepeye.musicpro.player.timer.SleepTimerManager,
     private val recommendationEngine: com.deepeye.musicpro.domain.recommendation.RecommendationEngine,
+    private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
 ) : ViewModel() {
     val playerState: StateFlow<PlayerState> = playerController.playerState
     val autoplayState: StateFlow<com.deepeye.musicpro.domain.autoplay.AutoplayState> = playerController.autoplayState
@@ -173,7 +174,10 @@ constructor(
         playerController.playQueueItem(index)
     }
 
-    fun downloadCurrentTrack() {
+    val activeDownloads = downloadManager.activeDownloads
+
+
+    fun downloadCurrentTrack() { android.util.Log.e("PlayerViewModel", "downloadCurrentTrack called! currentItem=" + playerState.value.currentItem?.title);
         playerState.value.currentItem?.let {
             downloadManager.downloadTrack(it)
         }
@@ -183,22 +187,42 @@ constructor(
         val currentItem = playerState.value.currentItem ?: return
         val currentId = currentItem.id
         viewModelScope.launch {
-            tasteProfileRepository.recordFeedback(currentId, liked = liked, dontPlayAgain = false)
-            // Fire an immediate listen event so the Recommendation Engine picks it up as a Liked Song right away
-            if (liked) {
-                recommendationEngine.trackListenEvent(
-                    videoId = currentId,
-                    title = currentItem.title,
-                    artist = currentItem.artist,
-                    channelId = "", // Not critically needed for pure likes
-                    listenDurationMs = 1000L,
-                    totalDurationMs = 1000L,
-                    wasSkipped = false,
-                    wasLiked = true,
-                    wasDisliked = false,
-                    wasAddedToPlaylist = false,
-                    wasReplayed = false
-                )
+            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                tasteProfileRepository.recordFeedback(currentId, liked = liked, dontPlayAgain = false)
+                
+                if (liked) {
+                    // Sync with Library UI
+                    libraryRepository.likeTrack(
+                        videoId = currentId,
+                        title = currentItem.title,
+                        artist = currentItem.artist,
+                        channelId = "",
+                        artworkUrl = currentItem.artworkUri?.toString()
+                    )
+                    
+                    // Fire an immediate listen event so the Recommendation Engine picks it up as a Liked Song right away
+                    recommendationEngine.trackListenEvent(
+                        videoId = currentId,
+                        title = currentItem.title,
+                        artist = currentItem.artist,
+                        channelId = "", // Not critically needed for pure likes
+                        listenDurationMs = 1000L,
+                        totalDurationMs = 1000L,
+                        wasSkipped = false,
+                        wasLiked = true,
+                        wasDisliked = false,
+                        wasAddedToPlaylist = false,
+                        wasReplayed = false
+                    )
+                } else {
+                    // Remove from Library UI
+                    libraryRepository.unlikeTrack(
+                        videoId = currentId,
+                        title = currentItem.title,
+                        artist = currentItem.artist,
+                        channelId = ""
+                    )
+                }
             }
         }
     }
@@ -206,8 +230,10 @@ constructor(
     fun blockTrack() {
         val currentId = playerState.value.currentItem?.id ?: return
         viewModelScope.launch {
-            // Block is dislike + dontPlayAgain
-            tasteProfileRepository.recordFeedback(currentId, liked = false, dontPlayAgain = true)
+            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                // Block is dislike + dontPlayAgain
+                tasteProfileRepository.recordFeedback(currentId, liked = false, dontPlayAgain = true)
+            }
             // Automatically advance to the next track!
             next()
         }

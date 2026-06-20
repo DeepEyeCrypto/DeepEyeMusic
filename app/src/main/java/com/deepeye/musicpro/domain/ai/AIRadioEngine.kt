@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import com.deepeye.musicpro.domain.repository.TasteProfileRepository
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,7 +24,8 @@ import javax.inject.Singleton
 class AIRadioEngine @Inject constructor(
     private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
     private val playerController: PlayerController,
-    private val queueManager: QueueManager
+    private val queueManager: QueueManager,
+    private val tasteProfileRepo: TasteProfileRepository
 ) {
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
@@ -39,8 +42,13 @@ class AIRadioEngine @Inject constructor(
         
         try {
             withContext(ioDispatcher) {
+                val tasteProfile = try { tasteProfileRepo.getTasteProfile().first() } catch (e: Exception) { null }
+                val langs = tasteProfile?.preferredLanguages?.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: "hindi punjabi english"
+                val artists = tasteProfile?.favoriteArtists?.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: ""
+                val personalSuffix = "$langs $artists".trim()
+                
                 // Mock NLP parser: We extract core keywords to feed to YouTube Music
-                val query = parseIntentToSearchQuery(prompt)
+                val query = parseIntentToSearchQuery(prompt, personalSuffix)
                 
                 // Fetch tracks from YouTube Music
                 val tracks = youtubeRemoteDataSource.searchMusic(query).take(15)
@@ -105,7 +113,7 @@ class AIRadioEngine @Inject constructor(
         }
     }
 
-    private fun parseIntentToSearchQuery(prompt: String): String {
+    private fun parseIntentToSearchQuery(prompt: String, personalSuffix: String): String {
         val lowerPrompt = prompt.lowercase().trim()
         
         // Remove conversational filler words
@@ -117,7 +125,7 @@ class AIRadioEngine @Inject constructor(
         
         // Add specific genre boosts if detected
         if (coreQuery.contains("romantic") || coreQuery.contains("love")) {
-            coreQuery += " romantic hindi songs"
+            coreQuery += " romantic"
         }
         if (coreQuery.contains("party") || coreQuery.contains("dance")) {
             coreQuery += " party anthems"
@@ -126,6 +134,7 @@ class AIRadioEngine @Inject constructor(
             coreQuery += " sad lofi emotional"
         }
         
-        return coreQuery.trim().ifBlank { "top hits" }
+        val finalQuery = "${coreQuery.trim()} $personalSuffix".trim()
+        return finalQuery.ifBlank { "top hits $personalSuffix".trim() }
     }
 }

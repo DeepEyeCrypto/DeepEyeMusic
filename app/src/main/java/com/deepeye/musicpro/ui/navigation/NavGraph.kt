@@ -37,6 +37,9 @@ import com.deepeye.musicpro.ui.playlist.PlaylistDetailScreen
 import com.deepeye.musicpro.ui.search.SearchScreen
 import com.deepeye.musicpro.ui.settings.SettingsScreen
 import com.deepeye.musicpro.ui.youtube.YouTubeScreen
+import com.deepeye.musicpro.ui.library.LikedSongsScreen
+import com.deepeye.musicpro.ui.library.PlaylistsScreen
+import com.deepeye.musicpro.ui.library.SavedItemsScreen
 
 import com.deepeye.musicpro.ui.auth.AuthViewModel
 import com.deepeye.musicpro.ui.auth.LoginScreen
@@ -215,6 +218,18 @@ fun NavGraph(
                 onNavigateToDownloads = {
                     navController.navigate(Routes.Downloads.route)
                 },
+                onNavigateToHistory = {
+                    navController.navigate(Routes.History.route)
+                },
+                onNavigateToLikedSongs = {
+                    navController.navigate(Routes.LikedSongs.route)
+                },
+                onNavigateToSavedItems = {
+                    navController.navigate(Routes.SavedItems.route)
+                },
+                onNavigateToPlaylists = {
+                    navController.navigate(Routes.Playlists.route)
+                },
                 onNavigateToNowPlaying = {
                     onExpandPlayer()
                 },
@@ -295,7 +310,29 @@ fun NavGraph(
         }
         composable(Routes.History.route) {
             HistoryScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.LikedSongs.route) {
+            LikedSongsScreen(
                 onNavigateBack = { navController.popBackStack() },
+                onNavigateToNowPlaying = onExpandPlayer
+            )
+        }
+
+        composable(Routes.SavedItems.route) {
+            SavedItemsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.Playlists.route) {
+            PlaylistsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPlaylist = { playlistId ->
+                    navController.navigate(Routes.PlaylistDetail.createRoute(playlistId))
+                }
             )
         }
     }

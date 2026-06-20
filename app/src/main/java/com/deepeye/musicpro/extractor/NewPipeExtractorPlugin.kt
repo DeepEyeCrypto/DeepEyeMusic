@@ -49,7 +49,7 @@ class NewPipeExtractorPlugin : IExtractorBridge {
     }
 
     override suspend fun searchMusic(query: String): List<ExtractorMusicItem> = withContext(Dispatchers.IO) {
-        val extractor = yt.getSearchExtractor(query, listOf("music_songs"), "")
+        val extractor = yt.getSearchExtractor(query, emptyList(), "")
         extractor.fetchPage()
         extractor.initialPage.items.filterIsInstance<StreamInfoItem>().map { it.toExtractorMusicItem() }
     }

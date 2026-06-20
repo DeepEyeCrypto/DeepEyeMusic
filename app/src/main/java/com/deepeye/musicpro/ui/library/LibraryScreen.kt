@@ -53,6 +53,10 @@ fun LibraryScreen(
     onNavigateToAlbum: (Long) -> Unit,
     onNavigateToArtist: (Long) -> Unit,
     onNavigateToDownloads: () -> Unit,
+    onNavigateToHistory: () -> Unit,
+    onNavigateToLikedSongs: () -> Unit,
+    onNavigateToSavedItems: () -> Unit,
+    onNavigateToPlaylists: () -> Unit,
     onNavigateToNowPlaying: () -> Unit,
     viewModel: LibraryViewModel = hiltViewModel(),
     playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel(),
@@ -114,7 +118,7 @@ fun LibraryScreen(
                     label = "Liked",
                     count = libraryHome.likedCount,
                     gradientColors = listOf(Color(0xFFE91E63), Color(0xFFC2185B)),
-                    onClick = { android.widget.Toast.makeText(context, "Liked songs coming soon", android.widget.Toast.LENGTH_SHORT).show() },
+                    onClick = onNavigateToLikedSongs,
                 )
             }
             item {
@@ -122,8 +126,8 @@ fun LibraryScreen(
                     icon = Icons.Default.Bookmark,
                     label = "Saved",
                     count = 0,
-                    gradientColors = listOf(Color(0xFF7C4DFF), Color(0xFF651FFF)),
-                    onClick = { android.widget.Toast.makeText(context, "Saved items coming soon", android.widget.Toast.LENGTH_SHORT).show() },
+                    gradientColors = listOf(Color(0xFF9C27B0), Color(0xFF7B1FA2)),
+                    onClick = onNavigateToSavedItems,
                 )
             }
             item {
@@ -131,8 +135,8 @@ fun LibraryScreen(
                     icon = Icons.AutoMirrored.Filled.PlaylistPlay,
                     label = "Playlists",
                     count = libraryHome.playlistCount,
-                    gradientColors = listOf(Color(0xFF00BCD4), Color(0xFF0097A7)),
-                    onClick = { android.widget.Toast.makeText(context, "Playlists coming soon", android.widget.Toast.LENGTH_SHORT).show() },
+                    gradientColors = listOf(Color(0xFF2196F3), Color(0xFF1976D2)),
+                    onClick = onNavigateToPlaylists,
                 )
             }
             item {
@@ -150,7 +154,7 @@ fun LibraryScreen(
                     label = "Recent",
                     count = libraryHome.recentCount,
                     gradientColors = listOf(Color(0xFFFF9800), Color(0xFFF57C00)),
-                    onClick = { android.widget.Toast.makeText(context, "Recent plays coming soon", android.widget.Toast.LENGTH_SHORT).show() },
+                    onClick = onNavigateToHistory,
                 )
             }
             item {
@@ -159,7 +163,7 @@ fun LibraryScreen(
                     label = "Offline",
                     count = libraryHome.downloadCount,
                     gradientColors = listOf(Color(0xFF607D8B), Color(0xFF455A64)),
-                    onClick = { android.widget.Toast.makeText(context, "Offline downloads coming soon", android.widget.Toast.LENGTH_SHORT).show() },
+                    onClick = onNavigateToDownloads,
                 )
             }
         }

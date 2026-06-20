@@ -85,6 +85,8 @@ fun NowPlayingScreen(
     sheetViewModel: MiniPlayerSheetViewModel = hiltViewModel()
 ) {
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
+    val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
+    val isDownloading = playerState.currentItem?.id != null && activeDownloads.values.any { it.id == playerState.currentItem?.id }
     val sheetState by sheetViewModel.state.collectAsStateWithLifecycle()
     val fftData by viewModel.fftData.collectAsStateWithLifecycle()
     val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
@@ -346,6 +348,9 @@ private fun AudioNowPlayingLayout(
     onNavigateToSettings: () -> Unit,
     pagerState: androidx.compose.foundation.pager.PagerState,
 ) {
+    val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
+    val isDownloading = playerState.currentItem?.id != null && activeDownloads.values.any { it.id == playerState.currentItem?.id }
+
     val isHiRes = remember(playerState.currentItem?.id) { (playerState.currentItem?.id.hashCode() % 3) == 0 }
     val bitrate = remember(playerState.currentItem?.id) { if (isHiRes) "24bit • 48kHz" else "16bit • 44.1kHz" }
 
@@ -594,8 +599,16 @@ private fun AudioNowPlayingLayout(
                 IconButton(onClick = onToggleVisualizer) {
                     Icon(Icons.Default.GraphicEq, "Visualizer", tint = if (showVisualizer) finalAccentColor else androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
                 }
-                IconButton(onClick = { viewModel.downloadCurrentTrack() }) {
-                    Icon(Icons.Default.Download, "Download", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+                IconButton(onClick = { if (!isDownloading) viewModel.downloadCurrentTrack() }) {
+                    if (isDownloading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = finalAccentColor,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(Icons.Default.Download, "Download", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+                    }
                 }
                 IconButton(onClick = onOpenDsp) {
                     Icon(Icons.Default.Tune, "DSP", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
@@ -633,10 +646,14 @@ private fun VideoNowPlayingLayout(
     val context = LocalContext.current
     val isFullscreen = LocalFullscreenMode.current.isFullscreen || com.deepeye.musicpro.ui.LocalPipMode.current
     
+    val columnModifier = if (!isFullscreen) {
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
+    } else {
+        Modifier.fillMaxSize()
+    }
+
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .then(if (!isFullscreen) Modifier.statusBarsPadding().navigationBarsPadding() else Modifier)
+        modifier = columnModifier
     ) {
         // 1. Header Row
         if (!isFullscreen) {
@@ -664,28 +681,27 @@ private fun VideoNowPlayingLayout(
         }
 
         // 2. Video Player Section (WebView) - Fixed 16:9 Aspect Ratio
+        val videoBoxModifier = if (isFullscreen) {
+            Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        } else {
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp)
+                .aspectRatio(16 / 9f)
+                .shadow(
+                    elevation = 24.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    spotColor = finalAccentColor,
+                    ambientColor = finalAccentColor
+                )
+                .clip(RoundedCornerShape(24.dp))
+                .border(1.5.dp, finalAccentColor.copy(alpha = 0.35f), RoundedCornerShape(24.dp))
+                .background(Color.Transparent)
+        }
         Box(
-            modifier = Modifier.then(
-                if (isFullscreen) {
-                    Modifier
-                        .fillMaxSize()
-                        .background(Color.Black)
-                } else {
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp)
-                        .aspectRatio(16 / 9f)
-                        .shadow(
-                            elevation = 24.dp,
-                            shape = RoundedCornerShape(24.dp),
-                            spotColor = finalAccentColor,
-                            ambientColor = finalAccentColor
-                        )
-                        .clip(RoundedCornerShape(24.dp))
-                        .border(1.5.dp, finalAccentColor.copy(alpha = 0.35f), RoundedCornerShape(24.dp))
-                        .background(Color.Transparent)
-                }
-            )
+            modifier = videoBoxModifier
         ) {
             val innerItem = playerState.currentItem
             if (innerItem != null) {
@@ -836,10 +852,11 @@ private fun VideoNowPlayingLayout(
                         }
                         context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Track"))
                     })
-                    InteractionButton(icon = Icons.Default.Download, label = "Download", onClick = {
-                        viewModel.downloadCurrentTrack()
-                        android.widget.Toast.makeText(context, "Downloading...", android.widget.Toast.LENGTH_SHORT).show()
-                    })
+                    InteractionButton(
+                        icon = Icons.Default.Download,
+                        label = "Download",
+                        onClick = { viewModel.downloadCurrentTrack() }
+                    )
                     InteractionButton(icon = Icons.Default.Add, label = "Save", onClick = {
                         showPlaylistSheet = true
                     })
@@ -1313,7 +1330,7 @@ fun PremiumActionPill(icon: androidx.compose.ui.graphics.vector.ImageVector, tex
 }
 
 @Composable
-fun InteractionButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, isActive: Boolean = false, activeColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.White, onClick: () -> Unit) {
+fun InteractionButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, isActive: Boolean = false, activeColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.White, isLoading: Boolean = false, onClick: () -> Unit) {
     val tintColor = if (isActive) activeColor else MaterialTheme.colorScheme.onSurface
     androidx.compose.foundation.layout.Column(
         modifier = androidx.compose.ui.Modifier
@@ -1323,7 +1340,11 @@ fun InteractionButton(icon: androidx.compose.ui.graphics.vector.ImageVector, lab
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Icon(icon, contentDescription = label, tint = tintColor, modifier = Modifier.size(28.dp))
-        Text(label, color = tintColor, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Medium)
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(28.dp), color = tintColor, strokeWidth = 2.dp)
+        } else {
+            Icon(icon, contentDescription = label, tint = tintColor, modifier = Modifier.size(28.dp))
+        }
+        Text(label, fontSize = 12.sp, color = tintColor, fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal)
     }
 }

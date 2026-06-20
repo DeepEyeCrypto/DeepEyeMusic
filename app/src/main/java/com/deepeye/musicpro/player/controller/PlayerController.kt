@@ -49,6 +49,7 @@ constructor(
     private val dspEngine: com.deepeye.musicpro.dsp.engine.DSPEngine,
     private val tasteProfileRepository: com.deepeye.musicpro.domain.repository.TasteProfileRepository,
     private val historyRepository: com.deepeye.musicpro.domain.repository.HistoryRepository,
+    private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
     private val musicRepository: com.deepeye.musicpro.domain.repository.MusicRepository,
     private val recommendationEngine: com.deepeye.musicpro.domain.recommendation.RecommendationEngine,
     private val autoplayRepository: com.deepeye.musicpro.domain.autoplay.AutoplayRepository,
@@ -302,8 +303,10 @@ constructor(
                         return@launch
                     }
 
-                    updateState { it.copy(isLoading = true) }
                     val oldCurrentItem = _playerState.value.currentItem
+                    // Immediately pause old track and show new track info with loading spinner
+                    player.pause()
+                    updateState { it.copy(isLoading = true, currentItem = item, isPlaying = false) }
 
                     val finalItem =
                         when (item) {
@@ -835,6 +838,13 @@ constructor(
                         source = source
                     )
                 }
+                
+                libraryRepository.recordRecentPlay(
+                    videoId = currentId,
+                    title = currentItem.title,
+                    artist = currentItem.artist,
+                    artworkUrl = currentItem.artworkUri?.toString()
+                )
 
                 // If skipped quickly (<10s) and not a full finish
                 if (played < 10000 && !finishedSuccessfully && duration > 15000) {

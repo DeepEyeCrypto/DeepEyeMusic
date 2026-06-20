@@ -649,16 +649,7 @@ fun PremiumMusicGridItem(
     val bitrate = remember(item.id) { if (isHiRes) "24bit · 48kHz" else "16bit · 44.1kHz" }
 
     // Shine animation
-    val infiniteTransition = rememberInfiniteTransition(label = "shine")
-    val shineOffset by infiniteTransition.animateFloat(
-        initialValue = -300f,
-        targetValue = 600f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "shineOffset"
-    )
+
 
     // Press scale
     val interactionSource = remember { MutableInteractionSource() }
@@ -717,28 +708,7 @@ fun PremiumMusicGridItem(
                     contentScale = ContentScale.Crop,
                 )
 
-                // Animated diagonal shine
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .drawWithCache {
-                            val shineBrush = Brush.linearGradient(
-                                colors = listOf(
-                                    ShineWhite.copy(alpha = 0.0f),
-                                    ShineWhite.copy(alpha = 0.08f),
-                                    ShineWhite.copy(alpha = 0.15f),
-                                    ShineWhite.copy(alpha = 0.08f),
-                                    ShineWhite.copy(alpha = 0.0f)
-                                ),
-                                start = Offset(shineOffset, 0f),
-                                end = Offset(shineOffset + 150f, size.height)
-                            )
-                            onDrawWithContent {
-                                drawContent()
-                                drawRect(brush = shineBrush)
-                            }
-                        }
-                )
+
 
                 // Bottom gradient fade for readability
                 Box(

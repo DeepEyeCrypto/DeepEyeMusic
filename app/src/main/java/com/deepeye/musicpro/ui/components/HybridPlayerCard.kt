@@ -73,15 +73,23 @@ fun VideoPlayerView(
 
     DisposableEffect(player) {
         playerView.player = player
+        val listener = object : androidx.media3.common.Player.Listener {
+            override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
+                // Force layout when video dimensions become known, fixing the black screen issue
+                // without causing massive stutter from continuous layout requests
+                playerView.requestLayout()
+            }
+        }
+        player.addListener(listener)
         onDispose {
+            player.removeListener(listener)
             playerView.player = null
         }
     }
 
     AndroidView(
         factory = { playerView },
-        modifier = modifier,
-        update = { it.requestLayout() }
+        modifier = modifier
     )
 }
 

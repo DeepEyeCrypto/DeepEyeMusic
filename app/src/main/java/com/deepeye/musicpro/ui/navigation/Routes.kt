@@ -33,6 +33,12 @@ sealed class Routes(val route: String) {
 
     data object History : Routes("history")
 
+    data object LikedSongs : Routes("liked_songs")
+
+    data object SavedItems : Routes("saved_items")
+
+    data object Playlists : Routes("playlists")
+
     data object Gamification : Routes("gamification")
 
     // Parameterized routes

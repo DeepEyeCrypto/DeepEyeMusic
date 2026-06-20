@@ -20,6 +20,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.MediaStyleNotificationHelper
+import androidx.media3.session.DefaultMediaNotificationProvider
 import com.deepeye.musicpro.MainActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.cancel
@@ -143,6 +144,12 @@ class MusicPlayerService : MediaSessionService() {
                 }
             }
         }
+
+        // Set custom notification provider to use the app icon for notifications
+        val notificationProvider = DefaultMediaNotificationProvider(this).apply {
+            setSmallIcon(com.deepeye.musicpro.R.drawable.ic_notification)
+        }
+        setMediaNotificationProvider(notificationProvider)
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession

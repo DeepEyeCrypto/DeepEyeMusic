@@ -69,7 +69,7 @@ constructor(
                     title = item.title,
                     artist = item.artist,
                     channelId = item.channelId,
-                    thumbnailUrl = "https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg",
+                    thumbnailUrl = "https://img.youtube.com/vi/${item.videoId}/maxresdefault.jpg",
                     duration = item.duration,
                     viewCount = "", // Assuming missing from VideoItem
                     rank = i,
@@ -171,7 +171,7 @@ constructor(
                     videoId = item.videoId,
                     title = item.title,
                     artist = item.artist,
-                    thumbnailUrl = "https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg",
+                    thumbnailUrl = "https://img.youtube.com/vi/${item.videoId}/maxresdefault.jpg",
                     duration = item.duration,
                     rank = i,
                 )

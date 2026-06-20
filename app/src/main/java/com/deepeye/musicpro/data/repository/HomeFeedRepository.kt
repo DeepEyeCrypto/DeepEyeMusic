@@ -12,6 +12,7 @@ import com.deepeye.musicpro.domain.model.home.MoodCategory
 import com.deepeye.musicpro.domain.model.home.MoodMix
 import com.deepeye.musicpro.domain.repository.MusicRepository
 import com.deepeye.musicpro.dsp.engine.DSPEngine
+import com.deepeye.musicpro.domain.repository.TasteProfileRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -29,11 +30,17 @@ constructor(
     private val recommendationDao: RecommendationDao,
     private val dspEngine: DSPEngine,
     private val libraryRepo: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
+    private val tasteProfileRepo: TasteProfileRepository,
 ) {
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
     suspend fun getHomeFeed(): HomeFeedState =
         withContext(ioDispatcher) {
+            val tasteProfile = try { tasteProfileRepo.getTasteProfile().first() } catch (e: Exception) { null }
+            val langs = tasteProfile?.preferredLanguages?.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: "hindi punjabi english"
+            val artists = tasteProfile?.favoriteArtists?.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: ""
+            val personalQuerySuffix = "$langs $artists".trim()
+
             // Run all in parallel and catch individual failures to keep the screen partially functional
             val subscriptions = libraryRepo.getAllSubscribedChannels()
 
@@ -70,7 +77,8 @@ constructor(
                             val channel = subscriptions.shuffled().first()
                             youtubeDs.searchMusic("${channel.channelName} official music video").take(15)
                         } else {
-                            kotlinx.coroutines.withTimeoutOrNull(3000L) { youtubeDs.searchMusic("top hits 2025") } ?: emptyList()
+                            val fallbackQuery = if (personalQuerySuffix.isNotBlank()) "top hits $personalQuerySuffix" else "top hits 2025"
+                            kotlinx.coroutines.withTimeoutOrNull(3000L) { youtubeDs.searchMusic(fallbackQuery) } ?: emptyList()
                         }
                     } catch (e: Exception) {
                         emptyList()
@@ -101,7 +109,7 @@ constructor(
                                     title = stats.title,
                                     channelName = stats.artist,
                                     channelId = stats.channelId,
-                                    thumbnailUrl = "https://i.ytimg.com/vi/${stats.videoId}/hqdefault.jpg",
+                                    thumbnailUrl = "https://i.ytimg.com/vi/${stats.videoId}/maxresdefault.jpg",
                                     progressPercent = stats.avgCompletion,
                                 )
                             }
@@ -125,7 +133,7 @@ constructor(
                                     id = stats.videoId,
                                     title = stats.title,
                                     artist = stats.artist,
-                                    thumbnailUrl = "https://i.ytimg.com/vi/${stats.videoId}/hqdefault.jpg",
+                                    thumbnailUrl = "https://i.ytimg.com/vi/${stats.videoId}/maxresdefault.jpg",
                                     lastPlayedAt = stats.lastPlayed,
                                 )
                             }
@@ -175,23 +183,23 @@ constructor(
                 continueWatching = continueWatching,
                 continueListening = continueListening,
                 localResume = localResume,
-                moodMixes = buildMoodMixes(),
+                moodMixes = buildMoodMixes(langs),
                 activeDspPreset = dspEngine.currentPresetName.value,
                 isLoading = false,
                 isOffline = trending.isEmpty() && music.isEmpty(),
             )
         }
 
-    private fun buildMoodMixes(): List<MoodMix> {
+    private fun buildMoodMixes(langs: String): List<MoodMix> {
         val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
         
         val baseMoods = listOf(
-            MoodMix(MoodCategory.CHILL, "Chill Vibes", "lofi chill beats relax", "🧊", 0xFF00BCD4),
-            MoodMix(MoodCategory.ENERGETIC, "Energy Boost", "upbeat workout motivation", "⚡", 0xFFFF5722),
-            MoodMix(MoodCategory.ROMANTIC, "Romance", "romantic hindi bollywood", "❤️", 0xFFE91E63),
+            MoodMix(MoodCategory.CHILL, "Chill Vibes", "lofi chill beats relax $langs", "🧊", 0xFF00BCD4),
+            MoodMix(MoodCategory.ENERGETIC, "Energy Boost", "upbeat workout motivation $langs", "⚡", 0xFFFF5722),
+            MoodMix(MoodCategory.ROMANTIC, "Romance", "romantic $langs", "❤️", 0xFFE91E63),
             MoodMix(MoodCategory.FOCUS, "Deep Focus", "instrumental focus study", "🎯", 0xFF2196F3),
-            MoodMix(MoodCategory.SAD, "In My Feels", "sad emotional hindi songs", "🥺", 0xFF607D8B),
-            MoodMix(MoodCategory.PARTY, "Party Mode", "party dance punjabi hindi", "🎉", 0xFFFF9800),
+            MoodMix(MoodCategory.SAD, "In My Feels", "sad emotional $langs", "🥺", 0xFF607D8B),
+            MoodMix(MoodCategory.PARTY, "Party Mode", "party dance $langs", "🎉", 0xFFFF9800),
             MoodMix(MoodCategory.WORKOUT, "Gym Beast", "gym workout bass heavy", "💪", 0xFF4CAF50),
             MoodMix(MoodCategory.SLEEP, "Sleep", "sleep ambient calm piano", "😴", 0xFF3F51B5),
         )
