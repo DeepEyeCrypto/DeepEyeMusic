@@ -31,6 +31,8 @@ import com.deepeye.musicpro.ui.homehub.HomeHubScreen
 import com.deepeye.musicpro.ui.library.AlbumDetailScreen
 import com.deepeye.musicpro.ui.library.ArtistDetailScreen
 import com.deepeye.musicpro.ui.library.LibraryScreen
+import com.deepeye.musicpro.ui.screens.NetMirrorScreen
+import com.deepeye.musicpro.ui.player.NowPlayingScreen
 import com.deepeye.musicpro.ui.music.MusicScreen
 import com.deepeye.musicpro.ui.onboarding.OnboardingScreen
 import com.deepeye.musicpro.ui.playlist.PlaylistDetailScreen
@@ -195,6 +197,10 @@ fun NavGraph(
                     onExpandPlayer()
                 },
             )
+        }
+
+        composable(Routes.NetMirror.route) {
+            NetMirrorScreen(onExpandPlayer = onExpandPlayer)
         }
 
         composable(Routes.Music.route) {

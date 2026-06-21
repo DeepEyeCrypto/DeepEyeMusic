@@ -13,6 +13,8 @@ sealed class Routes(val route: String) {
 
     data object YouTube : Routes("youtube")
 
+    data object NetMirror : Routes("netmirror")
+
     data object Music : Routes("music")
 
     data object Library : Routes("library")

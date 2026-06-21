@@ -17,7 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -25,6 +27,7 @@ import androidx.compose.material.icons.filled.Subscriptions
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LibraryMusic
+import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
@@ -209,6 +212,12 @@ fun DeepEyeMusicApp(
                         "YouTube",
                         Icons.Filled.Subscriptions,
                         Icons.Outlined.Subscriptions
+                    ),
+                    BottomNavItem(
+                        Routes.NetMirror.route,
+                        "Video Hub",
+                        Icons.Filled.Movie,
+                        Icons.Outlined.Movie
                     ),
                     BottomNavItem(Routes.Music.route, "Music", Icons.Filled.MusicNote, Icons.Outlined.MusicNote),
                     BottomNavItem(
