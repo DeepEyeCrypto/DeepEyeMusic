@@ -20,9 +20,10 @@ import javax.inject.Inject
 
 data class NetMirrorUiState(
     val heroMovie: HomeVideoItem? = null,
-    val trendingMovies: List<HomeVideoItem> = emptyList(),
-    val sciFiMovies: List<HomeVideoItem> = emptyList(),
-    val newReleases: List<HomeVideoItem> = emptyList(),
+    val bollywoodMovies: List<HomeVideoItem> = emptyList(),
+    val hollywoodMovies: List<HomeVideoItem> = emptyList(),
+    val southDubbedMovies: List<HomeVideoItem> = emptyList(),
+    val webSeries: List<HomeVideoItem> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null
 )
@@ -44,23 +45,27 @@ class NetMirrorViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                // Fetch Trending
-                val trendingResult = youtubeRemoteDataSource.searchVideosFirstPage("trending full movies 2024")
-                // Fetch Sci-Fi
-                val sciFiResult = youtubeRemoteDataSource.searchVideosFirstPage("sci-fi full movies")
-                // Fetch New Releases
-                val newReleasesResult = youtubeRemoteDataSource.searchVideosFirstPage("new release movies full")
+                // Fetch Bollywood
+                val bollywoodResult = youtubeRemoteDataSource.searchVideosFirstPage("latest blockbuster bollywood full movies")
+                // Fetch Hollywood
+                val hollywoodResult = youtubeRemoteDataSource.searchVideosFirstPage("latest hollywood full movies action")
+                // Fetch South (Hindi Dubbed)
+                val southResult = youtubeRemoteDataSource.searchVideosFirstPage("new released south indian movies dubbed in hindi full")
+                // Fetch Web Series
+                val webSeriesResult = youtubeRemoteDataSource.searchVideosFirstPage("latest hindi web series full episodes")
 
-                val trending = trendingResult.items
-                val sciFi = sciFiResult.items
-                val newReleases = newReleasesResult.items
+                val bollywood = bollywoodResult.items
+                val hollywood = hollywoodResult.items
+                val south = southResult.items
+                val webSeries = webSeriesResult.items
 
                 _uiState.update {
                     it.copy(
-                        heroMovie = if (trending.isNotEmpty()) trending.first() else null,
-                        trendingMovies = if (trending.size > 1) trending.drop(1) else trending,
-                        sciFiMovies = sciFi,
-                        newReleases = newReleases,
+                        heroMovie = if (bollywood.isNotEmpty()) bollywood.first() else null,
+                        bollywoodMovies = if (bollywood.size > 1) bollywood.drop(1) else bollywood,
+                        hollywoodMovies = hollywood,
+                        southDubbedMovies = south,
+                        webSeries = webSeries,
                         isLoading = false
                     )
                 }

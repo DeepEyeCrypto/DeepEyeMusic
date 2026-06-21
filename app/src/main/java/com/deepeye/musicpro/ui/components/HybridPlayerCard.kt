@@ -131,6 +131,7 @@ fun HybridPlayerCard(
     var controlsVisible by remember { mutableStateOf(true) }
     var sliderPosition by remember { mutableStateOf<Float?>(null) }
     var interactionCount by remember { mutableStateOf(0) }
+    var videoScale by remember { mutableFloatStateOf(1f) }
 
     fun resetTimer() {
         interactionCount++
@@ -262,7 +263,9 @@ fun HybridPlayerCard(
                             var initialVolume = 0
                             var initialSeek = 0L
                             var maxVolume = audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
-                            var dragDirection: Int? = null // 1: Horizontal (Seek), 2: Vertical Left (Brightness), 3: Vertical Right (Volume), 4: Exit
+                            var dragDirection: Int? = null // 1: Horizontal (Seek), 2: Vertical Left (Brightness), 3: Vertical Right (Volume), 4: Exit, 5: Zoom
+                            var initialPinchDistance = 0f
+                            var initialScale = 1f
                             
                             awaitEachGesture {
                                 val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
@@ -301,7 +304,18 @@ fun HybridPlayerCard(
                                     
                                     // Determine direction if not locked yet
                                     if (dragDirection == null) {
-                                        if (kotlin.math.abs(dy) > slopThreshold || kotlin.math.abs(dx) > slopThreshold) {
+                                        if (event.changes.size >= 2) {
+                                            val ptr1 = event.changes[0].position
+                                            val ptr2 = event.changes[1].position
+                                            val distance = kotlin.math.hypot(ptr1.x - ptr2.x, ptr1.y - ptr2.y)
+                                            if (distance > 20f) { // Slop for pinch
+                                                dragDirection = 5
+                                                initialPinchDistance = distance
+                                                initialScale = videoScale
+                                                isDragging = true
+                                                android.util.Log.e("VLC_GESTURE", "Pinch Zoom")
+                                            }
+                                        } else if (kotlin.math.abs(dy) > slopThreshold || kotlin.math.abs(dx) > slopThreshold) {
                                             isDragging = true
                                             android.util.Log.e("VLC_GESTURE", "Drag detected. dx=$dx, dy=$dy, slop=$slopThreshold")
                                             if (kotlin.math.abs(dy) > kotlin.math.abs(dx) * 1.5f) {
@@ -325,9 +339,18 @@ fun HybridPlayerCard(
 
                                     // Apply Gesture
                                     if (dragDirection != null) {
-                                        change.consume() // Consume drag so children don't tap
-                                        resetTimer()
-                                        when (dragDirection) {
+                                        if (dragDirection == 5) {
+                                            if (event.changes.size >= 2) {
+                                                val ptr1 = event.changes[0].position
+                                                val ptr2 = event.changes[1].position
+                                                val distance = kotlin.math.hypot(ptr1.x - ptr2.x, ptr1.y - ptr2.y)
+                                                videoScale = (initialScale * (distance / initialPinchDistance)).coerceIn(0.25f, 5f)
+                                                event.changes.forEach { it.consume() }
+                                            }
+                                        } else {
+                                            change.consume() // Consume drag so children don't tap
+                                            resetTimer()
+                                            when (dragDirection) {
                                             1 -> { // Seek
                                                 val seekDeltaMs = ((dx / screenWidth) * 90000f).toLong() // Max 90s swipe per screen width
                                                 val targetSeek = (initialSeek + seekDeltaMs).coerceIn(0L, player.duration.coerceAtLeast(0L))
@@ -354,6 +377,7 @@ fun HybridPlayerCard(
                                                 }
                                             }
                                         }
+                                        }
                                     }
                                 }
                             }
@@ -362,7 +386,10 @@ fun HybridPlayerCard(
                     val stablePlayer = remember(player) { StablePlayerHolder(player) }
                     VideoPlayerView(
                         playerHolder = stablePlayer,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize().graphicsLayer {
+                            scaleX = videoScale
+                            scaleY = videoScale
+                        }
                     )
 
                     // Close / Exit Fullscreen Button Overlay (top right)

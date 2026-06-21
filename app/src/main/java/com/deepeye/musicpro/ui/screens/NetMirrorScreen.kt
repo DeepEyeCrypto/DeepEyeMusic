@@ -66,11 +66,11 @@ fun NetMirrorScreen(
         }
 
         // Horizontal Category Rows
-        if (uiState.trendingMovies.isNotEmpty()) {
+        if (uiState.bollywoodMovies.isNotEmpty()) {
             item {
                 CategoryRow(
-                    title = "Trending Now", 
-                    items = uiState.trendingMovies,
+                    title = "Bollywood Movies", 
+                    items = uiState.bollywoodMovies,
                     onPlay = { movie -> 
                         viewModel.playVideo(movie)
                         onExpandPlayer()
@@ -79,11 +79,11 @@ fun NetMirrorScreen(
             }
         }
         
-        if (uiState.sciFiMovies.isNotEmpty()) {
+        if (uiState.hollywoodMovies.isNotEmpty()) {
             item {
                 CategoryRow(
-                    title = "Sci-Fi & Fantasy", 
-                    items = uiState.sciFiMovies,
+                    title = "Hollywood Movies", 
+                    items = uiState.hollywoodMovies,
                     onPlay = { movie -> 
                         viewModel.playVideo(movie)
                         onExpandPlayer()
@@ -92,11 +92,24 @@ fun NetMirrorScreen(
             }
         }
 
-        if (uiState.newReleases.isNotEmpty()) {
+        if (uiState.southDubbedMovies.isNotEmpty()) {
             item {
                 CategoryRow(
-                    title = "New Releases", 
-                    items = uiState.newReleases,
+                    title = "South (Hindi Dubbed)", 
+                    items = uiState.southDubbedMovies,
+                    onPlay = { movie -> 
+                        viewModel.playVideo(movie)
+                        onExpandPlayer()
+                    }
+                )
+            }
+        }
+
+        if (uiState.webSeries.isNotEmpty()) {
+            item {
+                CategoryRow(
+                    title = "WEB Series", 
+                    items = uiState.webSeries,
                     onPlay = { movie -> 
                         viewModel.playVideo(movie)
                         onExpandPlayer()
