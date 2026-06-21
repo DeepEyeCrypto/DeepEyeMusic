@@ -64,6 +64,7 @@ constructor(
                     put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "audio/mpeg")
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                         put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_MUSIC + "/DeepEyeMusic")
+                        put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1)
                     }
                 }
                 
@@ -88,6 +89,12 @@ constructor(
                 }
                 
                 if (success) {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                        val updateValues = android.content.ContentValues().apply {
+                            put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0)
+                        }
+                        resolver.update(uri, updateValues, null, null)
+                    }
                     historyRepository.recordDownload(downloadId, item.id, item.title, "COMPLETED")
                     libraryRepository.markTrackDownloaded(
                         videoId = item.id,

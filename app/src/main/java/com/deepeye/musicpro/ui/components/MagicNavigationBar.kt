@@ -73,30 +73,14 @@ fun MagicNavigationBar(
     val hazeState = LocalHazeState.current
 
     val tabCount = items.size
-    val tabWidthPx = if (tabCount > 0) totalWidthPx.toFloat() / tabCount else 0f
-    
-    // Animate pill position mathematically based on total width division
-    val targetPillX = selectedIndex * tabWidthPx
-    val targetPillWidth = tabWidthPx
-
-    val animatedPillX by animateFloatAsState(
-        targetValue = targetPillX,
-        animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow),
-        label = "pillX"
-    )
-    val animatedPillWidth by animateFloatAsState(
-        targetValue = targetPillWidth,
-        animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow),
-        label = "pillWidth"
-    )
 
     GlassContainer(
         tintColor = backgroundColor,
         hazeState = hazeState,
-        cornerRadius = 32.dp,
+        cornerRadius = 28.dp, // Perfect capsule (half of 56dp height)
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
             .height(56.dp)
             .onGloballyPositioned { coords ->
                 totalWidthPx = coords.size.width
@@ -112,14 +96,15 @@ fun MagicNavigationBar(
                     width = 1.dp,
                     brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.5f),
-                            Color.White.copy(alpha = 0.1f),
-                            Color.White.copy(alpha = 0.05f)
+                            Color.White.copy(alpha = 0.20f),
+                            Color.White.copy(alpha = 0.05f),
+                            Color.White.copy(alpha = 0.0f)
                         )
                     ),
-                    shape = RoundedCornerShape(32.dp)
+                    shape = RoundedCornerShape(28.dp)
                 )
         )
+
         
         // Icons Row
         Row(
@@ -134,8 +119,8 @@ fun MagicNavigationBar(
                 val interactionSource = remember { MutableInteractionSource() }
                 val isPressed by interactionSource.collectIsPressedAsState()
                 val scale by animateFloatAsState(
-                    targetValue = if (isPressed) 0.85f else 1f,
-                    animationSpec = spring(stiffness = Spring.StiffnessMedium),
+                    targetValue = if (isPressed) 0.80f else if (isSelected) 1.15f else 1f,
+                    animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
                     label = "iconScale"
                 )
 
@@ -170,10 +155,15 @@ fun MagicNavigationBar(
                         contentDescription = item.label,
                         tint = tint.copy(alpha = animatedAlpha),
                         modifier = Modifier
-                            .size(20.dp)
+                            .size(if (isSelected) 24.dp else 22.dp)
                             .graphicsLayer {
                                 scaleX = scale
                                 scaleY = scale
+                                if (isSelected) {
+                                    shadowElevation = 8f
+                                    ambientShadowColor = indicatorColor
+                                    spotShadowColor = indicatorColor
+                                }
                             }
                     )
                 }
