@@ -396,17 +396,17 @@ fun HybridPlayerCard(
                         }
                     )
 
-                    // Catch taps when locked to show the unlock button
+                    // Catch ANY touch when locked to show the unlock button
                     if (isLocked) {
                         Box(modifier = Modifier
                             .fillMaxSize()
                             .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onTap = {
-                                        controlsVisible = true
-                                        resetTimer()
-                                    }
-                                )
+                                awaitEachGesture {
+                                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                                    controlsVisible = true
+                                    resetTimer()
+                                    // Don't consume it so it doesn't block the lock button if tapped directly
+                                }
                             }
                         )
                     }
