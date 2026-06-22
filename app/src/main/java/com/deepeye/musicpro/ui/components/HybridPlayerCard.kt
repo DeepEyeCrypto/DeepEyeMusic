@@ -137,6 +137,12 @@ fun HybridPlayerCard(
     var videoScale by remember { mutableFloatStateOf(1f) }
     var isLocked by remember { mutableStateOf(false) }
 
+    androidx.activity.compose.BackHandler(enabled = isLocked) {
+        android.util.Log.e("HybridPlayerCard_Lock", "Back button intercepted because player is locked!")
+        controlsVisible = true
+        interactionCount++
+    }
+
     fun resetTimer() {
         interactionCount++
     }
@@ -396,16 +402,27 @@ fun HybridPlayerCard(
                         }
                     )
 
-                    // Catch ANY touch when locked to show the unlock button
+                    // Catch ANY touch when locked to show the unlock button and prevent swipe-to-dismiss
                     if (isLocked) {
                         Box(modifier = Modifier
                             .fillMaxSize()
                             .pointerInput(Unit) {
                                 awaitEachGesture {
-                                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                                    android.util.Log.e("HybridPlayerCard_Lock", "Screen touched while locked! controlsVisible=$controlsVisible")
                                     controlsVisible = true
                                     resetTimer()
-                                    // Don't consume it so it doesn't block the lock button if tapped directly
+                                    // Don't consume the DOWN event so the lock button can be tapped.
+                                    // But DO consume any drag/swipe so the parent bottom sheet doesn't dismiss!
+                                    while (true) {
+                                        val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                                        event.changes.forEach { change ->
+                                            if (change.positionChange() != androidx.compose.ui.geometry.Offset.Zero) {
+                                                change.consume()
+                                            }
+                                        }
+                                        if (event.changes.none { it.pressed }) break
+                                    }
                                 }
                             }
                         )
@@ -426,6 +443,7 @@ fun HybridPlayerCard(
                             ) {
                                 IconButton(
                                     onClick = {
+                                        android.util.Log.e("HybridPlayerCard_Lock", "Lock button clicked! current isLocked=$isLocked")
                                         isLocked = !isLocked
                                         if (!isLocked) resetTimer()
                                     },
