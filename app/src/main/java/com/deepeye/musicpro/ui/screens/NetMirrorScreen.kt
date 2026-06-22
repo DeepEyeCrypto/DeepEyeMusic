@@ -149,8 +149,8 @@ private fun HeroBanner(
                     Brush.verticalGradient(
                         colors = listOf(
                             Color.Transparent,
-                            Color.Black.copy(alpha = 0.5f),
-                            Color.Black
+                            Color.Black.copy(alpha = 0.3f),
+                            Color.Black.copy(alpha = 0.8f)
                         ),
                         startY = 300f
                     )
@@ -269,7 +269,8 @@ private fun VideoCard(
             .width(130.dp)
             .height(190.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF2C2C34))
+            .background(Color.White.copy(alpha = 0.05f))
+            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
             .clickable { onClick() }
     ) {
         AsyncImage(

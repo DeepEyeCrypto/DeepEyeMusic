@@ -223,6 +223,48 @@ fun HomeHubScreen(
                 }
             }
 
+            // 5b. YouTube / Trending Rails
+            if (feedState.trending.isNotEmpty()) {
+                item {
+                    HomeVideoRail(
+                        title = "🔥 Trending",
+                        items = feedState.trending,
+                        onClick = { 
+                            android.util.Log.e("HomeHubScreen", "Trending clicked: ${it.id}")
+                            viewModel.playVideo(it)
+                            onNavigateToVideo(it.id) 
+                        }
+                    )
+                }
+            }
+
+            if (feedState.shorts.isNotEmpty()) {
+                item {
+                    ShortsRail(
+                        items = feedState.shorts,
+                        onClick = { 
+                            android.util.Log.e("HomeHubScreen", "Short clicked: ${it.id}")
+                            viewModel.playVideo(it)
+                            onNavigateToVideo(it.id) 
+                        }
+                    )
+                }
+            }
+
+            if (feedState.quickPicks.isNotEmpty()) {
+                item {
+                    HomeMusicRail(
+                        title = "🎵 Quick Picks",
+                        items = feedState.quickPicks,
+                        onClick = { 
+                            android.util.Log.e("HomeHubScreen", "Music clicked: ${it.id}")
+                            viewModel.playMusic(it)
+                            onNavigateToMusic(it.id) 
+                        }
+                    )
+                }
+            }
+
             // Phase 4: AI Prompt Bar
             item {
                 val isGenerating by viewModel.isAIGenerating.collectAsStateWithLifecycle()
