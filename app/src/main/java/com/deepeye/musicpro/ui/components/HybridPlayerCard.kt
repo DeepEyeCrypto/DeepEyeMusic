@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PictureInPicture
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.*
@@ -132,6 +134,7 @@ fun HybridPlayerCard(
     var sliderPosition by remember { mutableStateOf<Float?>(null) }
     var interactionCount by remember { mutableStateOf(0) }
     var videoScale by remember { mutableFloatStateOf(1f) }
+    var isLocked by remember { mutableStateOf(false) }
 
     fun resetTimer() {
         interactionCount++
@@ -257,8 +260,8 @@ fun HybridPlayerCard(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .pointerInput(isFullscreen) {
-                            if (!isFullscreen) return@pointerInput
+                        .pointerInput(isFullscreen, isLocked) {
+                            if (!isFullscreen || isLocked) return@pointerInput
                             var initialBrightness = 0f
                             var initialVolume = 0
                             var initialSeek = 0L
@@ -392,30 +395,31 @@ fun HybridPlayerCard(
                         }
                     )
 
-                    // Close / Exit Fullscreen Button Overlay (top right)
+                    // Top Left Lock/Unlock Button
                     if (isFullscreen && !isInPipMode) {
                         AnimatedVisibility(
-                            visible = controlsVisible && !isInPipMode,
+                            visible = controlsVisible,
                             enter = fadeIn(),
                             exit = fadeOut(),
                         ) {
                             Box(
-                                modifier =
-                                Modifier
+                                modifier = Modifier
                                     .fillMaxSize()
                                     .padding(24.dp),
-                                contentAlignment = Alignment.TopEnd,
+                                contentAlignment = Alignment.TopStart,
                             ) {
                                 IconButton(
-                                    onClick = { fullscreenMode.exit() },
-                                    modifier =
-                                    Modifier
+                                    onClick = {
+                                        isLocked = !isLocked
+                                        if (!isLocked) resetTimer()
+                                    },
+                                    modifier = Modifier
                                         .size(48.dp)
                                         .background(Color.Black.copy(alpha = 0.55f), CircleShape),
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.FullscreenExit,
-                                        contentDescription = "Exit Fullscreen",
+                                        imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                                        contentDescription = if (isLocked) "Unlock" else "Lock",
                                         tint = Color.White,
                                         modifier = Modifier.size(24.dp),
                                     )
@@ -424,8 +428,24 @@ fun HybridPlayerCard(
                         }
                     }
 
+
+                    // Catch taps when locked to show the unlock button
+                    if (isLocked) {
+                        Box(modifier = Modifier
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                awaitEachGesture {
+                                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Main)
+                                    controlsVisible = true
+                                    resetTimer()
+                                    val event = awaitPointerEvent(PointerEventPass.Main)
+                                    event.changes.forEach { it.consume() }
+                                }
+                            }
+                        )
+                    }
                     // GESTURE SKIP ZONES + OVERLAYS: Hidden in PiP for clean view
-                    if (!isInPipMode) {
+                    if (!isInPipMode && !isLocked) {
                         // Vertical drag overlay for fullscreen exit — uses Initial pass
                         // VLC-style gesture overlay has been moved to the parent Box above
                         // to ensure it gets hit events BEFORE the sibling Tap Zones row.
@@ -615,7 +635,7 @@ fun HybridPlayerCard(
 
                         // CENTER PLAY OVERLAY when player is paused
                         AnimatedVisibility(
-                            visible = controlsVisible && !isPlaying && !isInPipMode,
+                            visible = controlsVisible && !isPlaying && !isInPipMode && !isLocked,
                             enter = fadeIn(),
                             exit = fadeOut(),
                             modifier = Modifier.align(Alignment.Center),
@@ -641,7 +661,7 @@ fun HybridPlayerCard(
 
                         // BOTTOM GLASSMORPHIC QUICK MEDIA CONTROL PANEL OVERLAY
                         AnimatedVisibility(
-                            visible = controlsVisible && !isInPipMode,
+                            visible = controlsVisible && !isInPipMode && !isLocked,
                             enter = fadeIn(),
                             exit = fadeOut(),
                             modifier = Modifier.align(Alignment.BottomCenter),
