@@ -395,6 +395,23 @@ fun HybridPlayerCard(
                         }
                     )
 
+                    // Catch taps when locked to show the unlock button
+                    if (isLocked) {
+                        Box(modifier = Modifier
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                awaitEachGesture {
+                                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                                    controlsVisible = true
+                                    resetTimer()
+                                    do {
+                                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                                    } while (event.changes.any { it.pressed })
+                                }
+                            }
+                        )
+                    }
+
                     // Top Left Lock/Unlock Button
                     if (isFullscreen && !isInPipMode) {
                         AnimatedVisibility(
@@ -426,23 +443,6 @@ fun HybridPlayerCard(
                                 }
                             }
                         }
-                    }
-
-
-                    // Catch taps when locked to show the unlock button
-                    if (isLocked) {
-                        Box(modifier = Modifier
-                            .fillMaxSize()
-                            .pointerInput(Unit) {
-                                awaitEachGesture {
-                                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Main)
-                                    controlsVisible = true
-                                    resetTimer()
-                                    val event = awaitPointerEvent(PointerEventPass.Main)
-                                    event.changes.forEach { it.consume() }
-                                }
-                            }
-                        )
                     }
                     // GESTURE SKIP ZONES + OVERLAYS: Hidden in PiP for clean view
                     if (!isInPipMode && !isLocked) {
