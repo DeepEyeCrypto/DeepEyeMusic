@@ -13,6 +13,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -400,14 +401,12 @@ fun HybridPlayerCard(
                         Box(modifier = Modifier
                             .fillMaxSize()
                             .pointerInput(Unit) {
-                                awaitEachGesture {
-                                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                                    controlsVisible = true
-                                    resetTimer()
-                                    do {
-                                        val event = awaitPointerEvent(PointerEventPass.Initial)
-                                    } while (event.changes.any { it.pressed })
-                                }
+                                detectTapGestures(
+                                    onTap = {
+                                        controlsVisible = true
+                                        resetTimer()
+                                    }
+                                )
                             }
                         )
                     }
