@@ -409,20 +409,16 @@ fun HybridPlayerCard(
                             .pointerInput(Unit) {
                                 awaitEachGesture {
                                     val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                                    android.util.Log.e("HybridPlayerCard_Lock", "Screen touched while locked! controlsVisible=$controlsVisible")
                                     controlsVisible = true
                                     resetTimer()
                                     // Don't consume the DOWN event so the lock button can be tapped.
-                                    // But DO consume any drag/swipe so the parent bottom sheet doesn't dismiss!
-                                    while (true) {
-                                        val event = awaitPointerEvent(pass = PointerEventPass.Initial)
-                                        event.changes.forEach { change ->
-                                            if (change.positionChange() != androidx.compose.ui.geometry.Offset.Zero) {
-                                                change.consume()
-                                            }
-                                        }
-                                        if (event.changes.none { it.pressed }) break
-                                    }
+                                }
+                            }
+                            .pointerInput(Unit) {
+                                // Consume drags so the parent bottom sheet doesn't dismiss, 
+                                // but do it in Main pass so IconButton can still receive clicks!
+                                androidx.compose.foundation.gestures.detectDragGestures { change, _ -> 
+                                    change.consume() 
                                 }
                             }
                         )
