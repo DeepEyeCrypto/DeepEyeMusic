@@ -18,6 +18,9 @@ class FullscreenMode {
     var isFullscreen by mutableStateOf(false)
         private set
 
+    /** When true, fullscreen exit is blocked (VLC-style lock) */
+    var isGestureLocked by mutableStateOf(false)
+
     /** Callback interface for the Activity to implement */
     var onEnterFullscreen: (Boolean) -> Unit = {}
     var onExitFullscreen: () -> Unit = {}
@@ -29,7 +32,7 @@ class FullscreenMode {
     }
 
     fun exit() {
-        if (!isFullscreen) return
+        if (!isFullscreen || isGestureLocked) return
         isFullscreen = false
         onExitFullscreen()
     }

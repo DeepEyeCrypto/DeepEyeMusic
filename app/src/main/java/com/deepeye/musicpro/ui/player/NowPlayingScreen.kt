@@ -133,7 +133,9 @@ fun NowPlayingScreen(
             if (configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
                 if (!fullscreenMode.isFullscreen) fullscreenMode.enter(forceLandscape = false)
             } else if (configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT) {
-                if (fullscreenMode.isFullscreen) fullscreenMode.exit()
+                if (fullscreenMode.isFullscreen && !sheetState.isGestureLocked) {
+                    fullscreenMode.exit()
+                }
             }
         }
     }
@@ -152,7 +154,8 @@ fun NowPlayingScreen(
                 playbackPosition = playerState.position,
                 modifier = modifier,
                 onTogglePlayPause = { viewModel.togglePlayPause() },
-                onSeekTo = { viewModel.seekTo(it) }
+                onSeekTo = { viewModel.seekTo(it) },
+                onLockChanged = { isLocked -> sheetViewModel.setGestureLocked(isLocked); fullscreenMode.isGestureLocked = isLocked }
             )
         } else if (innerItem != null) {
             HorizontalPager(
@@ -249,7 +252,8 @@ fun NowPlayingScreen(
                         viewModel = viewModel,
                         onOpenDsp = { showDspSheet = true },
                         onOpenQueue = { showQueueSheet = true },
-                        onNavigateToSettings = onNavigateToSettings
+                        onNavigateToSettings = onNavigateToSettings,
+                        onLockChanged = { isLocked -> sheetViewModel.setGestureLocked(isLocked); fullscreenMode.isGestureLocked = isLocked }
                     )
                 } else {
                     AudioNowPlayingLayout(
@@ -632,6 +636,7 @@ private fun VideoNowPlayingLayout(
     onOpenDsp: () -> Unit,
     onOpenQueue: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onLockChanged: (Boolean) -> Unit,
 ) {
     val scrollState = rememberScrollState()
     var selectedQuality by remember { mutableStateOf("1080p") }
@@ -714,7 +719,8 @@ private fun VideoNowPlayingLayout(
                     playbackPosition = playerState.position,
                     modifier = Modifier.fillMaxSize(),
                     onTogglePlayPause = { viewModel.togglePlayPause() },
-                    onSeekTo = { viewModel.seekTo(it) }
+                    onSeekTo = { viewModel.seekTo(it) },
+                    onLockChanged = onLockChanged
                 )
             }
         }

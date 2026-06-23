@@ -63,7 +63,8 @@ class HeadlessWebViewExtractor @Inject constructor(
 
         // Initialize global ServiceWorkerController to capture requests inside WebView Service Workers
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            try {
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                try {
                 android.webkit.ServiceWorkerController.getInstance().setServiceWorkerClient(object : android.webkit.ServiceWorkerClient() {
                     override fun shouldInterceptRequest(
                         request: WebResourceRequest?
@@ -108,8 +109,9 @@ class HeadlessWebViewExtractor @Inject constructor(
                         return null
                     }
                 })
-            } catch (e: Exception) {
-                Log.w(tag, "Failed to set ServiceWorkerClient: ${e.message}")
+                } catch (e: Exception) {
+                    Log.e(tag, "Failed to init ServiceWorkerClient", e)
+                }
             }
         }
     }

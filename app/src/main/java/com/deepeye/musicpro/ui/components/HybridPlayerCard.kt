@@ -14,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -128,6 +129,7 @@ fun HybridPlayerCard(
     modifier: Modifier = Modifier,
     onTogglePlayPause: () -> Unit,
     onSeekTo: (Long) -> Unit,
+    onLockChanged: (Boolean) -> Unit = {},
 ) {
     var playbackSpeed by remember { mutableStateOf(1.0f) }
     var isMuted by remember { mutableStateOf(false) }
@@ -406,57 +408,28 @@ fun HybridPlayerCard(
                     if (isLocked) {
                         Box(modifier = Modifier
                             .fillMaxSize()
+                            .background(Color.Transparent) // Ensures the entire bounds are hit-testable
                             .pointerInput(Unit) {
-                                awaitEachGesture {
-                                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                                    controlsVisible = true
-                                    resetTimer()
-                                    // Don't consume the DOWN event so the lock button can be tapped.
-                                }
+                                detectTapGestures(
+                                    onPress = {
+                                        android.util.Log.e("HybridPlayerCard_Lock", "Screen PRESSED while locked!")
+                                        controlsVisible = true
+                                        resetTimer()
+                                    },
+                                    onTap = {
+                                        android.util.Log.e("HybridPlayerCard_Lock", "Screen TAPPED while locked!")
+                                        controlsVisible = true
+                                        resetTimer()
+                                    }
+                                )
                             }
                             .pointerInput(Unit) {
-                                // Consume drags so the parent bottom sheet doesn't dismiss, 
-                                // but do it in Main pass so IconButton can still receive clicks!
-                                androidx.compose.foundation.gestures.detectDragGestures { change, _ -> 
-                                    change.consume() 
-                                }
+                                detectDragGestures { change, _ -> change.consume() }
                             }
                         )
                     }
 
-                    // Top Left Lock/Unlock Button
-                    if (isFullscreen && !isInPipMode) {
-                        AnimatedVisibility(
-                            visible = controlsVisible,
-                            enter = fadeIn(),
-                            exit = fadeOut(),
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(24.dp),
-                                contentAlignment = Alignment.TopStart,
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        android.util.Log.e("HybridPlayerCard_Lock", "Lock button clicked! current isLocked=$isLocked")
-                                        isLocked = !isLocked
-                                        if (!isLocked) resetTimer()
-                                    },
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .background(Color.Black.copy(alpha = 0.55f), CircleShape),
-                                ) {
-                                    Icon(
-                                        imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
-                                        contentDescription = if (isLocked) "Unlock" else "Lock",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(24.dp),
-                                    )
-                                }
-                            }
-                        }
-                    }
+
                     // GESTURE SKIP ZONES + OVERLAYS: Hidden in PiP for clean view
                     if (!isInPipMode && !isLocked) {
                         // Vertical drag overlay for fullscreen exit — uses Initial pass
@@ -961,6 +934,40 @@ fun HybridPlayerCard(
                             }
                         }
                     } // end if (!isInPipMode)
+
+                    // Top Left Lock/Unlock Button
+                    if (isFullscreen && !isInPipMode) {
+                        AnimatedVisibility(
+                            visible = controlsVisible,
+                            enter = fadeIn(),
+                            exit = fadeOut(),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(24.dp),
+                                contentAlignment = Alignment.TopStart,
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        android.util.Log.e("HybridPlayerCard_Lock", "Lock button clicked! current isLocked=$isLocked")
+                                        isLocked = !isLocked; onLockChanged(isLocked)
+                                        if (!isLocked) resetTimer()
+                                    },
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(Color.Black.copy(alpha = 0.55f), CircleShape),
+                                ) {
+                                    Icon(
+                                        imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                                        contentDescription = if (isLocked) "Unlock" else "Lock",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
                 // Premium Fallback Audio card
