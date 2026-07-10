@@ -70,12 +70,12 @@ fun AnchoredMiniPlayer(
     expandedContent: @Composable () -> Unit,
 ) {
     val isInPipMode = com.deepeye.musicpro.ui.LocalPipMode.current
-    BoxWithConstraints(Modifier.fillMaxSize().padding(bottom = bottomBarHeight)) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
         val density = LocalDensity.current
         val containerHeightPx = constraints.maxHeight.toFloat()
 
-        val bottomBarHeightPx = 0f // No longer used for anchor calculations
-        val collapsedAnchor = containerHeightPx - with(density) { 88.dp.toPx() }
+        val bottomBarHeightPx = with(density) { bottomBarHeight.toPx() }
+        val collapsedAnchor = containerHeightPx - bottomBarHeightPx - with(density) { 88.dp.toPx() }
         val halfAnchor = containerHeightPx * 0.45f
         val expandedAnchor = 0f
 
