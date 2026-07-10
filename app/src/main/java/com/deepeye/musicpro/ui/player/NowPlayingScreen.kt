@@ -94,8 +94,8 @@ fun NowPlayingScreen(
     val finalBgColor = extractedColors?.background ?: Color(0xFF121212)
     val finalAccentColor = extractedColors?.primary ?: dominantColor
 
-    val configuration = LocalConfiguration.current
     var showLyricsSheet by remember { mutableStateOf(false) }
+    val configuration = LocalConfiguration.current
     var showDspSheet by remember { mutableStateOf(false) }
     var showQueueSheet by remember { mutableStateOf(false) }
     var showInfoSheet by remember { mutableStateOf(false) }
@@ -361,14 +361,26 @@ private fun AudioNowPlayingLayout(
     val headerColor = if (finalBgColor.luminance() > 0.5f) Color.Black else Color.White
     val isInPipMode = com.deepeye.musicpro.ui.LocalPipMode.current
     
-    Column(
+    val scrollState = rememberScrollState()
+    val configuration = LocalConfiguration.current
 
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
-            .padding(horizontal = 32.dp) // Premium symmetric padding
     ) {
+        val screenHeight = maxHeight
+        // Approx height of Header (72dp) + Metadata & Controls (~368dp) + extra padding
+        val fixedControlsHeight = 460.dp 
+        val artworkHeight = androidx.compose.ui.unit.max(250.dp, screenHeight - fixedControlsHeight)
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 32.dp) // Premium symmetric padding
+        ) {
         // Header
         if (!isInPipMode) {
         Row(
@@ -396,9 +408,8 @@ private fun AudioNowPlayingLayout(
         }
         }
 
-        // Pager Artwork Area
         Box(
-            modifier = Modifier.fillMaxWidth().weight(1f).clipToBounds(),
+            modifier = Modifier.fillMaxWidth().height(artworkHeight).clipToBounds(),
             contentAlignment = Alignment.Center
         ) {
             val innerItem = playerState.currentItem
@@ -476,8 +487,7 @@ private fun AudioNowPlayingLayout(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(bottom = 16.dp, top = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Bottom)
         ) {
             // Title & Artist Card
@@ -657,6 +667,7 @@ private fun AudioNowPlayingLayout(
                     Icon(Icons.AutoMirrored.Filled.QueueMusic, "Queue", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
                 }
             }
+        }
         }
         }
     }
