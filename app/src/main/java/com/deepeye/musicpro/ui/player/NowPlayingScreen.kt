@@ -398,7 +398,7 @@ private fun AudioNowPlayingLayout(
 
         // Pager Artwork Area
         Box(
-            modifier = Modifier.fillMaxWidth().weight(0.5f).clipToBounds(),
+            modifier = Modifier.fillMaxWidth().weight(1f).clipToBounds(),
             contentAlignment = Alignment.Center
         ) {
             val innerItem = playerState.currentItem
@@ -474,126 +474,162 @@ private fun AudioNowPlayingLayout(
 
         // Metadata & Controls
         Column(
-            modifier = Modifier.fillMaxWidth().weight(0.5f).padding(top = 24.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.SpaceEvenly
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Bottom)
         ) {
-            // Title & Artist
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Title & Artist Card
+            com.deepeye.musicpro.ui.components.GlassCard(
+                tintColor = headerColor.copy(alpha = 0.05f),
+                cornerRadius = 24.dp,
+                blurRadius = com.deepeye.musicpro.ui.theme.GlassTokens.BlurHeavy,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    com.deepeye.musicpro.ui.components.DynamicLabel(
-                        text = playerState.currentItem?.title ?: "No Track Playing",
-                        backgroundColor = finalBgColor,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Black,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        useVibrancy = true
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        val artistText = playerState.currentItem?.artist?.takeIf { it != "<unknown>" && it.isNotBlank() } ?: "Unknown Artist"
-                        com.deepeye.musicpro.ui.components.SecondaryLabel(
-                            text = artistText,
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        com.deepeye.musicpro.ui.components.DynamicLabel(
+                            text = playerState.currentItem?.title ?: "No Track Playing",
                             backgroundColor = finalBgColor,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Black,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false),
                             useVibrancy = true
                         )
-                        
-                        Box(
-                            modifier = Modifier
-                                .background(headerColor.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
-                                .padding(horizontal = 5.dp, vertical = 2.dp)
+                        Spacer(Modifier.height(4.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text(bitrate, color = headerColor.copy(alpha = 0.6f), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                            val artistText = playerState.currentItem?.artist?.takeIf { it != "<unknown>" && it.isNotBlank() } ?: "Unknown Artist"
+                            com.deepeye.musicpro.ui.components.SecondaryLabel(
+                                text = artistText,
+                                backgroundColor = finalBgColor,
+                                style = MaterialTheme.typography.titleMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false),
+                                useVibrancy = true
+                            )
+                            
+                            Box(
+                                modifier = Modifier
+                                    .background(headerColor.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 5.dp, vertical = 2.dp)
+                            ) {
+                                Text(bitrate, color = headerColor.copy(alpha = 0.6f), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                    // Like Button
+                    val feedback by viewModel.currentSongFeedback.collectAsStateWithLifecycle()
+                    val isLiked = feedback?.liked == true
+                    IconButton(onClick = { viewModel.likeTrack(!isLiked) }) {
+                        Icon(
+                            imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Like",
+                            tint = if (isLiked) finalAccentColor else headerColor.copy(alpha = 0.5f)
+                        )
+                    }
+                }
+            }
+
+            // Seekbar Card
+            com.deepeye.musicpro.ui.components.GlassCard(
+                tintColor = headerColor.copy(alpha = 0.05f),
+                cornerRadius = 24.dp,
+                blurRadius = com.deepeye.musicpro.ui.theme.GlassTokens.BlurHeavy,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    GlassSlider(
+                        value = playerState.position.toFloat(),
+                        onValueChange = { viewModel.seekTo(it.toLong()) },
+                        valueRange = 0f..playerState.duration.toFloat().coerceAtLeast(1f),
+                        accentColor = finalAccentColor,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(TimeFormatter.formatDuration(playerState.position), style = MaterialTheme.typography.labelSmall, color = headerColor.copy(alpha = 0.5f))
+                        Text(TimeFormatter.formatDuration(playerState.duration), style = MaterialTheme.typography.labelSmall, color = headerColor.copy(alpha = 0.5f))
+                    }
+                }
+            }
+
+            // Main Controls Capsule
+            com.deepeye.musicpro.ui.components.GlassCard(
+                tintColor = headerColor.copy(alpha = 0.05f),
+                cornerRadius = 48.dp, // Pill shape
+                blurRadius = com.deepeye.musicpro.ui.theme.GlassTokens.BlurHeavy,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                androidx.compose.runtime.CompositionLocalProvider(LocalContentColor provides headerColor) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp, horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val isShuffleActive = playerState.shuffleMode == com.deepeye.musicpro.domain.model.ShuffleMode.ON
+                        val isRepeatActive = playerState.repeatMode != com.deepeye.musicpro.domain.model.RepeatMode.NONE
+
+                        StatefulTactileButton(
+                            isActive = isShuffleActive,
+                            onClick = { viewModel.toggleShuffle() },
+                            activeColor = finalAccentColor
+                        ) {
+                            Icon(Icons.Default.Shuffle, "Shuffle", tint = if (isShuffleActive) finalAccentColor else androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), modifier = Modifier.size(24.dp))
+                        }
+                        TactileIconButton(onClick = { viewModel.previous() }, modifier = Modifier.size(56.dp)) {
+                            Icon(Icons.Default.SkipPrevious, "Previous", modifier = Modifier.size(40.dp))
+                        }
+                        PlayPauseButton(
+                            isPlaying = playerState.isPlaying,
+                            onClick = { viewModel.togglePlayPause() },
+                            accentColor = finalAccentColor
+                        )
+                        TactileIconButton(onClick = { viewModel.next() }, modifier = Modifier.size(56.dp)) {
+                            Icon(Icons.Default.SkipNext, "Next", modifier = Modifier.size(40.dp))
+                        }
+                        StatefulTactileButton(
+                            isActive = isRepeatActive,
+                            onClick = { viewModel.toggleRepeat() },
+                            activeColor = finalAccentColor
+                        ) {
+                            Icon(
+                                imageVector = if (playerState.repeatMode == com.deepeye.musicpro.domain.model.RepeatMode.ONE) Icons.Default.RepeatOne else Icons.Default.Repeat,
+                                contentDescription = "Repeat",
+                                tint = if (isRepeatActive) finalAccentColor else androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
                     }
                 }
-                // Like Button
-                val feedback by viewModel.currentSongFeedback.collectAsStateWithLifecycle()
-                val isLiked = feedback?.liked == true
-                IconButton(onClick = { viewModel.likeTrack(!isLiked) }) {
-                    Icon(
-                        imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Like",
-                        tint = if (isLiked) finalAccentColor else headerColor.copy(alpha = 0.5f)
-                    )
-                }
             }
 
-            // Seekbar
-            Column {
-                GlassSlider(
-                    value = playerState.position.toFloat(),
-                    onValueChange = { viewModel.seekTo(it.toLong()) },
-                    valueRange = 0f..playerState.duration.toFloat().coerceAtLeast(1f),
-                    accentColor = finalAccentColor,
-                    modifier = Modifier.fillMaxWidth()
-                )
+            // Action Row Capsule
+            com.deepeye.musicpro.ui.components.GlassCard(
+                tintColor = headerColor.copy(alpha = 0.05f),
+                cornerRadius = 32.dp,
+                blurRadius = com.deepeye.musicpro.ui.theme.GlassTokens.BlurHeavy,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(TimeFormatter.formatDuration(playerState.position), style = MaterialTheme.typography.labelSmall, color = headerColor.copy(alpha = 0.5f))
-                    Text(TimeFormatter.formatDuration(playerState.duration), style = MaterialTheme.typography.labelSmall, color = headerColor.copy(alpha = 0.5f))
-                }
-            }
-
-            // Controls
-            androidx.compose.runtime.CompositionLocalProvider(LocalContentColor provides headerColor) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val isShuffleActive = playerState.shuffleMode == com.deepeye.musicpro.domain.model.ShuffleMode.ON
-                    val isRepeatActive = playerState.repeatMode != com.deepeye.musicpro.domain.model.RepeatMode.NONE
-
-                    StatefulTactileButton(
-                        isActive = isShuffleActive,
-                        onClick = { viewModel.toggleShuffle() },
-                        activeColor = finalAccentColor
-                    ) {
-                        Icon(Icons.Default.Shuffle, "Shuffle", tint = if (isShuffleActive) finalAccentColor else androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), modifier = Modifier.size(24.dp))
-                    }
-                    TactileIconButton(onClick = { viewModel.previous() }, modifier = Modifier.size(56.dp)) {
-                        Icon(Icons.Default.SkipPrevious, "Previous", modifier = Modifier.size(40.dp))
-                    }
-                    PlayPauseButton(
-                        isPlaying = playerState.isPlaying,
-                        onClick = { viewModel.togglePlayPause() },
-                        accentColor = finalAccentColor
-                    )
-                    TactileIconButton(onClick = { viewModel.next() }, modifier = Modifier.size(56.dp)) {
-                        Icon(Icons.Default.SkipNext, "Next", modifier = Modifier.size(40.dp))
-                    }
-                    StatefulTactileButton(
-                        isActive = isRepeatActive,
-                        onClick = { viewModel.toggleRepeat() },
-                        activeColor = finalAccentColor
-                    ) {
-                        Icon(
-                            imageVector = if (playerState.repeatMode == com.deepeye.musicpro.domain.model.RepeatMode.ONE) Icons.Default.RepeatOne else Icons.Default.Repeat,
-                            contentDescription = "Repeat",
-                            tint = if (isRepeatActive) finalAccentColor else androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-            }
-
-            // Action Row
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -621,6 +657,7 @@ private fun AudioNowPlayingLayout(
                     Icon(Icons.AutoMirrored.Filled.QueueMusic, "Queue", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
                 }
             }
+        }
         }
     }
 }
