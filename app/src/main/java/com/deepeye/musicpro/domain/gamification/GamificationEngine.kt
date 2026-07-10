@@ -5,10 +5,10 @@ package com.deepeye.musicpro.domain.gamification
 
 import com.deepeye.musicpro.data.prefs.GamificationPreferences
 import com.deepeye.musicpro.domain.repository.GamificationRepository
-import kotlinx.coroutines.flow.first
+
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
+
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -132,32 +132,23 @@ class GamificationEngine @Inject constructor(
 
     private suspend fun syncToFirestore() {
         try {
-            val state = repository.getGamificationState().first()
-            val score = rankingEngine.calculateTotalScore(
-                points = state.rewardPoints.totalPoints,
-                streak = state.streak.currentStreak,
-                songsListened = 0, // This needs to be fetched, but totalSongs is not exposed in GamificationState. We need to add it or skip for now. Wait, GamificationState doesn't have totalSongsListened?
-                activeDays = state.dailyGoalCompletedCount
+            val prefs = repository.getPreferencesSnapshot()
+            val songsListened = prefs[GamificationPreferences.TOTAL_SONGS_LISTENED] ?: 0
+            val points = prefs[GamificationPreferences.REWARD_POINTS] ?: 0
+            val streak = prefs[GamificationPreferences.CURRENT_STREAK] ?: 0
+            val completedCount = prefs[GamificationPreferences.DAILY_GOAL_COMPLETED_COUNT] ?: 0
+            val lastListeningDate = prefs[GamificationPreferences.LAST_LISTENING_DATE] ?: 0L
+
+            val currentScore = rankingEngine.calculateTotalScore(points, streak, songsListened, completedCount)
+
+            rankingRepository.syncGamificationState(
+                points = points,
+                streak = streak,
+                songsListened = songsListened,
+                activeDays = completedCount,
+                score = currentScore,
+                lastListeningDate = lastListeningDate
             )
-            // Wait, we need totalSongs from GamificationPreferences
-            repository.updatePreferences { prefs ->
-                val songsListened = prefs[GamificationPreferences.TOTAL_SONGS_LISTENED] ?: 0
-                val points = prefs[GamificationPreferences.REWARD_POINTS] ?: 0
-                val streak = prefs[GamificationPreferences.CURRENT_STREAK] ?: 0
-                val completedCount = prefs[GamificationPreferences.DAILY_GOAL_COMPLETED_COUNT] ?: 0
-                
-                val currentScore = rankingEngine.calculateTotalScore(points, streak, songsListened, completedCount)
-                
-                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-                    rankingRepository.syncGamificationState(
-                        points = points,
-                        streak = streak,
-                        songsListened = songsListened,
-                        activeDays = completedCount,
-                        score = currentScore
-                    )
-                }
-            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -172,11 +163,13 @@ class GamificationEngine @Inject constructor(
                     val streak = (data["streak"] as? Number)?.toInt() ?: 0
                     val songsListened = (data["songsListened"] as? Number)?.toInt() ?: 0
                     val activeDays = (data["dailyActiveDays"] as? Number)?.toInt() ?: 0
+                    val lastListeningDate = (data["lastListeningDate"] as? Number)?.toLong() ?: 0L
 
                     prefs[GamificationPreferences.REWARD_POINTS] = points
                     prefs[GamificationPreferences.CURRENT_STREAK] = streak
                     prefs[GamificationPreferences.TOTAL_SONGS_LISTENED] = songsListened
                     prefs[GamificationPreferences.DAILY_GOAL_COMPLETED_COUNT] = activeDays
+                    prefs[GamificationPreferences.LAST_LISTENING_DATE] = lastListeningDate
 
                     // Update longest streak if current is greater
                     val longestStreak = prefs[GamificationPreferences.LONGEST_STREAK] ?: 0

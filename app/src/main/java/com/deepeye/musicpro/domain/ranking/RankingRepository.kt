@@ -27,7 +27,8 @@ class RankingRepository @Inject constructor() {
         streak: Int,
         songsListened: Int,
         activeDays: Int,
-        score: Float
+        score: Float,
+        lastListeningDate: Long = 0L
     ) {
         val userId = getCurrentUserId() ?: return
         val user = auth.currentUser ?: return
@@ -40,6 +41,7 @@ class RankingRepository @Inject constructor() {
             "songsListened" to songsListened,
             "dailyActiveDays" to activeDays,
             "score" to score,
+            "lastListeningDate" to lastListeningDate,
             "lastSync" to System.currentTimeMillis()
         )
 

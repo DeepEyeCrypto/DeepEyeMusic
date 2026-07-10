@@ -10,6 +10,7 @@ import com.deepeye.musicpro.data.prefs.gamificationDataStore
 import com.deepeye.musicpro.domain.gamification.*
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 import javax.inject.Inject
@@ -97,5 +98,9 @@ class GamificationRepository @Inject constructor(
         dataStore.edit { prefs ->
             action(prefs)
         }
+    }
+
+    suspend fun getPreferencesSnapshot(): androidx.datastore.preferences.core.Preferences {
+        return dataStore.data.first()
     }
 }
