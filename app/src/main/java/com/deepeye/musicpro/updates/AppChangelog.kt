@@ -8,6 +8,18 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30028,
+                versionName = "3.0.1.18",
+                releaseDate = "July 2026",
+                title = "Now Playing Layout Fix 🔧",
+                highlight = true,
+                items =
+                    listOf(
+                        "Fixed a layout issue on the Now Playing screen where the bottom Action Row was being cut off on certain devices.",
+                        "The controls now have proper spacing and alignment.",
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30014,
                 versionName = "3.0.1.4",
                 releaseDate = "June 2026",
