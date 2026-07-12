@@ -8,6 +8,18 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30030,
+                versionName = "3.0.1.20",
+                releaseDate = "July 2026",
+                title = "Autoplay Hotfix ⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Fixed a bug where playlist autoplay and media keys (Next/Prev) were disabled by Android's MediaSession.",
+                        "Bluetooth controls and lockscreen Next/Prev buttons now correctly work with custom playlists.",
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30029,
                 versionName = "3.0.1.19",
                 releaseDate = "July 2026",

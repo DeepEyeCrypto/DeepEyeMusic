@@ -87,6 +87,15 @@ class MusicPlayerService : MediaSessionService() {
 
         val forwardingPlayer =
             object : androidx.media3.common.ForwardingPlayer(player) {
+                override fun getAvailableCommands(): androidx.media3.common.Player.Commands {
+                    return super.getAvailableCommands().buildUpon()
+                        .add(androidx.media3.common.Player.COMMAND_SEEK_TO_NEXT)
+                        .add(androidx.media3.common.Player.COMMAND_SEEK_TO_PREVIOUS)
+                        .add(androidx.media3.common.Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                        .add(androidx.media3.common.Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                        .build()
+                }
+
                 override fun seekToNext() {
                     playerController.next()
                 }
