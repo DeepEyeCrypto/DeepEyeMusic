@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -65,7 +66,7 @@ constructor(
 
                     val languageQuery =
                         async {
-                            val profile = tasteProfileRepository.getTasteProfile()
+                            val profile = tasteProfileRepository.getTasteProfile().firstOrNull()
                             val langs = profile?.preferredLanguages?.takeIf { it.isNotEmpty() }?.joinToString(" ")
                             if (langs != null) {
                                 contentFetcher.searchByQuery("$langs latest songs", 15)
@@ -92,8 +93,8 @@ constructor(
                     .filter { it.videoId !in recentHistory }
 
             // 4. Score each candidate
-            val profile = tasteProfileRepository.getTasteProfile()
-            val preferredLanguages = profile?.preferredLanguages ?: emptyList()
+            val profile = tasteProfileRepository.getTasteProfile().firstOrNull()
+            val preferredLanguages = profile?.preferredLanguages?.toList() ?: emptyList()
 
             val scored =
                 candidates.map { video ->
