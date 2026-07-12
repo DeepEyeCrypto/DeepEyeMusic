@@ -43,6 +43,8 @@ data class CandidateTrack(
                 when {
                     lowerTitle.contains("hindi") -> "Hindi"
                     lowerTitle.contains("punjabi") -> "Punjabi"
+                    lowerTitle.contains("haryanvi") -> "Haryanvi"
+                    lowerTitle.contains("bhojpuri") -> "Bhojpuri"
                     lowerTitle.contains("tamil") -> "Tamil"
                     lowerTitle.contains("telugu") -> "Telugu"
                     lowerTitle.contains("english") -> "English"
@@ -76,8 +78,19 @@ class AutoplayScorer {
         candidate: CandidateTrack,
         history: List<ListenEvent>,
         autoplayState: AutoplayState,
+        preferredLanguages: List<String> = emptyList(),
     ): Float {
         var score = 0f
+
+        // Language matching
+        if (preferredLanguages.isNotEmpty() && candidate.language != null) {
+            val isLanguagePreferred = preferredLanguages.any { it.equals(candidate.language, ignoreCase = true) }
+            if (isLanguagePreferred) {
+                score += 0.8f // Big boost for preferred languages
+            } else {
+                score -= 1.5f // Huge penalty for non-preferred explicit languages (e.g. English when user only chose Hindi)
+            }
+        }
 
         // 5. Recency penalty (avoid same song too soon)
         if (candidate.videoId in autoplayState.history.takeLast(20)) score -= 0.50f

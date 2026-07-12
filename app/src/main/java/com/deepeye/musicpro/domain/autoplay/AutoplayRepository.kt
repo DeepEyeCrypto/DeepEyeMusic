@@ -11,13 +11,15 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.deepeye.musicpro.domain.repository.TasteProfileRepository
+
 @Singleton
 class AutoplayRepository
 @Inject
 constructor(
-
     private val dao: RecommendationDao,
     private val contentFetcher: ContentFetcher,
+    private val tasteProfileRepository: TasteProfileRepository,
 ) {
     private val scorer = AutoplayScorer()
 
@@ -61,8 +63,20 @@ constructor(
                             contentFetcher.getTrendingMusic("IN", 15)
                         }
 
+                    val languageQuery =
+                        async {
+                            val profile = tasteProfileRepository.getTasteProfile()
+                            val langs = profile?.preferredLanguages?.takeIf { it.isNotEmpty() }?.joinToString(" ")
+                            if (langs != null) {
+                                contentFetcher.searchByQuery("$langs latest songs", 15)
+                            } else {
+                                emptyList()
+                            }
+                        }
+
                     val allCandidates = mutableListOf<com.deepeye.musicpro.domain.recommendation.VideoItem>()
                     allCandidates.addAll(fromHistory.await())
+                    allCandidates.addAll(languageQuery.await())
                     allCandidates.addAll(trending.await())
                     allCandidates
                 }
@@ -78,6 +92,9 @@ constructor(
                     .filter { it.videoId !in recentHistory }
 
             // 4. Score each candidate
+            val profile = tasteProfileRepository.getTasteProfile()
+            val preferredLanguages = profile?.preferredLanguages ?: emptyList()
+
             val scored =
                 candidates.map { video ->
                     val c = CandidateTrack.fromVideo(video)
@@ -86,6 +103,7 @@ constructor(
                             candidate = c,
                             history = emptyList(), // We could fetch recent ListenEvents, but leaving empty for now
                             autoplayState = autoplayState,
+                            preferredLanguages = preferredLanguages
                         )
                     QueueItem(
                         videoId = video.videoId,
