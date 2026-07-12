@@ -51,7 +51,7 @@ fun NetMirrorScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 120.dp) // Leave space for dock
+        contentPadding = PaddingValues(bottom = 32.dp) // Space for scroll, dock is handled by scaffold
     ) {
         // Hero Banner Section
         uiState.heroMovie?.let { hero ->
@@ -72,8 +72,8 @@ fun NetMirrorScreen(
                 CategoryRow(
                     title = "Bollywood Movies", 
                     items = uiState.bollywoodMovies,
-                    onPlay = { movie -> 
-                        viewModel.playVideo(movie)
+                    onPlayFromIndex = { index -> 
+                        viewModel.playVideoFromCategory(uiState.bollywoodMovies, index)
                         onExpandPlayer()
                     }
                 )
@@ -85,8 +85,8 @@ fun NetMirrorScreen(
                 CategoryRow(
                     title = "Hollywood Movies", 
                     items = uiState.hollywoodMovies,
-                    onPlay = { movie -> 
-                        viewModel.playVideo(movie)
+                    onPlayFromIndex = { index -> 
+                        viewModel.playVideoFromCategory(uiState.hollywoodMovies, index)
                         onExpandPlayer()
                     }
                 )
@@ -98,8 +98,8 @@ fun NetMirrorScreen(
                 CategoryRow(
                     title = "South (Hindi Dubbed)", 
                     items = uiState.southDubbedMovies,
-                    onPlay = { movie -> 
-                        viewModel.playVideo(movie)
+                    onPlayFromIndex = { index -> 
+                        viewModel.playVideoFromCategory(uiState.southDubbedMovies, index)
                         onExpandPlayer()
                     }
                 )
@@ -111,8 +111,34 @@ fun NetMirrorScreen(
                 CategoryRow(
                     title = "WEB Series", 
                     items = uiState.webSeries,
-                    onPlay = { movie -> 
-                        viewModel.playVideo(movie)
+                    onPlayFromIndex = { index -> 
+                        viewModel.playVideoFromCategory(uiState.webSeries, index)
+                        onExpandPlayer()
+                    }
+                )
+            }
+        }
+
+        if (uiState.pakistaniDramas.isNotEmpty()) {
+            item {
+                CategoryRow(
+                    title = "Pakistani Dramas", 
+                    items = uiState.pakistaniDramas,
+                    onPlayFromIndex = { index -> 
+                        viewModel.playVideoFromCategory(uiState.pakistaniDramas, index)
+                        onExpandPlayer()
+                    }
+                )
+            }
+        }
+
+        if (uiState.kids.isNotEmpty()) {
+            item {
+                CategoryRow(
+                    title = "Kids & Cartoons", 
+                    items = uiState.kids,
+                    onPlayFromIndex = { index -> 
+                        viewModel.playVideoFromCategory(uiState.kids, index)
                         onExpandPlayer()
                     }
                 )
@@ -230,7 +256,7 @@ private fun HeroBanner(
 private fun CategoryRow(
     title: String, 
     items: List<HomeVideoItem>,
-    onPlay: (HomeVideoItem) -> Unit
+    onPlayFromIndex: (Int) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -253,7 +279,7 @@ private fun CategoryRow(
             items(items.size) { index ->
                 VideoCard(
                     movie = items[index],
-                    onClick = { onPlay(items[index]) }
+                    onClick = { onPlayFromIndex(index) }
                 )
             }
         }
@@ -267,8 +293,8 @@ private fun VideoCard(
 ) {
     Box(
         modifier = Modifier
-            .width(130.dp)
-            .height(190.dp)
+            .width(160.dp)
+            .height(90.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White.copy(alpha = 0.05f))
             .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
@@ -287,8 +313,7 @@ private fun VideoCard(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.9f)),
-                        startY = 100f
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.9f))
                     )
                 )
         )
@@ -296,7 +321,7 @@ private fun VideoCard(
         Text(
             text = movie.title,
             color = Color.White,
-            fontSize = 12.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier
                 .align(Alignment.BottomStart)

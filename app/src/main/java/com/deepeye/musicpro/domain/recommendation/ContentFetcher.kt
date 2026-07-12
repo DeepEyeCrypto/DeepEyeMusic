@@ -21,41 +21,27 @@ constructor(
     private val httpClient: OkHttpClient,
     private val youtubeDs: Provider<YoutubeRemoteDataSource>,
 ) {
-    // ── Strategy A: YouTube Data API v3 ──
     suspend fun getRelatedVideos(
         videoId: String,
         maxResults: Int = 20,
+        isVideo: Boolean = false
     ): List<VideoItem> =
         withContext(Dispatchers.IO) {
-            if (BuildConfig.YOUTUBE_API_KEY.isEmpty()) {
-                return@withContext getRelatedVideosFallback(videoId, maxResults)
-            }
-            try {
-                val url =
-                    "https://www.googleapis.com/youtube/v3/search" +
-                        "?part=snippet" +
-                        "&relatedToVideoId=$videoId" +
-                        "&type=video" +
-                        "&videoCategoryId=10" +
-                        "&maxResults=$maxResults" +
-                        "&key=${BuildConfig.YOUTUBE_API_KEY}"
-
-                val response = httpClient.newCall(Request.Builder().url(url).build()).execute()
-                parseVideoItems(response.body?.string() ?: "")
-            } catch (e: Exception) {
-                getRelatedVideosFallback(videoId, maxResults)
-            }
+            // The YouTube Data API has deprecated the `relatedToVideoId` parameter. 
+            // It silently fails (returns HTTP 400 with an empty item array). 
+            // We bypass it completely for better performance and reliability, ensuring we actually get related items!
+            getRelatedVideosFallback(videoId, maxResults)
         }
 
     private suspend fun getRelatedVideosFallback(videoId: String, maxResults: Int): List<VideoItem> {
         return try {
             val ds = youtubeDs.get()
-            ds.searchVideos("related to $videoId").take(maxResults).map { item ->
+            ds.getRelatedVideos(videoId).take(maxResults).map { item ->
                 VideoItem(
                     videoId = item.id,
                     title = item.title,
                     artist = item.channelName,
-                    channelId = item.channelId,
+                    channelId = "",
                     duration = "${item.duration / 60}:${item.duration % 60}",
                     genre = ""
                 )
@@ -84,7 +70,10 @@ constructor(
                         "&key=${BuildConfig.YOUTUBE_API_KEY}"
 
                 val response = httpClient.newCall(Request.Builder().url(url).build()).execute()
-                parseVideoItems(response.body?.string() ?: "")
+                if (!response.isSuccessful) return@withContext searchByQueryFallback("$artistName new songs official", maxResults)
+                val parsed = parseVideoItems(response.body?.string() ?: "")
+                if (parsed.isEmpty()) return@withContext searchByQueryFallback("$artistName new songs official", maxResults)
+                parsed
             } catch (e: Exception) {
                 searchByQueryFallback("$artistName new songs official", maxResults)
             }
@@ -107,7 +96,10 @@ constructor(
                         "&key=${BuildConfig.YOUTUBE_API_KEY}"
 
                 val response = httpClient.newCall(Request.Builder().url(url).build()).execute()
-                parseVideoItems(response.body?.string() ?: "")
+                if (!response.isSuccessful) return@withContext searchByQueryFallback(query, maxResults)
+                val parsed = parseVideoItems(response.body?.string() ?: "")
+                if (parsed.isEmpty()) return@withContext searchByQueryFallback(query, maxResults)
+                parsed
             } catch (e: Exception) {
                 searchByQueryFallback(query, maxResults)
             }
@@ -189,7 +181,10 @@ constructor(
                         "&maxResults=$maxResults" +
                         "&key=${BuildConfig.YOUTUBE_API_KEY}"
                 val response = httpClient.newCall(Request.Builder().url(url).build()).execute()
-                parseTrendingVideoItems(response.body?.string() ?: "")
+                if (!response.isSuccessful) return@withContext getTrendingMusicFallback(maxResults)
+                val parsed = parseTrendingVideoItems(response.body?.string() ?: "")
+                if (parsed.isEmpty()) return@withContext getTrendingMusicFallback(maxResults)
+                parsed
             } catch (e: Exception) {
                 getTrendingMusicFallback(maxResults)
             }

@@ -92,4 +92,23 @@ class CloudSyncManager @Inject constructor(
             }
         }
     }
+
+    suspend fun syncHistory() {
+        withContext(Dispatchers.IO) {
+            val user = auth.currentUser ?: return@withContext
+            val uid = user.uid
+            try {
+                val historyJson = historyRepository.exportToJson()
+                val historyData = mapOf(
+                    "history" to historyJson,
+                    "last_synced" to System.currentTimeMillis()
+                )
+                firestore.collection("users").document(uid).collection("sync").document("history")
+                    .set(historyData, SetOptions.merge())
+                Log.d("CloudSync", "Successfully synced History to cloud for user $uid")
+            } catch (e: Exception) {
+                Log.e("CloudSync", "Failed to sync History to cloud", e)
+            }
+        }
+    }
 }

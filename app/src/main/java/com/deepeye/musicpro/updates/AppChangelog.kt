@@ -8,6 +8,20 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30029,
+                versionName = "3.0.1.19",
+                releaseDate = "July 2026",
+                title = "Playlist Queue & Autoplay Upgrade 🎬",
+                highlight = true,
+                items =
+                    listOf(
+                        "Drama & Web Series episodes now play as a playlist — click any episode and the rest auto-play in order!",
+                        "Improved Related Videos: uses NewPipe extractor for more accurate recommendations.",
+                        "YouTube API fallback: all content fetchers now gracefully fall back when API quota is exceeded.",
+                        "Cloud History Sync: your listening history now backs up to your Google account.",
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30028,
                 versionName = "3.0.1.18",
                 releaseDate = "July 2026",

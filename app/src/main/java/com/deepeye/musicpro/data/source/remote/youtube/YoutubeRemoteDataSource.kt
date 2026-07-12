@@ -419,7 +419,6 @@ constructor(
         finalRes
     }
 
-    // 🔗 Get related music (for autoplay)
     suspend fun getRelatedMusic(
         title: String,
         artist: String,
@@ -439,6 +438,17 @@ constructor(
                 }
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "getRelatedMusic failed: ${e.message}")
+                emptyList()
+            }
+        }
+
+    // 🔗 Get related videos (for video autoplay)
+    suspend fun getRelatedVideos(videoId: String): List<HomeVideoItem> =
+        withContext(ioDispatcher) {
+            try {
+                extractor.getRelatedVideos(videoId).map { it.toHomeVideoItem() }
+            } catch (e: Exception) {
+                Log.e("YoutubeDS", "getRelatedVideos failed: ${e.message}")
                 emptyList()
             }
         }

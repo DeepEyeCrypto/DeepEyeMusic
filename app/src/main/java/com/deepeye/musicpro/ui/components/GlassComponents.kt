@@ -141,6 +141,7 @@ fun GlassContainer(
     hazeState: HazeState? = LocalHazeState.current,
     modifier: Modifier = Modifier,
     cornerRadius: Dp = GlassTokens.CornerCard,
+    blurRadius: Dp = GlassTokens.BlurMedium,
     shape: Shape? = null,
     refractionHeight: Float = 0.5f,
     chromaticAberration: Float = 0.1f,
@@ -177,7 +178,7 @@ fun GlassContainer(
                                     state = hazeState,
                                     style = HazeStyle(
                                         tint = HazeTint(tintColor.copy(alpha = tintColor.alpha.coerceAtMost(0.4f))),
-                                        blurRadius = GlassTokens.BlurMedium,
+                                        blurRadius = blurRadius,
                                         noiseFactor = GlassTokens.NoiseFactor
                                     )
                                 )
@@ -208,7 +209,7 @@ fun GlassContainer(
                                     state = hazeState,
                                     style = HazeStyle(
                                         tint = HazeTint(tintColor.copy(alpha = tintColor.alpha.coerceAtMost(0.4f))),
-                                        blurRadius = GlassTokens.BlurMedium,
+                                        blurRadius = blurRadius,
                                         noiseFactor = GlassTokens.NoiseFactor
                                     )
                                 )
@@ -250,6 +251,7 @@ fun GlassCard(
     hazeState: HazeState? = LocalHazeState.current,
     modifier: Modifier = Modifier,
     cornerRadius: Dp = GlassTokens.CornerCard,
+    blurRadius: Dp = GlassTokens.BlurMedium,
     refractionHeight: Float = 0.5f,
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -265,8 +267,8 @@ fun GlassCard(
         GlassContainer(
             tintColor = tintColor,
             hazeState = hazeState,
-            modifier = Modifier.fillMaxSize(),
             cornerRadius = cornerRadius,
+            blurRadius = blurRadius,
             refractionHeight = refractionHeight,
             tiltProvider = { tiltState.value }
         ) {
@@ -324,7 +326,6 @@ fun GlassPill(
         GlassContainer(
             tintColor = tint,
             hazeState = hazeState,
-            modifier = Modifier.fillMaxSize(),
             cornerRadius = GlassTokens.CornerPill,
             refractionHeight = 0.2f,
             tiltProvider = { tiltState.value }
@@ -385,7 +386,6 @@ fun GlassButton(
         GlassContainer(
             tintColor = tintColor,
             hazeState = hazeState,
-            modifier = Modifier.fillMaxSize(),
             cornerRadius = cornerRadius,
             refractionHeight = 0.3f,
             tiltProvider = { tiltState.value }
@@ -502,7 +502,6 @@ fun GlassBottomSheet(
             GlassContainer(
                 tintColor = tintColor,
                 hazeState = hazeState,
-                modifier = Modifier.fillMaxSize(),
                 cornerRadius = GlassTokens.CornerSheet,
                 refractionHeight = 0.6f,
                 tiltProvider = { tiltState.value }
@@ -544,7 +543,6 @@ fun GlassSurface(
         GlassContainer(
             tintColor = tintColor,
             hazeState = hazeState,
-            modifier = Modifier.fillMaxSize(),
             cornerRadius = cornerRadius,
             shape = resolvedShape,
             refractionHeight = refractionHeight,

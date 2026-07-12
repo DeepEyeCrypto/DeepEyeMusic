@@ -94,6 +94,15 @@ class NewPipeExtractorPlugin : IExtractorBridge {
         }
     }
 
+    override suspend fun getRelatedVideos(videoId: String): List<ExtractorVideoItem> = withContext(Dispatchers.IO) {
+        try {
+            val streamInfo = StreamInfo.getInfo(yt, "https://www.youtube.com/watch?v=$videoId")
+            streamInfo.relatedItems.filterIsInstance<StreamInfoItem>().map { it.toExtractorVideoItem() }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     override suspend fun getShorts(): List<ExtractorVideoItem> = withContext(Dispatchers.IO) {
         val extractor = yt.getSearchExtractor("shorts", listOf("music_videos"), "")
         extractor.fetchPage()

@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import javax.inject.Inject
 
 data class NetMirrorUiState(
@@ -24,6 +25,8 @@ data class NetMirrorUiState(
     val hollywoodMovies: List<HomeVideoItem> = emptyList(),
     val southDubbedMovies: List<HomeVideoItem> = emptyList(),
     val webSeries: List<HomeVideoItem> = emptyList(),
+    val pakistaniDramas: List<HomeVideoItem> = emptyList(),
+    val kids: List<HomeVideoItem> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null
 )
@@ -45,19 +48,19 @@ class NetMirrorViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                // Fetch Bollywood
-                val bollywoodResult = youtubeRemoteDataSource.searchVideosFirstPage("latest blockbuster bollywood full movies")
-                // Fetch Hollywood
-                val hollywoodResult = youtubeRemoteDataSource.searchVideosFirstPage("latest hollywood full movies action")
-                // Fetch South (Hindi Dubbed)
-                val southResult = youtubeRemoteDataSource.searchVideosFirstPage("new released south indian movies dubbed in hindi full")
-                // Fetch Web Series
-                val webSeriesResult = youtubeRemoteDataSource.searchVideosFirstPage("latest hindi web series full episodes")
+                val deferredBollywood = async { youtubeRemoteDataSource.searchVideosFirstPage("latest official bollywood full movies 2024 -south -dubbed -hollywood -bhojpuri") }
+                val deferredHollywood = async { youtubeRemoteDataSource.searchVideosFirstPage("latest hollywood full movies action english -hindi -dubbed") }
+                val deferredSouth = async { youtubeRemoteDataSource.searchVideosFirstPage("latest south indian movies dubbed in hindi full -bollywood") }
+                val deferredWebSeries = async { youtubeRemoteDataSource.searchVideosFirstPage("latest hindi web series full episodes") }
+                val deferredPakistani = async { youtubeRemoteDataSource.searchVideosFirstPage("latest pakistani drama episodes") }
+                val deferredKids = async { youtubeRemoteDataSource.searchVideosFirstPage("latest kids cartoons in hindi full -horror") }
 
-                val bollywood = bollywoodResult.items
-                val hollywood = hollywoodResult.items
-                val south = southResult.items
-                val webSeries = webSeriesResult.items
+                val bollywood = deferredBollywood.await().items
+                val hollywood = deferredHollywood.await().items
+                val south = deferredSouth.await().items
+                val webSeries = deferredWebSeries.await().items
+                val pakistani = deferredPakistani.await().items
+                val kidsContent = deferredKids.await().items
 
                 _uiState.update {
                     it.copy(
@@ -66,6 +69,8 @@ class NetMirrorViewModel @Inject constructor(
                         hollywoodMovies = hollywood,
                         southDubbedMovies = south,
                         webSeries = webSeries,
+                        pakistaniDramas = pakistani,
+                        kids = kidsContent,
                         isLoading = false
                     )
                 }
@@ -85,5 +90,24 @@ class NetMirrorViewModel @Inject constructor(
             isVideo = true
         )
         playerController.setQueue(listOf(mediaItem), 0)
+    }
+
+    /**
+     * Play a video from a category row as a playlist.
+     * Sets the entire category list as queue and starts from the clicked episode index.
+     * This enables episode-by-episode auto-play (e.g., drama/web series episodes).
+     */
+    fun playVideoFromCategory(categoryItems: List<HomeVideoItem>, clickedIndex: Int) {
+        val queue = categoryItems.map { video ->
+            MediaItem.Remote(
+                id = video.id,
+                title = video.title,
+                artist = video.channelName,
+                artworkUri = Uri.parse(video.thumbnailUrl),
+                duration = video.duration * 1000L,
+                isVideo = true
+            )
+        }
+        playerController.setQueue(queue, clickedIndex.coerceIn(0, queue.lastIndex))
     }
 }

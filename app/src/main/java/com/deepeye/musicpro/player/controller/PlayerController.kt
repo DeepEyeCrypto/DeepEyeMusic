@@ -61,6 +61,7 @@ constructor(
     private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
     private val tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor,
     private val dspController: com.deepeye.musicpro.dsp.controller.DSPController,
+    private val cloudSyncManager: com.deepeye.musicpro.domain.sync.CloudSyncManager,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -184,6 +185,7 @@ constructor(
                         stopPositionUpdates()
                         if (currentTrackId != null) {
                             totalPlayTimeCurrentTrack += System.currentTimeMillis() - lastPlaybackStateTime
+                            syncCurrentProgressToDatabaseAndCloud()
                         }
                     }
                 }
@@ -735,6 +737,45 @@ constructor(
     fun setAppInForeground(foreground: Boolean) {
         isAppInForeground = foreground
         updateState { it.copy(isAppInForeground = foreground) }
+        if (!foreground) {
+            syncCurrentProgressToDatabaseAndCloud()
+        }
+    }
+
+    private fun syncCurrentProgressToDatabaseAndCloud() {
+        val currentItem = playerState.value.currentItem ?: return
+        val currentId = currentTrackId ?: return
+        val duration = player.duration.coerceAtLeast(0)
+        val currentPos = player.currentPosition.coerceAtLeast(0)
+
+        if (currentPos > 5000) {
+            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                val isVideo = (currentItem as? MediaItem.Remote)?.isVideo == true
+                val source = if (currentItem is MediaItem.Local) "local" else "youtube"
+
+                if (isVideo) {
+                    historyRepository.recordVideoProgress(
+                        videoId = currentId,
+                        title = currentItem.title,
+                        thumbnailUri = currentItem.artworkUri?.toString(),
+                        positionMs = currentPos,
+                        durationMs = duration
+                    )
+                } else {
+                    historyRepository.recordPlayback(
+                        mediaId = currentId,
+                        title = currentItem.title,
+                        artist = currentItem.artist,
+                        album = (currentItem as? MediaItem.Local)?.song?.album ?: "",
+                        artworkUri = currentItem.artworkUri?.toString(),
+                        playDurationMs = currentPos,
+                        totalDurationMs = duration,
+                        source = source
+                    )
+                }
+                cloudSyncManager.syncHistory()
+            }
+        }
     }
 
     private fun updateState(transform: (PlayerState) -> PlayerState) {
@@ -850,6 +891,9 @@ constructor(
                     artist = currentItem.artist,
                     artworkUrl = currentItem.artworkUri?.toString()
                 )
+
+                // Trigger cloud sync of watch history so it syncs immediately
+                cloudSyncManager.syncHistory()
 
                 // If skipped quickly (<10s) and not a full finish
                 if (played < 10000 && !finishedSuccessfully && duration > 15000) {

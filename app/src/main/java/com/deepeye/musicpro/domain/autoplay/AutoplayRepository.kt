@@ -48,7 +48,8 @@ constructor(
                                     val query = "${currentTrack.title} ${currentTrack.artist} song audio"
                                     contentFetcher.searchByQuery(query, 20)
                                 } else {
-                                    contentFetcher.getRelatedVideos(currentTrack.id, 20)
+                                    val isVideo = (currentTrack as? MediaItem.Remote)?.isVideo ?: false
+                                    contentFetcher.getRelatedVideos(currentTrack.id, 20, isVideo)
                                 }
                             } else {
                                 emptyList()

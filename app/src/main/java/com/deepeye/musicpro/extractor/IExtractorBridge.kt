@@ -40,6 +40,7 @@ interface IExtractorBridge {
     suspend fun searchMusic(query: String): List<ExtractorMusicItem>
     suspend fun extractStream(videoId: String, preferVideo: Boolean): ExtractorStreamResult?
     suspend fun getRelatedMusic(videoId: String): List<ExtractorMusicItem>
+    suspend fun getRelatedVideos(videoId: String): List<ExtractorVideoItem>
     suspend fun getShorts(): List<ExtractorVideoItem>
     suspend fun getSearchSuggestions(query: String): List<String>
 }
