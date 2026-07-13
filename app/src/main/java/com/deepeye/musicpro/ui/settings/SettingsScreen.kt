@@ -47,6 +47,7 @@ import com.deepeye.musicpro.ui.components.GlowCard
 fun SettingsScreen(
     windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
     viewModel: SettingsViewModel = hiltViewModel(),
+    onNavigateToAEOS: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val settings = uiState.settings
@@ -69,7 +70,7 @@ fun SettingsScreen(
 
         if (isExpanded) {
             var selectedCategory by remember { mutableStateOf(0) }
-            val categories = listOf("Appearance", "Music Taste", "Audio", "Library", "About")
+            val categories = listOf("Appearance", "Music Taste", "Audio", "Library", "About", "Developer (AEOS)")
 
             Row(modifier = Modifier.fillMaxSize()) {
                 // Left Pane: Navigation Category List
@@ -139,6 +140,10 @@ fun SettingsScreen(
                                 item { SectionHeader("About") }
                                 item { AboutSettingsCard(viewModel) }
                             }
+                            5 -> {
+                                item { SectionHeader("Developer (AEOS)") }
+                                item { AEOSSettingsCard(onNavigateToAEOS) }
+                            }
                         }
                     }
                 }
@@ -180,6 +185,9 @@ fun SettingsScreen(
 
                 item { SectionHeader("About") }
                 item { AboutSettingsCard(viewModel) }
+
+                item { SectionHeader("Developer (AEOS)") }
+                item { AEOSSettingsCard(onNavigateToAEOS) }
             }
         }
     }
@@ -745,6 +753,28 @@ private fun AboutSettingsCard(viewModel: SettingsViewModel) {
             ) {
                 Text("Check Now")
             }
+        }
+    }
+}
+
+@Composable
+private fun AEOSSettingsCard(onNavigateToAEOS: () -> Unit) {
+    SettingsCard {
+        Text("Autonomous Factory", style = MaterialTheme.typography.titleSmall)
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "Launch the AEOS Day-0 Vibe-Coding sandbox. This environment operates with strict Control/Data plane isolation.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(16.dp))
+        Button(
+            onClick = onNavigateToAEOS,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C4DFF))
+        ) {
+            Text("Launch AEOS Factory Dashboard", color = Color.White)
         }
     }
 }

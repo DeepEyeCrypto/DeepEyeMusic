@@ -70,8 +70,11 @@
 # Palette (album art color extraction)
 -keep class androidx.palette.** { *; }
 
-
 -dontwarn com.google.re2j.**
 -dontwarn java.beans.**
 -dontwarn javax.script.**
 
+# AEOS Vibe-Coding Phase 4: Preserve Control/Data plane structures and mesh contracts
+-keep class com.deepeye.musicpro.aeos.mesh.** { *; }
+-keep class com.deepeye.musicpro.aeos.data_plane.** { *; }
+-keep class com.deepeye.musicpro.aeos.control_plane.** { *; }

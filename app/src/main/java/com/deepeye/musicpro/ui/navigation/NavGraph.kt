@@ -253,7 +253,14 @@ fun NavGraph(
         }
 
         composable(Routes.Settings.route) {
-            SettingsScreen(windowSizeClass = windowSizeClass)
+            SettingsScreen(
+                windowSizeClass = windowSizeClass,
+                onNavigateToAEOS = { navController.navigate(Routes.AEOS.route) }
+            )
+        }
+        
+        composable(Routes.AEOS.route) {
+            com.deepeye.musicpro.aeos.ui.dashboard.MusicDashboard()
         }
 
         // ── Full-screen Destinations ──

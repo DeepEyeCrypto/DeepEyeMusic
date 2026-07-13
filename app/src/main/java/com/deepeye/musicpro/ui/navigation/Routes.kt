@@ -59,4 +59,6 @@ sealed class Routes(val route: String) {
     data object PlaylistDetail : Routes("playlist/{playlistId}") {
         fun createRoute(playlistId: Long) = "playlist/$playlistId"
     }
+
+    data object AEOS : Routes("aeos_dashboard")
 }
