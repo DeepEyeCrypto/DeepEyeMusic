@@ -3,6 +3,7 @@
 
 package com.deepeye.musicpro.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,6 +16,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,13 +48,9 @@ fun NetMirrorScreen(
     onExpandPlayer: () -> Unit = {}
 ) {
     val hazeState = LocalHazeState.current
-    val uiState by viewModel.uiState.collectAsState()
-
-    // Episode picker state
-    var playlistTitle by remember { mutableStateOf("") }
-    var playlistItems by remember { mutableStateOf<List<HomeVideoItem>>(emptyList()) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val episodeSheet = uiState.episodeSheet
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var showSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     if (uiState.isLoading) {
@@ -60,21 +60,25 @@ fun NetMirrorScreen(
         return
     }
 
-    // Episode Picker Bottom Sheet
-    if (showSheet && playlistItems.isNotEmpty()) {
+    // Episode Picker Bottom Sheet — driven by ViewModel state
+    if (episodeSheet != null) {
         ModalBottomSheet(
-            onDismissRequest = { showSheet = false },
+            onDismissRequest = { viewModel.closeEpisodePicker() },
             sheetState = sheetState,
             containerColor = Color(0xFF0D0D12),
             tonalElevation = 0.dp,
             shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         ) {
             EpisodePickerSheet(
-                title = playlistTitle,
-                episodes = playlistItems,
+                title = episodeSheet.dramaTitle,
+                episodes = episodeSheet.episodes,
+                isLoading = episodeSheet.isLoading,
+                error = episodeSheet.error,
                 onEpisodeClick = { index ->
-                    scope.launch { sheetState.hide() }.invokeOnCompletion { showSheet = false }
-                    viewModel.playVideoFromCategory(playlistItems, index)
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        viewModel.closeEpisodePicker()
+                    }
+                    viewModel.playVideoFromCategory(episodeSheet.episodes, index)
                     onExpandPlayer()
                 }
             )
@@ -146,7 +150,7 @@ fun NetMirrorScreen(
             }
         }
 
-        // WEB Series — open episode sheet first
+        // WEB Series — tap drama card → fetch that show's episodes
         if (uiState.webSeries.isNotEmpty()) {
             item {
                 CategoryRow(
@@ -154,16 +158,12 @@ fun NetMirrorScreen(
                     items = uiState.webSeries,
                     isPlaylist = true,
                     onPlayFromIndex = {},
-                    onOpenPlaylist = {
-                        playlistTitle = "WEB Series"
-                        playlistItems = uiState.webSeries
-                        showSheet = true
-                    }
+                    onCardClick = { drama -> viewModel.openEpisodePicker(drama) }
                 )
             }
         }
 
-        // Pakistani Dramas — open episode sheet first
+        // Pakistani Dramas — tap drama card → fetch that show's episodes
         if (uiState.pakistaniDramas.isNotEmpty()) {
             item {
                 CategoryRow(
@@ -171,11 +171,7 @@ fun NetMirrorScreen(
                     items = uiState.pakistaniDramas,
                     isPlaylist = true,
                     onPlayFromIndex = {},
-                    onOpenPlaylist = {
-                        playlistTitle = "Pakistani Dramas"
-                        playlistItems = uiState.pakistaniDramas
-                        showSheet = true
-                    }
+                    onCardClick = { drama -> viewModel.openEpisodePicker(drama) }
                 )
             }
         }
@@ -205,6 +201,8 @@ fun NetMirrorScreen(
 private fun EpisodePickerSheet(
     title: String,
     episodes: List<HomeVideoItem>,
+    isLoading: Boolean = false,
+    error: String? = null,
     onEpisodeClick: (Int) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -223,38 +221,73 @@ private fun EpisodePickerSheet(
                 ),
                 modifier = Modifier.align(Alignment.CenterStart)
             )
-            // Episode count badge
+            // Episode count / loading badge
             Surface(
                 color = Color(0xFF00E5C3).copy(alpha = 0.15f),
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.align(Alignment.CenterEnd)
             ) {
-                Text(
-                    text = "${episodes.size} Episodes",
-                    color = Color(0xFF00E5C3),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                )
+                if (isLoading) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(12.dp),
+                            color = Color(0xFF00E5C3),
+                            strokeWidth = 1.5.dp
+                        )
+                        Text("Loading...", color = Color(0xFF00E5C3), fontSize = 12.sp)
+                    }
+                } else {
+                    Text(
+                        text = "${episodes.size} Episodes",
+                        color = Color(0xFF00E5C3),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
             }
         }
 
         HorizontalDivider(color = Color.White.copy(alpha = 0.08f), modifier = Modifier.padding(horizontal = 20.dp))
         Spacer(Modifier.height(8.dp))
 
-        LazyColumn(
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 480.dp)
-        ) {
-            itemsIndexed(episodes) { index, episode ->
-                EpisodeListItem(
-                    episodeNumber = index + 1,
-                    episode = episode,
-                    onClick = { onEpisodeClick(index) }
-                )
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color(0xFF00E5C3))
+                }
+            }
+            error != null -> {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(150.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(error, color = Color.White.copy(alpha = 0.5f), fontSize = 14.sp)
+                }
+            }
+            else -> {
+                LazyColumn(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 480.dp)
+                ) {
+                    itemsIndexed(episodes) { index, episode ->
+                        EpisodeListItem(
+                            episodeNumber = index + 1,
+                            episode = episode,
+                            onClick = { onEpisodeClick(index) }
+                        )
+                    }
+                }
             }
         }
 
@@ -355,7 +388,8 @@ private fun CategoryRow(
     items: List<HomeVideoItem>,
     isPlaylist: Boolean,
     onPlayFromIndex: (Int) -> Unit,
-    onOpenPlaylist: () -> Unit
+    onCardClick: ((HomeVideoItem) -> Unit)? = null,
+    onOpenPlaylist: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -396,8 +430,11 @@ private fun CategoryRow(
                 VideoCard(
                     movie = items[index],
                     onClick = {
-                        if (isPlaylist) onOpenPlaylist()
-                        else onPlayFromIndex(index)
+                        when {
+                            isPlaylist && onCardClick != null -> onCardClick(items[index])
+                            isPlaylist -> onOpenPlaylist()
+                            else -> onPlayFromIndex(index)
+                        }
                     }
                 )
             }

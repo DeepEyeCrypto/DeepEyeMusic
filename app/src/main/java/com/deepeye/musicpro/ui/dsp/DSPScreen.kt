@@ -3,6 +3,7 @@
 
 package com.deepeye.musicpro.ui.dsp
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -49,9 +50,9 @@ fun DSPScreen(
     viewModel: DSPViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit = {},
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val fftData by viewModel.fftData.collectAsState()
-    val userRank by viewModel.userRankFlow.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val fftData by viewModel.fftData.collectAsStateWithLifecycle()
+    val userRank by viewModel.userRankFlow.collectAsStateWithLifecycle()
     val isEnabled = uiState.params.enabled
     val isWideScreen = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
 

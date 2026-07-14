@@ -69,10 +69,9 @@ constructor(
     }
 
     private fun playSelectedVideo(videoId: String) {
-        val section = state.value.sections.find { it.items.any { item -> item.videoId == videoId } }
-        val item = section?.items?.find { it.videoId == videoId } ?: return
+        val section = state.value.sections.find { it.items.any { item -> item.videoId == videoId } } ?: return
 
-        val mediaItem =
+        val mediaItems = section.items.map { item ->
             com.deepeye.musicpro.domain.model.MediaItem.Remote(
                 id = item.videoId,
                 title = item.title,
@@ -81,7 +80,13 @@ constructor(
                 duration = 180000L, // Mock
                 isVideo = true,
             )
-        playerController.playMedia(mediaItem)
+        }
+        
+        val index = section.items.indexOfFirst { it.videoId == videoId }
+        android.util.Log.d("VideoRailViewModel", "playSelectedVideo: videoId=$videoId, section category=${section.category}, section items size=${section.items.size}")
+        if (index >= 0) {
+            playerController.setQueue(mediaItems, index)
+        }
     }
 
     // Scroll away -> collapse

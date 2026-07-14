@@ -166,8 +166,13 @@ class MusicPlayerService : MediaSessionService() {
     override fun onTaskRemoved(rootIntent: Intent?) {
         val player = mediaSession?.player
         if (player == null || !player.playWhenReady || player.playbackState == Player.STATE_IDLE || player.playbackState == Player.STATE_ENDED) {
+            mediaSession?.player?.release()
+            mediaSession?.release()
+            mediaSession = null
+            stopForeground(android.app.Service.STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
+        super.onTaskRemoved(rootIntent)
     }
 
     override fun onDestroy() {

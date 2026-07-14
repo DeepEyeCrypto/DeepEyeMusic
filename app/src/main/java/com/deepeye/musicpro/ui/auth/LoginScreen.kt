@@ -3,6 +3,7 @@
 
 package com.deepeye.musicpro.ui.auth
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -63,7 +64,7 @@ fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val authState by viewModel.authState.collectAsState()
+    val authState by viewModel.authState.collectAsStateWithLifecycle()
     var isSignUpMode by remember { mutableStateOf(false) }
 
     var email by remember { mutableStateOf("") }

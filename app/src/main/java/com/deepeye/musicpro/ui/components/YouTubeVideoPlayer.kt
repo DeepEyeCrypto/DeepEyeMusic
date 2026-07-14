@@ -3,6 +3,7 @@
 
 package com.deepeye.musicpro.ui.components
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.annotation.SuppressLint
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -81,7 +82,7 @@ fun YouTubeVideoPlayer(
     }
 
     val state = webView.tag as? YouTubePlayerState ?: YouTubePlayerState().also { webView.tag = it }
-    val hasNetworkError by state.networkError.collectAsState()
+    val hasNetworkError by state.networkError.collectAsStateWithLifecycle()
 
     Box(modifier = modifier) {
         AndroidView(

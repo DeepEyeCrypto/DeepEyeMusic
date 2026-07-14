@@ -40,7 +40,8 @@ object PlayerModule {
         audioAttributes: AudioAttributes,
         vocalRemoverProcessor: com.deepeye.musicpro.dsp.processor.VocalRemoverProcessor,
         crossfeedProcessor: com.deepeye.musicpro.dsp.processor.CrossfeedProcessor,
-        tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor
+        tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor,
+        lufsAnalyzerProcessor: com.deepeye.musicpro.dsp.processor.LufsAnalyzerProcessor
     ): ExoPlayer {
         val renderersFactory = object : androidx.media3.exoplayer.DefaultRenderersFactory(context) {
             override fun buildAudioSink(
@@ -51,7 +52,7 @@ object PlayerModule {
                 return androidx.media3.exoplayer.audio.DefaultAudioSink.Builder(context)
                     .setEnableFloatOutput(enableFloatOutput)
                     .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
-                    .setAudioProcessors(arrayOf(vocalRemoverProcessor, crossfeedProcessor, tubeSimulatorProcessor))
+                    .setAudioProcessors(arrayOf(vocalRemoverProcessor, crossfeedProcessor, tubeSimulatorProcessor, lufsAnalyzerProcessor))
                     .build()
             }
         }

@@ -36,6 +36,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.repeatOnLifecycle
 import com.deepeye.musicpro.ui.components.DynamicLabel
 import com.deepeye.musicpro.ui.components.SecondaryLabel
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -383,25 +384,29 @@ fun HomeHubScreen(
 private fun HomeGreetingHeader(onNavigateToSettings: () -> Unit) {
     var btcPrice by remember { mutableStateOf("Fetching BTC...") }
 
-    LaunchedEffect(Unit) {
-        while (true) {
-            try {
-                btcPrice = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                    val url = java.net.URL("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT")
-                    val connection = url.openConnection() as java.net.HttpURLConnection
-                    connection.connectTimeout = 3000
-                    connection.readTimeout = 3000
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val priceStr = response.substringAfter("\"price\":\"").substringBefore("\"")
-                    val formattedPrice = String.format("%,.2f", priceStr.toDoubleOrNull() ?: 0.0)
-                    "₿ $$formattedPrice"
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    LaunchedEffect(lifecycleOwner.lifecycle) {
+        lifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+            while (true) {
+                try {
+                    btcPrice = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        val url = java.net.URL("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT")
+                        val connection = url.openConnection() as java.net.HttpURLConnection
+                        connection.connectTimeout = 3000
+                        connection.readTimeout = 3000
+                        val response = connection.inputStream.bufferedReader().use { it.readText() }
+                        val priceStr = response.substringAfter("\"price\":\"").substringBefore("\"")
+                        val formattedPrice = String.format("%,.2f", priceStr.toDoubleOrNull() ?: 0.0)
+                        "₿ $$formattedPrice"
+                    }
+                } catch (e: Exception) {
+                    if (btcPrice == "Fetching BTC...") {
+                        btcPrice = "₿ ---"
+                    }
                 }
-            } catch (e: Exception) {
-                if (btcPrice == "Fetching BTC...") {
-                    btcPrice = "₿ ---"
-                }
+                kotlinx.coroutines.delay(5000) // Update every 5 seconds
             }
-            kotlinx.coroutines.delay(5000) // Update every 5 seconds
         }
     }
 

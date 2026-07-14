@@ -206,8 +206,8 @@ fun PremiumProfileCard(
         refractionHeight = 0.3f
     ) {
         Box(modifier = Modifier.padding(18.dp)) {
-        val currentUser by authViewModel.currentUser.collectAsState()
-        val authState by authViewModel.authState.collectAsState()
+        val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
+        val authState by authViewModel.authState.collectAsStateWithLifecycle()
         var isSignUpMode by remember { mutableStateOf(false) }
         var email by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }

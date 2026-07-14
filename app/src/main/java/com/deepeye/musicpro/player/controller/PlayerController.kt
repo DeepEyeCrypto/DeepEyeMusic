@@ -173,6 +173,14 @@ constructor(
                     }
                 }
         }
+        
+        // 3. Sync to PlayerState (so UI can observe the actual queue)
+        scope.launch {
+            kotlinx.coroutines.flow.combine(queueManager.queue, queueManager.currentIndex) { q, idx -> Pair(q, idx) }
+                .collectLatest { (q, idx) ->
+                    updateState { it.copy(queue = q.toImmutableList(), currentIndex = idx) }
+                }
+        }
 
         player.addListener(
             object : Player.Listener {

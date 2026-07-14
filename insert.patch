@@ -1,0 +1,63 @@
+--- app/src/main/java/com/deepeye/musicpro/ui/components/HybridPlayerCard.kt
++++ app/src/main/java/com/deepeye/musicpro/ui/components/HybridPlayerCard.kt
+@@ -406,6 +406,53 @@
+                     )
+                 }
+ 
++                // Catch ANY touch when locked to show the unlock button and prevent swipe-to-dismiss
++                if (isLocked) {
++                    Box(modifier = Modifier
++                        .fillMaxSize()
++                        .background(Color.Transparent)
++                        .pointerInput(Unit) {
++                            detectTapGestures(
++                                onPress = {
++                                    android.util.Log.e("HybridPlayerCard_Lock", "Screen PRESSED while locked!")
++                                    controlsVisible = true
++                                    resetTimer()
++                                },
++                                onTap = {
++                                    android.util.Log.e("HybridPlayerCard_Lock", "Screen TAPPED while locked!")
++                                    controlsVisible = true
++                                    resetTimer()
++                                }
++                            )
++                        }
++                        .pointerInput(Unit) {
++                            androidx.compose.foundation.gestures.detectDragGestures { change, _ -> change.consume() }
++                        }
++                    )
++                }
++
++                // Top Left Lock/Unlock Button
++                if (isFullscreen && !isInPipMode) {
++                    AnimatedVisibility(
++                        visible = controlsVisible,
++                        enter = fadeIn(),
++                        exit = fadeOut(),
++                    ) {
++                        Box(
++                            modifier = Modifier.fillMaxSize().padding(24.dp),
++                            contentAlignment = Alignment.TopStart,
++                        ) {
++                            IconButton(
++                                onClick = {
++                                    android.util.Log.e("HybridPlayerCard_Lock", "Lock button clicked! current isLocked=$isLocked")
++                                    isLocked = !isLocked
++                                    if (!isLocked) resetTimer()
++                                },
++                                modifier = Modifier.size(48.dp).background(Color.Black.copy(alpha = 0.55f), CircleShape),
++                            ) {
++                                Icon(
++                                    imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
++                                    contentDescription = if (isLocked) "Unlock" else "Lock",
++                                    tint = Color.White,
++                                    modifier = Modifier.size(24.dp),
++                                )
++                            }
++                        }
++                    }
++                }
++
+                 // GESTURE SKIP ZONES + OVERLAYS: Hidden in PiP for clean view
+                 if (!isInPipMode && !isLocked) {

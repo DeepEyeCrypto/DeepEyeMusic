@@ -84,29 +84,47 @@ constructor(
     }
 
     fun playVideo(video: HomeVideoItem) {
-        val mediaItem =
+        val state = _feedState.value
+        val items = state.trending.takeIf { it.any { v -> v.id == video.id } }
+            ?: state.shorts.takeIf { it.any { v -> v.id == video.id } }
+            ?: state.continueWatching.takeIf { it.any { v -> v.id == video.id } }
+            ?: listOf(video)
+            
+        val index = items.indexOfFirst { it.id == video.id }.coerceAtLeast(0)
+        
+        val queue = items.map {
             MediaItem.Remote(
-                id = video.id,
-                title = video.title,
-                artist = video.channelName,
-                artworkUri = Uri.parse(video.thumbnailUrl),
-                duration = video.duration * 1000L,
+                id = it.id,
+                title = it.title,
+                artist = it.channelName,
+                artworkUri = Uri.parse(it.thumbnailUrl),
+                duration = it.duration * 1000L,
                 isVideo = true,
             )
-        playerController.playMedia(mediaItem)
+        }
+        playerController.setQueue(queue, index)
     }
 
     fun playMusic(music: HomeMusicItem) {
-        val mediaItem =
+        val state = _feedState.value
+        val items = state.quickPicks.takeIf { it.any { m -> m.id == music.id } }
+            ?: state.continueListening.takeIf { it.any { m -> m.id == music.id } }
+            ?: state.localResume.takeIf { it.any { m -> m.id == music.id } }
+            ?: listOf(music)
+            
+        val index = items.indexOfFirst { it.id == music.id }.coerceAtLeast(0)
+        
+        val queue = items.map {
             MediaItem.Remote(
-                id = music.id,
-                title = music.title,
-                artist = music.artist,
-                artworkUri = Uri.parse(music.thumbnailUrl),
-                duration = music.duration * 1000L,
+                id = it.id,
+                title = it.title,
+                artist = it.artist,
+                artworkUri = Uri.parse(it.thumbnailUrl),
+                duration = it.duration * 1000L,
                 isVideo = false,
             )
-        playerController.playMedia(mediaItem)
+        }
+        playerController.setQueue(queue, index)
     }
 
     fun openV4A(navController: NavController) {

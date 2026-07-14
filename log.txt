@@ -1,0 +1,528 @@
+--------- beginning of main
+07-12 16:44:31.035  6763  7026 I ModemStats: [DataStallDetectService] onCapabilitiesChanged networkCapabilities=[ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED LinkUpBandwidth>=13936Kbps LinkDnBandwidth>=17735Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /192.168.1.6, Security type: 2, Supplicant state: COMPLETED, Wi-Fi standard: 11n, RSSI: -59, Link speed: 65Mbps, Tx Link speed: 65Mbps, Max Supported Tx Link speed: 144Mbps, Calculated Tx : 42Mbps, Rx Link speed: 52Mbps, Max Supported Rx Link speed: 144Mbps, Calculated Rx : 35Mbps, Frequency: 2412MHz, Net ID: -1, Metered hint: false, score: 100, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -59 UnderlyingNetworks: Null]
+07-12 16:44:31.036  6763  7026 I ModemStats: [DataStallDetectService] onCapabilitiesChanged NET_CAPABILITY_VALIDATED=true
+07-12 16:44:31.036  4359  5478 D QCNEJ/NativeHalConnector: -> SND notifyDefaultNetworkChanged(1)
+07-12 16:44:31.036  6763  7026 I ModemStats: [DataStallDetectService] onCapabilitiesChanged mDataStallManager.mDataStallInstance=null
+07-12 16:44:31.036  6763  7026 I ModemStats: [DataStallDetectService] onCapabilitiesChanged mDataStallSmart5gManager.mDataStallInstance=null
+07-12 16:44:31.039  4156  4156 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+07-12 16:44:31.039 10948 11063 I BugleRcsEngine: handleMessage processing message:[NOTIFY_UPTIME_IGNORE_STATE_CHANGED] with [non-null]:RcsEngineImpl reference [CONTEXT log_prefix="RcsEngineImpl[DUAL_REG]:[8311b26b-d13d]>Handler" thread_id=431 ]
+07-12 16:44:31.040 10948 11031 I BugleRcsEngine: Connected state: [1], networkType: [WIFI] [CONTEXT thread_id=424 ]
+07-12 16:44:31.041 14366 14397 I NullBinder: NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0
+07-12 16:44:31.041  4156  4156 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+--------- beginning of system
+07-12 16:44:31.041 14366 14397 W Binder  : reply too large data on java level: InterfaceDescriptor = null, code = 1
+07-12 16:44:31.041 14366 14397 W .gms.persistent: Large reply transaction of 1056768 bytes, interface descriptor , code 1
+07-12 16:44:31.046  9552  9680 D OtaApp  : PollingManagerService:NetworkCallback:networkCapabilities=[ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED LinkUpBandwidth>=13936Kbps LinkDnBandwidth>=17735Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:00:00:00:00:00, MAC: 02:00:00:00:00:00, IP: /192.168.1.6, Security type: 2, Supplicant state: COMPLETED, Wi-Fi standard: 11n, RSSI: -59, Link speed: 65Mbps, Tx Link speed: 65Mbps, Max Supported Tx Link speed: 144Mbps, Calculated Tx : 42Mbps, Rx Link speed: 52Mbps, Max Supported Rx Link speed: 144Mbps, Calculated Rx : 35Mbps, Frequency: 2412MHz, Net ID: -1, Metered hint: false, score: 100, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , Is TID-To-Link negotiation supported by the AP: false, AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>, Vendor Data: <none>> SignalStrength: -59 UnderlyingNetworks: Null]
+07-12 16:44:31.049 14366 13542 I NearbyMediums: Wifi changed new SSID: "Airtel_Siddhanth's wifi"
+07-12 16:44:31.049 14366 13542 I NearbyMediums: WifiLanConnectivityInfo is not changed, skip notify.
+07-12 16:44:31.051  3243  4015 D ConnectivityService: NetReassign [no changes] [c 1] [a 1] [i 2]
+07-12 16:44:31.164  2719  3363 I qcc-trd : qdmaConnectivityInfoProvider: Into parseLTESysInfo()
+07-12 16:44:31.165  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=16
+07-12 16:44:31.165  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:31.166  2719  3363 I qcc-trd : qdmaConnectivityInfoProvider: Into parseLTESysInfo()
+07-12 16:44:31.166  2719  3363 I qcc-trd : qdmaConnectivityInfoProvider: Into parseLTESysInfo()
+07-12 16:44:31.169  2655  3223 E RIL-MOTEXT: qcrilUpdRegRAT, called , rat =7
+07-12 16:44:31.178  4381  5960 I QImsService: ImsRadioIndicationAidl : onServiceDomainChanged()[SUB0]
+07-12 16:44:31.179  4381  5960 I QImsService: ImsSenderRxr : [UNSL]< UNSOL_SERVICE_DOMAIN_CHANGED 3[SUB0]
+07-12 16:44:31.180  4381  4381 I QImsService: ImsRegistrationController : Message received: what = 5
+07-12 16:44:31.180  4381  4381 I QImsService: ImsRegistrationController : handleSrvDomainChanged
+07-12 16:44:31.181  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=16
+07-12 16:44:31.183  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:31.187  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=12
+07-12 16:44:31.187  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=28
+07-12 16:44:31.187  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:31.187  2655  3223 E RIL-MOTEXT: qcrilUpdRegRAT, called , rat =7
+07-12 16:44:31.189  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:31.190  6763  6763 W ModemStats: [ModemStatsService] (INF) handleOemHookBandInfo: Processing
+07-12 16:44:31.190  4381  5960 I QImsService: ImsRadioIndicationAidl : onVopsChanged()[SUB0]
+07-12 16:44:31.191  4381  5960 I QImsService: ImsSenderRxr : [UNSL]< UNSOL_VOPS_CHANGED false[SUB0]
+07-12 16:44:31.192  4381  4381 I QImsService: ImsServiceSubHandler : Message received: what = 25
+07-12 16:44:31.192  4381  4381 I QImsService: ImsServiceSub : [0] broadcastVopsSsacIntent Vops = false , Ssac = false , PhoneId = 0
+07-12 16:44:31.192  4359  5039 W IWlanNetworkService: 40721 > Response Processed
+07-12 16:44:31.194  4381  4381 I QImsService: ImsConfigImpl : onReceive: ACTION_VOPS_SSAC_STATUS
+07-12 16:44:31.196  4381  5960 I QImsService: ImsRadioIndicationAidl : onServiceDomainChanged()[SUB0]
+07-12 16:44:31.196  4381  5960 I QImsService: ImsSenderRxr : [UNSL]< UNSOL_SERVICE_DOMAIN_CHANGED 3[SUB0]
+07-12 16:44:31.198  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=16
+07-12 16:44:31.198  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:31.199  2655  3223 E RIL-MOTEXT: qcrilUpdRegRAT, called , rat =7
+07-12 16:44:31.201  4359  5039 W IWlanNetworkService: 40722 > Response Processed
+07-12 16:44:31.202  4381  5960 I QImsService: ImsRadioIndicationAidl : onVopsChanged()[SUB0]
+07-12 16:44:31.202  4381  5960 I QImsService: ImsSenderRxr : [UNSL]< UNSOL_VOPS_CHANGED true[SUB0]
+07-12 16:44:31.203  4381  4381 I QImsService: ImsConfigImpl : onReceive: ACTION_VOPS_SSAC_STATUS
+07-12 16:44:31.203  4381  4381 I QImsService: ImsRegistrationController : Message received: what = 5
+07-12 16:44:31.203  4381  4381 I QImsService: ImsRegistrationController : handleSrvDomainChanged
+07-12 16:44:31.203  4381  4381 I QImsService: ImsServiceSubHandler : Message received: what = 25
+07-12 16:44:31.203  4381  4381 I QImsService: ImsServiceSub : [0] broadcastVopsSsacIntent Vops = true , Ssac = false , PhoneId = 0
+07-12 16:44:31.205  4381  4381 I QImsService: ImsConfigImpl : onReceive: ACTION_VOPS_SSAC_STATUS
+07-12 16:44:31.209  4381  5960 I QImsService: ImsRadioIndicationAidl : onServiceDomainChanged()[SUB0]
+07-12 16:44:31.210  4381  4381 I QImsService: ImsConfigImpl : onReceive: ACTION_VOPS_SSAC_STATUS
+07-12 16:44:31.210  4381  5960 I QImsService: ImsSenderRxr : [UNSL]< UNSOL_SERVICE_DOMAIN_CHANGED 3[SUB0]
+07-12 16:44:31.211  4381  4381 I QImsService: ImsRegistrationController : Message received: what = 5
+07-12 16:44:31.211  4381  4381 I QImsService: ImsRegistrationController : handleSrvDomainChanged
+07-12 16:44:31.211  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=16
+07-12 16:44:31.211  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:31.215  4359  5039 W IWlanNetworkService: 40723 > Response Processed
+07-12 16:44:31.221  4156  4156 D GlobalActionsDialogLite: Service changed before actions created
+07-12 16:44:31.222  4156  4156 D GlobalActionsDialogLite: Service changed before actions created
+07-12 16:44:31.225  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:31.225  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:31.225  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:31.225  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:31.226 20845 20902 D HeadsetPhoneState: Enter onServiceStateChanged
+07-12 16:44:31.227  9552  9552 D OtaApp  : PollingMangerService, phone state: roaming: false
+07-12 16:44:31.227  3243  4868 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1281 android.content.Context.sendBroadcastMultiplePermissions:2476 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3597 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 
+07-12 16:44:31.228  4156  4156 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+07-12 16:44:31.228  3243  4868 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3602 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:31.229  2655 13714 E RIL-MOTEXT: qcrilUpdateOperator, called
+07-12 16:44:31.230  3243  4868 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3611 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:31.231  3243  4868 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3617 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:31.233 24672 24672 D CellBroadcastReceiver: onReceive Intent { act=android.intent.action.SERVICE_STATE flg=0x1000010 cmp=com.google.android.cellbroadcastreceiver/com.android.cellbroadcastreceiver.CellBroadcastReceiver (has extras) }
+07-12 16:44:31.234  4465  4465 D Telephony: TelecomAccountTelephonyCallback: onServiceStateChanged called.
+07-12 16:44:31.234  4465  4465 I Telephony: TelecomAccountTelephonyCallback: onServiceStateChanged: newState=0, mServiceState=0
+07-12 16:44:31.237 24672 24672 D CellBroadcastReceiver: onServiceStateChanged, ss: 0
+07-12 16:44:31.237 24672 24672 D CellBroadcastReceiver: networkOperator: 40410
+07-12 16:44:31.237 24672 24672 D CellBroadcastReceiver: mockmodem is running? = false
+07-12 16:44:31.237 24672 24672 D CellBroadcastReceiver: update supported roaming operator as 
+07-12 16:44:31.241  4465  4465 I Telephony: AccountEntry: isRttCurrentlySupported -- regular acct, hasVoiceAvailability: true
+07-12 16:44:31.241  4465  4465 I Telephony:  isRttSupported: false
+07-12 16:44:31.241  4465  4465 I Telephony:  alwaysAllowWhileRoaming: false
+07-12 16:44:31.241  4465  4465 I Telephony:  isRoaming: false
+07-12 16:44:31.241  4465  4465 I Telephony:  isOnWfc: false
+07-12 16:44:31.243  4465  4465 I Telephony: VoiceActivationHandler: Service state is IN_SERVICE. Set voice activation state to ACTIVATED
+07-12 16:44:31.270  4156  4156 D GlobalActionsDialogLite: Service changed before actions created
+07-12 16:44:31.270  4156  4156 D GlobalActionsDialogLite: Service changed before actions created
+07-12 16:44:31.273  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:31.274  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:31.274  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:31.274  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:31.274  4156  4156 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+07-12 16:44:31.275 20845 20902 D HeadsetPhoneState: Enter onServiceStateChanged
+07-12 16:44:31.276  9552  9552 D OtaApp  : PollingMangerService, phone state: roaming: false
+07-12 16:44:31.276  3243  3662 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1281 android.content.Context.sendBroadcastMultiplePermissions:2476 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3597 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 
+07-12 16:44:31.277  3243  3662 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3602 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:31.278  3243  3662 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3611 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:31.279  3243  3662 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3617 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:31.280  4465  4465 D ServiceStateProvider: subId=1
+07-12 16:44:31.281 24672 24672 D CellBroadcastReceiver: onReceive Intent { act=android.intent.action.SERVICE_STATE flg=0x1000010 cmp=com.google.android.cellbroadcastreceiver/com.android.cellbroadcastreceiver.CellBroadcastReceiver (has extras) }
+07-12 16:44:31.284  4465  4465 D Telephony: TelecomAccountTelephonyCallback: onServiceStateChanged called.
+07-12 16:44:31.284  4465  4465 I Telephony: TelecomAccountTelephonyCallback: onServiceStateChanged: newState=0, mServiceState=0
+07-12 16:44:31.284 24672 24672 D CellBroadcastReceiver: onServiceStateChanged, ss: 0
+07-12 16:44:31.284 24672 24672 D CellBroadcastReceiver: networkOperator: 40410
+07-12 16:44:31.284 24672 24672 D CellBroadcastReceiver: mockmodem is running? = false
+07-12 16:44:31.284 24672 24672 D CellBroadcastReceiver: update supported roaming operator as 
+07-12 16:44:31.290  4465  4465 I Telephony: AccountEntry: isRttCurrentlySupported -- regular acct, hasVoiceAvailability: true
+07-12 16:44:31.290  4465  4465 I Telephony:  isRttSupported: false
+07-12 16:44:31.290  4465  4465 I Telephony:  alwaysAllowWhileRoaming: false
+07-12 16:44:31.290  4465  4465 I Telephony:  isRoaming: false
+07-12 16:44:31.290  4465  4465 I Telephony:  isOnWfc: false
+07-12 16:44:31.292  4465  4465 I Telephony: VoiceActivationHandler: Service state is IN_SERVICE. Set voice activation state to ACTIVATED
+07-12 16:44:31.546 14366 13542 I NearbySharing: Network state changed: NetworkState(isRestricted=false, isOnline=true, isCongested=false, isMetered=false, isWifiConnected=true)
+07-12 16:44:31.547 14366 13703 I NearbySharing: Network state changed: NetworkState(isRestricted=false, isOnline=true, isCongested=false, isMetered=false, isWifiConnected=true)
+07-12 16:44:33.246  2719  3363 I qcc-trd : qdmaConnectivityInfoProvider: Into parseLTESysInfo()
+07-12 16:44:33.248  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=16
+07-12 16:44:33.249  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:33.249  2655  3223 E RIL-MOTEXT: qcrilUpdRegRAT, called , rat =7
+07-12 16:44:33.256  4381  5960 I QImsService: ImsRadioIndicationAidl : onServiceDomainChanged()[SUB0]
+07-12 16:44:33.257  4381  5960 I QImsService: ImsSenderRxr : [UNSL]< UNSOL_SERVICE_DOMAIN_CHANGED 3[SUB0]
+07-12 16:44:33.259  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=16
+07-12 16:44:33.259  4381  4381 I QImsService: ImsRegistrationController : Message received: what = 5
+07-12 16:44:33.259  4381  4381 I QImsService: ImsRegistrationController : handleSrvDomainChanged
+07-12 16:44:33.260  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:33.264  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=12
+07-12 16:44:33.264  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:33.264  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=28
+07-12 16:44:33.265  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:33.266  6763  6763 W ModemStats: [ModemStatsService] (INF) handleOemHookBandInfo: Processing
+07-12 16:44:33.269  4359  5039 W IWlanNetworkService: 40724 > Response Processed
+07-12 16:44:33.271 20845 20902 D HeadsetPhoneState: Updating the signal strength change to the apps
+07-12 16:44:33.272 20845 20902 D HeadsetPhoneState: sendDeviceStateChanged. mService=1 mIsSimStateLoaded=true mSignal=4 mRoam=0 mBatteryCharge=4
+07-12 16:44:33.272 20845 20902 D HeadsetService: onDeviceStateChanged
+07-12 16:44:33.272 20845 20902 I APM: CallControlIntf: updateSignalStatus
+07-12 16:44:33.272 20845 20902 D CallControl: updateSignalStatus
+07-12 16:44:33.272 20845 20902 E HeadsetStateMachine: returning mCurrentState as Connected
+07-12 16:44:33.272 20845 20953 V CCService: CcsMessageHandler: received message=UPDATE_SIGNAL_STRENGTH
+07-12 16:44:33.272 20845 20953 I bt_stack: [INFO:btif_cc.cc(119)] UpdateSignalStatus: 80
+07-12 16:44:33.273 20845 20953 V CCService: Exit handleMessage
+07-12 16:44:33.273 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(528)] UpdateBearerSignalStrength: signal: 80
+07-12 16:44:33.273 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(1163)] HandleCcsEvent: event: CCS_BEARER_SIGNAL_STRENGTH_UPDATE
+07-12 16:44:33.273 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(1912)] HandleCcsEvent: CCS_BEARER_SIGNAL_STRENGTH_UPDATE
+07-12 16:44:33.273 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(2065)] HandleCcsEvent: After Moving size: 1
+07-12 16:44:33.273 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(2322)] CCSHandler: inactive ccs handle event CCS_NOTIFY_ALL
+07-12 16:44:33.273 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(2332)] CCSHandler: Notify all handle 98
+07-12 16:44:33.273 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(2334)] CCSHandler: No device register for notification
+07-12 16:44:33.273 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(2072)] HandleCcsEventfree rsp data
+07-12 16:44:33.273 20845 20902 D HeadsetStateMachine: handleMessage: E msg.what=10
+07-12 16:44:33.273 20845 20902 D HeadsetStateMachine: processMsg: Connected
+07-12 16:44:33.273 20845 20902 D bt_btif : send_indicator_update: btif_trans_status:0 doing it in btif thread
+07-12 16:44:33.273 20845 20902 D bt_btif : send_indicator_update: btif_trans_status:0 doing it in btif thread
+07-12 16:44:33.273 20845 20902 D bt_btif : send_indicator_update: btif_trans_status:0 doing it in btif thread
+07-12 16:44:33.273 20845 20902 D bt_btif : send_indicator_update: btif_trans_status:0 doing it in btif thread
+07-12 16:44:33.273 20845 20867 D bt_btif : btif_ag_result: switched to btif context
+07-12 16:44:33.273 20845 20867 W bt_btif : call_active_profile_info
+07-12 16:44:33.273 20845 20902 D HeadsetStateMachine: handleMessage: X
+07-12 16:44:33.273 20845 20867 I BluetoothAPM_Jni: btapm_active_profile_callback
+07-12 16:44:33.273 20845 20867 D DeviceProfileMap: getSupportedProfile: for the device 64:8F:DB:D5:6F:1C AudioFeature 0
+07-12 16:44:33.273 20845 20867 D DeviceProfileMap: getSupportedProfile: supported Profiles for the device 64:8F:DB:D5:6F:1C val = 7
+07-12 16:44:33.273 20845 20867 D DeviceProfileMap: getSupportedProfile: device 64:8F:DB:D5:6F:1C supports: 2 for CALL_AUDIO
+07-12 16:44:33.273 20845 20867 D AcmService: Get group address for (64:8F:DB:D5:6F:1C)
+07-12 16:44:33.274 20845 20867 D BluetoothGroupService: checkIncludingServiceForDevice: device = 64:8F:DB:D5:6F:1C uuid = 00001853-0000-1000-8000-00805f9b34fb
+07-12 16:44:33.274 20845 20867 D BluetoothGroupService: getRemoteDeviceGroupId: device = 64:8F:DB:D5:6F:1C uuid = null, mPublicAddr = true
+07-12 16:44:33.274 20845 20867 D AcmService: Hash Map is not NULL
+07-12 16:44:33.274 20845 20867 W bt_btif : call_active_profile_info: profile info is 2
+07-12 16:44:33.274 20845 20867 D bt_btif : btif_ag_result: switched to btif context
+07-12 16:44:33.274 20845 20893 D bt_btif : bta_ag_api_result: p_scb 0x3c14af68 
+07-12 16:44:33.274 20845 20867 W bt_btif : call_active_profile_info
+07-12 16:44:33.274 20845 20867 I BluetoothAPM_Jni: btapm_active_profile_callback
+07-12 16:44:33.274 20845 20893 D bt_btif : bta_ag_hfp_result : res = 5
+07-12 16:44:33.274 20845 20867 D DeviceProfileMap: getSupportedProfile: for the device 64:8F:DB:D5:6F:1C AudioFeature 0
+07-12 16:44:33.274 20845 20867 D DeviceProfileMap: getSupportedProfile: supported Profiles for the device 64:8F:DB:D5:6F:1C val = 7
+07-12 16:44:33.274 20845 20867 D DeviceProfileMap: getSupportedProfile: device 64:8F:DB:D5:6F:1C supports: 2 for CALL_AUDIO
+07-12 16:44:33.274 20845 20867 D AcmService: Get group address for (64:8F:DB:D5:6F:1C)
+07-12 16:44:33.274 20845 20867 D BluetoothGroupService: checkIncludingServiceForDevice: device = 64:8F:DB:D5:6F:1C uuid = 00001853-0000-1000-8000-00805f9b34fb
+07-12 16:44:33.274 20845 20867 D BluetoothGroupService: getRemoteDeviceGroupId: device = 64:8F:DB:D5:6F:1C uuid = null, mPublicAddr = true
+07-12 16:44:33.274 20845 20867 D AcmService: Hash Map is not NULL
+07-12 16:44:33.274 20845 20867 W bt_btif : call_active_profile_info: profile info is 2
+07-12 16:44:33.274 20845 20867 D bt_btif : btif_ag_result: switched to btif context
+07-12 16:44:33.274 20845 20893 D bt_btif : bta_ag_api_result: p_scb 0x3c14af68 
+07-12 16:44:33.274 20845 20867 W bt_btif : call_active_profile_info
+07-12 16:44:33.274 20845 20893 D bt_btif : bta_ag_hfp_result : res = 5
+07-12 16:44:33.274 20845 20867 I BluetoothAPM_Jni: btapm_active_profile_callback
+07-12 16:44:33.275 20845 20867 D DeviceProfileMap: getSupportedProfile: for the device 64:8F:DB:D5:6F:1C AudioFeature 0
+07-12 16:44:33.275 20845 20867 D DeviceProfileMap: getSupportedProfile: supported Profiles for the device 64:8F:DB:D5:6F:1C val = 7
+07-12 16:44:33.275 20845 20867 D DeviceProfileMap: getSupportedProfile: device 64:8F:DB:D5:6F:1C supports: 2 for CALL_AUDIO
+07-12 16:44:33.275 20845 20867 D AcmService: Get group address for (64:8F:DB:D5:6F:1C)
+07-12 16:44:33.275 20845 20867 D BluetoothGroupService: checkIncludingServiceForDevice: device = 64:8F:DB:D5:6F:1C uuid = 00001853-0000-1000-8000-00805f9b34fb
+07-12 16:44:33.275 20845 20867 D BluetoothGroupService: getRemoteDeviceGroupId: device = 64:8F:DB:D5:6F:1C uuid = null, mPublicAddr = true
+07-12 16:44:33.275 20845 20867 D AcmService: Hash Map is not NULL
+07-12 16:44:33.275 20845 20867 W bt_btif : call_active_profile_info: profile info is 2
+07-12 16:44:33.275 20845 20867 D bt_btif : btif_ag_result: switched to btif context
+07-12 16:44:33.275 20845 20867 W bt_btif : call_active_profile_info
+07-12 16:44:33.275 20845 20867 I BluetoothAPM_Jni: btapm_active_profile_callback
+07-12 16:44:33.275 20845 20893 D bt_btif : bta_ag_api_result: p_scb 0x3c14af68 
+07-12 16:44:33.275 20845 20893 D bt_btif : bta_ag_hfp_result : res = 5
+07-12 16:44:33.275 20845 20893 W bt_btif : get_active_profile: active profile is 2 
+07-12 16:44:33.275 20845 20867 D DeviceProfileMap: getSupportedProfile: for the device 64:8F:DB:D5:6F:1C AudioFeature 0
+07-12 16:44:33.275 20845 20867 D DeviceProfileMap: getSupportedProfile: supported Profiles for the device 64:8F:DB:D5:6F:1C val = 7
+07-12 16:44:33.275 20845 20867 D DeviceProfileMap: getSupportedProfile: device 64:8F:DB:D5:6F:1C supports: 2 for CALL_AUDIO
+07-12 16:44:33.275 20845 20867 D AcmService: Get group address for (64:8F:DB:D5:6F:1C)
+07-12 16:44:33.275 20845 20867 D BluetoothGroupService: checkIncludingServiceForDevice: device = 64:8F:DB:D5:6F:1C uuid = 00001853-0000-1000-8000-00805f9b34fb
+07-12 16:44:33.275 20845 20893 D bt_btif : bta_ag_send_ind: p_scb->call_ind 0, p_scb->callsetup_ind 0, p_scb->callheld_ind 0
+07-12 16:44:33.275 20845 20867 D BluetoothGroupService: getRemoteDeviceGroupId: device = 64:8F:DB:D5:6F:1C uuid = null, mPublicAddr = true
+07-12 16:44:33.275 20845 20867 D AcmService: Hash Map is not NULL
+07-12 16:44:33.275 20845 20867 W bt_btif : call_active_profile_info: profile info is 2
+07-12 16:44:33.275 20845 20893 D bt_btif : bta_ag_api_result: p_scb 0x3c14af68 
+07-12 16:44:33.275 20845 20893 D bt_btif : bta_ag_hfp_result : res = 5
+07-12 16:44:33.275  1994  1994 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK ON
+07-12 16:44:33.276  1994  1994 D vendor.qti.bluetooth@1.0-wake_lock: Acquire wakelock is acquired 
+07-12 16:44:33.276  1994  1994 I vendor.qti.bluetooth@1.0-ibs_handler: DeviceWakeUp: Writing IBS_WAKE_IND
+07-12 16:44:33.280  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:33.280  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:33.280  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:33.280  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:33.280  4156  4156 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+07-12 16:44:33.282  1994 20891 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_ACK: 0xFC
+07-12 16:44:33.282  1994 20891 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Signal wack_cond_
+07-12 16:44:33.282  1994  1994 D vendor.qti.bluetooth@1.0-ibs_handler: DeviceWakeUp: Unblocked from waiting for FC, pthread_cond_timedwait ret = 0
+07-12 16:44:33.285  2655 13718 E RIL-MOTEXT: qcrilUpdateOperator, called
+07-12 16:44:33.304  4156  4156 D GlobalActionsDialogLite: Service changed before actions created
+07-12 16:44:33.304  4156  4156 D GlobalActionsDialogLite: Service changed before actions created
+07-12 16:44:33.311  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:33.311  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:33.311  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:33.311  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:33.311  4156  4156 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+07-12 16:44:33.312 20845 20902 D HeadsetPhoneState: Enter onServiceStateChanged
+07-12 16:44:33.312  9552  9552 D OtaApp  : PollingMangerService, phone state: roaming: false
+07-12 16:44:33.313  3243  3662 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1281 android.content.Context.sendBroadcastMultiplePermissions:2476 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3597 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 
+07-12 16:44:33.315  3243  3662 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3602 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:33.316  3243  3662 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3611 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:33.317  3243  3662 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3617 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:33.317  4465  4465 D ServiceStateProvider: subId=1
+07-12 16:44:33.319 24672 24672 D CellBroadcastReceiver: onReceive Intent { act=android.intent.action.SERVICE_STATE flg=0x1000010 cmp=com.google.android.cellbroadcastreceiver/com.android.cellbroadcastreceiver.CellBroadcastReceiver (has extras) }
+07-12 16:44:33.321  4465  4465 D Telephony: TelecomAccountTelephonyCallback: onServiceStateChanged called.
+07-12 16:44:33.321  4465  4465 I Telephony: TelecomAccountTelephonyCallback: onServiceStateChanged: newState=0, mServiceState=0
+07-12 16:44:33.322 24672 24672 D CellBroadcastReceiver: onServiceStateChanged, ss: 0
+07-12 16:44:33.322 24672 24672 D CellBroadcastReceiver: networkOperator: 40410
+07-12 16:44:33.322 24672 24672 D CellBroadcastReceiver: mockmodem is running? = false
+07-12 16:44:33.322 24672 24672 D CellBroadcastReceiver: update supported roaming operator as 
+07-12 16:44:33.326  4465  4465 I Telephony: AccountEntry: isRttCurrentlySupported -- regular acct, hasVoiceAvailability: true
+07-12 16:44:33.326  4465  4465 I Telephony:  isRttSupported: false
+07-12 16:44:33.326  4465  4465 I Telephony:  alwaysAllowWhileRoaming: false
+07-12 16:44:33.326  4465  4465 I Telephony:  isRoaming: false
+07-12 16:44:33.326  4465  4465 I Telephony:  isOnWfc: false
+07-12 16:44:33.328  4465  4465 I Telephony: VoiceActivationHandler: Service state is IN_SERVICE. Set voice activation state to ACTIVATED
+07-12 16:44:33.704  1994 20891 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_IND: 0xFD
+07-12 16:44:33.704  1994 20891 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Writing IBS_WAKE_ACK
+07-12 16:44:33.746  1994 20891 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_SLEEP_IND: 0xFE
+07-12 16:44:34.026  2080 20355 I QC2Comp : [vp9D_1159] Stats: Pending(21) i/p-done(21) Works: Q: 3749/Done 3729|Work-Rate: Q(0.0/s Avg=0.4/s) Done(0.000/s Avg=0.443/s)| Stream: 25.00fps 1.8Mbps
+07-12 16:44:34.026  2080 20355 I QC2Comp : [vp9D_1159] Mem-usage:  [In-1D: 13 bufs 48.598 MB] [1D-1897: 21 bufs 0.328 MB] [2D-1898: 29 bufs 89.039 MB] | Total: 137.965 MB
+07-12 16:44:34.049  3243  4008 D WifiStaIfaceHidlImpl: getCachedScanData is not implemented by HIDL
+07-12 16:44:34.063  4156  4156 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+07-12 16:44:34.282  1994 20896 I vendor.qti.bluetooth@1.0-ibs_handler: DeviceSleep: TX Awake, Sending SLEEP_IND
+07-12 16:44:34.282  1994 20896 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK OFF
+07-12 16:44:34.292 14366 13703 I NearbyMediums: No BLE Fast/GATT advertisements found in the latest cycle.
+07-12 16:44:34.292 14366 13703 I NearbyMediums: Current Tracked Scanning Clients are : {NearbyConnections.EnvironmentMonitor, NearbySharing, NearbyConnections.TxAdvertisement}
+07-12 16:44:34.434  1994 20886 D vendor.qti.bluetooth@1.0-wake_lock: Release wakelock is released 
+07-12 16:44:34.488 18835 18835 D NowPlayingGuardian: ✅ Now Playing metadata matches on all layers: UI/ExoPlayer/MediaSession = 'vhoL1EMmCtE'
+07-12 16:44:37.035  2719  3363 I qcc-trd : qdmaConnectivityInfoProvider: Into parseLTESysInfo()
+07-12 16:44:37.038  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=16
+07-12 16:44:37.039  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:37.040  2655  3223 E RIL-MOTEXT: qcrilUpdRegRAT, called , rat =7
+07-12 16:44:37.047  4381  5960 I QImsService: ImsRadioIndicationAidl : onServiceDomainChanged()[SUB0]
+07-12 16:44:37.048  4381  5960 I QImsService: ImsSenderRxr : [UNSL]< UNSOL_SERVICE_DOMAIN_CHANGED 3[SUB0]
+07-12 16:44:37.049  4381  4381 I QImsService: ImsRegistrationController : Message received: what = 5
+07-12 16:44:37.050  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=16
+07-12 16:44:37.050  4381  4381 I QImsService: ImsRegistrationController : handleSrvDomainChanged
+07-12 16:44:37.050  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:37.063 20845 20902 D HeadsetPhoneState: Updating the signal strength change to the apps
+07-12 16:44:37.063 20845 20902 D HeadsetPhoneState: sendDeviceStateChanged. mService=1 mIsSimStateLoaded=true mSignal=3 mRoam=0 mBatteryCharge=4
+07-12 16:44:37.063 20845 20902 D HeadsetService: onDeviceStateChanged
+07-12 16:44:37.063 20845 20902 I APM: CallControlIntf: updateSignalStatus
+07-12 16:44:37.063 20845 20902 D CallControl: updateSignalStatus
+07-12 16:44:37.063 20845 20902 E HeadsetStateMachine: returning mCurrentState as Connected
+07-12 16:44:37.063  4359  5039 W IWlanNetworkService: 40725 > Response Processed
+07-12 16:44:37.063 20845 20902 D HeadsetStateMachine: handleMessage: E msg.what=10
+07-12 16:44:37.064 20845 20953 V CCService: CcsMessageHandler: received message=UPDATE_SIGNAL_STRENGTH
+07-12 16:44:37.064 20845 20902 D HeadsetStateMachine: processMsg: Connected
+07-12 16:44:37.064 20845 20902 D bt_btif : send_indicator_update: btif_trans_status:0 doing it in btif thread
+07-12 16:44:37.064 20845 20902 D bt_btif : send_indicator_update: btif_trans_status:0 doing it in btif thread
+07-12 16:44:37.064 20845 20902 D bt_btif : send_indicator_update: btif_trans_status:0 doing it in btif thread
+07-12 16:44:37.064 20845 20902 D bt_btif : send_indicator_update: btif_trans_status:0 doing it in btif thread
+07-12 16:44:37.064 20845 20867 D bt_btif : btif_ag_result: switched to btif context
+07-12 16:44:37.064 20845 20902 D HeadsetStateMachine: handleMessage: X
+07-12 16:44:37.064 20845 20867 W bt_btif : call_active_profile_info
+07-12 16:44:37.064 20845 20867 I BluetoothAPM_Jni: btapm_active_profile_callback
+07-12 16:44:37.064 20845 20867 D DeviceProfileMap: getSupportedProfile: for the device 64:8F:DB:D5:6F:1C AudioFeature 0
+07-12 16:44:37.064 20845 20867 D DeviceProfileMap: getSupportedProfile: supported Profiles for the device 64:8F:DB:D5:6F:1C val = 7
+07-12 16:44:37.064 20845 20867 D DeviceProfileMap: getSupportedProfile: device 64:8F:DB:D5:6F:1C supports: 2 for CALL_AUDIO
+07-12 16:44:37.064 20845 20867 D AcmService: Get group address for (64:8F:DB:D5:6F:1C)
+07-12 16:44:37.064 20845 20867 D BluetoothGroupService: checkIncludingServiceForDevice: device = 64:8F:DB:D5:6F:1C uuid = 00001853-0000-1000-8000-00805f9b34fb
+07-12 16:44:37.064 20845 20867 D BluetoothGroupService: getRemoteDeviceGroupId: device = 64:8F:DB:D5:6F:1C uuid = null, mPublicAddr = true
+07-12 16:44:37.064 20845 20867 D AcmService: Hash Map is not NULL
+07-12 16:44:37.065 20845 20867 W bt_btif : call_active_profile_info: profile info is 2
+07-12 16:44:37.065 20845 20867 D bt_btif : btif_ag_result: switched to btif context
+07-12 16:44:37.065 20845 20867 W bt_btif : call_active_profile_info
+07-12 16:44:37.065 20845 20867 I BluetoothAPM_Jni: btapm_active_profile_callback
+07-12 16:44:37.065 20845 20893 D bt_btif : bta_ag_api_result: p_scb 0x3c14af68 
+07-12 16:44:37.065 20845 20893 D bt_btif : bta_ag_hfp_result : res = 5
+07-12 16:44:37.065 20845 20867 D DeviceProfileMap: getSupportedProfile: for the device 64:8F:DB:D5:6F:1C AudioFeature 0
+07-12 16:44:37.065 20845 20867 D DeviceProfileMap: getSupportedProfile: supported Profiles for the device 64:8F:DB:D5:6F:1C val = 7
+07-12 16:44:37.065 20845 20867 D DeviceProfileMap: getSupportedProfile: device 64:8F:DB:D5:6F:1C supports: 2 for CALL_AUDIO
+07-12 16:44:37.065 20845 20867 D AcmService: Get group address for (64:8F:DB:D5:6F:1C)
+07-12 16:44:37.065 20845 20867 D BluetoothGroupService: checkIncludingServiceForDevice: device = 64:8F:DB:D5:6F:1C uuid = 00001853-0000-1000-8000-00805f9b34fb
+07-12 16:44:37.065 20845 20867 D BluetoothGroupService: getRemoteDeviceGroupId: device = 64:8F:DB:D5:6F:1C uuid = null, mPublicAddr = true
+07-12 16:44:37.065 20845 20867 D AcmService: Hash Map is not NULL
+07-12 16:44:37.065 20845 20867 W bt_btif : call_active_profile_info: profile info is 2
+07-12 16:44:37.065 20845 20867 D bt_btif : btif_ag_result: switched to btif context
+07-12 16:44:37.065 20845 20867 W bt_btif : call_active_profile_info
+07-12 16:44:37.065 20845 20867 I BluetoothAPM_Jni: btapm_active_profile_callback
+07-12 16:44:37.065 20845 20893 D bt_btif : bta_ag_api_result: p_scb 0x3c14af68 
+07-12 16:44:37.065 20845 20893 D bt_btif : bta_ag_hfp_result : res = 5
+07-12 16:44:37.065 20845 20867 D DeviceProfileMap: getSupportedProfile: for the device 64:8F:DB:D5:6F:1C AudioFeature 0
+07-12 16:44:37.065 20845 20867 D DeviceProfileMap: getSupportedProfile: supported Profiles for the device 64:8F:DB:D5:6F:1C val = 7
+07-12 16:44:37.065 20845 20867 D DeviceProfileMap: getSupportedProfile: device 64:8F:DB:D5:6F:1C supports: 2 for CALL_AUDIO
+07-12 16:44:37.065 20845 20867 D AcmService: Get group address for (64:8F:DB:D5:6F:1C)
+07-12 16:44:37.065 20845 20867 D BluetoothGroupService: checkIncludingServiceForDevice: device = 64:8F:DB:D5:6F:1C uuid = 00001853-0000-1000-8000-00805f9b34fb
+07-12 16:44:37.065 20845 20867 D BluetoothGroupService: getRemoteDeviceGroupId: device = 64:8F:DB:D5:6F:1C uuid = null, mPublicAddr = true
+07-12 16:44:37.065 20845 20867 D AcmService: Hash Map is not NULL
+07-12 16:44:37.065 20845 20867 W bt_btif : call_active_profile_info: profile info is 2
+07-12 16:44:37.065 20845 20867 D bt_btif : btif_ag_result: switched to btif context
+07-12 16:44:37.065 20845 20867 W bt_btif : call_active_profile_info
+07-12 16:44:37.065 20845 20867 I BluetoothAPM_Jni: btapm_active_profile_callback
+07-12 16:44:37.065 20845 20893 D bt_btif : bta_ag_api_result: p_scb 0x3c14af68 
+07-12 16:44:37.065 20845 20893 D bt_btif : bta_ag_hfp_result : res = 5
+07-12 16:44:37.065 20845 20893 W bt_btif : get_active_profile: active profile is 2 
+07-12 16:44:37.065 20845 20867 D DeviceProfileMap: getSupportedProfile: for the device 64:8F:DB:D5:6F:1C AudioFeature 0
+07-12 16:44:37.065 20845 20867 D DeviceProfileMap: getSupportedProfile: supported Profiles for the device 64:8F:DB:D5:6F:1C val = 7
+07-12 16:44:37.066 20845 20867 D DeviceProfileMap: getSupportedProfile: device 64:8F:DB:D5:6F:1C supports: 2 for CALL_AUDIO
+07-12 16:44:37.066 20845 20867 D AcmService: Get group address for (64:8F:DB:D5:6F:1C)
+07-12 16:44:37.066 20845 20893 D bt_btif : bta_ag_send_ind: p_scb->call_ind 0, p_scb->callsetup_ind 0, p_scb->callheld_ind 0
+07-12 16:44:37.066 20845 20867 D BluetoothGroupService: checkIncludingServiceForDevice: device = 64:8F:DB:D5:6F:1C uuid = 00001853-0000-1000-8000-00805f9b34fb
+07-12 16:44:37.066 20845 20867 D BluetoothGroupService: getRemoteDeviceGroupId: device = 64:8F:DB:D5:6F:1C uuid = null, mPublicAddr = true
+07-12 16:44:37.066 20845 20867 D AcmService: Hash Map is not NULL
+07-12 16:44:37.066 20845 20867 W bt_btif : call_active_profile_info: profile info is 2
+07-12 16:44:37.066 20845 20893 D bt_btif : bta_ag_api_result: p_scb 0x3c14af68 
+07-12 16:44:37.066 20845 20893 D bt_btif : bta_ag_hfp_result : res = 5
+07-12 16:44:37.066  1994  1994 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK ON
+07-12 16:44:37.064 20845 20953 I bt_stack: [INFO:btif_cc.cc(119)] UpdateSignalStatus: 60
+07-12 16:44:37.066 20845 20953 V CCService: Exit handleMessage
+07-12 16:44:37.066 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(528)] UpdateBearerSignalStrength: signal: 60
+07-12 16:44:37.066 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(1163)] HandleCcsEvent: event: CCS_BEARER_SIGNAL_STRENGTH_UPDATE
+07-12 16:44:37.066 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(1912)] HandleCcsEvent: CCS_BEARER_SIGNAL_STRENGTH_UPDATE
+07-12 16:44:37.066 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(2065)] HandleCcsEvent: After Moving size: 1
+07-12 16:44:37.066 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(2322)] CCSHandler: inactive ccs handle event CCS_NOTIFY_ALL
+07-12 16:44:37.066 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(2332)] CCSHandler: Notify all handle 98
+07-12 16:44:37.067 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(2334)] CCSHandler: No device register for notification
+07-12 16:44:37.067 20845 20893 I bt_stack: [INFO:bta_cc_main.cc(2072)] HandleCcsEventfree rsp data
+07-12 16:44:37.067  1994  1994 D vendor.qti.bluetooth@1.0-wake_lock: Acquire wakelock is acquired 
+07-12 16:44:37.067  1994  1994 I vendor.qti.bluetooth@1.0-ibs_handler: DeviceWakeUp: Writing IBS_WAKE_IND
+07-12 16:44:37.067  2655 13723 E RIL-MOTEXT: qcrilUpdateOperator, called
+07-12 16:44:37.072  3243  4008 D WifiStaIfaceHidlImpl: getCachedScanData is not implemented by HIDL
+07-12 16:44:37.073  1994 20891 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_ACK: 0xFC
+07-12 16:44:37.073  1994 20891 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Signal wack_cond_
+07-12 16:44:37.073  1994  1994 D vendor.qti.bluetooth@1.0-ibs_handler: DeviceWakeUp: Unblocked from waiting for FC, pthread_cond_timedwait ret = 0
+07-12 16:44:37.073  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:37.073  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:37.073  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:37.073  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:37.073  4156  4156 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+07-12 16:44:37.080  4156  4156 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+07-12 16:44:37.089  4156  4156 D GlobalActionsDialogLite: Service changed before actions created
+07-12 16:44:37.089  4156  4156 D GlobalActionsDialogLite: Service changed before actions created
+07-12 16:44:37.094  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:37.095  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:37.095  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:37.095  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:37.095  4156  4156 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+07-12 16:44:37.096  9552  9552 D OtaApp  : PollingMangerService, phone state: roaming: false
+07-12 16:44:37.096  3243  4868 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1281 android.content.Context.sendBroadcastMultiplePermissions:2476 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3597 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 
+07-12 16:44:37.096 20845 20902 D HeadsetPhoneState: Enter onServiceStateChanged
+07-12 16:44:37.097  3243  4868 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3602 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:37.099  3243  4868 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3611 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:37.099  3243  4868 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3617 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:37.100  4465  4465 D ServiceStateProvider: subId=1
+07-12 16:44:37.101 24672 24672 D CellBroadcastReceiver: onReceive Intent { act=android.intent.action.SERVICE_STATE flg=0x1000010 cmp=com.google.android.cellbroadcastreceiver/com.android.cellbroadcastreceiver.CellBroadcastReceiver (has extras) }
+07-12 16:44:37.103 24672 24672 D CellBroadcastReceiver: onServiceStateChanged, ss: 0
+07-12 16:44:37.103 24672 24672 D CellBroadcastReceiver: networkOperator: 40410
+07-12 16:44:37.104 24672 24672 D CellBroadcastReceiver: mockmodem is running? = false
+07-12 16:44:37.104 24672 24672 D CellBroadcastReceiver: update supported roaming operator as 
+07-12 16:44:37.104  4465  4465 D Telephony: TelecomAccountTelephonyCallback: onServiceStateChanged called.
+07-12 16:44:37.104  4465  4465 I Telephony: TelecomAccountTelephonyCallback: onServiceStateChanged: newState=0, mServiceState=0
+07-12 16:44:37.109  4465  4465 I Telephony: AccountEntry: isRttCurrentlySupported -- regular acct, hasVoiceAvailability: true
+07-12 16:44:37.109  4465  4465 I Telephony:  isRttSupported: false
+07-12 16:44:37.109  4465  4465 I Telephony:  alwaysAllowWhileRoaming: false
+07-12 16:44:37.109  4465  4465 I Telephony:  isRoaming: false
+07-12 16:44:37.109  4465  4465 I Telephony:  isOnWfc: false
+07-12 16:44:37.111  4465  4465 I Telephony: VoiceActivationHandler: Service state is IN_SERVICE. Set voice activation state to ACTIVATED
+07-12 16:44:37.217 27764 27764 I adbd    : adbd service requested 'shell,v2,raw:pidof com.deepeye.musicpro'
+07-12 16:44:37.305  1994 20891 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_IND: 0xFD
+07-12 16:44:37.305  1994 20891 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Writing IBS_WAKE_ACK
+07-12 16:44:37.307 20845 20893 I bt_stack: [INFO:btm_ble_gap.cc(3287)] btm_ble_process_adv_pkt_cont Data Complete 3a:85:ae:93:11:8a
+07-12 16:44:37.307 20845 20893 D bt_btm_ble: bool parse_adv_audio_uuids_from_adv_pkt(const uint8_t *, size_t, uint8_t): tmap_cap_pts: false
+07-12 16:44:37.310 14366 13542 I NearbyConnections: Found BleAdvertisement [ 0x23 0x30 0x43 0x42 0x4a 0x11 0x32 0x6f 0x76 0x77 0x63 0x7f 0x12 0x8c 0xdb 0x7b 0xa2 0x64 0x2f 0xb3 0xca 0xca 0x4a ] (with EndpointId 0CBJ and EndpointInfo [ 0x32 0x6f 0x76 0x77 0x63 0x7f 0x12 0x8c 0xdb 0x7b 0xa2 0x64 0x2f 0xb3 0xca 0xca 0x4a ])
+07-12 16:44:37.311 14366 13542 I NearbyConnections: Unable to record discovered endpoint due to null currentDiscoveryPhase
+07-12 16:44:37.311 14366 13542 I NearbyConnections: ClientProxy(232588694 0p:com.google.android.gms.nearby.sharing) reporting onEndpointFound(0CBJ)
+07-12 16:44:37.311 14366 13542 I NearbyConnections: ClientProxy(232588694) reporting onEndpointDistanceChanged(0CBJ, UNKNOWN)
+07-12 16:44:37.313 14366 13730 I NearbySharing: NearbySharing Internal event EndpointDiscovered(endpointId=0CBJ)
+07-12 16:44:37.348  1994 20891 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_SLEEP_IND: 0xFE
+07-12 16:44:37.462  3243  3243 V UiModeManager: updateLocked: null action, mDockState=0, category=null
+07-12 16:44:37.463  3243  3243 D UiModeManager: updateConfigurationLocked: mDockState=0; mCarMode=false; mNightMode=2; mNightModeCustomType=-1; uiMode=33
+07-12 16:44:37.463  4381  4381 D QtiCarrierConfigHelper: WARNING, no carrier configs on phone Id: 1
+07-12 16:44:37.462  4156  5207 D PowerUI : can't show warning due to - plugged: true status unknown: false
+07-12 16:44:37.464  4369  4369 D DeviceStatisticsService: onReceive: action= android.intent.action.BATTERY_CHANGED
+07-12 16:44:37.467  4369  4369 V DeviceStatisticsService: chargerType=2 batteryLevel=73 totalBatteryCapacity=2611000
+07-12 16:44:37.467  4369  4369 D DeviceInfoHidlClient: isRadioOn()=true
+07-12 16:44:37.467  4369  4369 I DeviceInfoHidlClient: isPowerInfoNeverSent=false batteryLevel=73 batteryLevelIndex=3 chargingMode=2 totalCapacity=2611000 powerSaveMode=false
+07-12 16:44:37.488 27764 27764 I adbd    : adbd service requested 'shell,v2:export ANDROID_LOG_TAGS=''; exec logcat '-d' '-t' '1000' '--pid=18835''
+07-12 16:44:37.543  1994 20891 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_IND: 0xFD
+07-12 16:44:37.543  1994 20891 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Writing IBS_WAKE_ACK
+07-12 16:44:37.583  1994 20891 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_SLEEP_IND: 0xFE
+07-12 16:44:37.962  6870  7699 D CmdCenter: - RowBase2: sPrevModStatus: 1, modStatus: 1
+07-12 16:44:37.963  6870  7699 D CmdCenter: - RowBase2: sPrevBatStatus: 2, status: 2
+07-12 16:44:37.963  6870  7699 D CmdCenter: - RowBase2: sPrevChargeRate = 1, new = 1
+07-12 16:44:37.963  6870  7699 D CmdCenter: - RowBase2: sPrevPlugType: 2 plugType: 2
+07-12 16:44:38.074  1994 20896 I vendor.qti.bluetooth@1.0-ibs_handler: DeviceSleep: TX Awake, Sending SLEEP_IND
+07-12 16:44:38.074  1994 20896 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK OFF
+07-12 16:44:38.228  1994 20886 D vendor.qti.bluetooth@1.0-wake_lock: Release wakelock is released 
+07-12 16:44:38.491 18835 18835 D NowPlayingGuardian: ✅ Now Playing metadata matches on all layers: UI/ExoPlayer/MediaSession = 'vhoL1EMmCtE'
+07-12 16:44:39.026  2080 20355 I QC2Comp : [vp9D_1159] Stats: Pending(21) i/p-done(21) Works: Q: 3749/Done 3729|Work-Rate: Q(0.0/s Avg=0.4/s) Done(0.000/s Avg=0.443/s)| Stream: 25.00fps 1.8Mbps
+07-12 16:44:39.027  2080 20355 I QC2Comp : [vp9D_1159] Mem-usage:  [In-1D: 13 bufs 48.598 MB] [1D-1897: 21 bufs 0.328 MB] [2D-1898: 29 bufs 89.039 MB] | Total: 137.965 MB
+07-12 16:44:40.119  3243  4008 D WifiStaIfaceHidlImpl: getCachedScanData is not implemented by HIDL
+07-12 16:44:40.135  4156  4156 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+07-12 16:44:42.493 18835 18835 D NowPlayingGuardian: ✅ Now Playing metadata matches on all layers: UI/ExoPlayer/MediaSession = 'vhoL1EMmCtE'
+07-12 16:44:43.168  3243  4008 D WifiStaIfaceHidlImpl: getCachedScanData is not implemented by HIDL
+07-12 16:44:43.547  2719  3363 I qcc-trd : qdmaConnectivityInfoProvider: Into parseLTESysInfo()
+07-12 16:44:43.549  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=16
+07-12 16:44:43.550  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:43.550  2655  3223 E RIL-MOTEXT: qcrilUpdRegRAT, called , rat =7
+07-12 16:44:43.556  4381  5960 I QImsService: ImsRadioIndicationAidl : onServiceDomainChanged()[SUB0]
+07-12 16:44:43.557  4381  5960 I QImsService: ImsSenderRxr : [UNSL]< UNSOL_SERVICE_DOMAIN_CHANGED 3[SUB0]
+07-12 16:44:43.558  4381  4381 I QImsService: ImsRegistrationController : Message received: what = 5
+07-12 16:44:43.558  4381  4381 I QImsService: ImsRegistrationController : handleSrvDomainChanged
+07-12 16:44:43.559  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=16
+07-12 16:44:43.559  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:43.563  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=12
+07-12 16:44:43.563  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=28
+07-12 16:44:43.563  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=21
+07-12 16:44:43.564  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:43.565  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:43.566  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 0
+07-12 16:44:43.566  6763  6763 W ModemStats: [ModemStatsService] (INF) handleOemHookBandInfo: Processing
+07-12 16:44:43.568  4359  5039 W IWlanNetworkService: 40726 > Response Processed
+07-12 16:44:43.568  4369  4369 D QC_RIL_OEM_HOOK: Received Broadcast Intent ACTION_UNSOL_RESPONSE_OEM_HOOK_RAW
+07-12 16:44:43.568  4369  4369 D QC_RIL_OEM_HOOK: Oem ID in QCRILHOOK UNSOL RESP is QOEMHOOK
+07-12 16:44:43.569  4465  4465 D QC_RIL_OEM_HOOK: Received Broadcast Intent ACTION_UNSOL_RESPONSE_OEM_HOOK_RAW
+07-12 16:44:43.569  4465  4465 D QC_RIL_OEM_HOOK: Oem ID in QCRILHOOK UNSOL RESP is QOEMHOOK
+07-12 16:44:43.569  4465  4465 D QC_RIL_OEM_HOOK: Received Broadcast Intent ACTION_UNSOL_RESPONSE_OEM_HOOK_RAW
+07-12 16:44:43.569  4465  4465 D QC_RIL_OEM_HOOK: Oem ID in QCRILHOOK UNSOL RESP is QOEMHOOK
+07-12 16:44:43.578  4359  5039 W IWlanNetworkService: 40727 > Response Processed
+07-12 16:44:43.587  4156  4156 D GlobalActionsDialogLite: Service changed before actions created
+07-12 16:44:43.587  4156  4156 D GlobalActionsDialogLite: Service changed before actions created
+07-12 16:44:43.590  2655 13736 E RIL-MOTEXT: qcrilUpdateOperator, called
+07-12 16:44:43.591  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=12
+07-12 16:44:43.591  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:43.591  4369  4836 I QcrilOemhookMsgTunnel: [0]processOemHookIndication length=28
+07-12 16:44:43.593  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:43.593  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:43.593  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:43.593  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:43.593 20845 20902 D HeadsetPhoneState: Enter onServiceStateChanged
+07-12 16:44:43.593  4156  4156 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+07-12 16:44:43.593  9552  9552 D OtaApp  : PollingMangerService, phone state: roaming: false
+07-12 16:44:43.594  4369  4369 D QcrilMsgTunnelIfaceManager: handleMessage what = 5
+07-12 16:44:43.595  3243  3663 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1281 android.content.Context.sendBroadcastMultiplePermissions:2476 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3597 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 
+07-12 16:44:43.595  6763  6763 W ModemStats: [ModemStatsService] (INF) handleOemHookBandInfo: Processing
+07-12 16:44:43.596  3243  3663 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3602 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:43.596  3243  3663 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3611 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:43.597  3243  3663 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3617 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:43.599  4465  4465 D Telephony: TelecomAccountTelephonyCallback: onServiceStateChanged called.
+07-12 16:44:43.599  4465  4465 I Telephony: TelecomAccountTelephonyCallback: onServiceStateChanged: newState=0, mServiceState=0
+07-12 16:44:43.599 24672 24672 D CellBroadcastReceiver: onReceive Intent { act=android.intent.action.SERVICE_STATE flg=0x1000010 cmp=com.google.android.cellbroadcastreceiver/com.android.cellbroadcastreceiver.CellBroadcastReceiver (has extras) }
+07-12 16:44:43.602 24672 24672 D CellBroadcastReceiver: onServiceStateChanged, ss: 0
+07-12 16:44:43.602 24672 24672 D CellBroadcastReceiver: networkOperator: 40410
+07-12 16:44:43.602 24672 24672 D CellBroadcastReceiver: mockmodem is running? = false
+07-12 16:44:43.602 24672 24672 D CellBroadcastReceiver: update supported roaming operator as 
+07-12 16:44:43.605  4465  4465 I Telephony: AccountEntry: isRttCurrentlySupported -- regular acct, hasVoiceAvailability: true
+07-12 16:44:43.605  4465  4465 I Telephony:  isRttSupported: false
+07-12 16:44:43.605  4465  4465 I Telephony:  alwaysAllowWhileRoaming: false
+07-12 16:44:43.605  4465  4465 I Telephony:  isRoaming: false
+07-12 16:44:43.605  4465  4465 I Telephony:  isOnWfc: false
+07-12 16:44:43.607  4465  4465 I Telephony: VoiceActivationHandler: Service state is IN_SERVICE. Set voice activation state to ACTIVATED
+07-12 16:44:43.627  4156  4156 D GlobalActionsDialogLite: Service changed before actions created
+07-12 16:44:43.627  4156  4156 D GlobalActionsDialogLite: Service changed before actions created
+07-12 16:44:43.630  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:43.631  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:43.631  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel cellMsg:  cellEnabled: true
+07-12 16:44:43.631  4156  4156 D CBR_SystemUI: CarrierLabel - : updateLabel mCellBroadcastMessage Visibility: 8
+07-12 16:44:43.631  4156  4156 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+07-12 16:44:43.632 20845 20902 D HeadsetPhoneState: Enter onServiceStateChanged
+07-12 16:44:43.632  9552  9552 D OtaApp  : PollingMangerService, phone state: roaming: false
+07-12 16:44:43.632  3243  3662 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1281 android.content.Context.sendBroadcastMultiplePermissions:2476 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3597 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 
+07-12 16:44:43.635  3243  3662 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3602 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:43.635  3243  3662 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3611 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:43.636  3243  3662 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1314 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3617 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1734 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:550 android.os.Binder.execTransactInternal:1380 
+07-12 16:44:43.637  4465  4465 D ServiceStateProvider: subId=1
+07-12 16:44:43.638 24672 24672 D CellBroadcastReceiver: onReceive Intent { act=android.intent.action.SERVICE_STATE flg=0x1000010 cmp=com.google.android.cellbroadcastreceiver/com.android.cellbroadcastreceiver.CellBroadcastReceiver (has extras) }
+07-12 16:44:43.640 24672 24672 D CellBroadcastReceiver: onServiceStateChanged, ss: 0
+07-12 16:44:43.641 24672 24672 D CellBroadcastReceiver: networkOperator: 40410
+07-12 16:44:43.641 24672 24672 D CellBroadcastReceiver: mockmodem is running? = false
+07-12 16:44:43.641 24672 24672 D CellBroadcastReceiver: update supported roaming operator as 
+07-12 16:44:43.642  4465  4465 D Telephony: TelecomAccountTelephonyCallback: onServiceStateChanged called.
+07-12 16:44:43.642  4465  4465 I Telephony: TelecomAccountTelephonyCallback: onServiceStateChanged: newState=0, mServiceState=0
+07-12 16:44:43.646  4465  4465 I Telephony: AccountEntry: isRttCurrentlySupported -- regular acct, hasVoiceAvailability: true
+07-12 16:44:43.646  4465  4465 I Telephony:  isRttSupported: false
+07-12 16:44:43.646  4465  4465 I Telephony:  alwaysAllowWhileRoaming: false
+07-12 16:44:43.646  4465  4465 I Telephony:  isRoaming: false
+07-12 16:44:43.646  4465  4465 I Telephony:  isOnWfc: false
+07-12 16:44:43.647  4465  4465 I Telephony: VoiceActivationHandler: Service state is IN_SERVICE. Set voice activation state to ACTIVATED
+07-12 16:44:43.950  3243  3314 D ActivityManager: unfreezing ProcessRecord{143c658 2782:com.android.settings/1000}, reason = shouldNotFreeze_allowlist, adj = 925, adjType = cch-empty, adjSource = null
+07-12 16:44:43.952  3243  3314 D ActivityManager: sync unfroze 2782 com.android.settings for 10
+07-12 16:44:43.954  3243  3314 W ProcessStats: Tracking association SourceState{c0a123d com.google.android.gms.persistent/10192 BFgs #1420400} whose proc state 4 is better than process ProcessState{77541f7 com.google.android.adservices.api/10357 pkg=com.google.android.adservices.api} proc state 6 (7 skipped)
+07-12 16:44:44.027  2080 20355 I QC2Comp : [vp9D_1159] Stats: Pending(21) i/p-done(21) Works: Q: 3749/Done 3729|Work-Rate: Q(0.0/s Avg=0.4/s) Done(0.000/s Avg=0.443/s)| Stream: 25.00fps 1.8Mbps
+07-12 16:44:44.027  2080 20355 I QC2Comp : [vp9D_1159] Mem-usage:  [In-1D: 13 bufs 48.598 MB] [1D-1897: 21 bufs 0.328 MB] [2D-1898: 29 bufs 89.039 MB] | Total: 137.965 MB
+07-12 16:44:44.296 14366 13730 I NearbyMediums: Found Fast Ble Advertisements :
+07-12 16:44:44.296 14366 13730 I NearbyMediums: BleAdvertisement { version=2, socketVersion=2, isFast=true, serviceIdHash=null, data=[ 0x23 0x30 0x43 0x42 0x4a 0x11 0x32 0x6f 0x76 0x77 0x63 0x7f 0x12 0x8c 0xdb 0x7b 0xa2 0x64 0x2f 0xb3 0xca 0xca 0x4a ], deviceToken=[ 0x50 0x3f ], rxAdvertisement=null } : 1 times.
+07-12 16:44:44.296 14366 13730 I NearbyMediums: Total 1 fast advertisements from 1 unique advertisers.
+07-12 16:44:44.296 14366 13730 I NearbyMediums: Current Tracked Scanning Clients are : {NearbyConnections.EnvironmentMonitor, NearbySharing, NearbyConnections.TxAdvertisement}
+07-12 16:44:45.972 31510 31721 I ThermalEngine: Monitor:INACTIVE:MON-charge:battery=9:CHG-SENSORS=41960
+07-12 16:44:46.015 27764 27764 I adbd    : adbd service requested 'shell,v2:export ANDROID_LOG_TAGS=''; exec logcat '-d' '-t' '500''

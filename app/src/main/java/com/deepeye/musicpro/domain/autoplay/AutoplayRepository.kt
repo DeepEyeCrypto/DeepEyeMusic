@@ -61,7 +61,12 @@ constructor(
 
                     val trending =
                         async {
-                            contentFetcher.getTrendingMusic("IN", 15)
+                            val profile = tasteProfileRepository.getTasteProfile().firstOrNull()
+                            if (profile?.preferredLanguages.isNullOrEmpty()) {
+                                contentFetcher.getTrendingMusic("IN", 15)
+                            } else {
+                                emptyList()
+                            }
                         }
 
                     val languageQuery =
@@ -69,7 +74,9 @@ constructor(
                             val profile = tasteProfileRepository.getTasteProfile().firstOrNull()
                             val langs = profile?.preferredLanguages?.takeIf { it.isNotEmpty() }?.joinToString(" ")
                             if (langs != null) {
-                                contentFetcher.searchByQuery("$langs latest songs", 15)
+                                contentFetcher.searchByQuery("$langs latest songs", 15).map {
+                                    it.copy(genre = langs)
+                                }
                             } else {
                                 emptyList()
                             }

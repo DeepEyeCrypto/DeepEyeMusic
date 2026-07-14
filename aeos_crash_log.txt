@@ -1,0 +1,20 @@
+07-13 11:44:51.086 E/Ads     (19991): Caused by: m1.kt: Exception in CronetUrlRequest: net::ERR_CONNECTION_REFUSED, ErrorCode=7, InternalErrorCode=-102, Retryable=false
+07-13 11:44:51.086 E/Ads     (19991): 	at org.chromium.net.impl.CronetUrlRequest.onError(:com.google.android.gms.dynamite_cronetdynamite@262532029@26.25.32 (190400-0):74)
+07-13 11:44:51.108 E/Ads     (19991): Caused by: m1.kt: Exception in CronetUrlRequest: net::ERR_CONNECTION_REFUSED, ErrorCode=7, InternalErrorCode=-102, Retryable=false
+07-13 11:44:51.108 E/Ads     (19991): 	at org.chromium.net.impl.CronetUrlRequest.onError(:com.google.android.gms.dynamite_cronetdynamite@262532029@26.25.32 (190400-0):74)
+07-13 11:44:51.121 E/Ads     (19991): Caused by: m1.kt: Exception in CronetUrlRequest: net::ERR_CONNECTION_REFUSED, ErrorCode=7, InternalErrorCode=-102, Retryable=false
+07-13 11:44:51.121 E/Ads     (19991): 	at org.chromium.net.impl.CronetUrlRequest.onError(:com.google.android.gms.dynamite_cronetdynamite@262532029@26.25.32 (190400-0):74)
+07-13 11:44:51.136 E/Ads     (19991): Caused by: m1.kt: Exception in CronetUrlRequest: net::ERR_CONNECTION_REFUSED, ErrorCode=7, InternalErrorCode=-102, Retryable=false
+07-13 11:44:51.136 E/Ads     (19991): 	at org.chromium.net.impl.CronetUrlRequest.onError(:com.google.android.gms.dynamite_cronetdynamite@262532029@26.25.32 (190400-0):74)
+07-13 11:44:51.149 E/Ads     (19991): Caused by: m1.kt: Exception in CronetUrlRequest: net::ERR_CONNECTION_REFUSED, ErrorCode=7, InternalErrorCode=-102, Retryable=false
+07-13 11:44:51.149 E/Ads     (19991): 	at org.chromium.net.impl.CronetUrlRequest.onError(:com.google.android.gms.dynamite_cronetdynamite@262532029@26.25.32 (190400-0):74)
+07-13 11:44:57.038 I/NullBinder(23691): NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0
+07-13 11:45:00.057 I/NullBinder(23691): NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0
+07-13 11:45:06.112 I/NullBinder(23691): NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0
+07-13 11:45:09.137 I/NullBinder(23691): NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0
+07-13 11:45:12.161 I/NullBinder(23691): NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0
+07-13 11:45:15.185 I/NullBinder(23691): NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0
+07-13 11:45:24.258 I/NullBinder(23691): NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0
+07-13 11:45:27.349 I/NullBinder(23691): NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0
+07-13 11:45:29.634 E/msys    (12403): E[N WA]_WAJMNSStreamImplOnMNSFailure(290)=>[LogLevel:I] WAJMNSStream/impl/callback/onMNSFailure/p=0xb400006e7561e1c0 (error=MNSTCPSocketReceive(): Received EOF)
+07-13 11:45:30.373 I/NullBinder(23691): NullBinder for android.net.action.RECOMMEND_NETWORKS triggering remote TransactionTooLargeException due to Service without Chimera impl, calling uid: 1000, calling pid: 0

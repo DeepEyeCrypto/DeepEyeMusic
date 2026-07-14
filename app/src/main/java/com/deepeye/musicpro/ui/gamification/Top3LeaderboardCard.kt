@@ -266,8 +266,7 @@ fun Top3LeaderboardCard(
             // SECTION 3: TOP 3 LEADERBOARD
             // ═══════════════════════════════════════
 
-            if (top3Users.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(22.dp))
+            Spacer(modifier = Modifier.height(22.dp))
 
                 // Divider with gold accent
                 Box(
@@ -326,7 +325,11 @@ fun Top3LeaderboardCard(
 
                 // Top 3 List
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    top3Users.forEachIndexed { index, user ->
+                    val paddedUsers = top3Users.toMutableList()
+                    while (paddedUsers.size < 3) {
+                        paddedUsers.add(com.deepeye.musicpro.domain.ranking.UserRank(userId = "empty_${paddedUsers.size}", displayName = "Unranked Spot", rank = paddedUsers.size + 1))
+                    }
+                    paddedUsers.take(3).forEachIndexed { index, user ->
                         PremiumUserRow(user = user, rank = index + 1)
                     }
                 }
@@ -365,7 +368,6 @@ fun Top3LeaderboardCard(
                         letterSpacing = 0.5.sp
                     )
                 }
-            }
         }
     }
 }

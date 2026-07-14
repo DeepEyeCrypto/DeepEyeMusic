@@ -3,6 +3,7 @@
 
 package com.deepeye.musicpro.ui.homehub.video
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -42,8 +43,8 @@ fun VideoRail(
     viewModel: VideoRailViewModel = hiltViewModel(),
     onNavigateToVideo: (String) -> Unit = {},
 ) {
-    val state by viewModel.state.collectAsState()
-    val expandedId by viewModel.expandedCardId.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val expandedId by viewModel.expandedCardId.collectAsStateWithLifecycle()
 
     // Section tab pills (Trending / Because You Watched / Top Charts)
     val activeSection = state.activeSection

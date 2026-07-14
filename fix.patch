@@ -1,0 +1,16 @@
+--- app/src/main/java/com/deepeye/musicpro/ui/components/HybridPlayerCard.kt
++++ app/src/main/java/com/deepeye/musicpro/ui/components/HybridPlayerCard.kt
+@@ -424,7 +424,10 @@
+                                 }
+                             )
+-                        // to ensure it gets hit events BEFORE the sibling Tap Zones row.
++                        }
++                    )
++                }
+ 
++                // GESTURE SKIP ZONES + OVERLAYS: Hidden in PiP for clean view
++                if (!isInPipMode && !isLocked) {
++                    // Vertical drag overlay for fullscreen exit — uses Initial pass
++                    // VLC-style gesture overlay has been moved to the parent Box above
++                    // to ensure it gets hit events BEFORE the sibling Tap Zones row.
+ 

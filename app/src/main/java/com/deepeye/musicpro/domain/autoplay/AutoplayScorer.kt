@@ -41,6 +41,7 @@ data class CandidateTrack(
 
             val language =
                 when {
+                    video.genre.isNotEmpty() -> video.genre
                     lowerTitle.contains("hindi") -> "Hindi"
                     lowerTitle.contains("punjabi") -> "Punjabi"
                     lowerTitle.contains("haryanvi") -> "Haryanvi"
@@ -83,12 +84,17 @@ class AutoplayScorer {
         var score = 0f
 
         // Language matching
-        if (preferredLanguages.isNotEmpty() && candidate.language != null) {
-            val isLanguagePreferred = preferredLanguages.any { it.equals(candidate.language, ignoreCase = true) }
-            if (isLanguagePreferred) {
-                score += 0.8f // Big boost for preferred languages
+        if (preferredLanguages.isNotEmpty()) {
+            if (candidate.language != null) {
+                val isLanguagePreferred = preferredLanguages.any { candidate.language.contains(it, ignoreCase = true) }
+                if (isLanguagePreferred) {
+                    score += 0.8f // Big boost for preferred languages
+                } else {
+                    score -= 1.5f // Huge penalty for non-preferred explicit languages (e.g. English when user only chose Hindi)
+                }
             } else {
-                score -= 1.5f // Huge penalty for non-preferred explicit languages (e.g. English when user only chose Hindi)
+                // Slight penalty for unknown languages to prioritize explicit language matches
+                score -= 0.3f
             }
         }
 

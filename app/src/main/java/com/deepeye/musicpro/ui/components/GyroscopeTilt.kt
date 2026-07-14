@@ -15,13 +15,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
 fun rememberGyroscopeTilt(): State<Offset> {
     val context = LocalContext.current
     val tiltState = remember { mutableStateOf(Offset.Zero) }
 
-    DisposableEffect(context) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(context, lifecycleOwner) {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
         val rotationVectorSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
         val fallbackSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_GRAVITY)
@@ -45,16 +50,13 @@ fun rememberGyroscopeTilt(): State<Offset> {
                     SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
                     val orientation = FloatArray(3)
                     SensorManager.getOrientation(rotationMatrix, orientation)
-                    // orientation[1] is pitch (tilt forward/backward), orientation[2] is roll (tilt left/right)
                     targetX = (orientation[2] / (Math.PI / 2).toFloat()).coerceIn(-1.0f, 1.0f)
                     targetY = (orientation[1] / (Math.PI / 2).toFloat()).coerceIn(-1.0f, 1.0f)
                 } else {
-                    // event.values[0] is X-axis acceleration, [1] is Y-axis
                     targetX = (event.values[0] / 9.81f).coerceIn(-1.0f, 1.0f)
                     targetY = (event.values[1] / 9.81f).coerceIn(-1.0f, 1.0f)
                 }
 
-                // Apply exponential smoothing low-pass filter
                 currentX += (targetX - currentX) * kFilterFactor
                 currentY += (targetY - currentY) * kFilterFactor
 
@@ -64,12 +66,21 @@ fun rememberGyroscopeTilt(): State<Offset> {
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
         }
 
-        if (sensorManager != null && activeSensor != null) {
-            sensorManager.registerListener(listener, activeSensor, SensorManager.SENSOR_DELAY_UI)
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                if (sensorManager != null && activeSensor != null) {
+                    sensorManager.registerListener(listener, activeSensor, SensorManager.SENSOR_DELAY_UI)
+                }
+            } else if (event == Lifecycle.Event.ON_PAUSE) {
+                sensorManager?.unregisterListener(listener)
+            }
         }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
 
         onDispose {
             sensorManager?.unregisterListener(listener)
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 

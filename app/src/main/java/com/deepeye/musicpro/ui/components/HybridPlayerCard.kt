@@ -21,8 +21,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeMute
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.Pause
@@ -129,6 +132,9 @@ fun HybridPlayerCard(
     modifier: Modifier = Modifier,
     onTogglePlayPause: () -> Unit,
     onSeekTo: (Long) -> Unit,
+    onNext: () -> Unit = {},
+    onPrevious: () -> Unit = {},
+    onOpenQueue: () -> Unit = {},
     onLockChanged: (Boolean) -> Unit = {},
 ) {
     var playbackSpeed by remember { mutableStateOf(1.0f) }
@@ -755,23 +761,64 @@ fun HybridPlayerCard(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        // 1. Interactive Play/Pause Button
-                                        IconButton(
-                                            onClick = {
-                                                resetTimer()
-                                                onTogglePlayPause()
-                                            },
-                                            modifier =
-                                            Modifier
-                                                .size(32.dp)
-                                                .background(Color.White.copy(alpha = 0.15f), CircleShape),
+                                        // 1. Interactive Transport Controls (Prev, Play/Pause, Next)
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                                         ) {
-                                            Icon(
-                                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayCircle,
-                                                contentDescription = "Play/Pause",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(16.dp),
-                                            )
+                                            IconButton(
+                                                onClick = {
+                                                    resetTimer()
+                                                    onPrevious()
+                                                },
+                                                modifier =
+                                                Modifier
+                                                    .size(32.dp)
+                                                    .background(Color.White.copy(alpha = 0.15f), CircleShape),
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.SkipPrevious,
+                                                    contentDescription = "Previous",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(16.dp),
+                                                )
+                                            }
+
+                                            IconButton(
+                                                onClick = {
+                                                    resetTimer()
+                                                    onTogglePlayPause()
+                                                },
+                                                modifier =
+                                                Modifier
+                                                    .size(40.dp)
+                                                    .background(Color.White.copy(alpha = 0.15f), CircleShape),
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayCircle,
+                                                    contentDescription = "Play/Pause",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(24.dp),
+                                                )
+                                            }
+
+                                            IconButton(
+                                                onClick = {
+                                                    resetTimer()
+                                                    onNext()
+                                                },
+                                                modifier =
+                                                Modifier
+                                                    .size(32.dp)
+                                                    .background(Color.White.copy(alpha = 0.15f), CircleShape),
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.SkipNext,
+                                                    contentDescription = "Next",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(16.dp),
+                                                )
+                                            }
                                         }
 
                                         // 2. Interactive Mute/Unmute Indicator Button
@@ -854,6 +901,25 @@ fun HybridPlayerCard(
                                                     fontWeight = FontWeight.Bold,
                                                 )
                                             }
+                                        }
+
+                                        // 3.5 Queue Button
+                                        IconButton(
+                                            onClick = {
+                                                resetTimer()
+                                                onOpenQueue()
+                                            },
+                                            modifier =
+                                            Modifier
+                                                .size(32.dp)
+                                                .background(Color.White.copy(alpha = 0.15f), CircleShape),
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.QueueMusic,
+                                                contentDescription = "Queue",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(16.dp),
+                                            )
                                         }
 
                                         // 4. PiP Button

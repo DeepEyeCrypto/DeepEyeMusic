@@ -100,6 +100,15 @@ fun NowPlayingScreen(
     var showQueueSheet by remember { mutableStateOf(false) }
     var showInfoSheet by remember { mutableStateOf(false) }
     var showVisualizer by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    
+    val recordAudioPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            showVisualizer = true
+        }
+    }
 
     // Close inner sheets when parent collapses (prevents stuck states on re-expansion)
     LaunchedEffect(sheetState.anchor) {
@@ -155,6 +164,9 @@ fun NowPlayingScreen(
                 modifier = modifier,
                 onTogglePlayPause = { viewModel.togglePlayPause() },
                 onSeekTo = { viewModel.seekTo(it) },
+                onNext = { viewModel.next() },
+                onPrevious = { viewModel.previous() },
+                onOpenQueue = { showQueueSheet = true },
                 onLockChanged = { isLocked -> sheetViewModel.setGestureLocked(isLocked); fullscreenMode.isGestureLocked = isLocked }
             )
         } else if (innerItem != null) {
@@ -265,7 +277,17 @@ fun NowPlayingScreen(
                         onNavigateBack = onNavigateBack,
                         viewModel = viewModel,
                         onOpenInfo = { showInfoSheet = true },
-                        onToggleVisualizer = { showVisualizer = !showVisualizer },
+                        onToggleVisualizer = { 
+                            if (!showVisualizer) {
+                                if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                    showVisualizer = true
+                                } else {
+                                    recordAudioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+                                }
+                            } else {
+                                showVisualizer = false
+                            }
+                        },
                         onOpenDsp = { showDspSheet = true },
                         onOpenQueue = { showQueueSheet = true },
                         onNavigateToSettings = onNavigateToSettings,
@@ -693,7 +715,7 @@ private fun VideoNowPlayingLayout(
     var showAudioTrackMenu by remember { mutableStateOf(false) }
     var showAllComments by remember { mutableStateOf(false) }
     var showPlaylistSheet by remember { mutableStateOf(false) }
-
+    var showFullscreenQueue by remember { mutableStateOf(false) }
     val libraryViewModel: com.deepeye.musicpro.ui.library.LibraryViewModel = hiltViewModel()
 
     val context = LocalContext.current
@@ -768,8 +790,49 @@ private fun VideoNowPlayingLayout(
                     modifier = Modifier.fillMaxSize(),
                     onTogglePlayPause = { viewModel.togglePlayPause() },
                     onSeekTo = { viewModel.seekTo(it) },
+                    onNext = { viewModel.next() },
+                    onPrevious = { viewModel.previous() },
+                    onOpenQueue = {
+                        if (isFullscreen) {
+                            showFullscreenQueue = !showFullscreenQueue
+                        } else {
+                            onOpenQueue()
+                        }
+                    },
                     onLockChanged = onLockChanged
                 )
+            }
+
+            androidx.compose.animation.AnimatedVisibility(
+                visible = showFullscreenQueue && isFullscreen,
+                enter = androidx.compose.animation.slideInHorizontally(initialOffsetX = { it }),
+                exit = androidx.compose.animation.slideOutHorizontally(targetOffsetX = { it }),
+                modifier = Modifier.align(Alignment.CenterEnd)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.4f)
+                        .background(Color.Black.copy(alpha = 0.85f))
+                        .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) { } // block clicks
+                ) {
+                    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides Color.White) {
+                        QueueSheetContent(
+                            queue = playerState.queue,
+                            currentIndex = playerState.currentIndex,
+                            onItemClick = { viewModel.seekToMediaItem(it) },
+                            onItemMove = { from, to -> viewModel.moveMediaItem(from, to) },
+                            onItemRemove = { viewModel.removeMediaItem(it) },
+                            accentColor = finalAccentColor
+                        )
+                    }
+                    IconButton(
+                        onClick = { showFullscreenQueue = false },
+                        modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                    ) {
+                        Icon(androidx.compose.material.icons.Icons.Default.Close, "Close Queue", tint = Color.White)
+                    }
+                }
             }
         }
 
@@ -1214,14 +1277,26 @@ private fun QueueSheetContent(
     var draggingItemOffset by remember { mutableStateOf(0f) }
 
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        Text("Next in Queue", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(vertical = 16.dp))
+        Text("Next in Queue", style = MaterialTheme.typography.titleLarge, color = androidx.compose.material3.LocalContentColor.current, modifier = Modifier.padding(vertical = 16.dp))
         
-        val queueState = rememberLazyListState()
-        androidx.compose.foundation.lazy.LazyColumn(
-            state = queueState,
-            modifier = Modifier.fillMaxSize().premiumScrollHaptics(queueState),
-            contentPadding = PaddingValues(bottom = 32.dp)
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (queue.isEmpty() || (queue.size == 1 && queue[0].id == queue.getOrNull(currentIndex)?.id)) {
+                android.util.Log.d("NowPlayingScreen", "Queue is empty or has 1 playing item. Size: ${queue.size}")
+                Text(
+                    "Queue is empty.", 
+                    color = androidx.compose.material3.LocalContentColor.current.copy(alpha = 0.5f),
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            } else {
+                android.util.Log.d("NowPlayingScreen", "Queue has multiple items. Size: ${queue.size}")
+            }
+            
+            val queueState = rememberLazyListState()
+            androidx.compose.foundation.lazy.LazyColumn(
+                state = queueState,
+                modifier = Modifier.fillMaxSize().premiumScrollHaptics(queueState),
+                contentPadding = PaddingValues(bottom = 32.dp)
+            ) {
             items(queue.size, key = { it }) { index ->
                 val item = queue[index]
                 val isPlaying = index == currentIndex
@@ -1287,25 +1362,27 @@ private fun QueueSheetContent(
                         Text(
                             text = item.title,
                             style = MaterialTheme.typography.bodyLarge,
-                            color = if (isPlaying) accentColor else MaterialTheme.colorScheme.onSurface,
+                            color = if (isPlaying) accentColor else androidx.compose.material3.LocalContentColor.current,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = item.artist,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            color = androidx.compose.material3.LocalContentColor.current.copy(alpha = 0.6f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
                     IconButton(onClick = { onItemRemove(index) }) {
+                        Icon(Icons.Default.Close, "Remove", tint = androidx.compose.material3.LocalContentColor.current.copy(alpha = 0.7f))
                     }
-                    Icon(Icons.Default.DragHandle, "Drag to reorder", tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+                    Icon(Icons.Default.DragHandle, "Drag to reorder", tint = androidx.compose.material3.LocalContentColor.current.copy(alpha = 0.3f))
                 }
-            }
         }
     }
+}
+}
 }
 
 // -------------------------------------------------------------
