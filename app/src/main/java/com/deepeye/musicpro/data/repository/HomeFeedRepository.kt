@@ -161,6 +161,60 @@ constructor(
                     }
                 }
 
+            // Supermix — Top songs interleaved with related music
+            val supermixDeferred =
+                async {
+                    try {
+                        val topSongs = recommendationDao.getTopSongsSince(0, 5) // all time top 5
+                        if (topSongs.isNotEmpty()) {
+                            val topSong = topSongs.first()
+                            val relatedRemote = youtubeDs.getRelatedMusic(title = topSong.title, artist = topSong.artist).take(15)
+                            val related = relatedRemote.map { 
+                                HomeMusicItem(
+                                    id = it.id,
+                                    title = it.title,
+                                    artist = it.artist,
+                                    thumbnailUrl = it.artworkUri?.toString() ?: "",
+                                )
+                            }
+                            val mix = mutableListOf<HomeMusicItem>()
+                            // Interleave top songs and related
+                            val topMapped = topSongs.map { stats ->
+                                HomeMusicItem(
+                                    id = stats.videoId,
+                                    title = stats.title,
+                                    artist = stats.artist,
+                                    thumbnailUrl = "https://i.ytimg.com/vi/${stats.videoId}/maxresdefault.jpg",
+                                )
+                            }
+                            mix.addAll(topMapped)
+                            mix.addAll(related)
+                            mix.distinctBy { it.id }.take(20)
+                        } else {
+                            emptyList()
+                        }
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                }
+
+            // Discover Mix — Top artist's discover mix
+            val discoverMixDeferred =
+                async {
+                    try {
+                        val topArtists = recommendationDao.getTopArtistsSince(0, 1)
+                        if (topArtists.isNotEmpty()) {
+                            val topArtist = topArtists.first().artistName
+                            val searchResults = youtubeDs.searchMusic("$topArtist discover new tracks").take(15)
+                            searchResults
+                        } else {
+                            emptyList()
+                        }
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                }
+
             val trending = trendingDeferred.await()
             val shorts = shortsDeferred.await()
             val music = musicDeferred.await()
@@ -168,6 +222,8 @@ constructor(
             val continueWatching = continueWatchingDeferred.await()
             val continueListening = continueListeningDeferred.await()
             val localResume = localResumeDeferred.await()
+            val supermix = supermixDeferred.await()
+            val discoverMix = discoverMixDeferred.await()
 
             android.util.Log.d(
                 "HomeFeed",
@@ -183,6 +239,8 @@ constructor(
                 continueWatching = continueWatching,
                 continueListening = continueListening,
                 localResume = localResume,
+                supermix = supermix,
+                discoverMix = discoverMix,
                 moodMixes = buildMoodMixes(langs),
                 activeDspPreset = dspEngine.currentPresetName.value,
                 isLoading = false,

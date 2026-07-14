@@ -241,4 +241,15 @@ constructor() {
             null
         }
     }
+
+    /**
+     * Appends a list of items to the end of the queue.
+     */
+    @Synchronized
+    fun addItems(items: List<MediaItem>) {
+        val mutable = _queue.value.toMutableList()
+        mutable.addAll(items)
+        _queue.value = mutable
+        originalQueue = originalQueue + items
+    }
 }

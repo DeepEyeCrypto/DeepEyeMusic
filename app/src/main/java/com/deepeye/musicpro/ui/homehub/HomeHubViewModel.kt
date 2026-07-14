@@ -110,6 +110,8 @@ constructor(
         val items = state.quickPicks.takeIf { it.any { m -> m.id == music.id } }
             ?: state.continueListening.takeIf { it.any { m -> m.id == music.id } }
             ?: state.localResume.takeIf { it.any { m -> m.id == music.id } }
+            ?: state.supermix.takeIf { it.any { m -> m.id == music.id } }
+            ?: state.discoverMix.takeIf { it.any { m -> m.id == music.id } }
             ?: listOf(music)
             
         val index = items.indexOfFirst { it.id == music.id }.coerceAtLeast(0)

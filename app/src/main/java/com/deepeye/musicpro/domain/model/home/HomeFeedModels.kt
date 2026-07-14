@@ -12,6 +12,8 @@ data class HomeFeedState(
     val continueWatching: List<HomeVideoItem> = emptyList(),
     val continueListening: List<HomeMusicItem> = emptyList(),
     val localResume: List<HomeMusicItem> = emptyList(),
+    val supermix: List<HomeMusicItem> = emptyList(),
+    val discoverMix: List<HomeMusicItem> = emptyList(),
     val moodMixes: List<MoodMix> = emptyList(),
     val activeDspPreset: String? = null,
     val isLoading: Boolean = false,
@@ -75,6 +77,8 @@ enum class RailType {
     NEW_RELEASES,
     LOCAL_RESUME,
     MOOD_MIX,
+    SUPERMIX,
+    DISCOVER_MIX,
 }
 
 enum class MusicItemType {

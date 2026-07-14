@@ -98,13 +98,50 @@ class AutoplayScorer {
             }
         }
 
-        // 5. Recency penalty (avoid same song too soon)
+        // 5. Calculate Affinity & Completion Boost
+        val candidateHistory = history.filter { it.videoId == candidate.videoId }
+        if (candidateHistory.isNotEmpty()) {
+            val plays = candidateHistory.size
+            val avgCompletion = candidateHistory.map { it.completionRatio }.average().toFloat()
+            val likes = candidateHistory.count { it.wasLiked }
+            
+            var trackAffinity = (plays * 0.1f) + (likes * 2.0f)
+            
+            // Completion Boost
+            trackAffinity += when {
+                avgCompletion > 0.90f -> 1.0f
+                avgCompletion > 0.50f -> 0.5f
+                else -> 0f
+            }
+            score += trackAffinity
+        }
+
+        // Artist Affinity
+        val artistHistory = history.filter { it.channelId == candidate.channelId }
+        if (artistHistory.isNotEmpty()) {
+            val plays = artistHistory.size
+            val avgCompletion = artistHistory.map { it.completionRatio }.average().toFloat()
+            val artistAffinity = (plays * 0.05f) + (avgCompletion * 0.5f)
+            score += artistAffinity
+        }
+
+        // 6. Skip Penalty (Heavy penalty if skipped quickly)
+        val recentSkips = candidateHistory.filter { it.wasSkipped && it.timestamp > System.currentTimeMillis() - 90L * 86400_000 }
+        for (skip in recentSkips) {
+            if (skip.listenDurationMs < 5000L) {
+                score -= 2.0f // Hard skip
+            } else if (skip.listenDurationMs < 30000L) {
+                score -= 1.0f // Soft skip
+            }
+        }
+
+        // 7. Recency penalty (avoid same song too soon)
         if (candidate.videoId in autoplayState.history.takeLast(20)) score -= 0.50f
 
-        // 6. Blacklist penalty
+        // 8. Blacklist penalty
         if (candidate.videoId in autoplayState.blacklist) score -= 1.0f
 
-        // 7. Session similarity
+        // 9. Session / Context Match similarity
         val recentHistory = history.takeLast(5)
         if (recentHistory.isNotEmpty()) {
             val validHistory = recentHistory.filter { !it.completionRatio.isNaN() }
@@ -118,7 +155,6 @@ class AutoplayScorer {
                     score += candidate.discoveryScore * 0.25f
                 }
             } else {
-                // fallback if all completion ratios are NaN
                 score += candidate.discoveryScore * 0.10f
             }
         } else {

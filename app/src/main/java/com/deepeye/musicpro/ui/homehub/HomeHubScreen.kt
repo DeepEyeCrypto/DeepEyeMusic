@@ -252,6 +252,34 @@ fun HomeHubScreen(
                 }
             }
 
+            if (feedState.supermix.isNotEmpty()) {
+                item {
+                    HomeMusicRail(
+                        title = "✨ My Supermix",
+                        items = feedState.supermix,
+                        onClick = { 
+                            android.util.Log.e("HomeHubScreen", "Supermix clicked: ${it.id}")
+                            viewModel.playMusic(it)
+                            onNavigateToMusic(it.id) 
+                        }
+                    )
+                }
+            }
+
+            if (feedState.discoverMix.isNotEmpty()) {
+                item {
+                    HomeMusicRail(
+                        title = "🔭 Discover Mix",
+                        items = feedState.discoverMix,
+                        onClick = { 
+                            android.util.Log.e("HomeHubScreen", "Discover clicked: ${it.id}")
+                            viewModel.playMusic(it)
+                            onNavigateToMusic(it.id) 
+                        }
+                    )
+                }
+            }
+
             if (feedState.quickPicks.isNotEmpty()) {
                 item {
                     HomeMusicRail(

@@ -57,4 +57,5 @@ data class AutoplayState(
     val discoveryMode: Boolean = false,
     val familiarMode: Boolean = true,
     val lastGeneratedAt: Long = 0L,
+    val isGenerating: Boolean = false,
 )

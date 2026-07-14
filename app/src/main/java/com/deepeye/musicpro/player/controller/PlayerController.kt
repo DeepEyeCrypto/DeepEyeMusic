@@ -291,6 +291,47 @@ constructor(
                     }
                 }
         }
+        
+        // --- Infinite Autoplay Prefetch ---
+        scope.launch {
+            kotlinx.coroutines.flow.combine(queueManager.queue, queueManager.currentIndex) { q, idx -> Pair(q, idx) }
+                .collectLatest { (q, idx) ->
+                    if (q.isNotEmpty() && idx >= q.size - 2 && playerState.value.autoplayEnabled) {
+                        val current = q.getOrNull(idx)
+                        if (current != null && !_autoplayState.value.isGenerating) {
+                            _autoplayState.update { it.copy(isGenerating = true) }
+                            try {
+                                val candidates = withContext(Dispatchers.IO) {
+                                    autoplayRepository.generateNextQueue(current, _autoplayState.value)
+                                }
+                                if (candidates.isNotEmpty()) {
+                                    val mediaItems = candidates.map { c ->
+                                        MediaItem.Remote(
+                                            id = c.videoId,
+                                            title = c.title,
+                                            artist = c.artist,
+                                            artworkUri = android.net.Uri.parse("https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg"),
+                                            isVideo = (current as? MediaItem.Remote)?.isVideo ?: false,
+                                            duration = 0L,
+                                        )
+                                    }
+                                    queueManager.addItems(mediaItems)
+                                    _autoplayState.update { state ->
+                                        state.copy(
+                                            history = (state.history + (current.id)).takeLast(50),
+                                            lastGeneratedAt = System.currentTimeMillis()
+                                        )
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                android.util.Log.e("AutoplayEngine", "Failed to generate next tracks", e)
+                            } finally {
+                                _autoplayState.update { it.copy(isGenerating = false) }
+                            }
+                        }
+                    }
+                }
+        }
     }
 
     val nowPlaying = playerState.map { it.currentItem }
@@ -599,48 +640,40 @@ constructor(
                         return@launch
                     }
 
-                    // Exclude recently played autoplay tracks
                     val validCandidates = candidates.filter {
                         !recentAutoplayTrackIds.contains(it.videoId) && it.videoId != (current?.id ?: "")
                     }
-                    val finalCandidate = validCandidates.firstOrNull() ?: candidates.firstOrNull()
 
-                    if (finalCandidate != null) {
-                        android.util.Log.i(
-                            "AutoplayEngine",
-                            "Autoplay selected: ${finalCandidate.title} (${finalCandidate.videoId})"
-                        )
-                        // Add to recent list
-                        recentAutoplayTrackIds.add(finalCandidate.videoId)
-                        if (recentAutoplayTrackIds.size > 10) {
-                            recentAutoplayTrackIds.removeAt(0)
-                        }
-
-                        // Update AutoplayState
-                        _autoplayState.update { state ->
-                            state.copy(
-                                queue = validCandidates.drop(1),
-                                history = (state.history + (current?.id ?: "")).takeLast(50),
-                                skipStreak = if (isTrackSkipped) state.skipStreak + 1 else 0,
-                                lastGeneratedAt = System.currentTimeMillis(),
-                                discoveryMode = finalCandidate.score < 0.4f,
-                                familiarMode = finalCandidate.score >= 0.4f,
-                            )
-                        }
-
-                        val mediaItem =
+                    if (validCandidates.isNotEmpty()) {
+                        val mediaItems = validCandidates.map { c ->
                             MediaItem.Remote(
-                                id = finalCandidate.videoId,
-                                title = finalCandidate.title,
-                                artist = finalCandidate.artist,
-                                artworkUri =
-                                android.net.Uri.parse(
-                                    "https://img.youtube.com/vi/${finalCandidate.videoId}/hqdefault.jpg",
-                                ),
+                                id = c.videoId,
+                                title = c.title,
+                                artist = c.artist,
+                                artworkUri = android.net.Uri.parse("https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg"),
                                 isVideo = (current as? MediaItem.Remote)?.isVideo ?: false,
                                 duration = 0L,
                             )
-                        playMedia(mediaItem)
+                        }
+                        
+                        queueManager.addItems(mediaItems)
+                        
+                        val firstCandidate = validCandidates.first()
+                        
+                        _autoplayState.update { state ->
+                            state.copy(
+                                history = (state.history + (current?.id ?: "")).takeLast(50),
+                                skipStreak = if (isTrackSkipped) state.skipStreak + 1 else 0,
+                                lastGeneratedAt = System.currentTimeMillis(),
+                                discoveryMode = firstCandidate.score < 0.4f,
+                                familiarMode = firstCandidate.score >= 0.4f,
+                            )
+                        }
+                        
+                        val nextTrack = queueManager.next()
+                        if (nextTrack != null) {
+                            playMedia(nextTrack)
+                        }
                     } else {
                         android.util.Log.w("AutoplayEngine", "Autoplay pool completely exhausted. Halting.")
                     }
