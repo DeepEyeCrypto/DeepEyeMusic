@@ -233,7 +233,6 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation("androidx.test.espresso:espresso-contrib:3.6.1")
     androidTestImplementation("org.mockito:mockito-android:5.7.0")
-    androidTestImplementation("com.google.android.apps.mousewheel:mousewheel:1.0.0")
     
     // Compose Testing
     testImplementation(libs.compose.ui.test.junit4)

@@ -43,9 +43,11 @@ class AIRadioEngine @Inject constructor(
         try {
             withContext(ioDispatcher) {
                 val tasteProfile = try { tasteProfileRepo.getTasteProfile().first() } catch (e: Exception) { null }
-                val langs = tasteProfile?.preferredLanguages?.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: "hindi punjabi english"
+                val preferredLangs = tasteProfile?.preferredLanguages ?: emptySet()
+                val langsToInclude = preferredLangs.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: "hindi punjabi english"
+                val negativeKeywords = com.deepeye.musicpro.domain.util.LanguageUtils.buildNegativeLanguageConstraints(preferredLangs)
                 val artists = tasteProfile?.favoriteArtists?.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: ""
-                val personalSuffix = "$langs $artists".trim()
+                val personalSuffix = "$langsToInclude $artists $negativeKeywords".trim()
                 
                 // Mock NLP parser: We extract core keywords to feed to YouTube Music
                 val query = parseIntentToSearchQuery(prompt, personalSuffix)
@@ -86,7 +88,11 @@ class AIRadioEngine @Inject constructor(
         _isGenerating.value = true
         try {
             withContext(ioDispatcher) {
-                val query = "${moodMix.label} ${moodMix.query}"
+                val tasteProfile = try { tasteProfileRepo.getTasteProfile().first() } catch (e: Exception) { null }
+                val preferredLangs = tasteProfile?.preferredLanguages ?: emptySet()
+                val negativeKeywords = com.deepeye.musicpro.domain.util.LanguageUtils.buildNegativeLanguageConstraints(preferredLangs)
+                
+                val query = "${moodMix.label} ${moodMix.query} $negativeKeywords".trim()
                 val tracks = youtubeRemoteDataSource.searchMusic(query).take(15)
                 
                 if (tracks.isNotEmpty()) {

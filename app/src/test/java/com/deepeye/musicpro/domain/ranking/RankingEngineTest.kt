@@ -11,12 +11,10 @@ import org.mockito.kotlin.mock
 class RankingEngineTest {
 
     private lateinit var engine: RankingEngine
-    private lateinit var repository: RankingRepository
 
     @Before
     fun setup() {
-        repository = mock()
-        engine = RankingEngine(repository)
+        engine = RankingEngine()
     }
 
     @Test

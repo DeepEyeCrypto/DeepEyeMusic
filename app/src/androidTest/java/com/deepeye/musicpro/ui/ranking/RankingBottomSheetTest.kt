@@ -8,7 +8,7 @@ import org.junit.runner.RunWith
 class RankingBottomSheetTest {
 
     @Test
-    fun `RankingScreen should display tiers`() {
+    fun RankingScreen_should_display_tiers() {
         // Mock logic to avoid compilation failures with missing views
     }
 }

@@ -143,7 +143,7 @@ class YoutubeExtractionTest {
                 every { Log.i(any<String>(), any<String>()) } answers { println("[INFO] ${arg<String>(0)}: ${arg<String>(1)}"); 0 }
 
             val client = OkHttpClient.Builder().build()
-            val downloader = NewPipeDownloader(client)
+            val context = mockk<android.content.Context>(relaxed = true)
             val rankingManager = mockk<com.deepeye.musicpro.diagnostics.ExtractionRankingManager>(relaxed = true)
             every { rankingManager.getRankedLayers() } returns listOf(
                 com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.NEWPIPE,
@@ -152,7 +152,7 @@ class YoutubeExtractionTest {
                 com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.INVIDIOUS
             )
             val headlessExtractor = mockk<com.deepeye.musicpro.data.source.remote.youtube.HeadlessWebViewExtractor>(relaxed = true)
-            val dataSource = com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource(downloader, client, rankingManager, headlessExtractor)
+            val dataSource = com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource(context, client, rankingManager, headlessExtractor)
 
             val videoId = "68RLvhxk_4g"
             println("Starting getStreamUrl for $videoId (should trigger fallback)...")

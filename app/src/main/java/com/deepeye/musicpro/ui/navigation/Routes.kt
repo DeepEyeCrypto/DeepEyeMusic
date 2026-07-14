@@ -39,6 +39,8 @@ sealed class Routes(val route: String) {
 
     data object SavedItems : Routes("saved_items")
 
+    data object ChatAuth : Routes("chat_auth")
+
     data object Playlists : Routes("playlists")
 
     data object Gamification : Routes("gamification")
@@ -61,4 +63,10 @@ sealed class Routes(val route: String) {
     }
 
     data object AEOS : Routes("aeos_dashboard")
+
+    data object ChatList : Routes("chat_list")
+    
+    data object ChatRoom : Routes("chat_room/{chatId}/{receiverId}") {
+        fun createRoute(chatId: String, receiverId: String) = "chat_room/$chatId/$receiverId"
+    }
 }

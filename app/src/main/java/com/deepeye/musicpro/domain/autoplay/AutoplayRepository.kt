@@ -122,7 +122,8 @@ constructor(
                         rank = 0,
                         score = score,
                     )
-                }.sortedByDescending { it.score }
+                }.filter { it.score > -0.5f }
+                    .sortedByDescending { it.score }
                     .take(20)
                     .mapIndexed { index, item -> item.copy(rank = index + 1) }
 

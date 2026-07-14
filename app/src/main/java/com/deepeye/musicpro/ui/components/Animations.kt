@@ -7,6 +7,10 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -48,11 +52,37 @@ fun Modifier.hoverable(
                 isPressed = false
             }
         }
-        .scale(animatedScale)
         .graphicsLayer {
-            // Brightness effect can be approximated using color filter or just alpha if preferred.
-            // Using alpha here for simplicity, or we can leave it just scaling for better performance.
+            scaleX = animatedScale
+            scaleY = animatedScale
+            // Simulated brightness via alpha
+            alpha = if (isPressed) 0.8f else 1f 
         }
+}
+
+fun Modifier.bouncyClickable(
+    downScale: Float = 0.95f,
+    onClick: () -> Unit
+): Modifier = composed {
+    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    val animatedScale by animateFloatAsState(
+        targetValue = if (isPressed) downScale else 1f,
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = 400f),
+        label = "bouncy_scale"
+    )
+
+    this
+        .graphicsLayer {
+            scaleX = animatedScale
+            scaleY = animatedScale
+        }
+        .clickable(
+            interactionSource = interactionSource,
+            indication = null,
+            onClick = onClick
+        )
 }
 
 @Suppress("DEPRECATION")

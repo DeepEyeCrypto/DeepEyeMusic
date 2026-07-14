@@ -207,6 +207,6 @@ constructor(
             }
             return if (item.song.genre.isNotEmpty()) item.song.genre else "Local"
         }
-        return "English"
+        return "Unknown"
     }
 }

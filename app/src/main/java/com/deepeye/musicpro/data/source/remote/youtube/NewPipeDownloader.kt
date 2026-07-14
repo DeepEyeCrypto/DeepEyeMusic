@@ -47,7 +47,7 @@ constructor(
                     }
                     // Required headers for YouTube API requests
                     if (request.url().contains("youtube.com")) {
-                        addHeader("Accept-Language", "en-US,en;q=0.9")
+                        addHeader("Accept-Language", "hi-IN,en-IN;q=0.9,en-US;q=0.8")
                         addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
                     }
                 }

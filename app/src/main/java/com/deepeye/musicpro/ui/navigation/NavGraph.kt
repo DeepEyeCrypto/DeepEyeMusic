@@ -42,7 +42,9 @@ import com.deepeye.musicpro.ui.youtube.YouTubeScreen
 import com.deepeye.musicpro.ui.library.LikedSongsScreen
 import com.deepeye.musicpro.ui.library.PlaylistsScreen
 import com.deepeye.musicpro.ui.library.SavedItemsScreen
-
+import com.deepeye.musicpro.ui.chat.ChatListScreen
+import com.deepeye.musicpro.ui.chat.ChatAuthScreen
+import com.deepeye.musicpro.ui.chat.ChatRoomScreen
 import com.deepeye.musicpro.ui.auth.AuthViewModel
 import com.deepeye.musicpro.ui.auth.LoginScreen
 
@@ -186,6 +188,7 @@ fun NavGraph(
                     onExpandPlayer()
                 },
                 onNavigateToLibrary = { navController.navigate(Routes.Library.route) },
+                onNavigateToChat = { navController.navigate(Routes.ChatAuth.route) },
                 onOpenV4A = { navController.navigate(Routes.DSP.route) },
                 onNavigateToSettings = { navController.navigate(Routes.Settings.route) },
             )
@@ -346,6 +349,41 @@ fun NavGraph(
                 onNavigateToPlaylist = { playlistId ->
                     navController.navigate(Routes.PlaylistDetail.createRoute(playlistId))
                 }
+            )
+        }
+
+        composable(Routes.ChatAuth.route) {
+            ChatAuthScreen(
+                onAuthenticated = {
+                    navController.navigate(Routes.ChatList.route) {
+                        popUpTo(Routes.ChatAuth.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Routes.ChatList.route) {
+            ChatListScreen(
+                onNavigateToChat = { chatId, receiverId ->
+                    navController.navigate(Routes.ChatRoom.createRoute(chatId, receiverId))
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Routes.ChatRoom.route,
+            arguments = listOf(
+                navArgument("chatId") { type = NavType.StringType },
+                navArgument("receiverId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val chatId = backStackEntry.arguments?.getString("chatId") ?: return@composable
+            val receiverId = backStackEntry.arguments?.getString("receiverId") ?: return@composable
+            ChatRoomScreen(
+                chatId = chatId,
+                receiverId = receiverId,
+                onBack = { navController.popBackStack() }
             )
         }
     }

@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -51,6 +52,9 @@ constructor(
         initialValue = com.deepeye.musicpro.domain.gamification.GamificationState()
     )
 
+    private val _btcPrice = MutableStateFlow("Fetching BTC...")
+    val btcPrice = _btcPrice.asStateFlow()
+
     val achievementEvents = gamificationEngine.achievementEvents
 
     val isDspAttached = dspEngine.engineState
@@ -68,6 +72,27 @@ constructor(
             gamificationEngine.checkAndUpdateStreak() 
             cloudSyncManager.syncAllData()
             gamificationEngine.forceSyncToFirestore()
+        }
+        fetchBtcPrice()
+    }
+
+    private fun fetchBtcPrice() {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            while (isActive) {
+                try {
+                    val url = java.net.URL("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT")
+                    val connection = url.openConnection() as java.net.HttpURLConnection
+                    connection.connectTimeout = 3000
+                    connection.readTimeout = 3000
+                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+                    val priceStr = response.substringAfter("\"price\":\"").substringBefore("\"")
+                    val formattedPrice = String.format("%,.2f", priceStr.toDoubleOrNull() ?: 0.0)
+                    _btcPrice.value = "₿ $$formattedPrice"
+                } catch (e: Exception) {
+                    _btcPrice.value = "₿ Error"
+                }
+                kotlinx.coroutines.delay(10000L) // poll every 10 seconds
+            }
         }
     }
 

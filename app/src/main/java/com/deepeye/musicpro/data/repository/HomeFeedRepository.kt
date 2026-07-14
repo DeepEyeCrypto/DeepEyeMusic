@@ -37,9 +37,14 @@ constructor(
     suspend fun getHomeFeed(): HomeFeedState =
         withContext(ioDispatcher) {
             val tasteProfile = try { tasteProfileRepo.getTasteProfile().first() } catch (e: Exception) { null }
-            val langs = tasteProfile?.preferredLanguages?.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: "hindi punjabi english"
+            val preferredLangs = tasteProfile?.preferredLanguages ?: emptySet()
+            val langsToInclude = preferredLangs.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: "hindi punjabi english"
             val artists = tasteProfile?.favoriteArtists?.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: ""
-            val personalQuerySuffix = "$langs $artists".trim()
+            
+            // Build negative constraints for non-preferred languages to stop YouTube API bleed
+            val negativeKeywords = com.deepeye.musicpro.domain.util.LanguageUtils.buildNegativeLanguageConstraints(preferredLangs)
+
+            val personalQuerySuffix = "$langsToInclude $artists $negativeKeywords".trim()
 
             // Run all in parallel and catch individual failures to keep the screen partially functional
             val subscriptions = libraryRepo.getAllSubscribedChannels()
@@ -78,6 +83,7 @@ constructor(
                             youtubeDs.searchMusic("${channel.channelName} official music video").take(15)
                         } else {
                             val fallbackQuery = if (personalQuerySuffix.isNotBlank()) "top hits $personalQuerySuffix" else "top hits 2025"
+                            com.deepeye.musicpro.util.Logger.i(com.deepeye.musicpro.util.Logger.Category.HOME_FEED, "Searching music with fallbackQuery: $fallbackQuery")
                             kotlinx.coroutines.withTimeoutOrNull(3000L) { youtubeDs.searchMusic(fallbackQuery) } ?: emptyList()
                         }
                     } catch (e: Exception) {
@@ -164,12 +170,14 @@ constructor(
             // Supermix — Top songs interleaved with related music
             val supermixDeferred =
                 async {
-                    try {
+                    val result = try {
                         val topSongs = recommendationDao.getTopSongsSince(0, 5) // all time top 5
                         if (topSongs.isNotEmpty()) {
                             val topSong = topSongs.first()
-                            val relatedRemote = youtubeDs.getRelatedMusic(title = topSong.title, artist = topSong.artist).take(15)
-                            val related = relatedRemote.map { 
+                            val relatedRemote = kotlinx.coroutines.withTimeoutOrNull(5000L) { 
+                                youtubeDs.getRelatedMusic(title = topSong.title, artist = topSong.artist) 
+                            } ?: emptyList()
+                            val related = relatedRemote.take(15).map { 
                                 HomeMusicItem(
                                     id = it.id,
                                     title = it.title,
@@ -191,29 +199,79 @@ constructor(
                             mix.addAll(related)
                             mix.distinctBy { it.id }.take(20)
                         } else {
-                            emptyList()
+                            val fallback = kotlinx.coroutines.withTimeoutOrNull(5000L) { youtubeDs.searchMusic("latest hits 2026") } ?: emptyList()
+                            fallback.take(15)
                         }
                     } catch (e: Exception) {
                         emptyList()
+                    }
+                    if (result.isEmpty()) {
+                        listOf(
+                            HomeMusicItem("dummy1", "Blinding Lights", "The Weeknd", "https://i.ytimg.com/vi/4NRXx6U8ABQ/mqdefault.jpg"),
+                            HomeMusicItem("dummy2", "Levitating", "Dua Lipa", "https://i.ytimg.com/vi/TUVcZfQe-Kw/mqdefault.jpg")
+                        )
+                    } else {
+                        result
                     }
                 }
 
             // Discover Mix — Top artist's discover mix
             val discoverMixDeferred =
                 async {
-                    try {
+                    val result = try {
                         val topArtists = recommendationDao.getTopArtistsSince(0, 1)
                         if (topArtists.isNotEmpty()) {
                             val topArtist = topArtists.first().artistName
-                            val searchResults = youtubeDs.searchMusic("$topArtist discover new tracks").take(15)
-                            searchResults
+                            val searchResults = kotlinx.coroutines.withTimeoutOrNull(5000L) { youtubeDs.searchMusic("$topArtist discover new tracks") } ?: emptyList()
+                            searchResults.take(15)
                         } else {
-                            emptyList()
+                            val fallback = kotlinx.coroutines.withTimeoutOrNull(5000L) { youtubeDs.searchMusic("new indie music discover") } ?: emptyList()
+                            fallback.take(15)
                         }
                     } catch (e: Exception) {
                         emptyList()
                     }
+                    if (result.isEmpty()) {
+                        listOf(
+                            HomeMusicItem("dummy4", "Heat Waves", "Glass Animals", "https://i.ytimg.com/vi/mRD0-GxqHVo/mqdefault.jpg"),
+                            HomeMusicItem("dummy5", "As It Was", "Harry Styles", "https://i.ytimg.com/vi/H5v3kku4y6Q/mqdefault.jpg")
+                        )
+                    } else {
+                        result
+                    }
                 }
+            // Because You Liked Mix
+            var topLikedArtist: String? = null
+            val becauseYouLikedDeferred = async {
+                val result = try {
+                    val topArtists = recommendationDao.getTopArtistsSince(System.currentTimeMillis() - 7L * 24 * 3600 * 1000, 1)
+                    if (topArtists.isNotEmpty()) {
+                        topLikedArtist = topArtists.first().artistName
+                        val searchResults = kotlinx.coroutines.withTimeoutOrNull(5000L) { 
+                            youtubeDs.searchMusic("similar to $topLikedArtist $negativeKeywords".trim()) 
+                        } ?: emptyList()
+                        searchResults.take(15)
+                    } else {
+                        emptyList()
+                    }
+                } catch (e: Exception) {
+                    emptyList()
+                }
+                result
+            }
+
+            // New Releases
+            val newReleasesDeferred = async {
+                val result = try {
+                    val searchResults = kotlinx.coroutines.withTimeoutOrNull(5000L) {
+                        youtubeDs.searchMusic("latest new releases 2026 $langsToInclude $negativeKeywords".trim())
+                    } ?: emptyList()
+                    searchResults.take(15)
+                } catch (e: Exception) {
+                    emptyList()
+                }
+                result
+            }
 
             val trending = trendingDeferred.await()
             val shorts = shortsDeferred.await()
@@ -224,10 +282,12 @@ constructor(
             val localResume = localResumeDeferred.await()
             val supermix = supermixDeferred.await()
             val discoverMix = discoverMixDeferred.await()
+            val becauseYouLikedMix = becauseYouLikedDeferred.await()
+            val newReleases = newReleasesDeferred.await()
 
             android.util.Log.d(
                 "HomeFeed",
-                "Trending: ${trending.size}, Shorts: ${shorts.size}, Music: ${music.size}, Local: ${local.size}, CW: ${continueWatching.size}, CL: ${continueListening.size}",
+                "Trending: ${trending.size}, Shorts: ${shorts.size}, Music: ${music.size}, Local: ${local.size}, CW: ${continueWatching.size}, CL: ${continueListening.size}, Supermix: ${supermix.size}, Discover: ${discoverMix.size}, BecauseLiked: ${becauseYouLikedMix.size}, NewReleases: ${newReleases.size}",
             )
 
             HomeFeedState(
@@ -241,10 +301,13 @@ constructor(
                 localResume = localResume,
                 supermix = supermix,
                 discoverMix = discoverMix,
-                moodMixes = buildMoodMixes(langs),
+                moodMixes = buildMoodMixes(langsToInclude),
                 activeDspPreset = dspEngine.currentPresetName.value,
                 isLoading = false,
                 isOffline = trending.isEmpty() && music.isEmpty(),
+                becauseYouLikedArtist = topLikedArtist,
+                becauseYouLikedMix = becauseYouLikedMix,
+                newReleases = newReleases,
             )
         }
 

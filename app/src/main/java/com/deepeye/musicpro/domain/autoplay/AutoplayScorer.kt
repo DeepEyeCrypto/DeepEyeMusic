@@ -85,12 +85,12 @@ class AutoplayScorer {
 
         // Language matching
         if (preferredLanguages.isNotEmpty()) {
-            if (candidate.language != null) {
+            if (com.deepeye.musicpro.domain.util.LanguageUtils.isLanguageBlocked(candidate.language, preferredLanguages.toSet())) {
+                score -= 100f // HARD penalty to completely remove it from the pool
+            } else if (candidate.language != null) {
                 val isLanguagePreferred = preferredLanguages.any { candidate.language.contains(it, ignoreCase = true) }
                 if (isLanguagePreferred) {
                     score += 0.8f // Big boost for preferred languages
-                } else {
-                    score -= 1.5f // Huge penalty for non-preferred explicit languages (e.g. English when user only chose Hindi)
                 }
             } else {
                 // Slight penalty for unknown languages to prioritize explicit language matches
@@ -174,7 +174,7 @@ class AutoplayScorer {
         // 9. Freshness bonus
         score += candidate.freshnessScore * 0.10f
 
-        return score.coerceIn(-1f, 1f)
+        return score
     }
 
     fun pickMode(

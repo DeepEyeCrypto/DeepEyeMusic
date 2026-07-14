@@ -22,10 +22,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import coil3.request.crossfade
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import androidx.compose.runtime.getValue
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import kotlin.math.absoluteValue
+import com.deepeye.musicpro.ui.components.bouncyClickable
 
 @Composable
 fun VideoCard(
@@ -33,24 +34,11 @@ fun VideoCard(
     onClick: (HomeVideoItem) -> Unit,
     modifier: Modifier = Modifier.width(240.dp),
 ) {
-    val interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = androidx.compose.animation.core.spring(dampingRatio = 0.7f, stiffness = 400f),
-        label = "scale"
-    )
-
     Card(
         modifier = modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
             .clip(RoundedCornerShape(16.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
+            .bouncyClickable(
+                downScale = 0.95f,
                 onClick = {
                     android.util.Log.e("VideoCard", "CLICK DETECTED for: ${item.id}")
                     onClick(item)
@@ -79,7 +67,10 @@ fun VideoCard(
                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             ) {
                 AsyncImage(
-                    model = item.thumbnailUrl,
+                    model = coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                        .data(item.thumbnailUrl)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = item.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,

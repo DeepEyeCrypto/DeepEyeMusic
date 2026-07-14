@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -41,7 +42,9 @@ import com.deepeye.musicpro.ui.components.DynamicLabel
 import com.deepeye.musicpro.ui.components.SecondaryLabel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.deepeye.musicpro.ui.components.bouncyClickable
 import coil3.compose.AsyncImage
+import coil3.request.crossfade
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.ui.components.ShimmerBox
@@ -53,12 +56,14 @@ import com.deepeye.musicpro.ui.components.glassCard
 import com.deepeye.musicpro.ui.components.hoverable
 import com.deepeye.musicpro.ui.gamification.Top3LeaderboardCard
 
+
 @Composable
 fun HomeHubScreen(
     windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
     onNavigateToVideo: (String) -> Unit,
     onNavigateToMusic: (String) -> Unit,
     onNavigateToLibrary: () -> Unit,
+    onNavigateToChat: () -> Unit = {},
     onOpenV4A: () -> Unit,
     onNavigateToSettings: () -> Unit,
     viewModel: HomeHubViewModel = hiltViewModel(),
@@ -152,7 +157,12 @@ fun HomeHubScreen(
             ),
         ) {
             item {
-                HomeGreetingHeader(onNavigateToSettings = onNavigateToSettings)
+                val btcPrice by viewModel.btcPrice.collectAsStateWithLifecycle()
+                HomeGreetingHeader(
+                    btcPrice = btcPrice,
+                    onNavigateToSettings = onNavigateToSettings,
+                    onNavigateToChat = onNavigateToChat
+                )
             }
 
             // Phase 3: Unified Gamification + Leaderboard Card
@@ -254,6 +264,7 @@ fun HomeHubScreen(
 
             if (feedState.supermix.isNotEmpty()) {
                 item {
+                    android.util.Log.e("HomeHubScreen", "RENDERING SUPERMIX: size=${feedState.supermix.size}")
                     HomeMusicRail(
                         title = "✨ My Supermix",
                         items = feedState.supermix,
@@ -268,6 +279,7 @@ fun HomeHubScreen(
 
             if (feedState.discoverMix.isNotEmpty()) {
                 item {
+                    android.util.Log.e("HomeHubScreen", "RENDERING DISCOVER: size=${feedState.discoverMix.size}")
                     HomeMusicRail(
                         title = "🔭 Discover Mix",
                         items = feedState.discoverMix,
@@ -275,6 +287,32 @@ fun HomeHubScreen(
                             android.util.Log.e("HomeHubScreen", "Discover clicked: ${it.id}")
                             viewModel.playMusic(it)
                             onNavigateToMusic(it.id) 
+                        }
+                    )
+                }
+            }
+
+            if (feedState.becauseYouLikedMix.isNotEmpty() && feedState.becauseYouLikedArtist != null) {
+                item {
+                    HomeMusicRail(
+                        title = "❤️ Because You Liked ${feedState.becauseYouLikedArtist}",
+                        items = feedState.becauseYouLikedMix,
+                        onClick = {
+                            viewModel.playMusic(it)
+                            onNavigateToMusic(it.id)
+                        }
+                    )
+                }
+            }
+
+            if (feedState.newReleases.isNotEmpty()) {
+                item {
+                    HomeMusicRail(
+                        title = "🆕 New Releases For You",
+                        items = feedState.newReleases,
+                        onClick = {
+                            viewModel.playMusic(it)
+                            onNavigateToMusic(it.id)
                         }
                     )
                 }
@@ -409,35 +447,11 @@ fun HomeHubScreen(
 }
 
 @Composable
-private fun HomeGreetingHeader(onNavigateToSettings: () -> Unit) {
-    var btcPrice by remember { mutableStateOf("Fetching BTC...") }
-
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-
-    LaunchedEffect(lifecycleOwner.lifecycle) {
-        lifecycleOwner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
-            while (true) {
-                try {
-                    btcPrice = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        val url = java.net.URL("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT")
-                        val connection = url.openConnection() as java.net.HttpURLConnection
-                        connection.connectTimeout = 3000
-                        connection.readTimeout = 3000
-                        val response = connection.inputStream.bufferedReader().use { it.readText() }
-                        val priceStr = response.substringAfter("\"price\":\"").substringBefore("\"")
-                        val formattedPrice = String.format("%,.2f", priceStr.toDoubleOrNull() ?: 0.0)
-                        "₿ $$formattedPrice"
-                    }
-                } catch (e: Exception) {
-                    if (btcPrice == "Fetching BTC...") {
-                        btcPrice = "₿ ---"
-                    }
-                }
-                kotlinx.coroutines.delay(5000) // Update every 5 seconds
-            }
-        }
-    }
-
+private fun HomeGreetingHeader(
+    btcPrice: String,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToChat: () -> Unit = {}
+) {
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Box(
             modifier = Modifier
@@ -446,23 +460,33 @@ private fun HomeGreetingHeader(onNavigateToSettings: () -> Unit) {
                 .clip(RoundedCornerShape(24.dp))
                 .background(Color.Black.copy(alpha = 0.4f)) // Premium dark pill
                 .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp))
-                .padding(horizontal = 16.dp, vertical = 6.dp),
+                .padding(horizontal = 16.dp, vertical = 6.dp)
+                .clickable { onNavigateToChat() },
             contentAlignment = Alignment.Center
         ) {
-            Text(
-            text = buildAnnotatedString {
-                withStyle(SpanStyle(color = Color(0xFFFFD700))) { // Gold for Bitcoin icon
-                    append("₿ ")
-                }
-                withStyle(SpanStyle(color = Color(0xFF00E676))) { // Neon Green for price
-                    append(btcPrice.replace("₿ ", ""))
-                }
-            },
-            style = MaterialTheme.typography.titleMedium, // Much smaller, professional
-            fontWeight = FontWeight.Bold
-        )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                androidx.compose.material3.Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.Lock,
+                    contentDescription = "Secure Chat",
+                    tint = Color(0xFF7B3FE4),
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(SpanStyle(color = Color(0xFFFFD700))) { // Gold for Bitcoin icon
+                            append("₿ ")
+                        }
+                        withStyle(SpanStyle(color = Color(0xFF00E676))) { // Neon Green for price
+                            append(btcPrice.replace("₿ ", ""))
+                        }
+                    },
+                    style = MaterialTheme.typography.titleMedium, // Much smaller, professional
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
     }
-}
 }
 
 @Composable
@@ -537,28 +561,17 @@ private fun HomeMusicRail(
             contentPadding = PaddingValues(horizontal = 24.dp),
         ) {
             items(items, key = { it.id }) { music ->
-                val interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-                val isPressed by interactionSource.collectIsPressedAsState()
-                val scale by androidx.compose.animation.core.animateFloatAsState(
-                    targetValue = if (isPressed) 0.95f else 1f,
-                    animationSpec = androidx.compose.animation.core.spring(dampingRatio = 0.7f, stiffness = 400f)
-                )
-
                 Box(
                     modifier =
                     Modifier
                         .width(160.dp)
-                        .graphicsLayer {
-                            scaleX = scale
-                            scaleY = scale
-                        }
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color.White.copy(alpha = 0.1f))
+                        .background(Color.White.copy(alpha = 0.05f)) // Smoother glass effect
                         .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
-                        .clickable(
-                            interactionSource = interactionSource,
-                            indication = null
-                        ) { onClick(music) }
+                        .bouncyClickable(
+                            downScale = 0.95f,
+                            onClick = { onClick(music) }
+                        )
                         .padding(8.dp),
                 ) {
                     Column {
@@ -570,7 +583,10 @@ private fun HomeMusicRail(
                                 .clip(RoundedCornerShape(12.dp)),
                         ) {
                             AsyncImage(
-                                model = music.thumbnailUrl,
+                                model = coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                                    .data(music.thumbnailUrl)
+                                    .crossfade(true)
+                                    .build(),
                                 contentDescription = music.title,
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop,

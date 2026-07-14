@@ -28,8 +28,10 @@ import androidx.compose.ui.unit.dp
 import com.deepeye.musicpro.ui.components.DynamicLabel
 import com.deepeye.musicpro.ui.components.SecondaryLabel
 import coil3.compose.AsyncImage
+import coil3.request.crossfade
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.ui.theme.GlassBorder
+import com.deepeye.musicpro.ui.components.bouncyClickable
 
 /**
  * Continue Listening horizontal rail — shows recently played music tracks.
@@ -82,7 +84,7 @@ private fun ContinueListeningCard(
             .clip(RoundedCornerShape(20.dp))
             .background(Color.White.copy(alpha = 0.05f)) // Frost background
             .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick)
+            .bouncyClickable(onClick = onClick)
             .padding(10.dp),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -97,7 +99,10 @@ private fun ContinueListeningCard(
             ) {
                 if (music.thumbnailUrl.isNotEmpty()) {
                     AsyncImage(
-                        model = music.thumbnailUrl,
+                        model = coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                            .data(music.thumbnailUrl)
+                            .crossfade(true)
+                            .build(),
                         contentDescription = music.title,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,

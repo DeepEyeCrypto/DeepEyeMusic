@@ -19,6 +19,9 @@ data class HomeFeedState(
     val isLoading: Boolean = false,
     val isOffline: Boolean = false,
     val error: String? = null,
+    val becauseYouLikedArtist: String? = null,
+    val becauseYouLikedMix: List<HomeMusicItem> = emptyList(),
+    val newReleases: List<HomeMusicItem> = emptyList(),
 )
 
 data class HomeVideoItem(
@@ -79,6 +82,7 @@ enum class RailType {
     MOOD_MIX,
     SUPERMIX,
     DISCOVER_MIX,
+    BECAUSE_YOU_LIKED,
 }
 
 enum class MusicItemType {

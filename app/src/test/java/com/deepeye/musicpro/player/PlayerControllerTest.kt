@@ -87,6 +87,11 @@ class PlayerControllerTest {
             audioSessionGuardian = audioSessionGuardian,
             forensics = forensics,
             dspProfileManager = dspProfileManager,
+            libraryRepository = mockk(relaxed = true),
+            gamificationEngine = mockk(relaxed = true),
+            tubeSimulatorProcessor = mockk(relaxed = true),
+            dspController = mockk(relaxed = true),
+            cloudSyncManager = mockk(relaxed = true),
             context = context,
         )
         verify { audioSessionManager.attachToPlayer(player) }
@@ -112,6 +117,11 @@ class PlayerControllerTest {
                     audioSessionGuardian = audioSessionGuardian,
                     forensics = forensics,
                     dspProfileManager = dspProfileManager,
+                    libraryRepository = mockk(relaxed = true),
+                    gamificationEngine = mockk(relaxed = true),
+                    tubeSimulatorProcessor = mockk(relaxed = true),
+                    dspController = mockk(relaxed = true),
+                    cloudSyncManager = mockk(relaxed = true),
                     context = context,
                 )
 
