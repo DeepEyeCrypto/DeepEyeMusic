@@ -230,7 +230,9 @@ constructor(
 
             // ── Bass Boost ──
             bassBoost?.let { bb ->
-                bb.enabled = isEnabled && (params.bassBoostEnabled || params.viperBassEnabled)
+                // On API 28+ with DynamicsProcessing working, PreEQ handles sub/mid bass to avoid double-dipping
+                val dpAvailable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && dynamicsProcessing != null
+                bb.enabled = isEnabled && (params.bassBoostEnabled || params.viperBassEnabled) && !dpAvailable
                 if (bb.enabled) {
                     val strength = bassProcessor.computeLegacyBassBoostStrength(bassConfig)
                     bb.setStrength(strength.coerceIn(0, 1000).toShort())
@@ -255,22 +257,19 @@ constructor(
 
             // ── Gain Distribution ──
             var dynamicsPostGain = 0f
-            var loudnessGainMb = 0
+            val loudnessGainDb = if (params.loudnessEnabled) (params.loudnessTargetGainMb / 100f) else 0f
+            val pgcHeadroomDb = if (params.pgcEnabled) params.pgcGain else 0f
+            val netGainDb = pgcHeadroomDb + params.masterGain + loudnessGainDb
 
-            val totalGainDb = params.pgcGain + params.masterGain + (if (params.loudnessEnabled) params.loudnessGain else 0f)
-            
-            if (totalGainDb > 0) {
-                loudnessGainMb = (totalGainDb * 100).toInt()
-            } else {
-                // Apply negative headroom in DynamicsProcessing so it actually works
-                dynamicsPostGain = totalGainDb
+            if (netGainDb < 0f) {
+                dynamicsPostGain = netGainDb
             }
 
             // ── Loudness / Master Gain ──
             loudnessEnhancer?.let { loud ->
-                loud.enabled = isEnabled
-                if (isEnabled) {
-                    loud.setTargetGain(loudnessGainMb)
+                loud.enabled = isEnabled && params.loudnessEnabled
+                if (loud.enabled) {
+                    loud.setTargetGain(params.loudnessTargetGainMb.coerceAtLeast(0))
                 }
             }
 

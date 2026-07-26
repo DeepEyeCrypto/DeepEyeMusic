@@ -53,7 +53,7 @@ data class DspParams(
     val compressorAttack: Float = 3f, // ms
     val compressorRelease: Float = 250f, // ms
     val limiterEnabled: Boolean = true,
-    val limiterThreshold: Float = -1f, // dB
+    val limiterThreshold: Float = -3f, // dB
     val dynamicSystemEnabled: Boolean = false,
     val dynamicSystemMode: DynamicMode = DynamicMode.V1,
     val dynamicSystemStrength: Int = 0,
@@ -281,32 +281,32 @@ data class DspParams(
         fun premiumHeadphoneBass() =
             DspParams(
                 enabled = true,
-                pgcGain = -6f,
+                pgcGain = -8f,
                 eqEnabled = true,
                 eqBands =
                 floatArrayOf(
-                    4.5f, 5.5f, 4.0f, 2.0f, -1.0f,
-                    0.0f, -1.5f, 1.5f, 2.5f, 3.0f,
+                    2.5f, 3.5f, 2.5f, 1.0f, -1.0f,
+                    0.0f, -1.5f, 1.0f, 1.5f, 2.0f,
                 ),
                 viperBassEnabled = true,
                 viperBassMode = ViperBassMode.NATURAL,
                 viperBassFreq = 60,
-                viperBassGain = 10.0f,
+                viperBassGain = 7.0f,
                 viperClarityEnabled = true,
                 viperClarityMode = ViperClarityMode.OZONE_PLUS,
-                viperClarityGain = 8.5f,
+                viperClarityGain = 6.0f,
                 tubeEnabled = true,
                 tubeMode = TubeMode.TRIODE,
-                tubeDrive = 18,
+                tubeDrive = 15,
                 bassBoostEnabled = true,
-                bassBoostStrength = 600,
+                bassBoostStrength = 400,
                 loudnessEnabled = true,
-                loudnessTargetGainMb = 800,
+                loudnessTargetGainMb = 400,
                 virtualizerEnabled = true,
-                virtualizerStrength = 500,
+                virtualizerStrength = 400,
                 fieldSurroundEnabled = true,
-                fieldSurroundStrength = 6,
-                fieldMidImageStrength = 8,
+                fieldSurroundStrength = 5,
+                fieldMidImageStrength = 6,
                 limiterEnabled = true,
                 auditoryProtectionEnabled = true,
                 auditoryBinauralLevel = 2,
@@ -319,19 +319,19 @@ data class DspParams(
                 eqEnabled = true,
                 eqBands =
                 floatArrayOf(
-                    3.0f, 4.0f, 3.5f, 2.0f, 1.0f,
-                    2.5f, 1.5f, 1.0f, 2.0f, 1.5f,
+                    2.0f, 2.5f, 2.0f, 1.5f, 1.0f,
+                    2.0f, 1.5f, 1.0f, 1.5f, 1.0f,
                 ),
                 viperBassEnabled = true,
                 viperBassMode = ViperBassMode.NATURAL,
                 viperBassFreq = 80,
-                viperBassGain = 8.0f,
+                viperBassGain = 6.0f,
                 viperClarityEnabled = true,
                 viperClarityMode = ViperClarityMode.NATURAL,
-                viperClarityGain = 10.0f,
+                viperClarityGain = 7.0f,
                 tubeEnabled = true,
                 tubeMode = TubeMode.TRIODE,
-                tubeDrive = 12,
+                tubeDrive = 10,
                 reverbEnabled = true,
                 reverbRoomSize = 0.25f,
                 reverbDensity = 0.3f,
@@ -342,19 +342,19 @@ data class DspParams(
         fun nightMode() =
             DspParams(
                 enabled = true,
-                pgcGain = -4f,
+                pgcGain = -5f,
                 eqEnabled = true,
                 eqBands =
                 floatArrayOf(
-                    2.0f, 3.0f, 3.0f, 1.5f, 0.0f,
-                    0.5f, 0.0f, 0.5f, 1.0f, 1.5f,
+                    1.5f, 2.0f, 2.0f, 1.0f, 0.0f,
+                    0.5f, 0.0f, 0.5f, 1.0f, 1.0f,
                 ),
                 loudnessEnabled = true,
-                loudnessTargetGainMb = 1500,
+                loudnessTargetGainMb = 800,
                 bassBoostEnabled = true,
-                bassBoostStrength = 400,
+                bassBoostStrength = 300,
                 virtualizerEnabled = true,
-                virtualizerStrength = 300,
+                virtualizerStrength = 250,
                 limiterEnabled = true,
                 auditoryProtectionEnabled = true,
             )
@@ -362,24 +362,24 @@ data class DspParams(
         fun bassMonster() =
             DspParams(
                 enabled = true,
-                pgcGain = -8f, // extra headroom for max bass
+                pgcGain = -10f, // Extra headroom for high bass
                 eqEnabled = true,
                 eqBands =
                 floatArrayOf(
-                    6.0f, 7.0f, 5.5f, 3.0f, -2.0f,
-                    -1.5f, -1.0f, 2.0f, 3.0f, 3.5f,
+                    4.0f, 4.5f, 3.5f, 1.5f, -2.0f,
+                    -1.5f, -1.0f, 1.5f, 2.0f, 2.5f,
                 ),
                 viperBassEnabled = true,
                 viperBassMode = ViperBassMode.DYNAMIC,
                 viperBassFreq = 40,
-                viperBassGain = 14.0f,
+                viperBassGain = 10.0f,
                 bassBoostEnabled = true,
-                bassBoostStrength = 800,
+                bassBoostStrength = 600,
                 dynamicSystemEnabled = true,
                 dynamicSystemMode = DynamicMode.SUBWOOFER,
-                dynamicSystemStrength = 70,
+                dynamicSystemStrength = 50,
                 loudnessEnabled = true,
-                loudnessTargetGainMb = 600,
+                loudnessTargetGainMb = 400,
                 limiterEnabled = true,
                 pgcEnabled = true,
                 auditoryProtectionEnabled = true,
@@ -388,39 +388,39 @@ data class DspParams(
         fun speakerSafe() =
             DspParams(
                 enabled = true,
-                pgcGain = -2f,
+                pgcGain = -4f,
                 eqEnabled = true,
                 eqBands =
                 floatArrayOf(
-                    -2.0f, 0.0f, 1.5f, 2.0f, 1.5f,
-                    1.0f, 0.5f, 1.0f, 2.0f, 1.5f,
+                    -2.0f, 0.0f, 1.0f, 1.5f, 1.0f,
+                    1.0f, 0.5f, 1.0f, 1.5f, 1.0f,
                 ),
                 loudnessEnabled = true,
-                loudnessTargetGainMb = 400,
+                loudnessTargetGainMb = 300,
                 limiterEnabled = true,
             )
 
         fun bluetoothOptimized() =
             DspParams(
                 enabled = true,
-                pgcGain = -5f,
+                pgcGain = -6f,
                 eqEnabled = true,
                 eqBands =
                 floatArrayOf(
-                    3.0f, 4.5f, 4.0f, 2.5f, 0.0f,
-                    0.5f, 0.0f, 1.5f, 2.5f, 2.0f,
+                    2.0f, 3.0f, 2.5f, 1.5f, 0.0f,
+                    0.5f, 0.0f, 1.0f, 1.5f, 1.5f,
                 ),
                 viperBassEnabled = true,
                 viperBassMode = ViperBassMode.NATURAL,
                 viperBassFreq = 80,
-                viperBassGain = 9.0f,
+                viperBassGain = 6.0f,
                 viperClarityEnabled = true,
                 viperClarityMode = ViperClarityMode.NATURAL,
-                viperClarityGain = 7.0f,
+                viperClarityGain = 5.0f,
                 bassBoostEnabled = true,
-                bassBoostStrength = 500,
+                bassBoostStrength = 350,
                 loudnessEnabled = true,
-                loudnessTargetGainMb = 600,
+                loudnessTargetGainMb = 400,
                 limiterEnabled = true,
             )
     }

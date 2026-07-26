@@ -13,14 +13,15 @@ enum class DSPPreset(
         presetName = "Premium Bass",
         description = "Fata-fat bass with harmonic saturation",
         params = DspParams(
+            pgcGain = -8f,
             viperBassEnabled = true,
-            viperBassGain = 12f,
+            viperBassGain = 8f,
             viperBassFreq = 60,
             viperBassMode = ViperBassMode.PURE,
             bassBoostEnabled = true,
-            bassBoostStrength = 800,
+            bassBoostStrength = 500,
             limiterEnabled = true,
-            limiterThreshold = -1f
+            limiterThreshold = -3f
         )
     ),
     
@@ -28,11 +29,12 @@ enum class DSPPreset(
         presetName = "3D Audio",
         description = "Spatial audio with crossfeed + reverb",
         params = DspParams(
+            pgcGain = -4f,
             crossfeedEnabled = true,
             reverbEnabled = true,
             reverbPreset = ReverbPreset.LARGE_ROOM,
             virtualizerEnabled = true,
-            virtualizerStrength = 500
+            virtualizerStrength = 400
         )
     ),
     
@@ -40,8 +42,9 @@ enum class DSPPreset(
         presetName = "Vocal Clear",
         description = "Enhanced vocals for clarity",
         params = DspParams(
+            pgcGain = -4f,
             eqEnabled = true,
-            eqBands = arrayOf(0f, 0f, 3f, 6f, 3f, 0f, 0f, 0f, 0f, 0f).toFloatArray(),
+            eqBands = arrayOf(0f, 0f, 2f, 4f, 2f, 0f, 0f, 0f, 0f, 0f).toFloatArray(),
             karaokeModeEnabled = false
         )
     ),
@@ -50,9 +53,10 @@ enum class DSPPreset(
         presetName = "Tube Warmth",
         description = "Classic tube amplifier warmth",
         params = DspParams(
+            pgcGain = -3f,
             tubeEnabled = true,
             tubeMode = TubeMode.TRIODE,
-            tubeDrive = 70
+            tubeDrive = 45
         )
     ),
     
@@ -65,14 +69,17 @@ enum class DSPPreset(
     // Rank Exclusives
     LEGEND_BASS(
         presetName = "Legend Bass",
-        description = "Exclusive +15dB bass + harmony (Top 10 only)",
+        description = "Exclusive +10dB bass + harmony (Top 10 only)",
         params = DspParams(
+            pgcGain = -10f,
             viperBassEnabled = true,
-            viperBassGain = 15f,
+            viperBassGain = 10f,
             viperBassFreq = 80,
             viperBassMode = ViperBassMode.DYNAMIC,
             bassBoostEnabled = true,
-            bassBoostStrength = 1000
+            bassBoostStrength = 700,
+            limiterEnabled = true,
+            limiterThreshold = -3f
         ),
         requiredRank = 10
     ),
@@ -81,9 +88,10 @@ enum class DSPPreset(
         presetName = "Elite Warmth",
         description = "Enhanced tube sim (Top 100 only)",
         params = DspParams(
+            pgcGain = -4f,
             tubeEnabled = true,
             tubeMode = TubeMode.PENTODE,
-            tubeDrive = 90
+            tubeDrive = 60
         ),
         requiredRank = 100
     ),
@@ -92,9 +100,10 @@ enum class DSPPreset(
         presetName = "Rising 3D Audio",
         description = "Balanced 3D spatial (Top 1000 only)",
         params = DspParams(
+            pgcGain = -4f,
             crossfeedEnabled = true,
             virtualizerEnabled = true,
-            virtualizerStrength = 750
+            virtualizerStrength = 500
         ),
         requiredRank = 1000
     )

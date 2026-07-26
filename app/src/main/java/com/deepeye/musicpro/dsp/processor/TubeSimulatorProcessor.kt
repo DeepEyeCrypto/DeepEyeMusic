@@ -82,18 +82,20 @@ class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
                 sample *= drive
                 if (tubeMode == TubeMode.TRIODE) {
                     // Asymmetric clipping: affects positive peaks differently from negative peaks
+                    // Smooth soft-clipping for both to prevent sharp knee harmonic distortion
                     if (sample > 0) {
                         sample = tanh(sample)
                     } else {
-                        sample = -1f + 1f / (1f - sample) // softer negative clipping
+                        sample = tanh(sample * 0.85f) // Softer negative clipping for warm even harmonics
                     }
                 } else {
                     // Pentode: Symmetric clipping
                     sample = tanh(sample)
                 }
 
-                // Bring back to output level
-                sample /= drive
+                // Bring back output level with proper peak compensation
+                val comp = if (drive > 1.0f) 1.0f / tanh(drive) else 1.0f
+                sample *= comp / drive
                 
                 // Convert back to 16-bit
                 val outSample = (sample * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()

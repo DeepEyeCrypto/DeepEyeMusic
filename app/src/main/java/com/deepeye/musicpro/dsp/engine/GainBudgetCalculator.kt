@@ -25,7 +25,7 @@ object GainBudgetCalculator {
             total += (params.bassBoostStrength / 1000f) * 8f
         }
         if (params.loudnessEnabled) {
-            total += (params.loudnessTargetGainMb / 1000f) * 0.1f
+            total += params.loudnessTargetGainMb / 100f
         }
         if (params.viperBassEnabled) {
             total += params.viperBassGain * 0.5f
@@ -45,8 +45,8 @@ object GainBudgetCalculator {
 
         val risk =
             when {
-                total < 8f -> RiskLevel.SAFE
-                total < 14f -> RiskLevel.MODERATE
+                total < 6f -> RiskLevel.SAFE
+                total < 12f -> RiskLevel.MODERATE
                 else -> RiskLevel.DANGER
             }
 
@@ -60,6 +60,7 @@ object GainBudgetCalculator {
         val budget = calculate(params)
         return if (budget.risk == RiskLevel.DANGER) {
             params.copy(
+                pgcGain = minOf(params.pgcGain, -6f),
                 loudnessTargetGainMb = (params.loudnessTargetGainMb * 0.5f).toInt(),
                 bassBoostStrength = (params.bassBoostStrength * 0.7f).toInt(),
                 viperBassGain = params.viperBassGain * 0.8f,

@@ -27,6 +27,7 @@ constructor(
     suspend fun generateNextQueue(
         currentTrack: MediaItem?,
         autoplayState: AutoplayState,
+        activeQueueArtists: List<String> = emptyList(),
     ): List<QueueItem> =
         withContext(Dispatchers.IO) {
             val since = System.currentTimeMillis() - 30L * 86400_000
@@ -40,20 +41,32 @@ constructor(
             // Let's just use the currentTrack to seed Related.
 
             // 2. Build candidate pool in parallel
-            val candidateLists =
+            val candidatesAndScores =
                 coroutineScope {
                     val fromHistory =
                         async {
                             if (currentTrack != null) {
-                                if (currentTrack is MediaItem.Local) {
-                                    // Local file IDs aren't valid YouTube IDs, so we search YouTube
-                                    // for the song's title and artist to get relevant recommendations.
-                                    val query = "${currentTrack.title} ${currentTrack.artist} song audio"
-                                    contentFetcher.searchByQuery(query, 20)
-                                } else {
-                                    val isVideo = (currentTrack as? MediaItem.Remote)?.isVideo ?: false
-                                    contentFetcher.getRelatedVideos(currentTrack.id, 20, isVideo)
+                                val isVideo = (currentTrack as? MediaItem.Remote)?.isVideo ?: false
+                                
+                                val relatedTask = async {
+                                    if (currentTrack is MediaItem.Local) {
+                                        val query = "${currentTrack.title} ${currentTrack.artist} song audio"
+                                        contentFetcher.searchByQuery(query, 20)
+                                    } else {
+                                        contentFetcher.getRelatedVideos(currentTrack.id, 20, isVideo)
+                                    }
                                 }
+                                
+                                // YouTube style: Explicitly fetch more from the same artist to ensure continuity
+                                val artistTask = async {
+                                    if (currentTrack.artist.isNotBlank() && currentTrack.artist != "Unknown") {
+                                        contentFetcher.searchByQuery("${currentTrack.artist} songs", 15)
+                                    } else {
+                                        emptyList()
+                                    }
+                                }
+                                
+                                relatedTask.await() + artistTask.await()
                             } else {
                                 emptyList()
                             }
@@ -82,22 +95,41 @@ constructor(
                             }
                         }
 
+                    val related = fromHistory.await()
+                    val lang = languageQuery.await()
+                    val trend = trending.await()
+                    
                     val allCandidates = mutableListOf<com.deepeye.musicpro.domain.recommendation.VideoItem>()
-                    allCandidates.addAll(fromHistory.await())
-                    allCandidates.addAll(languageQuery.await())
-                    allCandidates.addAll(trending.await())
-                    allCandidates
+                    allCandidates.addAll(related)
+                    allCandidates.addAll(lang)
+                    allCandidates.addAll(trend)
+                    
+                    val relevanceMap = mutableMapOf<String, Float>()
+                    related.forEachIndexed { i, v -> relevanceMap[v.videoId] = 1.0f - (i / 40f) }
+                    lang.forEach { v -> if (!relevanceMap.containsKey(v.videoId)) relevanceMap[v.videoId] = 0.3f }
+                    trend.forEach { v -> if (!relevanceMap.containsKey(v.videoId)) relevanceMap[v.videoId] = 0.1f }
+
+                    android.util.Log.d("AutoplayEngine", "Seed track: ${currentTrack?.title} by ${currentTrack?.artist}")
+                    android.util.Log.d("AutoplayEngine", "Candidate pool raw size: ${allCandidates.size}")
+                    
+                    Pair(allCandidates, relevanceMap)
                 }
+
+            val candidateLists = candidatesAndScores.first
+            val relevanceMap = candidatesAndScores.second
 
             // 3. Deduplicate and remove blacklist/history
             val blacklist = dao.getBlacklistedVideoIds().toSet() + autoplayState.blacklist
-            val recentHistory = autoplayState.history.takeLast(30).toSet()
+            // Use sessionHistory which accurately contains ALL previously queued/played items
+            val recentHistory = autoplayState.sessionHistory
 
             val candidates =
                 candidateLists
                     .distinctBy { it.videoId }
                     .filter { it.videoId !in blacklist }
                     .filter { it.videoId !in recentHistory }
+                    
+            android.util.Log.d("AutoplayEngine", "Candidates after deduplication & history filter (Dropped ${candidateLists.size - candidates.size}): ${candidates.size}")
 
             // 4. Score each candidate
             val profile = tasteProfileRepository.getTasteProfile().firstOrNull()
@@ -105,10 +137,12 @@ constructor(
 
             val scored =
                 candidates.map { video ->
-                    val c = CandidateTrack.fromVideo(video)
+                    val c = CandidateTrack.fromVideo(video, relevanceMap[video.videoId] ?: 0.5f)
                     val score =
                         scorer.scoreCandidate(
                             candidate = c,
+                            seedTrack = currentTrack,
+                            activeQueueArtists = activeQueueArtists,
                             history = emptyList(), // We could fetch recent ListenEvents, but leaving empty for now
                             autoplayState = autoplayState,
                             preferredLanguages = preferredLanguages
@@ -126,6 +160,8 @@ constructor(
                     .sortedByDescending { it.score }
                     .take(20)
                     .mapIndexed { index, item -> item.copy(rank = index + 1) }
+
+            android.util.Log.d("AutoplayEngine", "Final Autoplay Queue Generated: ${scored.joinToString { "${it.title} (${it.score})" }}")
 
             scored
         }
