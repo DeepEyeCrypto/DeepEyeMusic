@@ -156,8 +156,15 @@ fun NavGraph(
         }
     ) {
         // Login Screen
+        composable(Routes.YouTubeLogin.route) {
+            com.deepeye.musicpro.ui.screens.YouTubeLoginScreen(
+                onLoginSuccess = { _, _ -> navController.popBackStack() },
+                onCancel = { navController.popBackStack() }
+            )
+        }
         composable(Routes.Login.route) {
             LoginScreen(
+                onYouTubeLoginClick = { navController.navigate(Routes.YouTubeLogin.route) },
                 onLoginSuccess = {
                     navController.navigate(if (onboardingState == true) Routes.Home.route else Routes.Onboarding.route) {
                         popUpTo(Routes.Login.route) { inclusive = true }
@@ -179,18 +186,10 @@ fun NavGraph(
 
         // ── Bottom Nav Destinations ──
         composable(Routes.Home.route) {
-            HomeHubScreen(
-                windowSizeClass = windowSizeClass,
+            YouTubeScreen(
                 onNavigateToVideo = { videoId ->
                     onExpandPlayer()
                 },
-                onNavigateToMusic = { musicId ->
-                    onExpandPlayer()
-                },
-                onNavigateToLibrary = { navController.navigate(Routes.Library.route) },
-                onNavigateToChat = { navController.navigate(Routes.ChatAuth.route) },
-                onOpenV4A = { navController.navigate(Routes.DSP.route) },
-                onNavigateToSettings = { navController.navigate(Routes.Settings.route) },
             )
         }
 
@@ -258,7 +257,8 @@ fun NavGraph(
         composable(Routes.Settings.route) {
             SettingsScreen(
                 windowSizeClass = windowSizeClass,
-                onNavigateToAEOS = { navController.navigate(Routes.AEOS.route) }
+                onNavigateToAEOS = { navController.navigate(Routes.AEOS.route) },
+                onYouTubeLoginClick = { navController.navigate(Routes.YouTubeLogin.route) }
             )
         }
         

@@ -15,6 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -165,18 +167,6 @@ fun HomeHubScreen(
                 )
             }
 
-            // Phase 3: Unified Gamification + Leaderboard Card
-            item {
-                Top3LeaderboardCard(
-                    top3Users = top3Users,
-                    currentStreak = gamificationState.streak.currentStreak,
-                    totalPoints = gamificationState.rewardPoints.totalPoints,
-                    onMoreClick = { showRankingSheet = true },
-                    onPointsClick = { showGamificationSheet = true },
-                    modifier = Modifier.padding(horizontal = 20.dp)
-                )
-            }
-
             // 1b. Featured Premium Audio Hero Card (AEOS Premium Feature)
             val featuredMusic = feedState.featuredMusic
             if (featuredMusic != null) {
@@ -238,7 +228,7 @@ fun HomeHubScreen(
             if (feedState.trending.isNotEmpty()) {
                 item {
                     HomeVideoRail(
-                        title = "🔥 Trending",
+                        title = if (feedState.hasAuth) "🌟 For You" else "🔥 Trending",
                         items = feedState.trending,
                         onClick = { 
                             android.util.Log.e("HomeHubScreen", "Trending clicked: ${it.id}")
@@ -442,7 +432,31 @@ fun HomeHubScreen(
                     )
                 }
             }
-        }
+        } // Close LazyColumn here
+
+        // Fluid Menu for Gamification (Upper Right)
+        FluidMenu(
+            items = listOf(
+                FluidMenuItem(
+                    icon = Icons.Default.Star,
+                    tint = androidx.compose.ui.graphics.Color(0xFFFFD700),
+                    onClick = { showGamificationSheet = true }
+                ),
+                FluidMenuItem(
+                    icon = Icons.Default.Person,
+                    tint = androidx.compose.ui.graphics.Color(0xFF00E5FF),
+                    onClick = { showRankingSheet = true }
+                ),
+                FluidMenuItem(
+                    icon = Icons.Default.Settings,
+                    tint = androidx.compose.ui.graphics.Color.White,
+                    onClick = onNavigateToSettings
+                )
+            ),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 16.dp, end = 16.dp)
+        )
     }
 }
 
@@ -507,7 +521,8 @@ private fun HomeVideoRail(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
-            items(items, key = { it.id }) { video ->
+            items(items.size, key = { index -> "$index-${items[index].id}" }) { index ->
+                val video = items[index]
                 VideoCard(item = video, onClick = onClick)
             }
         }
@@ -531,7 +546,8 @@ private fun ShortsRail(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
-            items(items, key = { it.id }) { short ->
+            items(items.size, key = { index -> "$index-${items[index].id}" }) { index ->
+                val short = items[index]
                 VideoCard(
                     item = short,
                     onClick = onClick,
