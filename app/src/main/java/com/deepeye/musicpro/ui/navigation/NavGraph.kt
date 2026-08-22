@@ -186,10 +186,18 @@ fun NavGraph(
 
         // ── Bottom Nav Destinations ──
         composable(Routes.Home.route) {
-            YouTubeScreen(
+            HomeHubScreen(
+                windowSizeClass = windowSizeClass,
                 onNavigateToVideo = { videoId ->
                     onExpandPlayer()
                 },
+                onNavigateToMusic = { musicId ->
+                    onExpandPlayer()
+                },
+                onNavigateToLibrary = { navController.navigate(Routes.Library.route) },
+                onNavigateToChat = { navController.navigate(Routes.ChatAuth.route) },
+                onOpenV4A = { navController.navigate(Routes.DSP.route) },
+                onNavigateToSettings = { navController.navigate(Routes.Settings.route) },
             )
         }
 

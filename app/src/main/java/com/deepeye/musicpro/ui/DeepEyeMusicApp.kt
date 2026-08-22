@@ -208,6 +208,12 @@ fun DeepEyeMusicApp(
                 listOf(
                     BottomNavItem(Routes.Home.route, "Home", Icons.Filled.Home, Icons.Outlined.Home),
                     BottomNavItem(
+                        Routes.YouTube.route,
+                        "YouTube",
+                        Icons.Filled.Subscriptions,
+                        Icons.Outlined.Subscriptions
+                    ),
+                    BottomNavItem(
                         Routes.NetMirror.route,
                         "Video Hub",
                         Icons.Filled.Movie,
