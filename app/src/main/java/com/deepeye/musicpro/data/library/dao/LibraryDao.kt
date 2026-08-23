@@ -82,6 +82,9 @@ interface LibraryDao {
     @Query("SELECT * FROM downloads WHERE state = :state ORDER BY downloadedAt DESC")
     fun observeCompletedDownloads(state: com.deepeye.musicpro.domain.model.library.DownloadState = com.deepeye.musicpro.domain.model.library.DownloadState.COMPLETED): Flow<List<DownloadEntity>>
 
+    @Query("SELECT * FROM downloads WHERE state = 'COMPLETED'")
+    suspend fun getCompletedDownloadsList(): List<DownloadEntity>
+
     @Query("SELECT * FROM downloads WHERE videoId = :videoId")
     suspend fun getDownload(videoId: String): DownloadEntity?
 

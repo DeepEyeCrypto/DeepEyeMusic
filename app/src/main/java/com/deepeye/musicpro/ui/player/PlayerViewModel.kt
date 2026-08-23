@@ -28,6 +28,7 @@ constructor(
     private val sleepTimerManager: com.deepeye.musicpro.player.timer.SleepTimerManager,
     private val recommendationEngine: com.deepeye.musicpro.domain.recommendation.RecommendationEngine,
     private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
+    private val youtubeRemoteDataSource: com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
 ) : ViewModel() {
     val playerState: StateFlow<PlayerState> = playerController.playerState
     val autoplayState: StateFlow<com.deepeye.musicpro.domain.autoplay.AutoplayState> = playerController.autoplayState
@@ -48,6 +49,9 @@ constructor(
 
     private val _dominantColor = MutableStateFlow(Color(0xFF7B3FE4))
     val dominantColor: StateFlow<Color> = _dominantColor.asStateFlow()
+
+    private val _videoDetails = MutableStateFlow<com.deepeye.musicpro.domain.model.VideoDetails?>(null)
+    val videoDetails: StateFlow<com.deepeye.musicpro.domain.model.VideoDetails?> = _videoDetails.asStateFlow()
 
     private val _extractedColors = MutableStateFlow<com.deepeye.musicpro.util.ExtractedColors?>(null)
     val extractedColors: StateFlow<com.deepeye.musicpro.util.ExtractedColors?> = _extractedColors.asStateFlow()
@@ -95,6 +99,14 @@ constructor(
                     } ?: run {
                         _extractedColors.value = null
                         _dominantColor.value = Color(0xFF7B3FE4)
+                    }
+                    _videoDetails.value = null
+                    if (mediaItem is com.deepeye.musicpro.domain.model.MediaItem.Remote) {
+                        try {
+                            _videoDetails.value = youtubeRemoteDataSource.getVideoDetails(mediaItem.id)
+                        } catch (e: Exception) {
+                            // ignore
+                        }
                     }
                     if (mediaItem != null) {
                         // Duration from playerState might be delayed, we use current duration or 0

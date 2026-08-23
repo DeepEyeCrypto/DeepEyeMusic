@@ -31,6 +31,8 @@ data class AppSettings(
     val bitDepth: Int = 16,
     val autoScanOnLaunch: Boolean = true,
     val showVisualizer: Boolean = true,
+    val youtubeAccessToken: String? = null,
+    val youtubeRefreshToken: String? = null
 )
 
 @Singleton
@@ -48,6 +50,8 @@ constructor(
         private val KEY_BIT_DEPTH = intPreferencesKey("bit_depth")
         private val KEY_AUTO_SCAN = booleanPreferencesKey("auto_scan")
         private val KEY_SHOW_VISUALIZER = booleanPreferencesKey("show_visualizer")
+        private val KEY_YT_ACCESS_TOKEN = stringPreferencesKey("yt_access_token")
+        private val KEY_YT_REFRESH_TOKEN = stringPreferencesKey("yt_refresh_token")
     }
 
     val settings: Flow<AppSettings> =
@@ -66,6 +70,8 @@ constructor(
                 bitDepth = prefs[KEY_BIT_DEPTH] ?: 16,
                 autoScanOnLaunch = prefs[KEY_AUTO_SCAN] ?: true,
                 showVisualizer = prefs[KEY_SHOW_VISUALIZER] ?: true,
+                youtubeAccessToken = prefs[KEY_YT_ACCESS_TOKEN],
+                youtubeRefreshToken = prefs[KEY_YT_REFRESH_TOKEN],
             )
         }
 
@@ -125,6 +131,20 @@ constructor(
             }
         } catch (e: Exception) {
             android.util.Log.e("SettingsDataStore", "Failed to restore settings", e)
+        }
+    }
+
+    suspend fun setYouTubeTokens(accessToken: String, refreshToken: String?) {
+        context.dataStore.edit { prefs ->
+            if (accessToken.isEmpty()) {
+                prefs.remove(KEY_YT_ACCESS_TOKEN)
+                prefs.remove(KEY_YT_REFRESH_TOKEN)
+            } else {
+                prefs[KEY_YT_ACCESS_TOKEN] = accessToken
+                if (refreshToken != null) {
+                    prefs[KEY_YT_REFRESH_TOKEN] = refreshToken
+                }
+            }
         }
     }
 }

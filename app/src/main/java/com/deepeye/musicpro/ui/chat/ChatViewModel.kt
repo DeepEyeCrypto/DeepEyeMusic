@@ -4,6 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deepeye.musicpro.data.repository.ChatRepository
 import com.deepeye.musicpro.domain.model.chat.DecryptedMessage
+import com.deepeye.musicpro.domain.network.MeshNetworkEngine
+import com.deepeye.musicpro.domain.network.MeshNode
+import com.deepeye.musicpro.domain.network.TorProxyManager
+import com.deepeye.musicpro.domain.network.TorVerificationResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,8 +18,18 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val torProxyManager: TorProxyManager,
+    private val meshNetworkEngine: MeshNetworkEngine
 ) : ViewModel() {
+
+    val isTorEnabled: StateFlow<Boolean> = torProxyManager.isTorEnabled
+    val isMeshEnabled: StateFlow<Boolean> = meshNetworkEngine.isMeshEnabled
+    val connectedPeersCount: StateFlow<Int> = meshNetworkEngine.connectedPeersCount
+    val activeMeshNodes: StateFlow<List<MeshNode>> = meshNetworkEngine.activeNodes
+
+    private val _torStatus = MutableStateFlow<TorVerificationResult?>(null)
+    val torStatus: StateFlow<TorVerificationResult?> = _torStatus.asStateFlow()
 
     private val _messages = MutableStateFlow<List<DecryptedMessage>>(emptyList())
     val messages: StateFlow<List<DecryptedMessage>> = _messages.asStateFlow()
@@ -33,6 +47,25 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             chatRepository.publishMyPublicKey()
             _myChatId.value = chatRepository.getMyCustomChatId()
+        }
+    }
+
+    fun toggleTor(enabled: Boolean) {
+        torProxyManager.setTorEnabled(enabled)
+        if (enabled) {
+            verifyTor()
+        } else {
+            _torStatus.value = null
+        }
+    }
+
+    fun toggleMesh(enabled: Boolean) {
+        meshNetworkEngine.setMeshEnabled(enabled)
+    }
+
+    fun verifyTor() {
+        viewModelScope.launch {
+            _torStatus.value = torProxyManager.verifyTorConnection()
         }
     }
 
@@ -56,6 +89,10 @@ class ChatViewModel @Inject constructor(
 
     fun setChatPassword(password: String) {
         chatRepository.setChatPassword(password)
+    }
+
+    fun resetChatPassword() {
+        chatRepository.resetChatPassword()
     }
 
     fun initChat(chatId: String, receiverId: String) {
@@ -85,12 +122,13 @@ class ChatViewModel @Inject constructor(
         _selectedTtl.value = seconds
     }
 
-    fun sendMessage(text: String) {
+    fun sendMessage(text: String, onComplete: (Boolean) -> Unit = {}) {
         if (text.isBlank()) return
         
         val ttl = _selectedTtl.value
         viewModelScope.launch {
-            chatRepository.sendMessage(currentChatId, currentReceiverId, text, ttl)
+            val success = chatRepository.sendMessage(currentChatId, currentReceiverId, text, ttl)
+            onComplete(success)
         }
     }
 }

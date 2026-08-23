@@ -790,7 +790,19 @@ fun YouTubeScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                val tabs =
+                val tabs = if (uiState.hasAuth) {
+                    listOf(
+                        SidebarTabItem("Home", Icons.Default.Home),
+                        SidebarTabItem("Subscriptions", Icons.Default.Subscriptions),
+                        SidebarTabItem("Liked", Icons.Default.Favorite),
+                        SidebarTabItem("History", Icons.Default.History),
+                        SidebarTabItem("Search", Icons.Default.Search),
+                        SidebarTabItem("Music", Icons.Default.PlayCircle),
+                        SidebarTabItem("Gaming", Icons.Default.Star),
+                        SidebarTabItem("News", Icons.Default.Info),
+                        SidebarTabItem("SponsorBlock", Icons.Default.Settings),
+                    )
+                } else {
                     listOf(
                         SidebarTabItem("Home", Icons.Default.Home),
                         SidebarTabItem("Search", Icons.Default.Search),
@@ -799,6 +811,7 @@ fun YouTubeScreen(
                         SidebarTabItem("News", Icons.Default.Info),
                         SidebarTabItem("SponsorBlock", Icons.Default.Settings),
                     )
+                }
 
                 tabs.forEach { tab ->
                     val isSelected = uiState.selectedCategory == tab.title
@@ -931,7 +944,11 @@ fun YouTubeScreen(
             }
 
             // Top Horizontal category ribbon
-            val tabs = listOf("Home", "Search", "Music", "Movies", "Gaming", "News", "SponsorBlock")
+            val tabs = if (uiState.hasAuth) {
+                listOf("Home", "Subscriptions", "Liked", "History", "Watch Later", "Music", "Movies", "Gaming", "News", "Search", "SponsorBlock")
+            } else {
+                listOf("Home", "Search", "Music", "Movies", "Gaming", "News", "SponsorBlock")
+            }
             LazyRow(
                 modifier =
                 Modifier
@@ -1399,6 +1416,6 @@ private fun formatViews(views: Long): String {
         views >= 1_000_000 -> String.format("%.1fM views", views / 1_000_000f)
         views >= 1_000 -> String.format("%.0fK views", views / 1_000f)
         views > 0 -> "$views views"
-        else -> "128K views"
+        else -> "No views"
     }
 }

@@ -26,7 +26,7 @@ data class CandidateTrack(
     val freshnessScore: Float = 0.5f,
 ) {
     companion object {
-        fun fromVideo(video: VideoItem): CandidateTrack {
+        fun fromVideo(video: VideoItem, sourceRelevance: Float = 0.5f): CandidateTrack {
             val lowerTitle = video.title.lowercase()
 
             // Very simple keyword heuristics to simulate audio analysis
@@ -67,7 +67,8 @@ data class CandidateTrack(
                 upbeatScore = upbeat,
                 romanticScore = romantic,
                 nightDriveScore = nightDrive,
-                discoveryScore = Math.random().toFloat(),
+                similarityToLastTrack = sourceRelevance,
+                discoveryScore = 1.0f - sourceRelevance,
                 freshnessScore = Math.random().toFloat(),
             )
         }
@@ -77,6 +78,8 @@ data class CandidateTrack(
 class AutoplayScorer {
     fun scoreCandidate(
         candidate: CandidateTrack,
+        seedTrack: com.deepeye.musicpro.domain.model.MediaItem?,
+        activeQueueArtists: List<String> = emptyList(),
         history: List<ListenEvent>,
         autoplayState: AutoplayState,
         preferredLanguages: List<String> = emptyList(),
@@ -135,30 +138,49 @@ class AutoplayScorer {
             }
         }
 
-        // 7. Recency penalty (avoid same song too soon)
-        if (candidate.videoId in autoplayState.history.takeLast(20)) score -= 0.50f
+        // 7. Strict Recency/Deduplication penalty (avoid same song in current session)
+        if (candidate.videoId in autoplayState.sessionHistory) score -= 100f // Hard block
+        else if (candidate.videoId in autoplayState.history.takeLast(50)) score -= 0.80f
 
         // 8. Blacklist penalty
-        if (candidate.videoId in autoplayState.blacklist) score -= 1.0f
+        if (candidate.videoId in autoplayState.blacklist) score -= 100f // Hard block
+
+        // 8.5 Artist Continuity and Diversity Score
+        var artistMatchLog = ""
+        if (seedTrack != null) {
+            // Boost if it's the exact same artist (Continuity)
+            if (candidate.artist.isNotBlank() && seedTrack.artist.contains(candidate.artist, ignoreCase = true) ||
+                candidate.artist.contains(seedTrack.artist, ignoreCase = true)) {
+                score += 0.4f
+                artistMatchLog = "(Artist Continuity Boost +0.4) "
+            }
+        }
+        
+        // Diversity: Penalize if we already generated this artist too many times in the active queue
+        val artistCountInQueue = activeQueueArtists.count { it.equals(candidate.artist, ignoreCase = true) }
+        var diversityLog = ""
+        if (artistCountInQueue > 0) {
+            val penalty = 0.15f * artistCountInQueue
+            score -= penalty
+            diversityLog = "(Diversity Penalty -$penalty for $artistCountInQueue matching queued tracks) "
+        }
 
         // 9. Session / Context Match similarity
-        val recentHistory = history.takeLast(5)
-        if (recentHistory.isNotEmpty()) {
-            val validHistory = recentHistory.filter { !it.completionRatio.isNaN() }
-            if (validHistory.isNotEmpty()) {
-                val recentCompletion = validHistory.map { it.completionRatio }.average().toFloat()
-                if (recentCompletion > 0.85f) {
-                    // user is happy, keep it similar
-                    score += candidate.similarityToLastTrack * 0.25f
-                } else if (autoplayState.skipStreak >= 2) {
-                    // user is bored, diversify
-                    score += candidate.discoveryScore * 0.25f
+        if (seedTrack != null) {
+            score += candidate.similarityToLastTrack * 1.5f
+            
+            val recentHistory = history.takeLast(5)
+            if (recentHistory.isNotEmpty()) {
+                val validHistory = recentHistory.filter { !it.completionRatio.isNaN() }
+                if (validHistory.isNotEmpty()) {
+                    val recentCompletion = validHistory.map { it.completionRatio }.average().toFloat()
+                    if (recentCompletion < 0.5f || autoplayState.skipStreak >= 2) {
+                        score += candidate.discoveryScore * 0.5f
+                    }
                 }
-            } else {
-                score += candidate.discoveryScore * 0.10f
             }
         } else {
-            score += candidate.discoveryScore * 0.10f
+            score += candidate.discoveryScore * 1.0f
         }
 
         // 8. Time-of-day context
@@ -173,6 +195,10 @@ class AutoplayScorer {
 
         // 9. Freshness bonus
         score += candidate.freshnessScore * 0.10f
+
+        if (score > -0.5f) {
+            android.util.Log.d("AutoplayEngine", "Scored [${candidate.title}]: $score $artistMatchLog$diversityLog")
+        }
 
         return score
     }

@@ -10,6 +10,10 @@ import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.deepeye.musicpro.data.prefs.SettingsDataStore
+import com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient
+import kotlinx.coroutines.flow.first
+
 @Singleton
 class RecommendationEngine
 @Inject
@@ -17,6 +21,8 @@ constructor(
     private val dao: RecommendationDao,
     private val fetcher: ContentFetcher,
     private val scorer: ScoringEngine,
+    private val settingsDataStore: SettingsDataStore,
+    private val authClient: AuthenticatedYouTubeClient,
 ) {
     private var currentSessionId: String = "session_${System.currentTimeMillis()}"
 
@@ -56,7 +62,26 @@ constructor(
                     async { fetcher.searchByArtist(artist, 10) }
                 }.awaitAll().flatten()
 
-            val trendingTask = async { fetcher.getTrendingMusic("IN", 20) }
+            val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
+            val hasAuth = authSettings?.youtubeAccessToken != null
+
+            val trendingTask = async { 
+                if (hasAuth) {
+                    try {
+                        authClient.getHomeFeed().map {
+                            com.deepeye.musicpro.domain.recommendation.VideoItem(
+                                videoId = it.id,
+                                title = it.title,
+                                artist = it.channelName,
+                                channelId = it.channelId,
+                                duration = "${it.duration / 60}:${(it.duration % 60).toString().padStart(2, '0')}"
+                            )
+                        }.take(20)
+                    } catch (e: Exception) { emptyList() }
+                } else {
+                    fetcher.getTrendingMusic("IN", 20) 
+                }
+            }
 
             // Time-context based fetch
             val contextQuery =
@@ -133,11 +158,11 @@ constructor(
                     subtitle = "Curated for this time",
                     items = contextual.take(15),
                 ),
-                // Row 4: Trending in India
+                // Row 4: Trending in India / Recommended
                 trending =
                 RecommendationRow(
-                    title = "🔥 Trending in India",
-                    subtitle = "Updated today",
+                    title = if (hasAuth) "🌟 Recommended Music" else "🔥 Trending in India",
+                    subtitle = if (hasAuth) "For you" else "Updated today",
                     items = trending.take(20),
                 ),
                 // Row 5: Top genres deep dive

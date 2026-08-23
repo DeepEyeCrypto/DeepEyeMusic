@@ -55,7 +55,8 @@ fun ContinueWatchingRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
-            items(items, key = { it.id }) { video ->
+            items(items.size, key = { index -> "$index-${items[index].id}" }) { index ->
+                val video = items[index]
                 ContinueWatchingCard(video = video, onClick = { onItemClick(video) })
             }
         }

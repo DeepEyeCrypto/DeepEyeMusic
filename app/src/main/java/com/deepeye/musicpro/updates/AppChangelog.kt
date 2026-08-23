@@ -8,6 +8,20 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30035,
+                versionName = "3.0.1.25",
+                releaseDate = "August 2026",
+                title = "SmartTube-Style YouTube Account Sync 🚀",
+                highlight = true,
+                items =
+                    listOf(
+                        "SmartTube-Style YouTube Sync: Subscriptions, Watch History, Liked Videos, and Watch Later now fully connected to your Google/YouTube account.",
+                        "All Home and YouTube sections (Trending, Music, Movies, Gaming, News) now use real personalized YouTube feeds.",
+                        "Dynamic YouTube category navigation ribbon with Subscriptions and Liked feeds.",
+                        "Fixed view count and upload date extraction across the app.",
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30030,
                 versionName = "3.0.1.20",
                 releaseDate = "July 2026",

@@ -58,4 +58,5 @@ data class AutoplayState(
     val familiarMode: Boolean = true,
     val lastGeneratedAt: Long = 0L,
     val isGenerating: Boolean = false,
+    val sessionHistory: Set<String> = emptySet(), // Tracks all tracks (played + queued) for strict deduplication
 )

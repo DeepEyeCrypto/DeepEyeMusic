@@ -57,6 +57,7 @@ constructor(
     private val playbackPathEnforcer: com.deepeye.musicpro.diagnostics.PlaybackPathEnforcer,
     private val audioSessionGuardian: com.deepeye.musicpro.diagnostics.AudioSessionGuardian,
     private val forensics: com.deepeye.musicpro.diagnostics.ExoPlayerForensics,
+    private val lyricsRepository: com.deepeye.musicpro.domain.lyrics.LyricsRepository,
     private val dspProfileManager: com.deepeye.musicpro.dsp.profile.DspProfileManager,
     private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
     private val tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor,
@@ -96,6 +97,7 @@ constructor(
         audioSessionGuardian.startMonitoring(player)
         audioSessionManager.attachToPlayer(player)
         player.addAnalyticsListener(forensics)
+        player.addAnalyticsListener(androidx.media3.exoplayer.util.EventLogger(null, "EventLogger"))
 
         // Initial load of global DSP profile so DSP works before opening DSP screen
         scope.launch {
@@ -300,9 +302,11 @@ constructor(
                         val current = q.getOrNull(idx)
                         if (current != null && !_autoplayState.value.isGenerating) {
                             _autoplayState.update { it.copy(isGenerating = true) }
+                            android.util.Log.d("AutoplayEngine", "Infinite Prefetch Triggered. Current Queue Size: ${q.size}, Index: $idx. Seed: ${current.title}")
                             try {
+                                val activeArtists = q.map { it.artist }
                                 val candidates = withContext(Dispatchers.IO) {
-                                    autoplayRepository.generateNextQueue(current, _autoplayState.value)
+                                    autoplayRepository.generateNextQueue(current, _autoplayState.value, activeArtists)
                                 }
                                 if (candidates.isNotEmpty()) {
                                     val mediaItems = candidates.map { c ->
@@ -316,12 +320,23 @@ constructor(
                                         )
                                     }
                                     queueManager.addItems(mediaItems)
+                                    val newIds = candidates.map { it.videoId }
+                                    recentAutoplayTrackIds.addAll(newIds)
+                                    
+                                    // Ensure it doesn't grow indefinitely to prevent OOM
+                                    if (recentAutoplayTrackIds.size > 1000) {
+                                        recentAutoplayTrackIds.subList(0, recentAutoplayTrackIds.size - 500).clear()
+                                    }
+
                                     _autoplayState.update { state ->
                                         state.copy(
                                             history = (state.history + (current.id)).takeLast(50),
+                                            sessionHistory = state.sessionHistory + newIds,
                                             lastGeneratedAt = System.currentTimeMillis()
                                         )
                                     }
+                                } else {
+                                    android.util.Log.w("AutoplayEngine", "Prefetch returned empty candidates! Queue might halt if not handled.")
                                 }
                             } catch (e: Exception) {
                                 android.util.Log.e("AutoplayEngine", "Failed to generate next tracks", e)
@@ -461,6 +476,16 @@ constructor(
                         }
                     }
 
+                    // Fetch lyrics asynchronously
+                    scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                        try {
+                            val lyrics = lyricsRepository.getLyricsForTrack(finalItem.title, finalItem.artist)
+                            updateState { it.copy(currentLyrics = lyrics) }
+                        } catch (e: Exception) {
+                            android.util.Log.e("LyricsEngine", "Failed to fetch lyrics", e)
+                            updateState { it.copy(currentLyrics = null) }
+                        }
+                    }
                     playMutex.withLock {
                         if (currentTrackId != null) {
                             recordCurrentTrackPlayStatsLocked(finishedSuccessfully = false)
@@ -494,13 +519,8 @@ constructor(
                             }
                         }
 
-                        // Start the MediaSessionService (Media3 will handle foreground promotion)
-                        try {
-                            val serviceIntent = android.content.Intent(context, com.deepeye.musicpro.player.service.MusicPlayerService::class.java)
-                            androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent)
-                        } catch (e: Exception) {
-                            android.util.Log.e("PlayerController", "Could not start MediaSessionService from background", e)
-                        }
+                        // Media3 automatically promotes MediaSessionService to foreground when playback starts,
+                        // so we don't need to manually start it (which causes crashes on Android 12+ from background).
 
                         updateState {
                             it.copy(
@@ -624,15 +644,16 @@ constructor(
         } else if (playerState.value.autoplayEnabled) {
             // Queue is empty, trigger Personalized Autoplay
             val current = playerState.value.currentItem
-            android.util.Log.d(
+            android.util.Log.w(
                 "AutoplayEngine",
-                "Queue empty. Triggering personalized autoplay. Last played: ${current?.title}"
+                "Queue empty on next(). Triggering personalized autoplay emergency fallback. Last played: ${current?.title}"
             )
             scope.launch {
                 try {
+                    val activeArtists = queueManager.queue.value.map { it.artist }
                     val candidates =
                         withContext(Dispatchers.IO) {
-                            autoplayRepository.generateNextQueue(current, _autoplayState.value)
+                            autoplayRepository.generateNextQueue(current, _autoplayState.value, activeArtists)
                         }
 
                     if (candidates.isEmpty()) {
@@ -645,6 +666,7 @@ constructor(
                     }
 
                     if (validCandidates.isNotEmpty()) {
+                        android.util.Log.d("AutoplayEngine", "Emergency fallback generated ${validCandidates.size} valid candidates. Appending to queue.")
                         val mediaItems = validCandidates.map { c ->
                             MediaItem.Remote(
                                 id = c.videoId,
@@ -657,12 +679,19 @@ constructor(
                         }
                         
                         queueManager.addItems(mediaItems)
+                        val newIds = validCandidates.map { it.videoId }
+                        recentAutoplayTrackIds.addAll(newIds)
+                        
+                        if (recentAutoplayTrackIds.size > 1000) {
+                            recentAutoplayTrackIds.subList(0, recentAutoplayTrackIds.size - 500).clear()
+                        }
                         
                         val firstCandidate = validCandidates.first()
                         
                         _autoplayState.update { state ->
                             state.copy(
                                 history = (state.history + (current?.id ?: "")).takeLast(50),
+                                sessionHistory = state.sessionHistory + newIds,
                                 skipStreak = if (isTrackSkipped) state.skipStreak + 1 else 0,
                                 lastGeneratedAt = System.currentTimeMillis(),
                                 discoveryMode = firstCandidate.score < 0.4f,

@@ -34,6 +34,7 @@ data class YouTubeUiState(
     val shieldsEnabled: Boolean = true,
     val shieldMode: String = "Standard", // "Standard" or "Aggressive"
     val hideShorts: Boolean = false,
+    val hasAuth: Boolean = false,
 )
 
 @HiltViewModel
@@ -45,6 +46,8 @@ constructor(
     private val homeFeedRepository: com.deepeye.musicpro.data.repository.HomeFeedRepository,
     private val tasteProfileRepository: com.deepeye.musicpro.domain.repository.TasteProfileRepository,
     private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
+    private val authClient: com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient,
+    private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(YouTubeUiState())
     val uiState: StateFlow<YouTubeUiState> = _uiState.asStateFlow()
@@ -60,8 +63,18 @@ constructor(
     }
 
     init {
+        observeAuth()
         loadCategory("Home")
         loadHomeFeed()
+    }
+
+    private fun observeAuth() {
+        viewModelScope.launch {
+            settingsDataStore.settings.collect { settings ->
+                val auth = settings.youtubeAccessToken != null
+                _uiState.update { it.copy(hasAuth = auth) }
+            }
+        }
     }
 
     private fun loadHomeFeed() {
@@ -139,9 +152,44 @@ constructor(
 
     private fun loadCategory(category: String) {
         viewModelScope.launch {
+            val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
+            val hasAuth = authSettings?.youtubeAccessToken != null
+
+            if (hasAuth) {
+                _uiState.update { it.copy(isLoading = true, error = null, hasMore = false) }
+                try {
+                    val authItems = when (category) {
+                        "Home" -> authClient.getHomeFeed()
+                        "Subscriptions" -> authClient.getSubscriptionsFeed()
+                        "History" -> authClient.getHistory()
+                        "Liked" -> authClient.getLikedVideos()
+                        "Watch Later" -> authClient.getWatchLater()
+                        "Music" -> authClient.getMusicFeed()
+                        "Movies" -> authClient.getMoviesFeed()
+                        "Gaming" -> authClient.getGamingFeed()
+                        "News" -> authClient.getNewsFeed()
+                        else -> return@launch // Search / SponsorBlock handle separately
+                    }
+                    _uiState.update {
+                        it.copy(
+                            videos = authItems,
+                            isLoading = false,
+                            hasMore = false,
+                        )
+                    }
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(isLoading = false, error = "Unable to fetch authenticated feed for $category.") }
+                }
+                return@launch
+            }
+
             var baseQuery =
                 when (category) {
                     "Home" -> "trending music"
+                    "Subscriptions" -> "trending videos"
+                    "History" -> "trending music"
+                    "Liked" -> "top hits songs"
+                    "Watch Later" -> "trending videos"
                     "Music" -> "official music video songs hits"
                     "Movies" -> "full movies action thriller comedy romance"
                     "Gaming" -> "gaming gameplay walkthrough let's play"
@@ -149,7 +197,7 @@ constructor(
                     else -> return@launch // Search / SponsorBlock handle separately
                 }
             
-            if (category == "Home") {
+            if (category == "Home" || category == "Subscriptions") {
                 val subs = libraryRepository.getAllSubscribedChannels()
                 if (subs.isNotEmpty()) {
                     val channels = subs.shuffled().take(3).joinToString(" | ") { it.channelName }
@@ -174,14 +222,28 @@ constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null, hasMore = false) }
             try {
-                val result = youtubeRemoteDataSource.searchVideosFirstPage(query)
-                nextPageToken = result.nextPageUrl
-                _uiState.update {
-                    it.copy(
-                        videos = result.items,
-                        isLoading = false,
-                        hasMore = result.nextPageUrl != null,
-                    )
+                val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
+                val hasAuth = authSettings?.youtubeAccessToken != null
+                
+                if (hasAuth) {
+                    val items = authClient.search(query)
+                    _uiState.update {
+                        it.copy(
+                            videos = items,
+                            isLoading = false,
+                            hasMore = false,
+                        )
+                    }
+                } else {
+                    val result = youtubeRemoteDataSource.searchVideosFirstPage(query)
+                    nextPageToken = result.nextPageUrl
+                    _uiState.update {
+                        it.copy(
+                            videos = result.items,
+                            isLoading = false,
+                            hasMore = result.nextPageUrl != null,
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = "Unable to search YouTube right now. Please check your connection.") }

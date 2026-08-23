@@ -37,6 +37,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
+import androidx.fragment.app.FragmentActivity
+
 /**
  * Single Activity host for the Compose-based UI.
  * Supports Picture-in-Picture (PiP) mode for video playback.
@@ -49,7 +51,7 @@ import kotlinx.coroutines.launch
  */
 @OptIn(androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi::class)
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     @javax.inject.Inject
     lateinit var playerController: com.deepeye.musicpro.player.controller.PlayerController
@@ -94,10 +96,21 @@ class MainActivity : ComponentActivity() {
     var isInPipMode by mutableStateOf(false)
         private set
 
+    private var mediaControllerFuture: com.google.common.util.concurrent.ListenableFuture<androidx.media3.session.MediaController>? = null
+
     override fun onStart() {
         super.onStart()
         if (::playerController.isInitialized) {
             playerController.setAppInForeground(true)
+        }
+        
+        // Bind to MediaSessionService so it instantiates safely without startForegroundService crashes
+        if (mediaControllerFuture == null) {
+            val sessionToken = androidx.media3.session.SessionToken(
+                this, 
+                android.content.ComponentName(this, com.deepeye.musicpro.player.service.MusicPlayerService::class.java)
+            )
+            mediaControllerFuture = androidx.media3.session.MediaController.Builder(this, sessionToken).buildAsync()
         }
     }
 
@@ -111,6 +124,10 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         orientationEventListener?.disable()
+        mediaControllerFuture?.let {
+            androidx.media3.session.MediaController.releaseFuture(it)
+            mediaControllerFuture = null
+        }
     }
 
     private val requestPermissionLauncher = registerForActivityResult(

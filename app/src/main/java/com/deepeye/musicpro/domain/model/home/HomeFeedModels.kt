@@ -22,6 +22,7 @@ data class HomeFeedState(
     val becauseYouLikedArtist: String? = null,
     val becauseYouLikedMix: List<HomeMusicItem> = emptyList(),
     val newReleases: List<HomeMusicItem> = emptyList(),
+    val hasAuth: Boolean = false,
 )
 
 data class HomeVideoItem(

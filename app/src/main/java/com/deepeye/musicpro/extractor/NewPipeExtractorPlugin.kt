@@ -124,6 +124,7 @@ class NewPipeExtractorPlugin : IExtractorBridge {
         artist = this.uploaderName,
         duration = this.duration,
         thumbnailUrl = this.thumbnails.firstOrNull()?.url ?: "",
+        viewCount = this.viewCount,
         isShort = isShort
     )
 

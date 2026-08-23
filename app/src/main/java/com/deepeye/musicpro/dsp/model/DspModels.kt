@@ -254,27 +254,33 @@ data class DspParams(
         fun audiophileUsbDac() =
             DspParams(
                 enabled = true,
-                pgcGain = -4f,
+                pgcGain = -5f, // Extra headroom for clean signal
                 eqEnabled = true,
+                // Harman-inspired curve: warm sub-bass shelf, recessed upper-mids, airy treble
                 eqBands =
                 floatArrayOf(
-                    1.5f, 2.0f, 1.5f, 1.0f, 0.0f,
-                    0.5f, 0.0f, 1.0f, 2.0f, 2.5f,
+                    2.5f, 3.0f, 2.0f, 0.5f, -0.5f,
+                    -1.0f, -0.5f, 1.5f, 2.5f, 3.0f,
                 ),
                 viperBassEnabled = true,
-                viperBassMode = ViperBassMode.PURE,
-                viperBassFreq = 40,
-                viperBassGain = 6.0f,
+                viperBassMode = ViperBassMode.PURE, // Cleanest harmonic extension
+                viperBassFreq = 35, // Deep sub-bass reach for DAC headphones
+                viperBassGain = 7.0f,
                 viperClarityEnabled = true,
-                viperClarityMode = ViperClarityMode.NATURAL,
-                viperClarityGain = 6.0f,
+                viperClarityMode = ViperClarityMode.OZONE_PLUS, // Sparkle without harshness
+                viperClarityGain = 5.0f,
                 tubeEnabled = true,
-                tubeMode = TubeMode.TRIODE,
-                tubeDrive = 10,
+                tubeMode = TubeMode.TRIODE, // Even-order warmth
+                tubeDrive = 8, // Subtle — just enough to round transients
+                crossfeedEnabled = true, // Natural soundstage for headphones
+                fieldSurroundEnabled = true,
+                fieldSurroundStrength = 3, // Very subtle depth, not gimmicky
+                fieldMidImageStrength = 4, // Slight center focus for vocals
                 bassBoostEnabled = false,
-                loudnessEnabled = false,
-                virtualizerEnabled = false,
+                loudnessEnabled = false, // Audiophile = no loudness wars
+                virtualizerEnabled = false, // Crossfeed handles staging
                 limiterEnabled = true,
+                limiterThreshold = -3f,
                 auditoryProtectionEnabled = false,
             )
 

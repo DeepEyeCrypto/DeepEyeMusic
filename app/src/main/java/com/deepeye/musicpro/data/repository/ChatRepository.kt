@@ -40,6 +40,10 @@ class ChatRepository @Inject constructor(
         prefs.edit().putString("chat_password", password).apply()
     }
 
+    fun resetChatPassword() {
+        prefs.edit().remove("chat_password").apply()
+    }
+
     private fun getCurrentUserId(): String? = auth.currentUser?.uid
 
     /**
@@ -160,8 +164,10 @@ class ChatRepository @Inject constructor(
             // 2. Encrypt the message text with AES
             val payload = CryptoEngine.encryptAes(plaintext, aesKey)
             
-            // 3. Encrypt the AES key with the receiver's RSA public key
-            val encryptedAesKey = CryptoEngine.encryptAesKeyWithRsa(aesKey, receiverPubKey)
+            // 3. Encrypt the AES key with both receiver's and sender's RSA public keys
+            val encryptedAesKeyForReceiver = CryptoEngine.encryptAesKeyWithRsa(aesKey, receiverPubKey)
+            val senderPubKey = CryptoEngine.getMyPublicKey()
+            val encryptedAesKeyForSender = CryptoEngine.encryptAesKeyWithRsa(aesKey, senderPubKey)
 
             val messageId = firestore.collection("chats").document(chatId).collection("messages").document().id
             val timestamp = System.currentTimeMillis()
@@ -174,7 +180,8 @@ class ChatRepository @Inject constructor(
                 timestamp = timestamp,
                 encryptedPayloadBase64 = payload.ciphertextBase64,
                 ivBase64 = payload.ivBase64,
-                encryptedAesKeyBase64 = encryptedAesKey,
+                encryptedAesKeyBase64 = encryptedAesKeyForReceiver,
+                senderEncryptedAesKeyBase64 = encryptedAesKeyForSender,
                 expiresAt = expiresAt
             )
 
@@ -231,16 +238,15 @@ class ChatRepository @Inject constructor(
                     if (msg != null) {
                         try {
                             val isMine = msg.senderId == currentUserId
-                            val plaintext = if (isMine) {
-                                // If I am the sender, I cannot decrypt the message because I encrypted the AES key with the RECEIVER's public key!
-                                // In a real system, you'd encrypt a copy of the AES key for yourself. For MVP, we'll just show a placeholder if we clear cache.
-                                "(Sent Message)"
+                            val keyToDecrypt = if (isMine && !msg.senderEncryptedAesKeyBase64.isNullOrEmpty()) {
+                                msg.senderEncryptedAesKeyBase64
                             } else {
-                                // I am the receiver. I can decrypt using my RSA private key!
-                                val aesKey = CryptoEngine.decryptAesKeyWithRsa(msg.encryptedAesKeyBase64)
-                                val payload = CryptoEngine.EncryptedPayload(msg.encryptedPayloadBase64, msg.ivBase64)
-                                CryptoEngine.decryptAes(payload, aesKey)
+                                msg.encryptedAesKeyBase64
                             }
+
+                            val aesKey = CryptoEngine.decryptAesKeyWithRsa(keyToDecrypt)
+                            val payload = CryptoEngine.EncryptedPayload(msg.encryptedPayloadBase64, msg.ivBase64)
+                            val plaintext = CryptoEngine.decryptAes(payload, aesKey)
                             
                             decryptedMessages.add(
                                 DecryptedMessage(

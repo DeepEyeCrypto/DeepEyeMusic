@@ -37,6 +37,20 @@ constructor(
     // 🔍 Search videos
     suspend fun searchVideos(query: String): List<HomeVideoItem> = searchVideosFirstPage(query).items
 
+    suspend fun getVideoDetails(videoId: String): com.deepeye.musicpro.domain.model.VideoDetails? = withContext(ioDispatcher) {
+        try {
+            val yt = org.schabi.newpipe.extractor.NewPipe.getService(org.schabi.newpipe.extractor.ServiceList.YouTube.serviceId)
+            val streamInfo = org.schabi.newpipe.extractor.stream.StreamInfo.getInfo(yt, "https://www.youtube.com/watch?v=$videoId")
+            com.deepeye.musicpro.domain.model.VideoDetails(
+                viewCount = streamInfo.viewCount ?: 0L,
+                subscriberCount = streamInfo.uploaderSubscriberCount ?: 0L,
+                uploadDate = streamInfo.textualUploadDate ?: ""
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     suspend fun searchVideosFirstPage(query: String): SearchResultPage =
         withContext(ioDispatcher) {
             try {
@@ -481,6 +495,7 @@ constructor(
         channelName = artist,
         thumbnailUrl = thumbnailUrl.upgradeResolution(),
         duration = duration,
+        viewCount = viewCount,
         isShort = isShort
     )
 

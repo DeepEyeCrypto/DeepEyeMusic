@@ -45,8 +45,8 @@ object GainBudgetCalculator {
 
         val risk =
             when {
-                total < 6f -> RiskLevel.SAFE
-                total < 12f -> RiskLevel.MODERATE
+                total < 10f -> RiskLevel.SAFE
+                total < 18f -> RiskLevel.MODERATE
                 else -> RiskLevel.DANGER
             }
 
@@ -55,15 +55,16 @@ object GainBudgetCalculator {
 
     /**
      * Automatically adjusts parameters if the gain budget enters the DANGER zone.
+     * Applies gentle reduction to avoid killing the sound signature.
      */
     fun autoCorrect(params: DspParams): DspParams {
         val budget = calculate(params)
         return if (budget.risk == RiskLevel.DANGER) {
             params.copy(
-                pgcGain = minOf(params.pgcGain, -6f),
-                loudnessTargetGainMb = (params.loudnessTargetGainMb * 0.5f).toInt(),
-                bassBoostStrength = (params.bassBoostStrength * 0.7f).toInt(),
-                viperBassGain = params.viperBassGain * 0.8f,
+                pgcGain = minOf(params.pgcGain, -8f),
+                loudnessTargetGainMb = (params.loudnessTargetGainMb * 0.8f).toInt(),
+                bassBoostStrength = (params.bassBoostStrength * 0.85f).toInt(),
+                viperBassGain = params.viperBassGain * 0.9f,
             )
         } else {
             params

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 data class NetMirrorUiState(
@@ -43,7 +44,9 @@ data class EpisodeSheetState(
 @HiltViewModel
 class NetMirrorViewModel @Inject constructor(
     private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
-    private val playerController: PlayerController
+    private val playerController: PlayerController,
+    private val authClient: com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient,
+    private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NetMirrorUiState())
@@ -57,19 +60,40 @@ class NetMirrorViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val deferredBollywood = async { youtubeRemoteDataSource.searchVideosFirstPage("latest official bollywood full movies 2024 -south -dubbed -hollywood -bhojpuri") }
-                val deferredHollywood = async { youtubeRemoteDataSource.searchVideosFirstPage("latest hollywood full movies action english -hindi -dubbed") }
-                val deferredSouth = async { youtubeRemoteDataSource.searchVideosFirstPage("latest south indian movies dubbed in hindi full -bollywood") }
-                val deferredWebSeries = async { youtubeRemoteDataSource.searchVideosFirstPage("popular hindi web series 2024 2025") }
-                val deferredPakistani = async { youtubeRemoteDataSource.searchVideosFirstPage("popular pakistani drama 2024 2025") }
-                val deferredKids = async { youtubeRemoteDataSource.searchVideosFirstPage("latest kids cartoons in hindi full -horror") }
+                val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
+                val hasAuth = authSettings?.youtubeAccessToken != null
 
-                val bollywood = deferredBollywood.await().items
-                val hollywood = deferredHollywood.await().items
-                val south = deferredSouth.await().items
-                val webSeries = deferredWebSeries.await().items
-                val pakistani = deferredPakistani.await().items
-                val kidsContent = deferredKids.await().items
+                val deferredBollywood = async {
+                    if (hasAuth) authClient.search("latest official bollywood full movies 2024 -south -dubbed -hollywood -bhojpuri")
+                    else youtubeRemoteDataSource.searchVideosFirstPage("latest official bollywood full movies 2024 -south -dubbed -hollywood -bhojpuri").items
+                }
+                val deferredHollywood = async {
+                    if (hasAuth) authClient.search("latest hollywood full movies action english -hindi -dubbed")
+                    else youtubeRemoteDataSource.searchVideosFirstPage("latest hollywood full movies action english -hindi -dubbed").items
+                }
+                val deferredSouth = async {
+                    if (hasAuth) authClient.search("latest south indian movies dubbed in hindi full -bollywood")
+                    else youtubeRemoteDataSource.searchVideosFirstPage("latest south indian movies dubbed in hindi full -bollywood").items
+                }
+                val deferredWebSeries = async {
+                    if (hasAuth) authClient.search("popular hindi web series 2024 2025")
+                    else youtubeRemoteDataSource.searchVideosFirstPage("popular hindi web series 2024 2025").items
+                }
+                val deferredPakistani = async {
+                    if (hasAuth) authClient.search("popular pakistani drama 2024 2025")
+                    else youtubeRemoteDataSource.searchVideosFirstPage("popular pakistani drama 2024 2025").items
+                }
+                val deferredKids = async {
+                    if (hasAuth) authClient.search("latest kids cartoons in hindi full -horror")
+                    else youtubeRemoteDataSource.searchVideosFirstPage("latest kids cartoons in hindi full -horror").items
+                }
+
+                val bollywood = deferredBollywood.await()
+                val hollywood = deferredHollywood.await()
+                val south = deferredSouth.await()
+                val webSeries = deferredWebSeries.await()
+                val pakistani = deferredPakistani.await()
+                val kidsContent = deferredKids.await()
 
                 _uiState.update {
                     it.copy(

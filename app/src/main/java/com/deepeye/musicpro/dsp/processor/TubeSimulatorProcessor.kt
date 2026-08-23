@@ -94,8 +94,9 @@ class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
                 }
 
                 // Bring back output level with proper peak compensation
+                // tanh(drive) is the max possible output from tanh(sample*drive), so 1/tanh(drive) normalizes back to ~1.0
                 val comp = if (drive > 1.0f) 1.0f / tanh(drive) else 1.0f
-                sample *= comp / drive
+                sample *= comp
                 
                 // Convert back to 16-bit
                 val outSample = (sample * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()

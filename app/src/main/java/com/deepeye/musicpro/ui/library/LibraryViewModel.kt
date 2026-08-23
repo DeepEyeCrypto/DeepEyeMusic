@@ -3,6 +3,7 @@
 
 package com.deepeye.musicpro.ui.library
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -37,10 +38,17 @@ class LibraryViewModel
 constructor(
     private val musicRepository: MusicRepository,
     private val libraryRepository: LibraryRepository,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     val selectedTab = savedStateHandle.getStateFlow("selected_tab", 0)
     val offlineMode = savedStateHandle.getStateFlow("offline_mode", false)
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            libraryRepository.resyncDownloadedTracksFromStorage(context)
+        }
+    }
 
     val uiState: StateFlow<LibraryUiState> =
         combine(

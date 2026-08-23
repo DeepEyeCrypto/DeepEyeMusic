@@ -14,8 +14,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.deepeye.musicpro.data.prefs.SettingsDataStore
+import com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient
 
 @Singleton
 class VideoRailRepository
@@ -23,10 +26,70 @@ class VideoRailRepository
 constructor(
     private val contentFetcher: ContentFetcher,
     private val recommendationDao: RecommendationDao,
+    private val settingsDataStore: SettingsDataStore,
+    private val authClient: AuthenticatedYouTubeClient,
 ) {
     suspend fun loadAllSections(): List<VideoRailSection> =
         withContext(Dispatchers.IO) {
             coroutineScope {
+                val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
+                val hasAuth = authSettings?.youtubeAccessToken != null
+
+                if (hasAuth) {
+                    val authHome = try { authClient.getHomeFeed() } catch (e: Exception) { emptyList() }
+                    
+                    return@coroutineScope buildList {
+                        if (authHome.isNotEmpty()) {
+                            add(
+                                VideoRailSection(
+                                    category = VideoRailCategory.TRENDING_IN,
+                                    title = "🌟 For You",
+                                    subtitle = "Personalized Recommendations",
+                                    items = authHome.take(20).map {
+                                        com.deepeye.musicpro.domain.model.home.VideoRailItem(
+                                            videoId = it.id,
+                                            title = it.title,
+                                            channelName = it.channelName,
+                                            thumbnailUrl = it.thumbnailUrl,
+                                            duration = "${it.duration / 60}:${(it.duration % 60).toString().padStart(2, '0')}",
+                                            viewCount = "",
+                                            publishedAt = "",
+                                            isLive = it.isLive,
+                                            isTrending = false,
+                                            category = VideoRailCategory.TRENDING_IN
+                                        )
+                                    },
+                                    accentColor = Color(0xFFFF6B35),
+                                )
+                            )
+                            if (authHome.size > 20) {
+                                add(
+                                    VideoRailSection(
+                                        category = VideoRailCategory.TOP_CHARTS,
+                                        title = "🎯 Discover More",
+                                        subtitle = "Fresh content",
+                                        items = authHome.drop(20).take(20).map {
+                                            com.deepeye.musicpro.domain.model.home.VideoRailItem(
+                                                videoId = it.id,
+                                                title = it.title,
+                                                channelName = it.channelName,
+                                                thumbnailUrl = it.thumbnailUrl,
+                                                duration = "${it.duration / 60}:${(it.duration % 60).toString().padStart(2, '0')}",
+                                                viewCount = "",
+                                                publishedAt = "",
+                                                isLive = it.isLive,
+                                                isTrending = false,
+                                                category = VideoRailCategory.TOP_CHARTS
+                                            )
+                                        },
+                                        accentColor = Color(0xFFE91E63),
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // Get user's top songs for seeding
                 val topSongs =
                     recommendationDao

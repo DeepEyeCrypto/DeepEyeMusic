@@ -59,17 +59,29 @@ constructor(
                     ?: sourceResolverManager.resolve(item.id, (item as? MediaItem.Remote)?.isVideo == true)
                     ?: throw Exception("Could not resolve stream URL")
 
+                val isVideo = (item as? MediaItem.Remote)?.isVideo == true
+                val extension = if (isVideo) "mp4" else "mp3"
+                val mimeType = if (isVideo) "video/mp4" else "audio/mpeg"
+                val subDir = if (isVideo) android.os.Environment.DIRECTORY_MOVIES else android.os.Environment.DIRECTORY_MUSIC
+                
                 val contentValues = android.content.ContentValues().apply {
-                    put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, "$sanitizedTitle.mp3")
-                    put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "audio/mpeg")
+                    put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, "$sanitizedTitle.$extension")
+                    put(android.provider.MediaStore.MediaColumns.MIME_TYPE, mimeType)
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                        put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_MUSIC + "/DeepEyeMusic")
+                        put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "$subDir/DeepEyeMusic")
                         put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1)
+                    } else {
+                        val publicDir = android.os.Environment.getExternalStoragePublicDirectory(subDir)
+                        val appDir = java.io.File(publicDir, "DeepEyeMusic")
+                        if (!appDir.exists()) appDir.mkdirs()
+                        val targetFile = java.io.File(appDir, "$sanitizedTitle.$extension")
+                        put(android.provider.MediaStore.MediaColumns.DATA, targetFile.absolutePath)
                     }
                 }
                 
                 val resolver = context.contentResolver
-                val uri = resolver.insert(android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, contentValues)
+                val contentUri = if (isVideo) android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI else android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                val uri = resolver.insert(contentUri, contentValues)
                     ?: throw Exception("Failed to create MediaStore entry")
                 
                 var success = false

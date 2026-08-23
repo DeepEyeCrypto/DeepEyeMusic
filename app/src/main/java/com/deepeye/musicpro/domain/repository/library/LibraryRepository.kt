@@ -184,6 +184,114 @@ constructor(
 
     fun observeDownloads() = dao.observeDownloads()
 
+    suspend fun resyncDownloadedTracksFromStorage(context: android.content.Context) {
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val existingLocalPaths = dao.getCompletedDownloadsList().map { it.localPath }.toSet()
+                val resolver = context.contentResolver
+
+                // 1. Audio MediaStore scan
+                val audioCollection = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    android.provider.MediaStore.Audio.Media.getContentUri(android.provider.MediaStore.VOLUME_EXTERNAL)
+                } else {
+                    android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                }
+                val audioProjection = arrayOf(
+                    android.provider.MediaStore.Audio.Media._ID,
+                    android.provider.MediaStore.Audio.Media.TITLE,
+                    android.provider.MediaStore.Audio.Media.ARTIST,
+                    android.provider.MediaStore.Audio.Media.DATA
+                )
+                val audioSelection = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    "${android.provider.MediaStore.Audio.Media.RELATIVE_PATH} LIKE ?"
+                } else {
+                    "${android.provider.MediaStore.Audio.Media.DATA} LIKE ?"
+                }
+                val selectionArgs = arrayOf("%DeepEyeMusic%")
+
+                resolver.query(audioCollection, audioProjection, audioSelection, selectionArgs, null)?.use { cursor ->
+                    val idCol = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Audio.Media._ID)
+                    val titleCol = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Audio.Media.TITLE)
+                    val artistCol = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Audio.Media.ARTIST)
+                    val dataCol = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Audio.Media.DATA)
+
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(idCol)
+                        val title = cursor.getString(titleCol) ?: "Unknown Song"
+                        val artist = cursor.getString(artistCol) ?: "Unknown Artist"
+                        val path = cursor.getString(dataCol) ?: ""
+                        val contentUri = android.content.ContentUris.withAppendedId(android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id).toString()
+
+                        if (path.isNotEmpty() && !existingLocalPaths.contains(contentUri) && !existingLocalPaths.contains(path)) {
+                            val videoId = "restored_audio_$id"
+                            dao.upsertDownload(
+                                DownloadEntity(
+                                    videoId = videoId,
+                                    title = title,
+                                    artist = artist,
+                                    localPath = contentUri,
+                                    state = DownloadState.COMPLETED,
+                                    progress = 100,
+                                    downloadedAt = System.currentTimeMillis()
+                                )
+                            )
+                        }
+                    }
+                }
+
+                // 2. Video MediaStore scan
+                val videoCollection = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    android.provider.MediaStore.Video.Media.getContentUri(android.provider.MediaStore.VOLUME_EXTERNAL)
+                } else {
+                    android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                }
+                val videoProjection = arrayOf(
+                    android.provider.MediaStore.Video.Media._ID,
+                    android.provider.MediaStore.Video.Media.TITLE,
+                    android.provider.MediaStore.Video.Media.ARTIST,
+                    android.provider.MediaStore.Video.Media.DATA
+                )
+                val videoSelection = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    "${android.provider.MediaStore.Video.Media.RELATIVE_PATH} LIKE ?"
+                } else {
+                    "${android.provider.MediaStore.Video.Media.DATA} LIKE ?"
+                }
+
+                resolver.query(videoCollection, videoProjection, videoSelection, selectionArgs, null)?.use { cursor ->
+                    val idCol = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Video.Media._ID)
+                    val titleCol = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Video.Media.TITLE)
+                    val artistCol = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Video.Media.ARTIST)
+                    val dataCol = cursor.getColumnIndexOrThrow(android.provider.MediaStore.Video.Media.DATA)
+
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(idCol)
+                        val title = cursor.getString(titleCol) ?: "Unknown Video"
+                        val artist = cursor.getString(artistCol) ?: "Unknown Artist"
+                        val path = cursor.getString(dataCol) ?: ""
+                        val contentUri = android.content.ContentUris.withAppendedId(android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id).toString()
+
+                        if (path.isNotEmpty() && !existingLocalPaths.contains(contentUri) && !existingLocalPaths.contains(path)) {
+                            val videoId = "restored_video_$id"
+                            dao.upsertDownload(
+                                DownloadEntity(
+                                    videoId = videoId,
+                                    title = title,
+                                    artist = artist,
+                                    localPath = contentUri,
+                                    state = DownloadState.COMPLETED,
+                                    progress = 100,
+                                    downloadedAt = System.currentTimeMillis()
+                                )
+                            )
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("LibraryRepository", "Error resyncing downloads from storage", e)
+            }
+        }
+    }
+
     // ── Recent Plays ──
 
     suspend fun recordRecentPlay(

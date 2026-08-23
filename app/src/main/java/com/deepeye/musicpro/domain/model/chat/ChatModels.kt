@@ -15,6 +15,7 @@ data class EncryptedMessage(
     val encryptedPayloadBase64: String = "",
     val ivBase64: String = "",
     val encryptedAesKeyBase64: String = "",
+    val senderEncryptedAesKeyBase64: String? = null,
     val expiresAt: Long? = null
 )
 

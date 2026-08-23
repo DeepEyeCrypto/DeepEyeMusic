@@ -48,6 +48,7 @@ fun SettingsScreen(
     windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
     viewModel: SettingsViewModel = hiltViewModel(),
     onNavigateToAEOS: () -> Unit = {},
+    onYouTubeLoginClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val settings = uiState.settings
@@ -93,6 +94,24 @@ fun SettingsScreen(
                     PremiumProfileCard(
                         modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
                     )
+
+                    if (settings.youtubeAccessToken != null) {
+                        Button(
+                            onClick = { viewModel.logoutYouTube() },
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp).fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF4CAF50))
+                        ) {
+                            Text("YouTube Connected (Tap to Logout)", color = androidx.compose.ui.graphics.Color.White)
+                        }
+                    } else {
+                        Button(
+                            onClick = onYouTubeLoginClick,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp).fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color.Red.copy(alpha = 0.8f))
+                        ) {
+                            Text("Connect YouTube (TV Mode)", color = androidx.compose.ui.graphics.Color.White)
+                        }
+                    }
 
                     categories.forEachIndexed { index, category ->
                         NavigationDrawerItem(
@@ -165,6 +184,26 @@ fun SettingsScreen(
                     PremiumProfileCard(
                         modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp)
                     )
+                }
+
+                item {
+                    if (settings.youtubeAccessToken != null) {
+                        Button(
+                            onClick = { viewModel.logoutYouTube() },
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp).fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF4CAF50))
+                        ) {
+                            Text("YouTube Connected (Tap to Logout)", color = androidx.compose.ui.graphics.Color.White)
+                        }
+                    } else {
+                        Button(
+                            onClick = onYouTubeLoginClick,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp).fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color.Red.copy(alpha = 0.8f))
+                        ) {
+                            Text("Connect YouTube (TV Mode)", color = androidx.compose.ui.graphics.Color.White)
+                        }
+                    }
                 }
 
 

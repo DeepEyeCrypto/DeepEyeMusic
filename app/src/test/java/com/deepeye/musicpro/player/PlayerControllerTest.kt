@@ -92,6 +92,7 @@ class PlayerControllerTest {
             tubeSimulatorProcessor = mockk(relaxed = true),
             dspController = mockk(relaxed = true),
             cloudSyncManager = mockk(relaxed = true),
+            lyricsRepository = mockk(relaxed = true),
             context = context,
         )
         verify { audioSessionManager.attachToPlayer(player) }
@@ -122,6 +123,7 @@ class PlayerControllerTest {
                     tubeSimulatorProcessor = mockk(relaxed = true),
                     dspController = mockk(relaxed = true),
                     cloudSyncManager = mockk(relaxed = true),
+                    lyricsRepository = mockk(relaxed = true),
                     context = context,
                 )
 

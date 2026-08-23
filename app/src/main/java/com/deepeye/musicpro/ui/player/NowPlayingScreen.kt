@@ -85,6 +85,7 @@ fun NowPlayingScreen(
     sheetViewModel: MiniPlayerSheetViewModel = hiltViewModel()
 ) {
     val playerState by viewModel.playerState.collectAsStateWithLifecycle()
+    val videoDetails by viewModel.videoDetails.collectAsStateWithLifecycle()
     val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
     val isDownloading = playerState.currentItem?.id != null && activeDownloads.values.any { it.id == playerState.currentItem?.id }
     val sheetState by sheetViewModel.state.collectAsStateWithLifecycle()
@@ -265,7 +266,8 @@ fun NowPlayingScreen(
                         onOpenDsp = { showDspSheet = true },
                         onOpenQueue = { showQueueSheet = true },
                         onNavigateToSettings = onNavigateToSettings,
-                        onLockChanged = { isLocked -> sheetViewModel.setGestureLocked(isLocked); fullscreenMode.isGestureLocked = isLocked }
+                        onLockChanged = { isLocked -> sheetViewModel.setGestureLocked(isLocked); fullscreenMode.isGestureLocked = isLocked },
+                        onOpenLyrics = { showLyricsSheet = true }
                     )
                 } else {
                     AudioNowPlayingLayout(
@@ -291,7 +293,8 @@ fun NowPlayingScreen(
                         onOpenDsp = { showDspSheet = true },
                         onOpenQueue = { showQueueSheet = true },
                         onNavigateToSettings = onNavigateToSettings,
-                        pagerState = pagerState
+                        pagerState = pagerState,
+                        onOpenLyrics = { showLyricsSheet = true }
                     )
                 }
             }
@@ -373,6 +376,7 @@ private fun AudioNowPlayingLayout(
     onOpenQueue: () -> Unit,
     onNavigateToSettings: () -> Unit,
     pagerState: androidx.compose.foundation.pager.PagerState,
+    onOpenLyrics: () -> Unit
 ) {
     val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
     val isDownloading = playerState.currentItem?.id != null && activeDownloads.values.any { it.id == playerState.currentItem?.id }
@@ -685,6 +689,9 @@ private fun AudioNowPlayingLayout(
                 IconButton(onClick = onOpenDsp) {
                     Icon(Icons.Default.Tune, "DSP", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
                 }
+                IconButton(onClick = onOpenLyrics) {
+                    Icon(Icons.Default.MusicNote, "Lyrics", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+                }
                 IconButton(onClick = onOpenQueue) {
                     Icon(Icons.AutoMirrored.Filled.QueueMusic, "Queue", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
                 }
@@ -707,7 +714,9 @@ private fun VideoNowPlayingLayout(
     onOpenQueue: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onLockChanged: (Boolean) -> Unit,
+    onOpenLyrics: () -> Unit
 ) {
+    val videoDetails by viewModel.videoDetails.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     var selectedQuality by remember { mutableStateOf("1080p") }
     var showQualityMenu by remember { mutableStateOf(false) }
@@ -867,11 +876,15 @@ private fun VideoNowPlayingLayout(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Text(
-                        text = "1.2M views • 2 days ago",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                    )
+                    val viewText = videoDetails?.viewCount?.let { com.deepeye.musicpro.util.formatCompactNumber(it) + " views" } ?: ""
+                    val uploadText = videoDetails?.uploadDate?.takeIf { it.isNotBlank() }?.let { " • $it" } ?: ""
+                    if (viewText.isNotBlank()) {
+                        Text(
+                            text = viewText + uploadText,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        )
+                    }
                 }
                 
                 // Channel Info
@@ -908,11 +921,14 @@ private fun VideoNowPlayingLayout(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
-                            Text(
-                                text = "1.24M Subscribers",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
+                            val subText = videoDetails?.subscriberCount?.takeIf { it > 0 }?.let { com.deepeye.musicpro.util.formatCompactNumber(it) + " Subscribers" } ?: ""
+                            if (subText.isNotBlank()) {
+                                Text(
+                                    text = subText,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
                         }
 
                         // Subscribe Button
@@ -977,6 +993,7 @@ private fun VideoNowPlayingLayout(
                     InteractionButton(icon = Icons.Default.Add, label = "Save", onClick = {
                         showPlaylistSheet = true
                     })
+                    InteractionButton(icon = Icons.Default.MusicNote, label = "Lyrics", onClick = onOpenLyrics)
                 }
             }
 

@@ -29,6 +29,8 @@ sealed class Routes(val route: String) {
 
     data object Login : Routes("login")
 
+    data object YouTubeLogin : Routes("youtube_login")
+
     data object Onboarding : Routes("onboarding")
 
     data object Downloads : Routes("downloads")

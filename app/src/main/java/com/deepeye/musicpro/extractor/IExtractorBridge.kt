@@ -6,6 +6,7 @@ data class ExtractorVideoItem(
     val artist: String,
     val duration: Long,
     val thumbnailUrl: String,
+    val viewCount: Long = 0,
     val isShort: Boolean = false
 )
 

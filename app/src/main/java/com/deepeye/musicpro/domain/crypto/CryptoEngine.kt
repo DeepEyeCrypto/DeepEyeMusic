@@ -68,6 +68,11 @@ object CryptoEngine {
         return Base64.encodeToString(publicKey.encoded, Base64.NO_WRAP)
     }
 
+    fun getMyPublicKey(): PublicKey {
+        val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
+        return keyStore.getCertificate(RSA_ALIAS).publicKey
+    }
+
     private fun getMyPrivateKey(): PrivateKey {
         val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
         return keyStore.getKey(RSA_ALIAS, null) as PrivateKey

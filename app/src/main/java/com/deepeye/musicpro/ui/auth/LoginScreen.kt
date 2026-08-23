@@ -61,6 +61,7 @@ import com.deepeye.musicpro.R
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
+    onYouTubeLoginClick: () -> Unit = {},
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -220,6 +221,19 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Google Sign In Button
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onYouTubeLoginClick,
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text("Login with YouTube (TV)", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+
             GoogleSignInButton(
                 isLoading = authState is AuthState.Loading,
                 onClick = { viewModel.signInWithGoogle(context) }
@@ -367,6 +381,7 @@ fun PremiumActionButton(
         }
     }
 }
+
 
 @Composable
 fun GoogleSignInButton(

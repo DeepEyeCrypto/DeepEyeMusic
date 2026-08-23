@@ -109,7 +109,7 @@ fun MagicNavigationBar(
         // Icons Row
         Row(
             modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.Start, // Weight-based items fill the row automatically
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEachIndexed { index, item ->

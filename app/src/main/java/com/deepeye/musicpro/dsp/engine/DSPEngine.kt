@@ -183,16 +183,25 @@ constructor(
     ) {
         // Run auto-correction if clipping risk is in DANGER zone
         val correctedParams = GainBudgetCalculator.autoCorrect(params)
+        val budget = GainBudgetCalculator.calculate(correctedParams)
+        
+        if (correctedParams !== params) {
+            Log.w(TAG, "⚡ AutoCorrect triggered! Risk=${budget.risk}, totalGain=${budget.totalDb}dB")
+        }
+        Log.d(TAG, "updateParams: enabled=${correctedParams.enabled}, budget=${budget.totalDb}dB (${budget.risk})")
 
         _currentParams.value = correctedParams
         presetName?.let { _currentPresetName.value = it }
         applyParams(correctedParams)
-        _gainBudget.value = GainBudgetCalculator.calculate(correctedParams)
+        _gainBudget.value = budget
     }
 
     private fun applyParams(params: DspParams) {
-        if (!isAttached()) return
-        Log.d(TAG, "Applying DSP Params: enabled=${params.enabled}")
+        if (!isAttached()) {
+            Log.w(TAG, "⚠️ applyParams called but engine NOT attached! State=${_engineState.value}")
+            return
+        }
+        Log.d(TAG, "Applying DSP Params: enabled=${params.enabled}, eq=${params.eqEnabled}, bass=${params.bassBoostEnabled}, viperBass=${params.viperBassEnabled}(gain=${params.viperBassGain}), loudness=${params.loudnessEnabled}(mb=${params.loudnessTargetGainMb}), tube=${params.tubeEnabled}(drive=${params.tubeDrive}), pgc=${params.pgcGain}, limiter=${params.limiterEnabled}(threshold=${params.limiterThreshold})")
 
         try {
             val isEnabled = params.enabled
@@ -230,9 +239,7 @@ constructor(
 
             // ── Bass Boost ──
             bassBoost?.let { bb ->
-                // On API 28+ with DynamicsProcessing working, PreEQ handles sub/mid bass to avoid double-dipping
-                val dpAvailable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && dynamicsProcessing != null
-                bb.enabled = isEnabled && (params.bassBoostEnabled || params.viperBassEnabled) && !dpAvailable
+                bb.enabled = isEnabled && (params.bassBoostEnabled || params.viperBassEnabled)
                 if (bb.enabled) {
                     val strength = bassProcessor.computeLegacyBassBoostStrength(bassConfig)
                     bb.setStrength(strength.coerceIn(0, 1000).toShort())
@@ -255,16 +262,6 @@ constructor(
                 }
             }
 
-            // ── Gain Distribution ──
-            var dynamicsPostGain = 0f
-            val loudnessGainDb = if (params.loudnessEnabled) (params.loudnessTargetGainMb / 100f) else 0f
-            val pgcHeadroomDb = if (params.pgcEnabled) params.pgcGain else 0f
-            val netGainDb = pgcHeadroomDb + params.masterGain + loudnessGainDb
-
-            if (netGainDb < 0f) {
-                dynamicsPostGain = netGainDb
-            }
-
             // ── Loudness / Master Gain ──
             loudnessEnhancer?.let { loud ->
                 loud.enabled = isEnabled && params.loudnessEnabled
@@ -278,25 +275,19 @@ constructor(
                 dynamicsProcessing?.let { dp ->
                     if (isEnabled && (params.viperBassEnabled || params.bassBoostEnabled)) {
                         bassProcessor.applyBassConfig(bassConfig, dp)
-                        // Override the limiter postGain with our computed negative headroom
-                        val limiter = DynamicsProcessing.Limiter(
-                            true, true, 0, 1f, 50f, 10f, params.limiterThreshold, dynamicsPostGain
-                        )
-                        dp.setLimiterAllChannelsTo(limiter)
                     } else {
                         dp.enabled = isEnabled && params.dynamicsEnabled
-                        if (dp.enabled || dynamicsPostGain < 0f) {
-                            dp.enabled = true
+                        if (dp.enabled) {
                             val limiter =
                                 DynamicsProcessing.Limiter(
                                     true, // inUse
-                                    params.limiterEnabled || dynamicsPostGain < 0f, // enabled
+                                    params.limiterEnabled, // enabled
                                     0, // linkGroup
                                     params.compressorAttack, // attackTime
                                     params.compressorRelease, // releaseTime
-                                    10f, // ratio (placeholder)
+                                    10f, // ratio
                                     params.limiterThreshold, // threshold
-                                    dynamicsPostGain, // postGain
+                                    0f, // postGain — no negative attenuation
                                 )
                             dp.setLimiterAllChannelsTo(limiter)
                         }

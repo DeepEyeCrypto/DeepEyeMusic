@@ -26,6 +26,7 @@ data class PlayerState(
     val isAppInForeground: Boolean = true,
     val sponsorSegments: ImmutableList<SponsorSegment> = persistentListOf(),
     val autoplayEnabled: Boolean = true,
+    val currentLyrics: com.deepeye.musicpro.domain.model.Lyrics? = null,
     // Keep legacy field for backward compatibility during migration
     val currentSong: Song? = null,
 )

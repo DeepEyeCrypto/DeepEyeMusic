@@ -126,4 +126,16 @@ constructor(
             cloudSyncManager.syncAllData()
         }
     }
+
+    fun logoutYouTube() {
+        viewModelScope.launch {
+            settingsDataStore.setYouTubeTokens("", null)
+        }
+    }
+
+    fun saveYouTubeTokens(accessToken: String, refreshToken: String?) {
+        viewModelScope.launch {
+            settingsDataStore.setYouTubeTokens(accessToken, refreshToken)
+        }
+    }
 }
