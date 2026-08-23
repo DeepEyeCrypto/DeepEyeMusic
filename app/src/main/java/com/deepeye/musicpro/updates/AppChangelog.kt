@@ -8,8 +8,8 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
-                versionCode = 30035,
-                versionName = "3.0.1.25",
+                versionCode = 30036,
+                versionName = "3.0.1.26",
                 releaseDate = "August 2026",
                 title = "SmartTube-Style YouTube Account Sync 🚀",
                 highlight = true,
