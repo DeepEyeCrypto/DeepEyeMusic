@@ -54,7 +54,7 @@ constructor(
             val subscriptions = libraryRepo.getAllSubscribedChannels()
             val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
             val hasAuth = authSettings?.youtubeAccessToken != null
-            android.util.Log.d("AuthYTClient", "hasAuth: $hasAuth, token: ${authSettings?.youtubeAccessToken}")
+            android.util.Log.d("AuthYTClient", "hasAuth: $hasAuth, tokenPresent: ${authSettings?.youtubeAccessToken != null}")
 
             var authHistory: List<HomeVideoItem> = emptyList()
             var authHome: List<HomeVideoItem> = emptyList()

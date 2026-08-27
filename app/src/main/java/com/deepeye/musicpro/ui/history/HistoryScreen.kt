@@ -28,6 +28,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import com.deepeye.musicpro.domain.model.home.HomeVideoItem
+import com.deepeye.musicpro.ui.youtube.SmartTubeVideoCard
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.data.db.PlaybackHistoryEntity
 import com.deepeye.musicpro.data.db.SearchHistoryEntity
@@ -134,39 +136,18 @@ fun HistoryScreen(
 
 @Composable
 fun VideoHistoryCard(video: VideoHistoryEntity) {
-    Column(modifier = Modifier.width(200.dp).clickable { /* Restore video */ }) {
-        Box(modifier = Modifier.fillMaxWidth().height(120.dp).clip(RoundedCornerShape(12.dp))) {
-            AsyncImage(
-                model = video.thumbnailUri,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-            // Progress Bar overlay
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .align(Alignment.BottomStart)
-                    .background(Color.White.copy(alpha = 0.3f))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(video.completionPercent)
-                        .fillMaxHeight()
-                        .background(Color(0xFFFF0033)) // YouTube red
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = video.title,
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.White,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
+    SmartTubeVideoCard(
+        video = HomeVideoItem(
+            id = video.videoId,
+            title = video.title,
+            channelName = "",
+            thumbnailUrl = video.thumbnailUri ?: "",
+            duration = video.durationMs / 1000,
+        ),
+        onClick = { /* Restore video */ },
+        modifier = Modifier.width(280.dp),
+        progressFraction = video.completionPercent / 100f,
+    )
 }
 
 @Composable

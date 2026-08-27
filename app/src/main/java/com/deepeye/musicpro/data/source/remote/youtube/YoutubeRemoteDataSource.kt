@@ -39,13 +39,86 @@ constructor(
 
     suspend fun getVideoDetails(videoId: String): com.deepeye.musicpro.domain.model.VideoDetails? = withContext(ioDispatcher) {
         try {
-            val yt = org.schabi.newpipe.extractor.NewPipe.getService(org.schabi.newpipe.extractor.ServiceList.YouTube.serviceId)
-            val streamInfo = org.schabi.newpipe.extractor.stream.StreamInfo.getInfo(yt, "https://www.youtube.com/watch?v=$videoId")
-            com.deepeye.musicpro.domain.model.VideoDetails(
-                viewCount = streamInfo.viewCount ?: 0L,
-                subscriberCount = streamInfo.uploaderSubscriberCount ?: 0L,
-                uploadDate = streamInfo.textualUploadDate ?: ""
-            )
+            val pipedInstances = listOf(
+                "https://api.piped.private.coffee",
+                "https://pipedapi.kavin.rocks",
+                "https://pipedapi.us.projectsegfau.lt",
+                "https://pipedapi.colt.top"
+            ).shuffled()
+            
+            var result: com.deepeye.musicpro.domain.model.VideoDetails? = null
+            for (instance in pipedInstances) {
+                try {
+                    val request = okhttp3.Request.Builder()
+                        .url("$instance/streams/$videoId")
+                        .addHeader("User-Agent", "DeepEyeMusicPro/2.0")
+                        .build()
+                    val response = fastClient.newCall(request).execute()
+                    val body = response.body?.string()
+                    if (response.isSuccessful && body != null) {
+                        val json = org.json.JSONObject(body)
+                        val views = json.optLong("views", 0L)
+                        val uploader = json.optString("uploader", "")
+                        val uploaderAvatar = json.optString("uploaderAvatar", "")
+                        val subscriberCount = json.optLong("uploaderSubscriberCount", 0L)
+                        val uploadDate = json.optString("uploadDate", "")
+                        
+                        result = com.deepeye.musicpro.domain.model.VideoDetails(
+                            viewCount = views,
+                            subscriberCount = subscriberCount,
+                            uploadDate = com.deepeye.musicpro.util.formatUploadDate(uploadDate),
+                            channelName = uploader,
+                            channelAvatarUrl = uploaderAvatar
+                        )
+                        // #region agent log
+                        try {
+                            android.util.Log.i("DBG_B5FA56", org.json.JSONObject()
+                                .put("sessionId", "b5fa56").put("hypothesisId", "E")
+                                .put("location", "YoutubeRemoteDataSource.kt:getVideoDetails")
+                                .put("message", "piped_ok").put("timestamp", System.currentTimeMillis())
+                                .put("runId", "pre-fix")
+                                .put("data", org.json.JSONObject()
+                                    .put("host", instance.substringAfter("://").substringBefore("/"))
+                                    .put("views", views).put("subs", subscriberCount)
+                                    .put("hasAvatar", uploaderAvatar.isNotBlank())
+                                    .put("uploaderLen", uploader.length)
+                                ).toString())
+                        } catch (_: Exception) {}
+                        // #endregion
+                        break
+                    } else {
+                        // #region agent log
+                        try {
+                            android.util.Log.i("DBG_B5FA56", org.json.JSONObject()
+                                .put("sessionId", "b5fa56").put("hypothesisId", "E")
+                                .put("location", "YoutubeRemoteDataSource.kt:getVideoDetails")
+                                .put("message", "piped_http_fail").put("timestamp", System.currentTimeMillis())
+                                .put("runId", "pre-fix")
+                                .put("data", org.json.JSONObject()
+                                    .put("host", instance.substringAfter("://").substringBefore("/"))
+                                    .put("http", response.code)
+                                ).toString())
+                        } catch (_: Exception) {}
+                        // #endregion
+                    }
+                } catch (e: Exception) {
+                    // #region agent log
+                    try {
+                        android.util.Log.i("DBG_B5FA56", org.json.JSONObject()
+                            .put("sessionId", "b5fa56").put("hypothesisId", "E")
+                            .put("location", "YoutubeRemoteDataSource.kt:getVideoDetails")
+                            .put("message", "piped_exc").put("timestamp", System.currentTimeMillis())
+                            .put("runId", "pre-fix")
+                            .put("data", org.json.JSONObject()
+                                .put("host", instance.substringAfter("://").substringBefore("/"))
+                                .put("type", e.javaClass.simpleName)
+                            ).toString())
+                    } catch (_: Exception) {}
+                    // #endregion
+                    continue
+                }
+            }
+            result
         } catch (e: Exception) {
             null
         }
@@ -493,10 +566,12 @@ constructor(
         id = id,
         title = title,
         channelName = artist,
+        channelId = channelId,
         thumbnailUrl = thumbnailUrl.upgradeResolution(),
         duration = duration,
         viewCount = viewCount,
-        isShort = isShort
+        isShort = isShort,
+        channelAvatarUrl = channelAvatarUrl
     )
 
     private fun com.deepeye.musicpro.extractor.ExtractorMusicItem.toHomeMusicItem() = HomeMusicItem(

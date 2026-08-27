@@ -4,12 +4,16 @@
 package com.deepeye.musicpro.ui.music
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.deepeye.musicpro.data.prefs.SettingsDataStore
+import com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient
 import com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
 import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.Song
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
+import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.domain.repository.MusicRepository
 import com.deepeye.musicpro.player.controller.PlayerController
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,6 +29,7 @@ data class MusicUiState(
     val localSongs: List<Song> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
+    val hasAuth: Boolean = false,
 )
 
 @HiltViewModel
@@ -34,15 +39,49 @@ constructor(
     private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
     private val musicRepository: MusicRepository,
     private val playerController: PlayerController,
+    private val authClient: AuthenticatedYouTubeClient,
+    private val settingsDataStore: SettingsDataStore,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MusicUiState())
     val uiState: StateFlow<MusicUiState> = _uiState.asStateFlow()
 
+    companion object {
+        private const val TAG = "MusicViewModel"
+    }
+
     init {
-        loadRecommendations()
+        observeAuth()
         observeLocalSongs()
         syncLibrary()
     }
+
+    private var isFirstAuthEmission = true
+
+    private fun observeAuth() {
+        viewModelScope.launch {
+            settingsDataStore.settings.collect { settings ->
+                val auth = settings.youtubeAccessToken != null
+                val changed = auth != _uiState.value.hasAuth
+                _uiState.value = _uiState.value.copy(hasAuth = auth)
+                // Load on the first emission (covers the initial screen) and whenever
+                // account state changes, so the feed is fetched from the connected
+                // YouTube account (by id).
+                if (changed || isFirstAuthEmission) {
+                    isFirstAuthEmission = false
+                    loadRecommendations()
+                }
+            }
+        }
+    }
+
+    private fun HomeVideoItem.toHomeMusic(): HomeMusicItem =
+        HomeMusicItem(
+            id = id,
+            title = title,
+            artist = channelName,
+            thumbnailUrl = thumbnailUrl,
+            duration = duration,
+        )
 
     private fun observeLocalSongs() {
         viewModelScope.launch {
@@ -57,6 +96,7 @@ constructor(
             try {
                 musicRepository.syncFromMediaStore()
             } catch (e: Exception) {
+                Log.e(TAG, "syncLibrary failed", e)
                 _uiState.value = _uiState.value.copy(error = "Unable to sync local library right now.")
             }
         }
@@ -66,11 +106,25 @@ constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                // Using search for 'trending music' as a proxy for recommendations
-                val music = youtubeRemoteDataSource.searchMusic("trending music")
+                val auth = _uiState.value.hasAuth
+                Log.d(TAG, "loadRecommendations (hasAuth=$auth)")
+                val music =
+                    if (auth) {
+                        // Pull a personally-aligned feed from the connected YouTube account.
+                        val accountMusic = authClient.getMusicFeed()
+                        if (accountMusic.isNotEmpty()) {
+                            accountMusic.map { it.toHomeMusic() }
+                        } else {
+                            Log.w(TAG, "Authenticated music feed empty; falling back to public search")
+                            youtubeRemoteDataSource.searchMusic("trending music")
+                        }
+                    } else {
+                        youtubeRemoteDataSource.searchMusic("trending music")
+                    }
                 _uiState.value = _uiState.value.copy(recommendedMusic = music, isLoading = false)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false, error = "Unable to sync local library right now.")
+                Log.e(TAG, "loadRecommendations failed", e)
+                _uiState.value = _uiState.value.copy(isLoading = false, error = "Couldn't load recommendations. Check your connection and retry.")
             }
         }
     }

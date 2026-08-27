@@ -21,13 +21,26 @@ class AuthenticatedYouTubeClient @Inject constructor(
     private val settingsDataStore: SettingsDataStore,
     private val authManager: YouTubeDeviceAuthManager
 ) {
-    private val INNERTUBE_API_URL = "https://youtubei.googleapis.com/youtubei/v1/browse?key="
-    private val CONTEXT_JSON = """
+    private val INNERTUBE_API_URL = "https://youtubei.googleapis.com/youtubei/v1/browse?key=${com.deepeye.musicpro.BuildConfig.YOUTUBE_API_KEY}"
+
+    // WEB client — returns videoRenderer with full channel avatars & metadata
+    private val WEB_CONTEXT_JSON = """
+        "context": {
+          "client": {
+            "clientName": "WEB",
+            "clientVersion": "2.20240101.00.00",
+            "hl": "en",
+            "gl": "IN"
+          }
+        }
+    """.trimIndent()
+
+    // TVHTML5 client — works with OAuth tokens for personalized/auth content
+    private val TV_CONTEXT_JSON = """
         "context": {
           "client": {
             "clientName": "TVHTML5",
             "clientVersion": "7.20230412.08.00",
-            "androidSdkVersion": 30,
             "hl": "en",
             "gl": "IN"
           }
@@ -47,39 +60,53 @@ class AuthenticatedYouTubeClient @Inject constructor(
             if (newToken != null) {
                 settingsDataStore.setYouTubeTokens(newToken.accessToken, newToken.refreshToken)
                 val retryReq = request.newBuilder().header("Authorization", "Bearer ${newToken.accessToken}").build()
-                val retryRes = client.newCall(retryReq).execute()
-                if (retryRes.isSuccessful) {
-                    return parseInnerTubeVideos(retryRes.body?.string() ?: "")
+                client.newCall(retryReq).execute().use { retryRes ->
+                    if (retryRes.isSuccessful) {
+                        return parseInnerTubeVideos(retryRes.body?.string() ?: "")
+                    }
+                    Log.e("AuthYTClient", "Post-refresh retry failed with HTTP ${retryRes.code}")
                 }
             }
         }
         return emptyList()
     }
 
-    suspend fun browse(browseId: String, params: String? = null): List<HomeVideoItem> = withContext(Dispatchers.IO) {
-        val token = getValidAccessToken() ?: return@withContext emptyList()
+    /**
+     * Browse with specified client context.
+     * @param useAuthClient true = TVHTML5 + OAuth token (for personalized data), false = WEB (for public data with full metadata)
+     */
+    private suspend fun browseInternal(browseId: String, params: String? = null, useAuthClient: Boolean = false): List<HomeVideoItem> = withContext(Dispatchers.IO) {
+        val token = getValidAccessToken()
+        val contextJson = if (useAuthClient && token != null) TV_CONTEXT_JSON else WEB_CONTEXT_JSON
         val paramsPart = if (params != null) ", \"params\": \"$params\"" else ""
-        val bodyStr = "{$CONTEXT_JSON, \"browseId\": \"$browseId\"$paramsPart}"
+        val bodyStr = "{$contextJson, \"browseId\": \"$browseId\"$paramsPart}"
 
         try {
-            val request = Request.Builder()
+            val reqBuilder = Request.Builder()
                 .url(INNERTUBE_API_URL)
-                .addHeader("Authorization", "Bearer $token")
                 .addHeader("Content-Type", "application/json")
                 .post(bodyStr.toRequestBody("application/json".toMediaType()))
-                .build()
 
+            if (token != null) {
+                reqBuilder.addHeader("Authorization", "Bearer $token")
+            }
+
+            val request = reqBuilder.build()
             val response = client.newCall(request).execute()
-            if (response.code == 401) {
+            if (response.code == 401 && token != null) {
+                Log.e("AuthYTClient", "401 Unauthorized for $browseId, retrying...")
+                response.close()
                 return@withContext handle401AndRetry(request)
             }
             if (!response.isSuccessful) {
-                Log.e("AuthYTClient", "browse($browseId) HTTP Error: ${response.code} - ${response.body?.string()}")
+                val errorBody = response.body?.string()
+                Log.e("AuthYTClient", "browse($browseId) HTTP Error: ${response.code} - $errorBody")
                 return@withContext emptyList()
             }
 
-            val items = parseInnerTubeVideos(response.body?.string() ?: "")
-            Log.d("AuthYTClient", "browse($browseId) returned ${items.size} videos")
+            val jsonStr = response.body?.string() ?: ""
+            val items = parseInnerTubeVideos(jsonStr)
+            Log.d("AuthYTClient", "browse($browseId, auth=$useAuthClient) returned ${items.size} videos")
             items.distinctBy { it.id }
         } catch (e: Exception) {
             Log.e("AuthYTClient", "browse($browseId) failed", e)
@@ -87,25 +114,40 @@ class AuthenticatedYouTubeClient @Inject constructor(
         }
     }
 
-    suspend fun getHomeFeed(): List<HomeVideoItem> = browse("FEwhat_to_watch")
+    /** Public browse (WEB client, works without auth, returns full channel metadata) */
+    suspend fun browse(browseId: String, params: String? = null): List<HomeVideoItem> =
+        browseInternal(browseId, params, useAuthClient = false)
 
-    suspend fun getHistory(): List<HomeVideoItem> = browse("FEhistory")
+    /** Auth browse (TVHTML5 + OAuth, for personalized content like history/subs) */
+    private suspend fun authBrowse(browseId: String, params: String? = null): List<HomeVideoItem> =
+        browseInternal(browseId, params, useAuthClient = true)
 
-    suspend fun getSubscriptionsFeed(): List<HomeVideoItem> = browse("FEsubscriptions")
+    suspend fun getHomeFeed(): List<HomeVideoItem> {
+        // Try auth first for personalized home, fallback to public WEB
+        val token = getValidAccessToken()
+        if (token != null) {
+            val authResult = authBrowse("FEwhat_to_watch")
+            if (authResult.isNotEmpty()) return authResult
+        }
+        return browse("FEwhat_to_watch")
+    }
+
+    suspend fun getHistory(): List<HomeVideoItem> = authBrowse("FEhistory")
+
+    suspend fun getSubscriptionsFeed(): List<HomeVideoItem> = authBrowse("FEsubscriptions")
 
     suspend fun getLikedVideos(): List<HomeVideoItem> {
-        val result = browse("VL${"LL"}")
-        return if (result.isNotEmpty()) result else browse("FEliked_playlists")
+        val result = authBrowse("VLLL")
+        return if (result.isNotEmpty()) result else authBrowse("FEliked_playlists")
     }
 
-    suspend fun getWatchLater(): List<HomeVideoItem> = browse("VLWL")
+    suspend fun getWatchLater(): List<HomeVideoItem> = authBrowse("VLWL")
 
-    suspend fun getTrending(): List<HomeVideoItem> = browse("FEtrending")
+    suspend fun getTrending(): List<HomeVideoItem> =
+        search("trending videos")
 
-    suspend fun getMusicFeed(): List<HomeVideoItem> {
-        val result = browse("FEmusic_home")
-        return if (result.isNotEmpty()) result else search("trending songs official music video")
-    }
+    suspend fun getMusicFeed(): List<HomeVideoItem> =
+        search("trending songs official music video")
 
     suspend fun getMoviesFeed(): List<HomeVideoItem> {
         val result = browse("FEmovies_home")
@@ -123,36 +165,54 @@ class AuthenticatedYouTubeClient @Inject constructor(
     }
 
     suspend fun search(query: String): List<HomeVideoItem> = withContext(Dispatchers.IO) {
-        val token = getValidAccessToken() ?: return@withContext emptyList()
+        val token = getValidAccessToken()
         val requestJson = JSONObject().apply {
             put("context", JSONObject().apply {
                 put("client", JSONObject().apply {
-                    put("clientName", "TVHTML5")
-                    put("clientVersion", "7.20230412.08.00")
+                    if (token != null) {
+                        // OAuth tokens are only accepted with a device client context —
+                        // WEB + Bearer returns 400 INVALID_ARGUMENT (verified via probe).
+                        put("clientName", "TVHTML5")
+                        put("clientVersion", "7.20230412.08.00")
+                    } else {
+                        put("clientName", "WEB")
+                        put("clientVersion", "2.20240101.00.00")
+                    }
+                    put("hl", "en")
+                    put("gl", "IN")
                 })
             })
             put("query", query)
         }
 
         try {
-            val request = Request.Builder()
-                .url("https://youtubei.googleapis.com/youtubei/v1/search")
-                .addHeader("Authorization", "Bearer $token")
+            val reqBuilder = Request.Builder()
+                .url("https://youtubei.googleapis.com/youtubei/v1/search?key=${com.deepeye.musicpro.BuildConfig.YOUTUBE_API_KEY}")
                 .addHeader("Content-Type", "application/json")
                 .post(requestJson.toString().toRequestBody("application/json".toMediaType()))
-                .build()
 
+            if (token != null) {
+                reqBuilder.addHeader("Authorization", "Bearer $token")
+            }
+
+            val request = reqBuilder.build()
             val response = client.newCall(request).execute()
-            if (response.code == 401) {
+            if (response.code == 401 && token != null) {
+                Log.e("AuthYTClient", "401 Unauthorized for search $query, retrying...")
                 return@withContext handle401AndRetry(request)
             }
-            if (!response.isSuccessful) return@withContext emptyList()
+            if (!response.isSuccessful) {
+                val errBody = try { response.body?.string()?.take(300) } catch (e: Exception) { null }
+                Log.e("AuthYTClient", "search '$query' HTTP Error: ${response.code} - $errBody")
+                return@withContext emptyList()
+            }
 
             val jsonStr = response.body?.string() ?: ""
             val items = parseInnerTubeVideos(jsonStr)
-            Log.d("AuthYTClient", "search '$query' returned ${items.size} tiles")
+            Log.d("AuthYTClient", "search '$query' returned ${items.size} items")
             items.distinctBy { it.id }
         } catch (e: Exception) {
+            Log.e("AuthYTClient", "search failed for $query", e)
             emptyList()
         }
     }
@@ -225,10 +285,14 @@ class AuthenticatedYouTubeClient @Inject constructor(
 
     private fun parseVideoRenderer(videoObj: JSONObject): HomeVideoItem? {
         val id = videoObj.optString("videoId")
+            ?: videoObj.optJSONObject("navigationEndpoint")?.optJSONObject("watchEndpoint")?.optString("videoId")
+            ?: ""
         if (id.isEmpty()) return null
 
         val title = videoObj.optJSONObject("title")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text")
             ?: videoObj.optJSONObject("title")?.optString("simpleText")
+            ?: videoObj.optJSONObject("headline")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text")
+            ?: videoObj.optJSONObject("headline")?.optString("simpleText")
             ?: ""
 
         val channelName = videoObj.optJSONObject("shortBylineText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text")
@@ -250,12 +314,22 @@ class AuthenticatedYouTubeClient @Inject constructor(
         val viewText = videoObj.optJSONObject("shortViewCountText")?.optString("simpleText")
             ?: videoObj.optJSONObject("shortViewCountText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text")
             ?: videoObj.optJSONObject("viewCountText")?.optString("simpleText")
+            ?: videoObj.optJSONObject("viewCountText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text")
             ?: ""
         val views = parseViews(viewText)
 
         val uploadDate = videoObj.optJSONObject("publishedTimeText")?.optString("simpleText")
             ?: videoObj.optJSONObject("publishedTimeText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text")
             ?: ""
+
+        val channelAvatar = getLastThumbnail(
+            videoObj.optJSONObject("channelThumbnailSupportedRenderers")
+                ?.optJSONObject("channelThumbnailWithLinkRenderer")
+                ?.optJSONObject("thumbnail")
+                ?.optJSONArray("thumbnails")
+        ).ifEmpty {
+            getLastThumbnail(videoObj.optJSONObject("channelThumbnail")?.optJSONArray("thumbnails"))
+        }
 
         return HomeVideoItem(
             id = id,
@@ -266,7 +340,8 @@ class AuthenticatedYouTubeClient @Inject constructor(
             duration = durationSeconds,
             viewCount = views,
             uploadDate = uploadDate,
-            isShort = durationSeconds in 1..60
+            isShort = durationSeconds in 1..60,
+            channelAvatarUrl = channelAvatar
         )
     }
 
@@ -305,28 +380,66 @@ class AuthenticatedYouTubeClient @Inject constructor(
 
         var channelName = ""
         var viewText = ""
+        var uploadDate = ""
         val lines = metaRenderer?.optJSONArray("lines")
-        if (lines != null && lines.length() > 0) {
-            val lineItems0 = lines.optJSONObject(0)?.optJSONObject("lineRenderer")?.optJSONArray("items")
-            if (lineItems0 != null && lineItems0.length() > 0) {
-                val runs = lineItems0.optJSONObject(0)?.optJSONObject("lineItemRenderer")?.optJSONObject("text")?.optJSONArray("runs")
-                if (runs != null && runs.length() > 0) {
-                    channelName = runs.optJSONObject(0)?.optString("text") ?: ""
-                }
-            }
-            if (lines.length() > 1) {
-                val lineItems1 = lines.optJSONObject(1)?.optJSONObject("lineRenderer")?.optJSONArray("items")
-                if (lineItems1 != null && lineItems1.length() > 0) {
-                    val runs = lineItems1.optJSONObject(0)?.optJSONObject("lineItemRenderer")?.optJSONObject("text")?.optJSONArray("runs")
-                    if (runs != null && runs.length() > 0) {
-                        viewText = runs.optJSONObject(0)?.optString("text") ?: ""
+        if (lines != null) {
+            val allTexts = mutableListOf<String>()
+            for (i in 0 until lines.length()) {
+                val lineObj = lines.optJSONObject(i)?.optJSONObject("lineRenderer")
+                val items = lineObj?.optJSONArray("items")
+                if (items != null) {
+                    for (j in 0 until items.length()) {
+                        val itemObj = items.optJSONObject(j)?.optJSONObject("lineItemRenderer")
+                        val text = itemObj?.optJSONObject("text")?.optString("simpleText")
+                            ?: itemObj?.optJSONObject("text")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text")
+                            ?: ""
+                        if (text.isNotBlank()) {
+                            allTexts.add(text)
+                        }
                     }
                 }
+            }
+            for (t in allTexts) {
+                val clean = t.trim()
+                val isMeta = clean.contains("view", ignoreCase = true) ||
+                    clean.contains("watching", ignoreCase = true) ||
+                    clean.contains("ago", ignoreCase = true) ||
+                    clean.contains("streamed", ignoreCase = true) ||
+                    clean.contains("premier", ignoreCase = true) ||
+                    clean == "•" || clean == "·" || clean == "|" || clean.isBlank()
+                when {
+                    clean.contains("view", ignoreCase = true) || clean.contains("watching", ignoreCase = true) -> {
+                        if (viewText.isEmpty()) viewText = clean
+                    }
+                    clean.contains("ago", ignoreCase = true) || clean.contains("streamed", ignoreCase = true) || clean.contains("premier", ignoreCase = true) -> {
+                        if (uploadDate.isEmpty()) uploadDate = clean
+                    }
+                    channelName.isEmpty() && !isMeta && !clean.matches(Regex("^[\\d.,]+[KkMmBb]?\\s*(views?|watching)?$")) -> {
+                        channelName = clean
+                    }
+                    uploadDate.isEmpty() && channelName.isNotEmpty() && channelName != clean && !isMeta -> {
+                        uploadDate = clean
+                    }
+                }
+            }
+            if (channelName.isEmpty()) {
+                channelName = allTexts.firstOrNull {
+                    val c = it.trim()
+                    !c.contains("view", ignoreCase = true) && !c.contains("watching", ignoreCase = true) && c != "•" && c != "·" && c != "|" && c.isNotBlank()
+                }?.trim() ?: ""
             }
         }
 
         val headerRenderer = tileObj.optJSONObject("header")?.optJSONObject("tileHeaderRenderer")
         val thumbUrl = getLastThumbnail(headerRenderer?.optJSONObject("thumbnail")?.optJSONArray("thumbnails"))
+
+        val channelAvatar = getLastThumbnail(
+            metaRenderer?.optJSONObject("avatar")?.optJSONObject("avatarViewModel")?.optJSONObject("image")?.optJSONArray("sources")
+        ).ifEmpty {
+            getLastThumbnail(metaRenderer?.optJSONObject("avatar")?.optJSONArray("thumbnails"))
+        }.ifEmpty {
+            getLastThumbnail(headerRenderer?.optJSONObject("avatar")?.optJSONObject("avatarViewModel")?.optJSONObject("image")?.optJSONArray("sources"))
+        }
 
         var durationSeconds = 0L
         val overlays = headerRenderer?.optJSONArray("thumbnailOverlays")
@@ -350,7 +463,9 @@ class AuthenticatedYouTubeClient @Inject constructor(
             thumbnailUrl = thumbUrl,
             duration = durationSeconds,
             viewCount = parseViews(viewText),
-            isShort = durationSeconds in 1..60
+            uploadDate = uploadDate,
+            isShort = durationSeconds in 1..60,
+            channelAvatarUrl = channelAvatar
         )
     }
 
@@ -358,22 +473,81 @@ class AuthenticatedYouTubeClient @Inject constructor(
         val id = lockupObj.optString("contentId")
         if (id.isEmpty()) return null
 
-        val title = lockupObj.optJSONObject("metadata")?.optJSONObject("lockupMetadataViewModel")?.optJSONObject("title")?.optString("content") ?: ""
+        val metaVm = lockupObj.optJSONObject("metadata")?.optJSONObject("lockupMetadataViewModel")
+        val title = metaVm?.optJSONObject("title")?.optString("content") ?: ""
 
         var channelName = ""
         var viewText = ""
-        val metadataRows = lockupObj.optJSONObject("metadata")?.optJSONObject("lockupMetadataViewModel")?.optJSONObject("metadata")?.optJSONObject("contentMetadataViewModel")?.optJSONArray("metadataRows")
-        if (metadataRows != null && metadataRows.length() > 0) {
-            val parts = metadataRows.optJSONObject(0)?.optJSONArray("metadataParts")
-            if (parts != null && parts.length() > 0) {
-                channelName = parts.optJSONObject(0)?.optJSONObject("text")?.optString("content") ?: ""
-                if (parts.length() > 1) {
-                    viewText = parts.optJSONObject(1)?.optJSONObject("text")?.optString("content") ?: ""
+        var uploadDate = ""
+        val metadataRows = metaVm?.optJSONObject("metadata")?.optJSONObject("contentMetadataViewModel")?.optJSONArray("metadataRows")
+        val allTexts = mutableListOf<String>()
+        if (metadataRows != null) {
+            for (i in 0 until metadataRows.length()) {
+                val parts = metadataRows.optJSONObject(i)?.optJSONArray("metadataParts")
+                if (parts != null) {
+                    for (j in 0 until parts.length()) {
+                        val t = parts.optJSONObject(j)?.optJSONObject("text")?.optString("content")
+                            ?: parts.optJSONObject(j)?.optJSONObject("text")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text")
+                            ?: ""
+                        if (t.isNotBlank()) allTexts.add(t)
+                    }
                 }
+            }
+        }
+        if (allTexts.isNotEmpty()) {
+            for (t in allTexts) {
+                val clean = t.trim()
+                val isMeta = clean.contains("view", ignoreCase = true) ||
+                    clean.contains("watching", ignoreCase = true) ||
+                    clean.contains("ago", ignoreCase = true) ||
+                    clean.contains("streamed", ignoreCase = true) ||
+                    clean.contains("premier", ignoreCase = true) ||
+                    clean == "•" || clean == "·" || clean == "|" || clean.isBlank()
+                when {
+                    clean.contains("view", ignoreCase = true) || clean.contains("watching", ignoreCase = true) -> {
+                        if (viewText.isEmpty()) viewText = clean
+                    }
+                    clean.contains("ago", ignoreCase = true) || clean.contains("streamed", ignoreCase = true) || clean.contains("premier", ignoreCase = true) -> {
+                        if (uploadDate.isEmpty()) uploadDate = clean
+                    }
+                    channelName.isEmpty() && !isMeta && !clean.matches(Regex("^[\\d.,]+[KkMmBb]?\\s*(views?|watching)?$")) -> {
+                        channelName = clean
+                    }
+                    uploadDate.isEmpty() && channelName.isNotEmpty() && channelName != clean && !isMeta -> {
+                        uploadDate = clean
+                    }
+                }
+            }
+            if (channelName.isEmpty()) {
+                channelName = allTexts.firstOrNull {
+                    val c = it.trim()
+                    !c.contains("view", ignoreCase = true) && !c.contains("watching", ignoreCase = true) && c != "•" && c != "·" && c != "|" && c.isNotBlank()
+                }?.trim() ?: ""
             }
         }
 
         val thumbUrl = lockupObj.optJSONObject("contentImage")?.optJSONObject("thumbnailViewModel")?.optJSONObject("image")?.optJSONArray("sources")?.optJSONObject(0)?.optString("url") ?: ""
+
+        val channelAvatar = getLastThumbnail(
+            metaVm?.optJSONObject("image")?.optJSONArray("sources")
+        ).ifEmpty {
+            getLastThumbnail(
+                metaVm?.optJSONObject("decoratedAvatarViewModel")
+                    ?.optJSONObject("avatar")
+                    ?.optJSONObject("avatarViewModel")
+                    ?.optJSONObject("image")
+                    ?.optJSONArray("sources")
+            )
+        }.ifEmpty {
+            getLastThumbnail(
+                lockupObj.optJSONObject("contentImage")
+                    ?.optJSONObject("decoratedAvatarViewModel")
+                    ?.optJSONObject("avatar")
+                    ?.optJSONObject("avatarViewModel")
+                    ?.optJSONObject("image")
+                    ?.optJSONArray("sources")
+            )
+        }
 
         var durationText = ""
         val overlays = lockupObj.optJSONObject("contentImage")?.optJSONObject("thumbnailViewModel")?.optJSONArray("overlays")
@@ -392,18 +566,22 @@ class AuthenticatedYouTubeClient @Inject constructor(
             thumbnailUrl = thumbUrl,
             duration = durationSeconds,
             viewCount = parseViews(viewText),
-            isShort = durationSeconds in 1..60
+            uploadDate = uploadDate,
+            isShort = durationSeconds in 1..60,
+            channelAvatarUrl = channelAvatar
         )
     }
 
     private fun parseViews(viewText: String?): Long {
         if (viewText.isNullOrBlank()) return 0L
-        val cleaned = viewText.lowercase().replace("views", "").replace("view", "").replace(",", "").trim()
+        val cleaned = viewText.lowercase().replace("views", "").replace("view", "").replace("watching", "").replace(",", "").trim()
         return try {
             when {
                 cleaned.endsWith("m") -> (cleaned.removeSuffix("m").trim().toDouble() * 1_000_000).toLong()
                 cleaned.endsWith("b") -> (cleaned.removeSuffix("b").trim().toDouble() * 1_000_000_000).toLong()
                 cleaned.endsWith("k") -> (cleaned.removeSuffix("k").trim().toDouble() * 1_000).toLong()
+                cleaned.endsWith("cr") -> (cleaned.removeSuffix("cr").trim().toDouble() * 10_000_000).toLong()
+                cleaned.endsWith("lakh") -> (cleaned.removeSuffix("lakh").trim().toDouble() * 100_000).toLong()
                 else -> cleaned.filter { it.isDigit() }.toLongOrNull() ?: 0L
             }
         } catch (e: Exception) {
@@ -422,6 +600,7 @@ class AuthenticatedYouTubeClient @Inject constructor(
 
     private fun getLastThumbnail(thumbnails: org.json.JSONArray?): String {
         if (thumbnails == null || thumbnails.length() == 0) return ""
-        return thumbnails.optJSONObject(thumbnails.length() - 1)?.optString("url") ?: ""
+        val last = thumbnails.optJSONObject(thumbnails.length() - 1)?.optString("url") ?: ""
+        return if (last.startsWith("//")) "https:$last" else last
     }
 }

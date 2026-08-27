@@ -102,6 +102,15 @@ fun NowPlayingScreen(
     var showInfoSheet by remember { mutableStateOf(false) }
     var showVisualizer by remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    var showSpeedDialog by remember { mutableStateOf(false) }
+    var showAudioBoostDialog by remember { mutableStateOf(false) }
+    var showSleepTimerDialog by remember { mutableStateOf(false) }
+    var isOledScreenOffMode by remember { mutableStateOf(false) }
+    val showStatsForNerds by viewModel.showStatsForNerds.collectAsStateWithLifecycle()
+    val audioBoostLevel by viewModel.audioBoostLevel.collectAsStateWithLifecycle()
+    val subtitlesEnabled by viewModel.subtitlesEnabled.collectAsStateWithLifecycle()
+    val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsStateWithLifecycle()
     
     val recordAudioPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
@@ -267,7 +276,11 @@ fun NowPlayingScreen(
                         onOpenQueue = { showQueueSheet = true },
                         onNavigateToSettings = onNavigateToSettings,
                         onLockChanged = { isLocked -> sheetViewModel.setGestureLocked(isLocked); fullscreenMode.isGestureLocked = isLocked },
-                        onOpenLyrics = { showLyricsSheet = true }
+                        onOpenLyrics = { showLyricsSheet = true },
+                        onOpenSpeedDialog = { showSpeedDialog = true },
+                        onOpenAudioBoostDialog = { showAudioBoostDialog = true },
+                        onOpenSleepTimerDialog = { showSleepTimerDialog = true },
+                        onEnableOledMode = { isOledScreenOffMode = true }
                     )
                 } else {
                     AudioNowPlayingLayout(
@@ -294,7 +307,11 @@ fun NowPlayingScreen(
                         onOpenQueue = { showQueueSheet = true },
                         onNavigateToSettings = onNavigateToSettings,
                         pagerState = pagerState,
-                        onOpenLyrics = { showLyricsSheet = true }
+                        onOpenLyrics = { showLyricsSheet = true },
+                        onOpenSpeedDialog = { showSpeedDialog = true },
+                        onOpenAudioBoostDialog = { showAudioBoostDialog = true },
+                        onOpenSleepTimerDialog = { showSleepTimerDialog = true },
+                        onEnableOledMode = { isOledScreenOffMode = true }
                     )
                 }
             }
@@ -359,10 +376,44 @@ fun NowPlayingScreen(
             )
         }
     }
+
+    if (showSpeedDialog) {
+        SmartTubeSpeedDialog(
+            currentSpeed = playerState.playbackSpeed,
+            onSpeedSelected = { viewModel.setPlaybackSpeed(it) },
+            onDismiss = { showSpeedDialog = false },
+            accentColor = finalAccentColor
+        )
+    }
+
+    if (showAudioBoostDialog) {
+        SmartTubeAudioBoostDialog(
+            currentBoost = audioBoostLevel,
+            onBoostSelected = { viewModel.setAudioBoostLevel(it) },
+            onDismiss = { showAudioBoostDialog = false },
+            accentColor = finalAccentColor
+        )
+    }
+
+    if (showSleepTimerDialog) {
+        SmartTubeSleepTimerDialog(
+            activeRemainingMs = sleepTimerMs,
+            onSetTimer = { viewModel.startSleepTimer(it) },
+            onCancelTimer = { viewModel.cancelSleepTimer() },
+            onDismiss = { showSleepTimerDialog = false },
+            accentColor = finalAccentColor
+        )
+    }
+
+    if (isOledScreenOffMode) {
+        SmartTubeOledScreenOffOverlay(
+            onWake = { isOledScreenOffMode = false }
+        )
+    }
 }
 
 @Composable
-private fun AudioNowPlayingLayout(
+fun AudioNowPlayingLayout(
     playerState: PlayerState,
     finalAccentColor: Color,
     finalBgColor: Color,
@@ -376,7 +427,11 @@ private fun AudioNowPlayingLayout(
     onOpenQueue: () -> Unit,
     onNavigateToSettings: () -> Unit,
     pagerState: androidx.compose.foundation.pager.PagerState,
-    onOpenLyrics: () -> Unit
+    onOpenLyrics: () -> Unit,
+    onOpenSpeedDialog: () -> Unit,
+    onOpenAudioBoostDialog: () -> Unit,
+    onOpenSleepTimerDialog: () -> Unit,
+    onEnableOledMode: () -> Unit,
 ) {
     val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
     val isDownloading = playerState.currentItem?.id != null && activeDownloads.values.any { it.id == playerState.currentItem?.id }
@@ -655,12 +710,58 @@ private fun AudioNowPlayingLayout(
                 }
             }
 
+            // SmartTube Quick Tools (Audio Mode)
+            val audioBoostLevel by viewModel.audioBoostLevel.collectAsStateWithLifecycle()
+            val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsStateWithLifecycle()
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SmartTubePlaybackControlCard(
+                    icon = Icons.Default.Speed,
+                    title = "SPEED",
+                    value = "${playerState.playbackSpeed}x",
+                    accentColor = finalAccentColor,
+                    isActive = playerState.playbackSpeed != 1.0f,
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenSpeedDialog
+                )
+                SmartTubePlaybackControlCard(
+                    icon = Icons.AutoMirrored.Filled.VolumeUp,
+                    title = "BOOST",
+                    value = if (audioBoostLevel > 0) "+${audioBoostLevel}dB" else "0dB",
+                    accentColor = finalAccentColor,
+                    isActive = audioBoostLevel > 0,
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenAudioBoostDialog
+                )
+                SmartTubePlaybackControlCard(
+                    icon = Icons.Default.Bedtime,
+                    title = "SLEEP",
+                    value = sleepTimerMs?.let { "${it / 60000}m" } ?: "Off",
+                    accentColor = finalAccentColor,
+                    isActive = sleepTimerMs != null,
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenSleepTimerDialog
+                )
+                SmartTubePlaybackControlCard(
+                    icon = Icons.Default.PowerSettingsNew,
+                    title = "OLED",
+                    value = "Off",
+                    accentColor = finalAccentColor,
+                    isActive = false,
+                    modifier = Modifier.weight(1f),
+                    onClick = onEnableOledMode
+                )
+            }
+
             // Action Row Capsule
             com.deepeye.musicpro.ui.components.GlassCard(
                 tintColor = headerColor.copy(alpha = 0.05f),
                 cornerRadius = 32.dp,
                 blurRadius = com.deepeye.musicpro.ui.theme.GlassTokens.BlurHeavy,
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp).imePadding()
             ) {
                 Row(
                     modifier = Modifier
@@ -704,7 +805,7 @@ private fun AudioNowPlayingLayout(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun VideoNowPlayingLayout(
+fun VideoNowPlayingLayout(
     playerState: PlayerState,
     finalAccentColor: Color,
     finalBgColor: Color,
@@ -714,7 +815,11 @@ private fun VideoNowPlayingLayout(
     onOpenQueue: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onLockChanged: (Boolean) -> Unit,
-    onOpenLyrics: () -> Unit
+    onOpenLyrics: () -> Unit,
+    onOpenSpeedDialog: () -> Unit,
+    onOpenAudioBoostDialog: () -> Unit,
+    onOpenSleepTimerDialog: () -> Unit,
+    onEnableOledMode: () -> Unit,
 ) {
     val videoDetails by viewModel.videoDetails.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
@@ -726,6 +831,11 @@ private fun VideoNowPlayingLayout(
     var showPlaylistSheet by remember { mutableStateOf(false) }
     var showFullscreenQueue by remember { mutableStateOf(false) }
     val libraryViewModel: com.deepeye.musicpro.ui.library.LibraryViewModel = hiltViewModel()
+
+    val showStatsForNerds by viewModel.showStatsForNerds.collectAsStateWithLifecycle()
+    val audioBoostLevel by viewModel.audioBoostLevel.collectAsStateWithLifecycle()
+    val subtitlesEnabled by viewModel.subtitlesEnabled.collectAsStateWithLifecycle()
+    val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val isFullscreen = LocalFullscreenMode.current.isFullscreen || com.deepeye.musicpro.ui.LocalPipMode.current
@@ -899,27 +1009,46 @@ private fun VideoNowPlayingLayout(
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Avatar placeholder (Premium glass)
-                        val firstChar = currentItem?.artist?.firstOrNull()?.toString() ?: "U"
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(finalAccentColor.copy(alpha=0.3f), finalAccentColor.copy(alpha=0.05f))))
-                                .border(1.dp, finalAccentColor.copy(alpha=0.5f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(firstChar.uppercase(), color = finalAccentColor, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                        // Channel Avatar (Async Image or Glass initial)
+                        val effectiveChannelName = videoDetails?.channelName?.takeIf { it.isNotBlank() }
+                            ?: currentItem?.artist?.takeIf { !it.contains("view", ignoreCase = true) }
+                            ?: "YouTube Channel"
+                        val firstChar = effectiveChannelName.firstOrNull()?.toString() ?: "Y"
+                        val avatarUrl = videoDetails?.channelAvatarUrl?.takeIf { it.isNotBlank() }
+
+                        if (avatarUrl != null) {
+                            AsyncImage(
+                                model = avatarUrl,
+                                contentDescription = effectiveChannelName,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .border(1.dp, finalAccentColor.copy(alpha=0.5f), CircleShape),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(Brush.linearGradient(listOf(finalAccentColor.copy(alpha=0.3f), finalAccentColor.copy(alpha=0.05f))))
+                                    .border(1.dp, finalAccentColor.copy(alpha=0.5f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(firstChar.uppercase(), color = finalAccentColor, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                            }
                         }
                         
                         Spacer(Modifier.width(16.dp))
                         
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = currentItem?.artist ?: "Unknown Channel",
+                                text = effectiveChannelName,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             val subText = videoDetails?.subscriberCount?.takeIf { it > 0 }?.let { com.deepeye.musicpro.util.formatCompactNumber(it) + " Subscribers" } ?: ""
                             if (subText.isNotBlank()) {
@@ -932,7 +1061,7 @@ private fun VideoNowPlayingLayout(
                         }
 
                         // Subscribe Button
-                        val channelName = currentItem?.artist ?: "Unknown"
+                        val channelName = effectiveChannelName
                         val channelId = currentItem?.artist ?: ""
                         val isSubscribed by libraryViewModel.isChannelSubscribed(channelId).collectAsStateWithLifecycle(initialValue = false)
 
@@ -997,79 +1126,49 @@ private fun VideoNowPlayingLayout(
                 }
             }
 
-            // Specs and Custom Controls Panel
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            SmartTubeVideoControlsPanel(
+                playerState = playerState,
+                finalAccentColor = finalAccentColor,
+                audioBoostLevel = audioBoostLevel,
+                subtitlesEnabled = subtitlesEnabled,
+                sleepTimerMs = sleepTimerMs,
+                showStatsForNerds = showStatsForNerds,
+                selectedQuality = selectedQuality,
+                context = context,
+                viewModel = viewModel,
+                onOpenSpeedDialog = onOpenSpeedDialog,
+                onOpenAudioBoostDialog = onOpenAudioBoostDialog,
+                onOpenSleepTimerDialog = onOpenSleepTimerDialog,
+                onEnableOledMode = onEnableOledMode,
+                onShowQualityMenu = { showQualityMenu = true }
+            )
+
+            // Quality Dropdown Menu
+            DropdownMenu(
+                expanded = showQualityMenu,
+                onDismissRequest = { showQualityMenu = false }
             ) {
-                // Quality Selector Card
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
-                        .border(0.5.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
-                        .clickable { showQualityMenu = true }
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("QUALITY", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(Modifier.height(4.dp))
-                        Text(selectedQuality, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                    }
-                    
-                    DropdownMenu(
-                        expanded = showQualityMenu,
-                        onDismissRequest = { showQualityMenu = false }
-                    ) {
-                        listOf("1080p (60fps)", "720p", "480p", "Auto").forEach { quality ->
-                            DropdownMenuItem(
-                                text = { Text(quality) },
-                                onClick = {
-                                    selectedQuality = quality
-                                    showQualityMenu = false
-                                    viewModel.setVideoQuality(quality)
-                                    android.widget.Toast.makeText(context, "Switched video quality to $quality", android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            )
+                listOf("1080p (60fps)", "720p", "480p", "Auto").forEach { quality ->
+                    DropdownMenuItem(
+                        text = { Text(quality) },
+                        onClick = {
+                            selectedQuality = quality
+                            showQualityMenu = false
+                            viewModel.setVideoQuality(quality)
+                            android.widget.Toast.makeText(context, "Switched video quality to $quality", android.widget.Toast.LENGTH_SHORT).show()
                         }
-                    }
+                    )
                 }
+            }
 
-                // Audio Track Card
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
-                        .border(0.5.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
-                        .clickable { showAudioTrackMenu = true }
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("AUDIO TRACK", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(Modifier.height(4.dp))
-                        Text(selectedAudioTrack, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-
-                    DropdownMenu(
-                        expanded = showAudioTrackMenu,
-                        onDismissRequest = { showAudioTrackMenu = false }
-                    ) {
-                        listOf("Stereo (Original)", "Dolby Atmos (Downmix)", "L-R Audio Track").forEach { track ->
-                            DropdownMenuItem(
-                                text = { Text(track) },
-                                onClick = {
-                                    selectedAudioTrack = track
-                                    showAudioTrackMenu = false
-                                    android.widget.Toast.makeText(context, "Audio channel set to $track", android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                        }
-                    }
-                }
+            // Stats for Nerds Overlay Card (Live HUD)
+            if (showStatsForNerds) {
+                SmartTubeStatsForNerdsOverlay(
+                    videoId = currentItem?.id ?: "N/A",
+                    quality = selectedQuality,
+                    speed = playerState.playbackSpeed,
+                    onDismiss = { viewModel.toggleStatsForNerds() }
+                )
             }
 
             // Live DSP Status Card
@@ -1495,4 +1594,487 @@ fun InteractionButton(icon: androidx.compose.ui.graphics.vector.ImageVector, lab
         }
         Text(label, fontSize = 12.sp, color = tintColor, fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal)
     }
+}
+
+@Composable
+fun SmartTubePlaybackControlCard(
+    icon: ImageVector,
+    title: String,
+    value: String,
+    accentColor: Color,
+    isActive: Boolean = false,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = if (isActive) accentColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+        border = androidx.compose.foundation.BorderStroke(
+            0.5.dp,
+            if (isActive) accentColor.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+        ),
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = if (isActive) accentColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                modifier = Modifier.size(16.dp)
+            )
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                )
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, fontSize = 11.sp),
+                    color = if (isActive) accentColor else MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SmartTubeSpeedDialog(
+    currentSpeed: Float,
+    onSpeedSelected: (Float) -> Unit,
+    onDismiss: () -> Unit,
+    accentColor: Color
+) {
+    val presets = listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.5f, 3.0f)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Speed, contentDescription = null, tint = accentColor)
+                Spacer(Modifier.width(8.dp))
+                Text("Playback Speed", fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Current: ${String.format(java.util.Locale.US, "%.2f", currentSpeed)}x (SmartTube Engine)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+                Spacer(Modifier.height(16.dp))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(presets) { speed ->
+                        val isSelected = Math.abs(currentSpeed - speed) < 0.05f
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isSelected) accentColor else MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    onSpeedSelected(speed)
+                                    onDismiss()
+                                }
+                        ) {
+                            Text(
+                                text = "${speed}x",
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close", color = accentColor)
+            }
+        }
+    )
+}
+
+@Composable
+fun SmartTubeAudioBoostDialog(
+    currentBoost: Int,
+    onBoostSelected: (Int) -> Unit,
+    onDismiss: () -> Unit,
+    accentColor: Color
+) {
+    val boostOptions = listOf(
+        0 to "0dB (Normal Original Audio)",
+        3 to "+3dB (Low Boost / Subtle)",
+        6 to "+6dB (Medium Boost / Loud)",
+        12 to "+12dB (Max Boost / Quiet Audio Fix)"
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = accentColor)
+                Spacer(Modifier.width(8.dp))
+                Text("SmartTube Audio Boost", fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                boostOptions.forEach { (level, label) ->
+                    val isSelected = currentBoost == level
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isSelected) accentColor.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, accentColor) else null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                onBoostSelected(level)
+                                onDismiss()
+                            }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = label,
+                                color = if (isSelected) accentColor else MaterialTheme.colorScheme.onSurface,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            if (isSelected) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = accentColor, modifier = Modifier.size(20.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close", color = accentColor)
+            }
+        }
+    )
+}
+
+@Composable
+fun SmartTubeSleepTimerDialog(
+    activeRemainingMs: Long?,
+    onSetTimer: (Int) -> Unit,
+    onCancelTimer: () -> Unit,
+    onDismiss: () -> Unit,
+    accentColor: Color
+) {
+    val timerOptions = listOf(15, 30, 45, 60, 90)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Bedtime, contentDescription = null, tint = accentColor)
+                Spacer(Modifier.width(8.dp))
+                Text("Sleep Timer", fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (activeRemainingMs != null) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.15f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                onCancelTimer()
+                                onDismiss()
+                            }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Turn Off Sleep Timer (${activeRemainingMs / 60000}m left)", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                            Icon(Icons.Default.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                        }
+                    }
+                }
+                timerOptions.forEach { minutes ->
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                onSetTimer(minutes)
+                                onDismiss()
+                            }
+                    ) {
+                        Text(
+                            text = "$minutes Minutes",
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = accentColor)
+            }
+        }
+    )
+}
+
+@Composable
+fun SmartTubeStatsForNerdsOverlay(
+    videoId: String,
+    quality: String,
+    speed: Float,
+    onDismiss: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = Color.Black.copy(alpha = 0.88f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00E676).copy(alpha = 0.4f)),
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("📊 Stats for Nerds (SmartTube HUD)", color = Color(0xFF00E676), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(16.dp))
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text("Video ID: $videoId", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("Resolution: $quality", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("Playback Speed: ${speed}x", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("Audio Codec: Opus 160kbps / 48kHz Stereo", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("Buffer Health: 28.4s (Optimal Ultra-low Latency)", color = Color(0xFF00E676), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("Player Pipeline: ExoPlayer 2.19 + DSP Filter Enabled", color = Color(0xFF00D2FF), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+        }
+    }
+}
+
+@Composable
+fun SmartTubeOledScreenOffOverlay(
+    onWake: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .clickable(onClick = onWake),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(Icons.Default.PowerSettingsNew, contentDescription = null, tint = Color.White.copy(alpha = 0.25f), modifier = Modifier.size(48.dp))
+            Spacer(Modifier.height(12.dp))
+            Text("OLED Battery Saver Active", color = Color.White.copy(alpha = 0.35f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text("Audio playing in background • Tap anywhere to wake", color = Color.White.copy(alpha = 0.2f), fontSize = 11.sp)
+        }
+    }
+}
+
+@Composable
+fun SmartTubeVideoControlsPanel(
+    playerState: com.deepeye.musicpro.domain.model.PlayerState,
+    finalAccentColor: androidx.compose.ui.graphics.Color,
+    audioBoostLevel: Int,
+    subtitlesEnabled: Boolean,
+    sleepTimerMs: Long?,
+    showStatsForNerds: Boolean,
+    selectedQuality: String,
+    context: android.content.Context,
+    viewModel: com.deepeye.musicpro.ui.player.PlayerViewModel,
+    onOpenSpeedDialog: () -> Unit,
+    onOpenAudioBoostDialog: () -> Unit,
+    onOpenSleepTimerDialog: () -> Unit,
+    onEnableOledMode: () -> Unit,
+    onShowQualityMenu: () -> Unit
+) {
+        // ============================================================
+        // 🚀 SMARTTUBE ADVANCED PLAYBACK CONTROLS PANEL
+        // ============================================================
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Header Label
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Tune,
+                        contentDescription = null,
+                        tint = finalAccentColor,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "SmartTube Playback Engine",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    )
+                }
+                if (showStatsForNerds) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color(0xFF00E676).copy(alpha = 0.2f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00E676).copy(alpha = 0.6f))
+                    ) {
+                        Text(
+                            text = "HUD ACTIVE",
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = Color(0xFF00E676),
+                                fontWeight = FontWeight.Black,
+                                fontSize = 9.sp
+                            )
+                        )
+                    }
+                }
+            }
+
+            // Row 1: Primary Controls (Speed, Quality, Audio Boost, Subtitles)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Speed Card
+                SmartTubePlaybackControlCard(
+                    icon = Icons.Default.Speed,
+                    title = "SPEED",
+                    value = "${playerState.playbackSpeed}x",
+                    accentColor = finalAccentColor,
+                    isActive = playerState.playbackSpeed != 1.0f,
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenSpeedDialog
+                )
+
+                // Quality Card
+                SmartTubePlaybackControlCard(
+                    icon = Icons.Default.HighQuality,
+                    title = "QUALITY",
+                    value = selectedQuality,
+                    accentColor = finalAccentColor,
+                    isActive = true,
+                    modifier = Modifier.weight(1f),
+                    onClick = { onShowQualityMenu() }
+                )
+
+                // Audio Boost Card
+                SmartTubePlaybackControlCard(
+                    icon = Icons.AutoMirrored.Filled.VolumeUp,
+                    title = "BOOST",
+                    value = if (audioBoostLevel > 0) "+${audioBoostLevel}dB" else "0dB",
+                    accentColor = finalAccentColor,
+                    isActive = audioBoostLevel > 0,
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenAudioBoostDialog
+                )
+
+                // CC / Subtitles Card
+                SmartTubePlaybackControlCard(
+                    icon = Icons.Default.ClosedCaption,
+                    title = "CC",
+                    value = if (subtitlesEnabled) "ON" else "OFF",
+                    accentColor = finalAccentColor,
+                    isActive = subtitlesEnabled,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        viewModel.toggleSubtitles()
+                        android.widget.Toast.makeText(
+                            context,
+                            if (!subtitlesEnabled) "Subtitles (CC) Enabled" else "Subtitles Disabled",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                )
+            }
+
+            // Row 2: Secondary SmartTube Tools (Loop, Sleep Timer, Screen Off, Stats HUD)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val repeatLabel = when (playerState.repeatMode) {
+                    com.deepeye.musicpro.domain.model.RepeatMode.ONE -> "Single"
+                    com.deepeye.musicpro.domain.model.RepeatMode.ALL -> "Queue"
+                    else -> "Off"
+                }
+                val isRepeatActive = playerState.repeatMode != com.deepeye.musicpro.domain.model.RepeatMode.NONE
+
+                // Repeat / Loop Card
+                SmartTubePlaybackControlCard(
+                    icon = Icons.Default.Repeat,
+                    title = "REPEAT",
+                    value = repeatLabel,
+                    accentColor = finalAccentColor,
+                    isActive = isRepeatActive,
+                    modifier = Modifier.weight(1f),
+                    onClick = { viewModel.toggleRepeat() }
+                )
+
+                // Sleep Timer Card
+                SmartTubePlaybackControlCard(
+                    icon = Icons.Default.Bedtime,
+                    title = "SLEEP",
+                    value = sleepTimerMs?.let { "${it / 60000}m" } ?: "Off",
+                    accentColor = finalAccentColor,
+                    isActive = sleepTimerMs != null,
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenSleepTimerDialog
+                )
+
+                // Screen-Off (OLED Saver) Card
+                SmartTubePlaybackControlCard(
+                    icon = Icons.Default.PowerSettingsNew,
+                    title = "OLED",
+                    value = "Screen Off",
+                    accentColor = finalAccentColor,
+                    isActive = false,
+                    modifier = Modifier.weight(1f),
+                    onClick = onEnableOledMode
+                )
+
+                // Stats for Nerds HUD Card
+                SmartTubePlaybackControlCard(
+                    icon = Icons.Default.Analytics,
+                    title = "STATS",
+                    value = if (showStatsForNerds) "HUD On" else "HUD",
+                    accentColor = finalAccentColor,
+                    isActive = showStatsForNerds,
+                    modifier = Modifier.weight(1f),
+                    onClick = { viewModel.toggleStatsForNerds() }
+                )
+            }
+        }
 }

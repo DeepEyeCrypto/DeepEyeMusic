@@ -50,6 +50,7 @@ import coil3.request.crossfade
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.ui.components.ShimmerBox
+import com.deepeye.musicpro.ui.youtube.SmartTubeVideoCard
 import com.deepeye.musicpro.ui.components.premium.PremiumHeroCard
 import com.deepeye.musicpro.ui.components.premium.SplitMediaHero
 import com.deepeye.musicpro.ui.components.premium.DotMatrixClock
@@ -523,7 +524,11 @@ private fun HomeVideoRail(
         ) {
             items(items.size, key = { index -> "$index-${items[index].id}" }) { index ->
                 val video = items[index]
-                VideoCard(item = video, onClick = onClick)
+                SmartTubeVideoCard(
+                    video = video,
+                    onClick = { onClick(video) },
+                    modifier = Modifier.width(300.dp),
+                )
             }
         }
     }
@@ -548,10 +553,10 @@ private fun ShortsRail(
         ) {
             items(items.size, key = { index -> "$index-${items[index].id}" }) { index ->
                 val short = items[index]
-                VideoCard(
-                    item = short,
-                    onClick = onClick,
-                    modifier = Modifier.width(160.dp), // Narrower for shorts
+                SmartTubeVideoCard(
+                    video = short,
+                    onClick = { onClick(short) },
+                    modifier = Modifier.width(200.dp), // Narrower for shorts
                 )
             }
         }

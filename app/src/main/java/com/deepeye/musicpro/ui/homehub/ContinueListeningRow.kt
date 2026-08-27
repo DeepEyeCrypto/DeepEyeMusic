@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.deepeye.musicpro.ui.components.DynamicLabel
 import com.deepeye.musicpro.ui.components.SecondaryLabel
 import coil3.compose.AsyncImage
@@ -140,16 +141,16 @@ private fun ContinueListeningCard(
             DynamicLabel(
                 text = music.title,
                 backgroundColor = Color.Black,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 15.sp),
                 fontWeight = FontWeight.Bold,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(2.dp))
             SecondaryLabel(
                 text = music.artist,
                 backgroundColor = Color.Black,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

@@ -30,6 +30,23 @@ fun YouTubeLoginScreen(
     LaunchedEffect(Unit) {
         statusMessage = "Getting activation code from Google..."
         val response = authManager.requestDeviceCode()
+        // #region agent log
+        try {
+            val payload = org.json.JSONObject()
+                .put("sessionId", "b5fa56")
+                .put("hypothesisId", "D")
+                .put("location", "YouTubeLoginScreen.kt:LaunchedEffect")
+                .put("message", "device_code_result")
+                .put("timestamp", System.currentTimeMillis())
+                .put("runId", "pre-fix")
+                .put("data", org.json.JSONObject()
+                    .put("success", response != null)
+                    .put("userCodeLen", response?.userCode?.length ?: 0)
+                    .put("urlEmpty", response?.verificationUrl.isNullOrBlank())
+                ).toString()
+            android.util.Log.i("DBG_B5FA56", payload)
+        } catch (_: Exception) {}
+        // #endregion
         
         if (response != null) {
             userCode = response.userCode

@@ -4,6 +4,7 @@
 package com.deepeye.musicpro.ui.youtube
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
@@ -155,21 +156,21 @@ constructor(
             val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
             val hasAuth = authSettings?.youtubeAccessToken != null
 
-            if (hasAuth) {
-                _uiState.update { it.copy(isLoading = true, error = null, hasMore = false) }
-                try {
-                    val authItems = when (category) {
-                        "Home" -> authClient.getHomeFeed()
-                        "Subscriptions" -> authClient.getSubscriptionsFeed()
-                        "History" -> authClient.getHistory()
-                        "Liked" -> authClient.getLikedVideos()
-                        "Watch Later" -> authClient.getWatchLater()
-                        "Music" -> authClient.getMusicFeed()
-                        "Movies" -> authClient.getMoviesFeed()
-                        "Gaming" -> authClient.getGamingFeed()
-                        "News" -> authClient.getNewsFeed()
-                        else -> return@launch // Search / SponsorBlock handle separately
-                    }
+            _uiState.update { it.copy(isLoading = true, error = null, hasMore = false) }
+            try {
+                val authItems = when (category) {
+                    "Home" -> authClient.getHomeFeed().ifEmpty { authClient.getTrending() }.ifEmpty { authClient.search("trending music") }
+                    "Subscriptions" -> if (hasAuth) authClient.getSubscriptionsFeed() else emptyList()
+                    "History" -> if (hasAuth) authClient.getHistory() else emptyList()
+                    "Liked" -> if (hasAuth) authClient.getLikedVideos() else emptyList()
+                    "Watch Later" -> if (hasAuth) authClient.getWatchLater() else emptyList()
+                    "Music" -> authClient.getMusicFeed().ifEmpty { authClient.search("top music videos") }
+                    "Movies" -> authClient.getMoviesFeed().ifEmpty { authClient.search("full movies") }
+                    "Gaming" -> authClient.getGamingFeed().ifEmpty { authClient.search("gaming walkthrough") }
+                    "News" -> authClient.getNewsFeed().ifEmpty { authClient.search("news live report") }
+                    else -> return@launch // Search / SponsorBlock handle separately
+                }
+                if (authItems.isNotEmpty()) {
                     _uiState.update {
                         it.copy(
                             videos = authItems,
@@ -177,10 +178,10 @@ constructor(
                             hasMore = false,
                         )
                     }
-                } catch (e: Exception) {
-                    _uiState.update { it.copy(isLoading = false, error = "Unable to fetch authenticated feed for $category.") }
+                    return@launch
                 }
-                return@launch
+            } catch (e: Exception) {
+                // Fallthrough to baseQuery fetchVideos
             }
 
             var baseQuery =
@@ -222,11 +223,8 @@ constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null, hasMore = false) }
             try {
-                val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
-                val hasAuth = authSettings?.youtubeAccessToken != null
-                
-                if (hasAuth) {
-                    val items = authClient.search(query)
+                val items = try { authClient.search(query) } catch (e: Exception) { emptyList() }
+                if (items.isNotEmpty()) {
                     _uiState.update {
                         it.copy(
                             videos = items,
@@ -234,19 +232,21 @@ constructor(
                             hasMore = false,
                         )
                     }
-                } else {
-                    val result = youtubeRemoteDataSource.searchVideosFirstPage(query)
-                    nextPageToken = result.nextPageUrl
-                    _uiState.update {
-                        it.copy(
-                            videos = result.items,
-                            isLoading = false,
-                            hasMore = result.nextPageUrl != null,
-                        )
-                    }
+                    return@launch
+                }
+                
+                val result = youtubeRemoteDataSource.searchVideosFirstPage(query)
+                nextPageToken = result.nextPageUrl
+                _uiState.update {
+                    it.copy(
+                        videos = result.items,
+                        isLoading = false,
+                        hasMore = result.nextPageUrl != null,
+                    )
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Unable to search YouTube right now. Please check your connection.") }
+                Log.e("YouTubeVM", "fetchVideos failed for query: $query", e)
+                _uiState.update { it.copy(isLoading = false, error = "Unable to reach YouTube right now. Please check your connection.") }
             }
         }
     }
@@ -274,8 +274,13 @@ constructor(
     }
 
     fun playVideo(video: HomeVideoItem) {
+        val currentVideos = if (_uiState.value.videos.any { it.id == video.id }) {
+            _uiState.value.videos
+        } else {
+            listOf(video) + _uiState.value.videos
+        }
         val mediaItems =
-            _uiState.value.videos.map { item ->
+            currentVideos.map { item ->
                 MediaItem.Remote(
                     id = item.id,
                     title = item.title,
@@ -285,9 +290,7 @@ constructor(
                     isVideo = true,
                 )
             }
-        val index = _uiState.value.videos.indexOfFirst { it.id == video.id }
-        if (index >= 0) {
-            playerController.setQueue(mediaItems, index)
-        }
+        val index = currentVideos.indexOfFirst { it.id == video.id }.coerceAtLeast(0)
+        playerController.setQueue(mediaItems, index)
     }
 }

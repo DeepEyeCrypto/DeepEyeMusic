@@ -43,3 +43,16 @@ full_logcat.txt
 google-services.json
 
 testsprite_tests/tmp/config.json
+
+# Debugging artifacts (screenshots, UI dumps, response captures) - root level only
+/*.png
+/*.jpg
+/window_dump*.xml
+/uidump*.xml
+/ui.xml
+/formatted_dump.xml
+/logcat*.txt
+/temp*.txt
+/temp_db.sqlite*
+/*.bak
+/*.jar  # stray root-level JAR libs (e.g. json-20231013.jar) should be build deps, not vendored

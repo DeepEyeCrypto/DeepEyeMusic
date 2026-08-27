@@ -120,12 +120,16 @@ class NewPipeExtractorPlugin : IExtractorBridge {
 
     private fun StreamInfoItem.toExtractorVideoItem(isShort: Boolean = false) = ExtractorVideoItem(
         id = this.url.substringAfter("v=").substringBefore("&").take(11),
-        title = this.name,
-        artist = this.uploaderName,
-        duration = this.duration,
+        title = this.name ?: "",
+        artist = this.uploaderName ?: "",
+        duration = this.duration.coerceAtLeast(0),
         thumbnailUrl = this.thumbnails.firstOrNull()?.url ?: "",
-        viewCount = this.viewCount,
-        isShort = isShort
+        viewCount = this.viewCount.coerceAtLeast(0),
+        isShort = isShort,
+        channelAvatarUrl = this.uploaderAvatars?.lastOrNull()?.url
+            ?: this.uploaderAvatars?.firstOrNull()?.url
+            ?: "",
+        channelId = this.uploaderUrl?.substringAfterLast("/") ?: ""
     )
 
     private fun StreamInfoItem.toExtractorMusicItem() = ExtractorMusicItem(

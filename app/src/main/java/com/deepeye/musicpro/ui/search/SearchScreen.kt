@@ -35,6 +35,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.search.SearchResultItem
+import com.deepeye.musicpro.domain.model.home.HomeVideoItem
+import com.deepeye.musicpro.ui.youtube.SmartTubeVideoCard
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -148,14 +150,29 @@ fun SearchScreen(
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     items(results, key = { it.id }) { item ->
-                        SearchResultRow(
-                            item = item,
-                            onClick = {
-                                viewModel.playResult(item)
-                                onNavigateToNowPlaying()
-                            },
-                            onArtistClick = { item.artist?.let(onNavigateToArtist) },
-                        )
+                        if (item.videoId != null) {
+                            SmartTubeVideoCard(
+                                video = HomeVideoItem(
+                                    id = item.videoId,
+                                    title = item.title,
+                                    channelName = item.artist ?: item.subtitle,
+                                    thumbnailUrl = item.thumbnailUrl ?: "",
+                                ),
+                                onClick = {
+                                    viewModel.playResult(item)
+                                    onNavigateToNowPlaying()
+                                },
+                            )
+                        } else {
+                            SearchResultRow(
+                                item = item,
+                                onClick = {
+                                    viewModel.playResult(item)
+                                    onNavigateToNowPlaying()
+                                },
+                                onArtistClick = { item.artist?.let(onNavigateToArtist) },
+                            )
+                        }
                     }
                 }
             }

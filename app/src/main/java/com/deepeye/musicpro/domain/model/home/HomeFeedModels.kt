@@ -39,6 +39,7 @@ data class HomeVideoItem(
     val streamUrl: String? = null,
     val lastWatchedPosition: Long = 0, // millis — for continue watching
     val progressPercent: Float = 0f,
+    val channelAvatarUrl: String = "",
 )
 
 data class HomeMusicItem(

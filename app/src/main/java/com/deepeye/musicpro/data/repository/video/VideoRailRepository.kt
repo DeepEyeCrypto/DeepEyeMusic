@@ -35,57 +35,75 @@ constructor(
                 val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
                 val hasAuth = authSettings?.youtubeAccessToken != null
 
-                if (hasAuth) {
-                    val authHome = try { authClient.getHomeFeed() } catch (e: Exception) { emptyList() }
-                    
+                val authHome = try {
+                    authClient.getHomeFeed().ifEmpty {
+                        authClient.getTrending()
+                    }.ifEmpty {
+                        authClient.search("trending music india")
+                    }
+                } catch (e: Exception) { emptyList() }
+
+                if (authHome.isNotEmpty()) {
                     return@coroutineScope buildList {
-                        if (authHome.isNotEmpty()) {
+                        add(
+                            VideoRailSection(
+                                category = VideoRailCategory.TRENDING_IN,
+                                title = "🌟 For You",
+                                subtitle = "Personalized Recommendations",
+                                items = authHome.take(20).map {
+                                    val viewStr = when {
+                                        it.viewCount >= 1_000_000 -> String.format("%.1fM views", it.viewCount / 1_000_000f)
+                                        it.viewCount >= 1_000 -> String.format("%.0fK views", it.viewCount / 1_000f)
+                                        it.viewCount > 0 -> "${it.viewCount} views"
+                                        it.uploadDate.isNotBlank() -> it.uploadDate
+                                        else -> ""
+                                    }
+                                    com.deepeye.musicpro.domain.model.home.VideoRailItem(
+                                        videoId = it.id,
+                                        title = it.title,
+                                        channelName = it.channelName,
+                                        thumbnailUrl = it.thumbnailUrl,
+                                        duration = if (it.duration > 0) "${it.duration / 60}:${(it.duration % 60).toString().padStart(2, '0')}" else "",
+                                        viewCount = viewStr,
+                                        publishedAt = it.uploadDate,
+                                        isLive = it.isLive,
+                                        isTrending = false,
+                                        category = VideoRailCategory.TRENDING_IN
+                                    )
+                                },
+                                accentColor = Color(0xFFFF6B35),
+                            )
+                        )
+                        if (authHome.size > 20) {
                             add(
                                 VideoRailSection(
-                                    category = VideoRailCategory.TRENDING_IN,
-                                    title = "🌟 For You",
-                                    subtitle = "Personalized Recommendations",
-                                    items = authHome.take(20).map {
+                                    category = VideoRailCategory.TOP_CHARTS,
+                                    title = "🎯 Discover More",
+                                    subtitle = "Fresh content",
+                                    items = authHome.drop(20).take(20).map {
+                                        val viewStr = when {
+                                            it.viewCount >= 1_000_000 -> String.format("%.1fM views", it.viewCount / 1_000_000f)
+                                            it.viewCount >= 1_000 -> String.format("%.0fK views", it.viewCount / 1_000f)
+                                            it.viewCount > 0 -> "${it.viewCount} views"
+                                            it.uploadDate.isNotBlank() -> it.uploadDate
+                                            else -> ""
+                                        }
                                         com.deepeye.musicpro.domain.model.home.VideoRailItem(
                                             videoId = it.id,
                                             title = it.title,
                                             channelName = it.channelName,
                                             thumbnailUrl = it.thumbnailUrl,
-                                            duration = "${it.duration / 60}:${(it.duration % 60).toString().padStart(2, '0')}",
-                                            viewCount = "",
-                                            publishedAt = "",
+                                            duration = if (it.duration > 0) "${it.duration / 60}:${(it.duration % 60).toString().padStart(2, '0')}" else "",
+                                            viewCount = viewStr,
+                                            publishedAt = it.uploadDate,
                                             isLive = it.isLive,
                                             isTrending = false,
-                                            category = VideoRailCategory.TRENDING_IN
+                                            category = VideoRailCategory.TOP_CHARTS
                                         )
                                     },
-                                    accentColor = Color(0xFFFF6B35),
+                                    accentColor = Color(0xFFE91E63),
                                 )
                             )
-                            if (authHome.size > 20) {
-                                add(
-                                    VideoRailSection(
-                                        category = VideoRailCategory.TOP_CHARTS,
-                                        title = "🎯 Discover More",
-                                        subtitle = "Fresh content",
-                                        items = authHome.drop(20).take(20).map {
-                                            com.deepeye.musicpro.domain.model.home.VideoRailItem(
-                                                videoId = it.id,
-                                                title = it.title,
-                                                channelName = it.channelName,
-                                                thumbnailUrl = it.thumbnailUrl,
-                                                duration = "${it.duration / 60}:${(it.duration % 60).toString().padStart(2, '0')}",
-                                                viewCount = "",
-                                                publishedAt = "",
-                                                isLive = it.isLive,
-                                                isTrending = false,
-                                                category = VideoRailCategory.TOP_CHARTS
-                                            )
-                                        },
-                                        accentColor = Color(0xFFE91E63),
-                                    )
-                                )
-                            }
                         }
                     }
                 }

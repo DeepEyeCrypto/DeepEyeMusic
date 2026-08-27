@@ -199,14 +199,20 @@ fun VideoRailCard(
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = 16.sp,
                 )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    "${item.channelName} · ${item.viewCount}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(0.45f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                val meta = listOfNotNull(
+                    item.channelName.takeIf { it.isNotBlank() },
+                    item.viewCount.takeIf { it.isNotBlank() && it != "0" && it != "0 views" }
+                ).joinToString(" · ")
+                if (meta.isNotBlank()) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        meta,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(0.6f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }

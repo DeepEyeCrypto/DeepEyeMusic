@@ -218,7 +218,8 @@ fun NavGraph(
                 onNavigateToNowPlaying = { musicId ->
                     onExpandPlayer()
                 },
-                onNavigateToSearch = { navController.navigate(Routes.Search.route) }
+                onNavigateToSearch = { navController.navigate(Routes.Search.route) },
+                onConnectAccount = { navController.navigate(Routes.YouTubeLogin.route) }
             )
         }
 

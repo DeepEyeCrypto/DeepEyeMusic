@@ -119,7 +119,7 @@ fun VideoCard(
                 }
 
                 // Duration Badge Pill (Bottom-Right)
-                if (!item.isLive) {
+                if (!item.isLive && item.duration > 0) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
@@ -167,18 +167,20 @@ fun VideoCard(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
-                    Spacer(Modifier.width(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), RoundedCornerShape(4.dp))
-                            .padding(horizontal = 5.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = item.viewCount.formatCount(),
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                    if (item.viewCount > 0) {
+                        Spacer(Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), RoundedCornerShape(4.dp))
+                                .padding(horizontal = 5.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = item.viewCount.formatCount(),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                                fontSize = 8.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
                 }
             }

@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.SpatialAudioOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -76,6 +77,7 @@ private val ShineWhite = Color.White
 fun MusicScreen(
     onNavigateToNowPlaying: (String) -> Unit,
     onNavigateToSearch: () -> Unit = {},
+    onConnectAccount: () -> Unit = {},
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -146,6 +148,13 @@ fun MusicScreen(
                     Spacer(Modifier.height(8.dp))
                 }
 
+                // YouTube account connectivity prompt — lets the user connect so the
+                // music feed is fetched from their account (by YouTube id).
+                if (!uiState.hasAuth) {
+                    MusicAccountBanner(onConnect = onConnectAccount)
+                    Spacer(Modifier.height(4.dp))
+                }
+
                 // Premium segmented tab bar
                 PremiumTabBar(
                     tabs = tabs,
@@ -163,6 +172,76 @@ fun MusicScreen(
                 1 -> LibraryTab(uiState, viewModel, onNavigateToNowPlaying, paddingValues)
             }
         }
+    }
+}
+// ─── YouTube Account Connect Banner ─────────────────────────────────────────
+/**
+ * Shown when the user hasn't connected their YouTube account yet. Tapping it opens
+ * the device-auth login so music recommendations can be fetched from the account.
+ */
+@Composable
+private fun MusicAccountBanner(onConnect: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "accountBannerScale"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .clip(RoundedCornerShape(14.dp))
+            .background(
+                Brush.horizontalGradient(
+                    listOf(
+                        ElectricViolet.copy(alpha = 0.22f),
+                        NeonCyan.copy(alpha = 0.12f)
+                    )
+                )
+            )
+            .border(
+                0.5.dp,
+                Brush.horizontalGradient(
+                    listOf(ElectricViolet.copy(alpha = 0.45f), NeonCyan.copy(alpha = 0.3f))
+                ),
+                RoundedCornerShape(14.dp)
+            )
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onConnect)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.PlayArrow,
+            contentDescription = null,
+            tint = NeonCyan,
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                "Connect YouTube account",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+            Text(
+                "Personalize your Discovery and fetch music from your account by ID",
+                fontSize = 11.sp,
+                color = TextSecondary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Icon(
+            imageVector = Icons.Rounded.ChevronRight,
+            contentDescription = null,
+            tint = TextTertiary,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
 

@@ -7,7 +7,9 @@ data class ExtractorVideoItem(
     val duration: Long,
     val thumbnailUrl: String,
     val viewCount: Long = 0,
-    val isShort: Boolean = false
+    val isShort: Boolean = false,
+    val channelAvatarUrl: String = "",
+    val channelId: String = ""
 )
 
 data class ExtractorMusicItem(

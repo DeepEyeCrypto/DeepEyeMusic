@@ -64,6 +64,38 @@ constructor(
     private val _isBackgroundPlaybackEnabled = MutableStateFlow(false)
     val isBackgroundPlaybackEnabled: StateFlow<Boolean> = _isBackgroundPlaybackEnabled.asStateFlow()
 
+    private val _audioBoostLevel = MutableStateFlow(0)
+    val audioBoostLevel: StateFlow<Int> = _audioBoostLevel.asStateFlow()
+
+    fun setAudioBoostLevel(level: Int) {
+        _audioBoostLevel.value = level
+        try {
+            val volumeMultiplier = when (level) {
+                3 -> 1.25f
+                6 -> 1.5f
+                12 -> 2.0f
+                else -> 1.0f
+            }
+            playerController.player.volume = volumeMultiplier.coerceIn(0f, 2.0f)
+        } catch (e: Exception) {
+            // Safe fallback
+        }
+    }
+
+    private val _subtitlesEnabled = MutableStateFlow(false)
+    val subtitlesEnabled: StateFlow<Boolean> = _subtitlesEnabled.asStateFlow()
+
+    fun toggleSubtitles() {
+        _subtitlesEnabled.value = !_subtitlesEnabled.value
+    }
+
+    private val _showStatsForNerds = MutableStateFlow(false)
+    val showStatsForNerds: StateFlow<Boolean> = _showStatsForNerds.asStateFlow()
+
+    fun toggleStatsForNerds() {
+        _showStatsForNerds.value = !_showStatsForNerds.value
+    }
+
     fun enableBackgroundPlayback() {
         _isBackgroundPlaybackEnabled.value = true
         playerController.enableBackgroundPlayback(true)

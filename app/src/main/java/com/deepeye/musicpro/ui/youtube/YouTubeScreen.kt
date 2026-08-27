@@ -1166,6 +1166,8 @@ fun VideoGridContent(
 fun SmartTubeVideoCard(
     video: HomeVideoItem,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    progressFraction: Float? = null,
 ) {
     val neonCyan = Color(0xFF00D2FF)
     val neonPurple = Color(0xFF7C4DFF)
@@ -1197,7 +1199,7 @@ fun SmartTubeVideoCard(
     )
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .graphicsLayer {
                 scaleX = scale
@@ -1286,105 +1288,147 @@ fun SmartTubeVideoCard(
                 }
             }
 
-            // Duration Badge (Bottom-Right)
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(8.dp)
-                    .background(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.65f), RoundedCornerShape(6.dp))
-                    .padding(horizontal = 6.dp, vertical = 3.dp),
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+            // Duration Badge (Bottom-Right) — only show if duration is known
+            if (video.duration > 0) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                        .background(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.65f), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 6.dp, vertical = 3.dp),
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayCircle,
-                        contentDescription = null,
-                        tint = neonCyan,
-                        modifier = Modifier.size(11.dp),
-                    )
-                    Text(
-                        text = formatDuration(video.duration),
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayCircle,
+                            contentDescription = null,
+                            tint = neonCyan,
+                            modifier = Modifier.size(11.dp),
+                        )
+                        Text(
+                            text = formatDuration(video.duration),
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                        )
+                    }
+                }
+            }
+
+            // Watch-progress bar (Bottom-Full) — used by Continue Watching / History sections
+            if (progressFraction != null && progressFraction > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(3.dp)
+                        .align(Alignment.BottomStart)
+                        .background(Color.White.copy(alpha = 0.25f))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(progressFraction.coerceIn(0f, 1f))
+                            .fillMaxHeight()
+                            .background(Color(0xFFFF0033))
                     )
                 }
             }
         }
 
-        Row(
+        // Card metadata — title on full width, then channel + views row with avatar
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            val firstChar = video.channelName.firstOrNull()?.toString() ?: "Y"
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(CircleShape)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                neonPurple.copy(alpha = 0.25f),
-                                neonCyan.copy(alpha = 0.25f),
-                            ),
-                        ),
-                    )
-                    .border(
-                        width = 1.5.dp,
-                        brush = Brush.sweepGradient(
-                            colors = listOf(neonPurple, neonCyan, neonPurple),
-                        ),
-                        shape = CircleShape,
-                    ),
-                contentAlignment = Alignment.Center,
+            // Title — full width, 3 lines max for complete info
+            Text(
+                text = video.title,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 16.sp,
+                    letterSpacing = 0.1.sp
+                ),
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            // Channel row: avatar + channel name + dot + views/date
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = firstChar.uppercase(),
-                    color = neonCyan,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 15.sp,
-                )
-            }
-
-            Spacer(Modifier.width(12.dp))
-
-            Column {
-                Text(
-                    text = video.title,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 18.sp,
-                        letterSpacing = 0.1.sp
-                    ),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.height(4.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                val cleanChannel = video.channelName.trim().let { if (it == "." || it == "·" || it.isBlank()) "DeepEye" else it }
+                val firstChar = cleanChannel.firstOrNull()?.toString() ?: "D"
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    neonPurple.copy(alpha = 0.25f),
+                                    neonCyan.copy(alpha = 0.25f),
+                                ),
+                            ),
+                        )
+                        .border(
+                            width = 1.dp,
+                            brush = Brush.sweepGradient(
+                                colors = listOf(neonPurple, neonCyan, neonPurple),
+                            ),
+                            shape = CircleShape,
+                        ),
+                    contentAlignment = Alignment.Center,
                 ) {
+                    if (video.channelAvatarUrl.isNotBlank()) {
+                        AsyncImage(
+                            model = video.channelAvatarUrl,
+                            contentDescription = cleanChannel,
+                            modifier = Modifier.fillMaxSize().clip(CircleShape),
+                            contentScale = ContentScale.Crop,
+                        )
+                    } else {
+                        Text(
+                            text = firstChar.uppercase(),
+                            color = neonCyan,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 10.sp,
+                        )
+                    }
+                }
+
+                Spacer(Modifier.width(6.dp))
+
+                Text(
+                    text = cleanChannel,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 10.sp,
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+
+                val metaText = when {
+                    video.viewCount > 0 -> formatViews(video.viewCount)
+                    video.uploadDate.isNotBlank() -> video.uploadDate
+                    else -> ""
+                }
+                if (metaText.isNotEmpty()) {
+                    Text(" · ", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), fontSize = 9.sp)
                     Text(
-                        text = video.channelName,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false),
-                    )
-                    Text("•", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), fontSize = 10.sp)
-                    Text(
-                        text = formatViews(video.viewCount),
+                        text = metaText,
                         color = neonCyan.copy(alpha = 0.9f),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp,
+                            fontSize = 9.sp,
                         ),
                         maxLines = 1,
                     )
