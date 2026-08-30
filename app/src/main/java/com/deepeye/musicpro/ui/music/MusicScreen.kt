@@ -14,6 +14,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -334,23 +335,77 @@ private fun DiscoveryTab(
     onNavigateToNowPlaying: (String) -> Unit,
     paddingValues: PaddingValues,
 ) {
-    if (uiState.isLoading) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(start = 16.dp, top = paddingValues.calculateTopPadding() + 12.dp, end = 16.dp, bottom = 180.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+    val categories = if (uiState.hasAuth) {
+        listOf("For You", "Liked Music", "History", "Trending", "Bollywood", "Punjabi", "Romantic", "Lo-Fi", "Pop", "Hip-Hop", "Devotional")
+    } else {
+        listOf("For You", "Trending", "Bollywood", "Punjabi", "Romantic", "Lo-Fi", "Pop", "Hip-Hop", "Devotional")
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = paddingValues.calculateTopPadding())
+    ) {
+        // Category Filter Chips
+        val chipScrollState = rememberLazyListState()
+        LazyRow(
+            state = chipScrollState,
+            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth().premiumScrollHaptics(chipScrollState)
         ) {
-            items(6) {
-                ShimmerBox(
-                    Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(0.72f)
-                        .clip(RoundedCornerShape(20.dp))
-                )
+            items(categories) { category ->
+                val isSelected = uiState.selectedCategory == category
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            if (isSelected) Brush.horizontalGradient(
+                                listOf(ElectricViolet.copy(alpha = 0.4f), NeonCyan.copy(alpha = 0.25f))
+                            ) else Brush.horizontalGradient(
+                                listOf(Color.White.copy(alpha = 0.04f), Color.White.copy(alpha = 0.02f))
+                            )
+                        )
+                        .border(
+                            width = if (isSelected) 1.dp else 0.5.dp,
+                            brush = if (isSelected) Brush.horizontalGradient(
+                                listOf(ElectricViolet.copy(alpha = 0.8f), NeonCyan.copy(alpha = 0.6f))
+                            ) else Brush.horizontalGradient(
+                                listOf(Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.04f))
+                            ),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .clickable { viewModel.selectCategory(category) }
+                        .padding(horizontal = 14.dp, vertical = 7.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = category,
+                        fontSize = 12.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = if (isSelected) NeonCyan else TextSecondary
+                    )
+                }
             }
         }
-    } else if (uiState.error != null) {
+
+        if (uiState.isLoading) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(start = 14.dp, top = 8.dp, end = 14.dp, bottom = 180.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                items(6) {
+                    ShimmerBox(
+                        Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(0.72f)
+                            .clip(RoundedCornerShape(20.dp))
+                    )
+                }
+            }
+        } else if (uiState.error != null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
@@ -402,7 +457,7 @@ private fun DiscoveryTab(
             state = gridState,
             columns = GridCells.Fixed(2),
             modifier = Modifier.fillMaxSize().premiumScrollHaptics(gridState),
-            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 180.dp, top = paddingValues.calculateTopPadding() + 8.dp),
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 180.dp, top = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
@@ -436,6 +491,7 @@ private fun DiscoveryTab(
             }
         }
     }
+}
 }
 
 // ─── Library Tab ─────────────────────────────────────────────────────────────

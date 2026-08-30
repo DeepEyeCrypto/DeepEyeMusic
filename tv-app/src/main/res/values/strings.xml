@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DeepEyeMusic TV</string>
+    <string name="home">Home</string>
+    <string name="search">Search</string>
+    <string name="library">Library</string>
+    <string name="settings">Settings</string>
+    <string name="continue_watching">Continue Watching</string>
+    <string name="recommended">Recommended</string>
+    <string name="trending">Trending</string>
+    <string name="play">Play</string>
+    <string name="related_content">Related Content</string>
+    <string name="sponsorblock">SponsorBlock</string>
+    <string name="playback_speed">Playback Speed</string>
+    <string name="auto_skip_intro">Auto-skip Intro</string>
+    <string name="video_quality">Video Quality</string>
+    <string name="speed_1x">1x</string>
+    <string name="speed_1_25x">1.25x</string>
+    <string name="speed_1_5x">1.5x</string>
+    <string name="speed_2x">2x</string>
+    <string name="quality_auto">Auto</string>
+    <string name="quality_1080p">1080p</string>
+    <string name="quality_720p">720p</string>
+    <string name="quality_480p">480p</string>
+</resources>

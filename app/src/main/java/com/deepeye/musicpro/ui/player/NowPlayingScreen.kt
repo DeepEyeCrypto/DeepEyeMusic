@@ -317,6 +317,8 @@ fun NowPlayingScreen(
             }
 
     if (showDspSheet) {
+        val dspViewModel: com.deepeye.musicpro.dsp.engine.DSPViewModel = hiltViewModel()
+        val dspUiState by dspViewModel.uiState.collectAsStateWithLifecycle()
         ModalBottomSheet(
             onDismissRequest = { showDspSheet = false },
             containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -330,7 +332,10 @@ fun NowPlayingScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("DSP Master", color = MaterialTheme.colorScheme.onSurface)
-                    Switch(checked = true, onCheckedChange = {})
+                    Switch(
+                        checked = dspUiState.params.enabled,
+                        onCheckedChange = { dspViewModel.toggleMasterEnabled() }
+                    )
                 }
                 Spacer(modifier = Modifier.height(32.dp))
                 Button(onClick = { 
@@ -342,6 +347,17 @@ fun NowPlayingScreen(
                 Spacer(modifier = Modifier.height(48.dp))
             }
         }
+    }
+
+    if (showLyricsSheet) {
+        val currentLyrics by viewModel.currentLyrics.collectAsStateWithLifecycle()
+        LyricsBottomSheet(
+            lyrics = currentLyrics,
+            playbackPositionMs = playerState.position,
+            dominantColor = finalAccentColor,
+            onSeekTo = { viewModel.seekTo(it) },
+            onDismissRequest = { showLyricsSheet = false }
+        )
     }
 
     if (showInfoSheet) {
@@ -412,6 +428,7 @@ fun NowPlayingScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AudioNowPlayingLayout(
     playerState: PlayerState,
@@ -442,9 +459,6 @@ fun AudioNowPlayingLayout(
     val headerColor = if (finalBgColor.luminance() > 0.5f) Color.Black else Color.White
     val isInPipMode = com.deepeye.musicpro.ui.LocalPipMode.current
     
-    val scrollState = rememberScrollState()
-    val configuration = LocalConfiguration.current
-
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -452,353 +466,436 @@ fun AudioNowPlayingLayout(
             .navigationBarsPadding()
     ) {
         val screenHeight = maxHeight
-        // Approx height of Header (72dp) + Metadata & Controls (~368dp) + extra padding
-        val fixedControlsHeight = 460.dp 
-        val artworkHeight = androidx.compose.ui.unit.max(250.dp, screenHeight - fixedControlsHeight)
+        val isShortScreen = screenHeight < 640.dp
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 32.dp) // Premium symmetric padding
+                .then(if (isShortScreen) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                .padding(horizontal = 24.dp),
+            verticalArrangement = if (isShortScreen) Arrangement.spacedBy(12.dp) else Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-        // Header
-        if (!isInPipMode) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onNavigateBack, modifier = Modifier.size(44.dp)) {
-                Icon(Icons.Default.KeyboardArrowDown, "Close", tint = headerColor, modifier = Modifier.size(32.dp))
+            // Header
+            if (!isInPipMode) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onNavigateBack, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.KeyboardArrowDown, "Close", tint = headerColor, modifier = Modifier.size(32.dp))
+                    }
+                    Text(
+                        text = "NOW PLAYING",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 3.sp,
+                        color = headerColor.copy(alpha = 0.7f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+                        textAlign = TextAlign.Center
+                    )
+                    IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.Settings, "Settings", tint = headerColor, modifier = Modifier.size(24.dp))
+                    }
+                }
             }
-            Text(
-                text = playerState.currentItem?.title?.uppercase() ?: "NOW PLAYING",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 4.sp,
-                color = headerColor.copy(alpha = 0.85f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
-                textAlign = TextAlign.Center
-            )
-            IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(44.dp)) {
-                Icon(Icons.Default.Settings, "Settings", tint = headerColor, modifier = Modifier.size(24.dp))
+
+            // Artwork Pager (Flexible weight on normal screens, fixed height on short screens)
+            val artworkModifier = if (isShortScreen) {
+                Modifier
+                    .fillMaxWidth()
+                    .height(240.dp)
+            } else {
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
             }
-        }
-        }
 
-        Box(
-            modifier = Modifier.fillMaxWidth().height(artworkHeight).clipToBounds(),
-            contentAlignment = Alignment.Center
-        ) {
-            val innerItem = playerState.currentItem
-            if (innerItem != null) {
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
-                ) { page ->
-                    Box(contentAlignment = Alignment.Center) {
-                        val scale by animateFloatAsState(
-                            targetValue = if (page == 1) 1f else 0.85f,
-                            animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow)
-                        )
-                        // Parallax & Glow
-                        // Removed buggy Parallax Glow
+            Box(
+                modifier = artworkModifier,
+                contentAlignment = Alignment.Center
+            ) {
+                val innerItem = playerState.currentItem
+                if (innerItem != null) {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            val scale by animateFloatAsState(
+                                targetValue = if (page == 1) 1f else 0.85f,
+                                animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow)
+                            )
 
-                        BassRingGlow(
-                            fftData = fftData,
-                            dominantColor = finalAccentColor,
-                            isPlaying = playerState.isPlaying,
-                            modifier = Modifier.fillMaxWidth(0.98f).aspectRatio(1f)
-                        )
+                            BassRingGlow(
+                                fftData = fftData,
+                                dominantColor = finalAccentColor,
+                                isPlaying = playerState.isPlaying,
+                                modifier = Modifier
+                                    .fillMaxHeight(0.95f)
+                                    .aspectRatio(1f)
+                            )
 
-                        val shadowRadius by animateFloatAsState(
-                            targetValue = if (playerState.isPlaying && page == 1) 48f else 16f,
-                            animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessLow)
+                            val shadowRadius by animateFloatAsState(
+                                targetValue = if (playerState.isPlaying && page == 1) 32f else 10f,
+                                animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessLow)
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.88f)
+                                    .aspectRatio(1f)
+                                    .graphicsLayer {
+                                        scaleX = scale
+                                        scaleY = scale
+                                    }
+                                    .shadow(
+                                        elevation = shadowRadius.dp,
+                                        shape = RoundedCornerShape(28.dp),
+                                        spotColor = finalAccentColor,
+                                        ambientColor = finalAccentColor
+                                    )
+                                    .clip(RoundedCornerShape(28.dp))
+                                    .background(Brush.linearGradient(listOf(Color(0xFF2A2A35), Color(0xFF1E1E28))))
+                                    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(28.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.MusicNote,
+                                    contentDescription = null,
+                                    tint = finalAccentColor.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(72.dp)
+                                )
+                                AsyncImage(
+                                    model = innerItem.artworkUri,
+                                    contentDescription = "Album Art",
+                                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(28.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                                if (showVisualizer) {
+                                    NowPlayingVisualizerOverlay(
+                                        fftData = fftData,
+                                        dominantColor = finalAccentColor,
+                                        isPlaying = playerState.isPlaying,
+                                        modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Track Title, Artist, & Like Button Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                    com.deepeye.musicpro.ui.components.DynamicLabel(
+                        text = playerState.currentItem?.title ?: "No Track Playing",
+                        backgroundColor = finalBgColor,
+                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        useVibrancy = true
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val artistText = playerState.currentItem?.artist?.takeIf { it != "<unknown>" && it.isNotBlank() } ?: "Unknown Artist"
+                        com.deepeye.musicpro.ui.components.SecondaryLabel(
+                            text = artistText,
+                            backgroundColor = finalBgColor,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false),
+                            useVibrancy = true
                         )
 
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(0.92f)
-                                .aspectRatio(1f)
-                                .graphicsLayer {
-                                    scaleX = scale
-                                    scaleY = scale
-                                }
-                                .shadow(
-                                    elevation = shadowRadius.dp,
-                                    shape = RoundedCornerShape(32.dp),
-                                    spotColor = finalAccentColor,
-                                    ambientColor = finalAccentColor
-                                )
-                                .clip(RoundedCornerShape(32.dp))
-                                .background(Brush.linearGradient(listOf(Color(0xFF2A2A35), Color(0xFF1E1E28))))
-                                .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(32.dp)),
-                            contentAlignment = Alignment.Center
+                                .background(headerColor.copy(alpha = 0.12f), RoundedCornerShape(4.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Rounded.MusicNote,
-                                contentDescription = null,
-                                tint = finalAccentColor.copy(alpha = 0.5f),
-                                modifier = Modifier.size(100.dp)
-                            )
-                            AsyncImage(
-                                model = innerItem.artworkUri,
-                                contentDescription = "Album Art",
-                                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(32.dp)),
-                                contentScale = ContentScale.Crop
-                            )
-                            if (showVisualizer) {
-                                NowPlayingVisualizerOverlay(
-                                    fftData = fftData,
-                                    dominantColor = finalAccentColor,
-                                    isPlaying = playerState.isPlaying,
-                                    modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter)
-                                )
-                            }
+                            Text(bitrate, color = headerColor.copy(alpha = 0.7f), fontSize = 9.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
-            }
-        }
 
-        // Metadata & Controls
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp, top = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Bottom)
-        ) {
-            // Title & Artist Card
-            com.deepeye.musicpro.ui.components.GlassCard(
-                tintColor = headerColor.copy(alpha = 0.05f),
-                cornerRadius = 24.dp,
-                blurRadius = com.deepeye.musicpro.ui.theme.GlassTokens.BlurHeavy,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                // Like Button
+                val feedback by viewModel.currentSongFeedback.collectAsStateWithLifecycle()
+                val isLiked = feedback?.liked == true
+                IconButton(
+                    onClick = { viewModel.likeTrack(!isLiked) },
+                    modifier = Modifier.size(48.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        com.deepeye.musicpro.ui.components.DynamicLabel(
-                            text = playerState.currentItem?.title ?: "No Track Playing",
-                            backgroundColor = finalBgColor,
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Black,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            useVibrancy = true
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            val artistText = playerState.currentItem?.artist?.takeIf { it != "<unknown>" && it.isNotBlank() } ?: "Unknown Artist"
-                            com.deepeye.musicpro.ui.components.SecondaryLabel(
-                                text = artistText,
-                                backgroundColor = finalBgColor,
-                                style = MaterialTheme.typography.titleMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f, fill = false),
-                                useVibrancy = true
-                            )
-                            
-                            Box(
-                                modifier = Modifier
-                                    .background(headerColor.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
-                                    .padding(horizontal = 5.dp, vertical = 2.dp)
-                            ) {
-                                Text(bitrate, color = headerColor.copy(alpha = 0.6f), fontSize = 8.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                    // Like Button
-                    val feedback by viewModel.currentSongFeedback.collectAsStateWithLifecycle()
-                    val isLiked = feedback?.liked == true
-                    IconButton(onClick = { viewModel.likeTrack(!isLiked) }) {
-                        Icon(
-                            imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Like",
-                            tint = if (isLiked) finalAccentColor else headerColor.copy(alpha = 0.5f)
-                        )
-                    }
-                }
-            }
-
-            // Seekbar Card
-            com.deepeye.musicpro.ui.components.GlassCard(
-                tintColor = headerColor.copy(alpha = 0.05f),
-                cornerRadius = 24.dp,
-                blurRadius = com.deepeye.musicpro.ui.theme.GlassTokens.BlurHeavy,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                    GlassSlider(
-                        value = playerState.position.toFloat(),
-                        onValueChange = { viewModel.seekTo(it.toLong()) },
-                        valueRange = 0f..playerState.duration.toFloat().coerceAtLeast(1f),
-                        accentColor = finalAccentColor,
-                        modifier = Modifier.fillMaxWidth()
+                    Icon(
+                        imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Like",
+                        tint = if (isLiked) finalAccentColor else headerColor.copy(alpha = 0.65f),
+                        modifier = Modifier.size(28.dp)
                     )
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(TimeFormatter.formatDuration(playerState.position), style = MaterialTheme.typography.labelSmall, color = headerColor.copy(alpha = 0.5f))
-                        Text(TimeFormatter.formatDuration(playerState.duration), style = MaterialTheme.typography.labelSmall, color = headerColor.copy(alpha = 0.5f))
-                    }
                 }
             }
 
-            // Main Controls Capsule
-            com.deepeye.musicpro.ui.components.GlassCard(
-                tintColor = headerColor.copy(alpha = 0.05f),
-                cornerRadius = 48.dp, // Pill shape
-                blurRadius = com.deepeye.musicpro.ui.theme.GlassTokens.BlurHeavy,
-                modifier = Modifier.fillMaxWidth()
+            // Seekbar
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
             ) {
-                androidx.compose.runtime.CompositionLocalProvider(LocalContentColor provides headerColor) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp, horizontal = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        val isShuffleActive = playerState.shuffleMode == com.deepeye.musicpro.domain.model.ShuffleMode.ON
-                        val isRepeatActive = playerState.repeatMode != com.deepeye.musicpro.domain.model.RepeatMode.NONE
-
-                        StatefulTactileButton(
-                            isActive = isShuffleActive,
-                            onClick = { viewModel.toggleShuffle() },
-                            activeColor = finalAccentColor
-                        ) {
-                            Icon(Icons.Default.Shuffle, "Shuffle", tint = if (isShuffleActive) finalAccentColor else androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f), modifier = Modifier.size(24.dp))
-                        }
-                        TactileIconButton(onClick = { viewModel.previous() }, modifier = Modifier.size(56.dp)) {
-                            Icon(Icons.Default.SkipPrevious, "Previous", modifier = Modifier.size(40.dp))
-                        }
-                        PlayPauseButton(
-                            isPlaying = playerState.isPlaying,
-                            onClick = { viewModel.togglePlayPause() },
-                            accentColor = finalAccentColor
-                        )
-                        TactileIconButton(onClick = { viewModel.next() }, modifier = Modifier.size(56.dp)) {
-                            Icon(Icons.Default.SkipNext, "Next", modifier = Modifier.size(40.dp))
-                        }
-                        StatefulTactileButton(
-                            isActive = isRepeatActive,
-                            onClick = { viewModel.toggleRepeat() },
-                            activeColor = finalAccentColor
-                        ) {
-                            Icon(
-                                imageVector = if (playerState.repeatMode == com.deepeye.musicpro.domain.model.RepeatMode.ONE) Icons.Default.RepeatOne else Icons.Default.Repeat,
-                                contentDescription = "Repeat",
-                                tint = if (isRepeatActive) finalAccentColor else androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
+                GlassSlider(
+                    value = playerState.position.toFloat(),
+                    onValueChange = { viewModel.seekTo(it.toLong()) },
+                    valueRange = 0f..playerState.duration.toFloat().coerceAtLeast(1f),
+                    accentColor = finalAccentColor,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = TimeFormatter.formatDuration(playerState.position),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = headerColor.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        text = TimeFormatter.formatDuration(playerState.duration),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = headerColor.copy(alpha = 0.6f)
+                    )
                 }
             }
 
-            // SmartTube Quick Tools (Audio Mode)
+            // Main Playback Controls
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val isShuffleActive = playerState.shuffleMode == com.deepeye.musicpro.domain.model.ShuffleMode.ON
+                val isRepeatActive = playerState.repeatMode != com.deepeye.musicpro.domain.model.RepeatMode.NONE
+
+                TactileIconButton(onClick = { viewModel.toggleShuffle() }, modifier = Modifier.size(48.dp)) {
+                    Icon(
+                        Icons.Default.Shuffle,
+                        contentDescription = "Shuffle",
+                        tint = if (isShuffleActive) finalAccentColor else headerColor.copy(alpha = 0.6f),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                TactileIconButton(onClick = { viewModel.previous() }, modifier = Modifier.size(54.dp)) {
+                    Icon(Icons.Default.SkipPrevious, "Previous", tint = headerColor, modifier = Modifier.size(38.dp))
+                }
+                PlayPauseButton(
+                    isPlaying = playerState.isPlaying,
+                    onClick = { viewModel.togglePlayPause() },
+                    accentColor = finalAccentColor
+                )
+                TactileIconButton(onClick = { viewModel.next() }, modifier = Modifier.size(54.dp)) {
+                    Icon(Icons.Default.SkipNext, "Next", tint = headerColor, modifier = Modifier.size(38.dp))
+                }
+                TactileIconButton(onClick = { viewModel.toggleRepeat() }, modifier = Modifier.size(48.dp)) {
+                    Icon(
+                        imageVector = if (playerState.repeatMode == com.deepeye.musicpro.domain.model.RepeatMode.ONE) Icons.Default.RepeatOne else Icons.Default.Repeat,
+                        contentDescription = "Repeat",
+                        tint = if (isRepeatActive) finalAccentColor else headerColor.copy(alpha = 0.6f),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            // Quick Tools Panel: 2 Balanced Rows (5 buttons each, all fit perfectly on screen)
             val audioBoostLevel by viewModel.audioBoostLevel.collectAsStateWithLifecycle()
             val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsStateWithLifecycle()
 
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp, bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                SmartTubePlaybackControlCard(
-                    icon = Icons.Default.Speed,
-                    title = "SPEED",
-                    value = "${playerState.playbackSpeed}x",
-                    accentColor = finalAccentColor,
-                    isActive = playerState.playbackSpeed != 1.0f,
-                    modifier = Modifier.weight(1f),
-                    onClick = onOpenSpeedDialog
-                )
-                SmartTubePlaybackControlCard(
-                    icon = Icons.AutoMirrored.Filled.VolumeUp,
-                    title = "BOOST",
-                    value = if (audioBoostLevel > 0) "+${audioBoostLevel}dB" else "0dB",
-                    accentColor = finalAccentColor,
-                    isActive = audioBoostLevel > 0,
-                    modifier = Modifier.weight(1f),
-                    onClick = onOpenAudioBoostDialog
-                )
-                SmartTubePlaybackControlCard(
-                    icon = Icons.Default.Bedtime,
-                    title = "SLEEP",
-                    value = sleepTimerMs?.let { "${it / 60000}m" } ?: "Off",
-                    accentColor = finalAccentColor,
-                    isActive = sleepTimerMs != null,
-                    modifier = Modifier.weight(1f),
-                    onClick = onOpenSleepTimerDialog
-                )
-                SmartTubePlaybackControlCard(
-                    icon = Icons.Default.PowerSettingsNew,
-                    title = "OLED",
-                    value = "Off",
-                    accentColor = finalAccentColor,
-                    isActive = false,
-                    modifier = Modifier.weight(1f),
-                    onClick = onEnableOledMode
-                )
-            }
-
-            // Action Row Capsule
-            com.deepeye.musicpro.ui.components.GlassCard(
-                tintColor = headerColor.copy(alpha = 0.05f),
-                cornerRadius = 32.dp,
-                blurRadius = com.deepeye.musicpro.ui.theme.GlassTokens.BlurHeavy,
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp).imePadding()
-            ) {
+                // Row 1: Speed, Boost, Sleep, EQ, Lyrics
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onOpenInfo) {
-                    Icon(Icons.Outlined.Info, "Audio Info", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    QuickToolButton(
+                        icon = Icons.Default.Speed,
+                        label = "${playerState.playbackSpeed}x",
+                        isActive = playerState.playbackSpeed != 1.0f,
+                        accentColor = finalAccentColor,
+                        headerColor = headerColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenSpeedDialog
+                    )
+                    QuickToolButton(
+                        icon = Icons.AutoMirrored.Filled.VolumeUp,
+                        label = if (audioBoostLevel > 0) "+${audioBoostLevel}dB" else "Boost",
+                        isActive = audioBoostLevel > 0,
+                        accentColor = finalAccentColor,
+                        headerColor = headerColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenAudioBoostDialog
+                    )
+                    QuickToolButton(
+                        icon = Icons.Default.Bedtime,
+                        label = sleepTimerMs?.let { "${it / 60000}m" } ?: "Sleep",
+                        isActive = sleepTimerMs != null,
+                        accentColor = finalAccentColor,
+                        headerColor = headerColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenSleepTimerDialog
+                    )
+                    QuickToolButton(
+                        icon = Icons.Default.Tune,
+                        label = "EQ",
+                        isActive = false,
+                        accentColor = finalAccentColor,
+                        headerColor = headerColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenDsp
+                    )
+                    QuickToolButton(
+                        icon = Icons.Default.MusicNote,
+                        label = "Lyrics",
+                        isActive = false,
+                        accentColor = finalAccentColor,
+                        headerColor = headerColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenLyrics
+                    )
                 }
-                IconButton(onClick = onToggleVisualizer) {
-                    Icon(Icons.Default.GraphicEq, "Visualizer", tint = if (showVisualizer) finalAccentColor else androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
-                }
-                IconButton(onClick = { if (!isDownloading) viewModel.downloadCurrentTrack() }) {
-                    if (isDownloading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = finalAccentColor,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Icon(Icons.Default.Download, "Download", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
-                    }
-                }
-                IconButton(onClick = onOpenDsp) {
-                    Icon(Icons.Default.Tune, "DSP", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
-                }
-                IconButton(onClick = onOpenLyrics) {
-                    Icon(Icons.Default.MusicNote, "Lyrics", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
-                }
-                IconButton(onClick = onOpenQueue) {
-                    Icon(Icons.AutoMirrored.Filled.QueueMusic, "Queue", tint = androidx.compose.material3.MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+
+                // Row 2: Queue, Visualizer, Download, Info, OLED
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    QuickToolButton(
+                        icon = Icons.AutoMirrored.Filled.QueueMusic,
+                        label = "Queue",
+                        isActive = false,
+                        accentColor = finalAccentColor,
+                        headerColor = headerColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenQueue
+                    )
+                    QuickToolButton(
+                        icon = Icons.Default.GraphicEq,
+                        label = "Visual",
+                        isActive = showVisualizer,
+                        accentColor = finalAccentColor,
+                        headerColor = headerColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = onToggleVisualizer
+                    )
+                    QuickToolButton(
+                        icon = Icons.Default.Download,
+                        label = if (isDownloading) "Saving" else "Save",
+                        isActive = isDownloading,
+                        accentColor = finalAccentColor,
+                        headerColor = headerColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = { if (!isDownloading) viewModel.downloadCurrentTrack() }
+                    )
+                    QuickToolButton(
+                        icon = Icons.Outlined.Info,
+                        label = "Info",
+                        isActive = false,
+                        accentColor = finalAccentColor,
+                        headerColor = headerColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenInfo
+                    )
+                    QuickToolButton(
+                        icon = Icons.Default.PowerSettingsNew,
+                        label = "OLED",
+                        isActive = false,
+                        accentColor = finalAccentColor,
+                        headerColor = headerColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = onEnableOledMode
+                    )
                 }
             }
         }
-        }
+    }
+}
+
+@Composable
+private fun QuickToolButton(
+    icon: ImageVector,
+    label: String,
+    isActive: Boolean,
+    accentColor: Color,
+    headerColor: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.92f else 1f, spring(stiffness = 500f, dampingRatio = 0.7f))
+
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = if (isActive) accentColor.copy(alpha = 0.2f) else headerColor.copy(alpha = 0.08f),
+        border = androidx.compose.foundation.BorderStroke(
+            0.5.dp,
+            if (isActive) accentColor.copy(alpha = 0.75f) else headerColor.copy(alpha = 0.12f)
+        ),
+        modifier = modifier
+            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp, horizontal = 2.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = if (isActive) accentColor else headerColor.copy(alpha = 0.8f),
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 10.sp,
+                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium
+                ),
+                color = if (isActive) accentColor else headerColor.copy(alpha = 0.85f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -1105,7 +1202,8 @@ fun VideoNowPlayingLayout(
                         onClick = { viewModel.likeTrack(!isLiked) }
                     )
                     InteractionButton(icon = Icons.Default.ThumbDown, label = "Dislike", onClick = {
-                        android.widget.Toast.makeText(context, "Disliked", android.widget.Toast.LENGTH_SHORT).show()
+                        viewModel.dislikeTrack()
+                        android.widget.Toast.makeText(context, "Marked as Disliked", android.widget.Toast.LENGTH_SHORT).show()
                     })
                     InteractionButton(icon = Icons.Default.Share, label = "Share", onClick = {
                         val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
@@ -1529,15 +1627,26 @@ private fun StatefulTactileButton(isActive: Boolean, onClick: () -> Unit, active
 private fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit, accentColor: Color) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.85f else 1f, spring(stiffness = 400f, dampingRatio = 0.7f))
-    val glow by animateFloatAsState(if (isPlaying) 1.2f else 1.0f, spring(stiffness = 200f))
-    
-    Box(modifier = Modifier.size(88.dp).graphicsLayer(scaleX = scale, scaleY = scale), contentAlignment = Alignment.Center) {
-        androidx.compose.foundation.Canvas(modifier = Modifier.size(128.dp).graphicsLayer(scaleX = glow, scaleY = glow)) {
+    val scale by animateFloatAsState(if (isPressed) 0.88f else 1f, spring(stiffness = 400f, dampingRatio = 0.7f))
+    val glow by animateFloatAsState(if (isPlaying) 1.15f else 1.0f, spring(stiffness = 200f))
+    val isDarkAccent = accentColor.luminance() < 0.5f
+    val iconColor = if (isDarkAccent) Color.White else Color.Black
+
+    Box(
+        modifier = Modifier
+            .size(72.dp)
+            .graphicsLayer(scaleX = scale, scaleY = scale),
+        contentAlignment = Alignment.Center
+    ) {
+        androidx.compose.foundation.Canvas(
+            modifier = Modifier
+                .size(104.dp)
+                .graphicsLayer(scaleX = glow, scaleY = glow)
+        ) {
             drawCircle(
                 brush = androidx.compose.ui.graphics.Brush.radialGradient(
                     colors = listOf(
-                        accentColor.copy(alpha = if (isPlaying) 0.5f else 0.2f),
+                        accentColor.copy(alpha = if (isPlaying) 0.45f else 0.15f),
                         accentColor.copy(alpha = 0f)
                     )
                 ),
@@ -1545,14 +1654,19 @@ private fun PlayPauseButton(isPlaying: Boolean, onClick: () -> Unit, accentColor
             )
         }
         Box(
-            modifier = Modifier.size(92.dp).clip(CircleShape).background(accentColor).clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
+            modifier = Modifier
+                .size(68.dp)
+                .shadow(elevation = 12.dp, shape = CircleShape, spotColor = accentColor, ambientColor = accentColor)
+                .clip(CircleShape)
+                .background(accentColor)
+                .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayCircle,
-                contentDescription = "Play/Pause",
-                modifier = Modifier.size(56.dp),
-                tint = Color.Black // Contrast against accent color
+                imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                contentDescription = if (isPlaying) "Pause" else "Play",
+                modifier = Modifier.size(38.dp),
+                tint = iconColor
             )
         }
     }

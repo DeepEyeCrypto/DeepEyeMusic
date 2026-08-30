@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deepeye.musicpro.data.prefs.SettingsDataStore
 import com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient
+import com.deepeye.musicpro.data.source.remote.youtube.MusicFilter
 import com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
 import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.Song
@@ -27,6 +28,7 @@ import javax.inject.Inject
 data class MusicUiState(
     val recommendedMusic: List<HomeMusicItem> = emptyList(),
     val localSongs: List<Song> = emptyList(),
+    val selectedCategory: String = "For You",
     val isLoading: Boolean = false,
     val error: String? = null,
     val hasAuth: Boolean = false,
@@ -102,29 +104,74 @@ constructor(
         }
     }
 
-    fun loadRecommendations() {
+    fun selectCategory(category: String) {
+        if (_uiState.value.selectedCategory == category) return
+        _uiState.value = _uiState.value.copy(selectedCategory = category)
+        loadRecommendations(category)
+    }
+
+    fun loadRecommendations(category: String = _uiState.value.selectedCategory) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
                 val auth = _uiState.value.hasAuth
-                Log.d(TAG, "loadRecommendations (hasAuth=$auth)")
-                val music =
-                    if (auth) {
-                        // Pull a personally-aligned feed from the connected YouTube account.
-                        val accountMusic = authClient.getMusicFeed()
-                        if (accountMusic.isNotEmpty()) {
-                            accountMusic.map { it.toHomeMusic() }
+                Log.d(TAG, "loadRecommendations (hasAuth=$auth, category=$category)")
+                val rawList: List<HomeMusicItem> = when (category) {
+                    "For You" -> {
+                        val trending = youtubeRemoteDataSource.searchMusic("trending songs official audio video")
+                        if (auth) {
+                            val accountMusic = authClient.getMusicFeed()
+                            val personal = accountMusic
+                                .map { it.toHomeMusic() }
+                                .filter { MusicFilter.isMusicTrack(it.title, it.artist, it.duration) }
+                            (personal + trending).distinctBy { it.id }
                         } else {
-                            Log.w(TAG, "Authenticated music feed empty; falling back to public search")
-                            youtubeRemoteDataSource.searchMusic("trending music")
+                            trending
                         }
-                    } else {
-                        youtubeRemoteDataSource.searchMusic("trending music")
                     }
-                _uiState.value = _uiState.value.copy(recommendedMusic = music, isLoading = false)
+                    "Liked", "Liked Music" -> {
+                        if (auth) {
+                            val liked = authClient.getLikedMusic()
+                            val filtered = liked
+                                .map { it.toHomeMusic() }
+                                .filter { MusicFilter.isMusicTrack(it.title, it.artist, it.duration) }
+                            filtered.ifEmpty { youtubeRemoteDataSource.searchMusic("top hit songs official audio") }
+                        } else {
+                            youtubeRemoteDataSource.searchMusic("top hit songs official audio")
+                        }
+                    }
+                    "History" -> {
+                        if (auth) {
+                            val history = authClient.getMusicHistory()
+                            val filtered = history
+                                .map { it.toHomeMusic() }
+                                .filter { MusicFilter.isMusicTrack(it.title, it.artist, it.duration) }
+                            filtered.ifEmpty { youtubeRemoteDataSource.searchMusic("latest hindi songs audio") }
+                        } else {
+                            youtubeRemoteDataSource.searchMusic("latest hindi songs audio")
+                        }
+                    }
+                    "Trending" -> youtubeRemoteDataSource.searchMusic("trending songs official audio video")
+                    "Bollywood" -> youtubeRemoteDataSource.searchMusic("latest bollywood songs hindi hits official audio")
+                    "Punjabi" -> youtubeRemoteDataSource.searchMusic("trending punjabi songs latest hits")
+                    "Romantic" -> youtubeRemoteDataSource.searchMusic("romantic hindi love songs audio")
+                    "Lo-Fi" -> youtubeRemoteDataSource.searchMusic("hindi lofi chill songs audio")
+                    "Pop" -> youtubeRemoteDataSource.searchMusic("top pop songs global hits")
+                    "Hip-Hop" -> youtubeRemoteDataSource.searchMusic("trending hip hop rap songs")
+                    "Devotional" -> youtubeRemoteDataSource.searchMusic("hindi bhakti bhajan devotional songs")
+                    else -> youtubeRemoteDataSource.searchMusic("$category songs official audio")
+                }
+                val music = rawList.filter { MusicFilter.isMusicTrack(it.title, it.artist, it.duration) }
+                _uiState.value = _uiState.value.copy(
+                    recommendedMusic = if (music.isNotEmpty()) music else rawList,
+                    isLoading = false
+                )
             } catch (e: Exception) {
                 Log.e(TAG, "loadRecommendations failed", e)
-                _uiState.value = _uiState.value.copy(isLoading = false, error = "Couldn't load recommendations. Check your connection and retry.")
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Couldn't load songs. Check your connection and retry."
+                )
             }
         }
     }

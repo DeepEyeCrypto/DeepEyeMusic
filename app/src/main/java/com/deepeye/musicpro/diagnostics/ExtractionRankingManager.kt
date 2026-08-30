@@ -20,7 +20,7 @@ class ExtractionRankingManager @Inject constructor(
     }
 
     enum class Layer(val defaultPriority: Int) {
-        NEWPIPE(10),
+        SMARTTUBE(10),
         ALT_EXTRACTOR(9),
         PIPED(8),
         INVIDIOUS(7),

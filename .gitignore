@@ -50,9 +50,17 @@ testsprite_tests/tmp/config.json
 /window_dump*.xml
 /uidump*.xml
 /ui.xml
+/*dump*.xml
 /formatted_dump.xml
 /logcat*.txt
 /temp*.txt
 /temp_db.sqlite*
 /*.bak
 /*.jar  # stray root-level JAR libs (e.g. json-20231013.jar) should be build deps, not vendored
+/*.pb
+/*.py
+/*.sh
+/TestClient.kt
+/test_*.kt
+/test_*.txt
+/workspace/

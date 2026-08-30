@@ -21,7 +21,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
-fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
+fun PlaylistScreen(
+    onNavigateToPlaylist: (Long) -> Unit = {},
+    viewModel: PlaylistViewModel = hiltViewModel()
+) {
     val playlists by viewModel.playlists.collectAsStateWithLifecycle()
     var showCreateDialog by remember { mutableStateOf(false) }
     var newPlaylistName by remember { mutableStateOf("") }
@@ -48,7 +51,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(playlists, key = { it.id }) { playlist ->
-                    Card(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable { }) {
+                    Card(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable { onNavigateToPlaylist(playlist.id) }) {
                         Column(Modifier.padding(16.dp)) {
                             Text(playlist.name, style = MaterialTheme.typography.titleSmall)
                             Text(

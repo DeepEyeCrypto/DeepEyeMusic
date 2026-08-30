@@ -20,8 +20,8 @@ android {
         applicationId = "com.deepeye.musicpro"
         minSdk = 24
         targetSdk = 35
-        versionCode = 30037
-        versionName = "3.0.1.27"
+        versionCode = 30038
+        versionName = "3.0.1.28"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -178,6 +178,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.3.0")
     implementation("androidx.media3:media3-exoplayer-dash:1.3.0")
     implementation("androidx.media3:media3-exoplayer-hls:1.3.0")
+    implementation("androidx.media3:media3-datasource-okhttp:1.3.0")
     implementation("androidx.media3:media3-session:1.3.0")
     implementation("androidx.media3:media3-ui:1.3.0")
     implementation("androidx.media:media:1.7.0")
@@ -201,6 +202,10 @@ dependencies {
     implementation(libs.haze.compose)
     implementation(libs.liquidglass)
 
+    // Mobile optimization: Chrome Custom Tabs (in-app OAuth) + secure token storage (Keystore)
+    implementation(libs.androidx.browser)
+    implementation(libs.security.crypto)
+
 
 
     // LeakCanary (debug only)
@@ -210,8 +215,7 @@ dependencies {
     implementation(libs.paging.runtime)
     implementation(libs.paging.compose)
 
-    // NewPipe Extractor (primary) and YouTube Extractor (fallback)
-    implementation(libs.newpipe.extractor.kmp)
+    // SmartTube-style Innertube client (primary) and YouTube Extractor (fallback)
     implementation(libs.okhttp)
     implementation("io.github.ajaydhattarwal:youtube-extractor-android:1.0.2")
 

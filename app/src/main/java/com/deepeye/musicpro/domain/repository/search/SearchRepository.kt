@@ -62,14 +62,14 @@ constructor(
                             } catch (e: Exception) {
                                 android.util.Log.e(
                                     "SearchRepo",
-                                    "ContentFetcher failed, falling back to NewPipe: ${e.message}",
+                                    "ContentFetcher failed, falling back to Innertube: ${e.message}",
                                     e
                                 )
-                                fetchFromNewPipe(query, filter)
+                                fetchFromInnertubeDataSource(query, filter)
                             }
                         } else {
-                            android.util.Log.d("SearchRepo", "YOUTUBE_API_KEY is empty, calling NewPipe directly...")
-                            fetchFromNewPipe(query, filter)
+                            android.util.Log.d("SearchRepo", "YOUTUBE_API_KEY is empty, calling Innertube directly...")
+                            fetchFromInnertubeDataSource(query, filter)
                         }
 
                     android.util.Log.d("SearchRepo", "Fetched ${fetched.size} items from remote source")
@@ -104,12 +104,12 @@ constructor(
             merged
         }
 
-    private suspend fun fetchFromNewPipe(
+    private suspend fun fetchFromInnertubeDataSource(
         query: String,
         filter: SearchFilter,
     ): List<VideoItem> {
         return try {
-            android.util.Log.d("SearchRepo", "fetchFromNewPipe query='$query' filter=$filter")
+            android.util.Log.d("SearchRepo", "fetchFromInnertubeDataSource query='$query' filter=$filter")
             if (filter == SearchFilter.VIDEOS) {
                 youtubeRemoteDataSource.searchVideos("$query music video").map { video ->
                     VideoItem(
@@ -143,7 +143,7 @@ constructor(
                 }
             }
         } catch (e: Exception) {
-            android.util.Log.e("SearchRepo", "fetchFromNewPipe failed: ${e.message}", e)
+            android.util.Log.e("SearchRepo", "fetchFromInnertubeDataSource failed: ${e.message}", e)
             emptyList()
         }
     }

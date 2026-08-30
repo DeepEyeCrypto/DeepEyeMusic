@@ -56,7 +56,9 @@ constructor(
 @Composable
 fun DownloadsScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToNowPlaying: () -> Unit = {},
     viewModel: DownloadsViewModel = hiltViewModel(),
+    playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel(),
 ) {
     val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
     val completedDownloads by viewModel.completedDownloads.collectAsStateWithLifecycle()
@@ -90,7 +92,7 @@ fun DownloadsScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        imageVector = Icons.Rounded.DownloadDone,
                         contentDescription = "No Downloads",
                         tint = Color.White.copy(alpha = 0.5f),
                         modifier = Modifier.size(64.dp),
@@ -174,6 +176,18 @@ fun DownloadsScreen(
                     }
                     items(completedDownloads) { item ->
                         Card(
+                            onClick = {
+                                playerViewModel.playMedia(
+                                    com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                                        id = item.videoId ?: item.id,
+                                        title = item.title,
+                                        artist = item.artist ?: item.subtitle,
+                                        artworkUri = item.artworkUrl?.let { android.net.Uri.parse(it) },
+                                        duration = 0L
+                                    )
+                                )
+                                onNavigateToNowPlaying()
+                            },
                             colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f)),
                             modifier = Modifier.fillMaxWidth(),
                         ) {

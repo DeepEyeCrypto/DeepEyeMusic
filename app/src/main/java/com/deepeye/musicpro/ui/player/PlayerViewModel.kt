@@ -271,6 +271,29 @@ constructor(
         }
     }
 
+    fun dislikeTrack() {
+        val currentItem = playerState.value.currentItem ?: return
+        val currentId = currentItem.id
+        viewModelScope.launch {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                tasteProfileRepository.recordFeedback(currentId, liked = false, dontPlayAgain = true)
+                recommendationEngine.trackListenEvent(
+                    videoId = currentId,
+                    title = currentItem.title,
+                    artist = currentItem.artist,
+                    channelId = "",
+                    listenDurationMs = 1000L,
+                    totalDurationMs = 1000L,
+                    wasSkipped = true,
+                    wasLiked = false,
+                    wasDisliked = true,
+                    wasAddedToPlaylist = false,
+                    wasReplayed = false
+                )
+            }
+        }
+    }
+
     fun blockTrack() {
         val currentId = playerState.value.currentItem?.id ?: return
         viewModelScope.launch {

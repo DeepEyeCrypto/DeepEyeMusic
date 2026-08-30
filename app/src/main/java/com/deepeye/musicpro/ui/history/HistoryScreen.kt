@@ -69,7 +69,9 @@ class HistoryViewModel @Inject constructor(
 @Composable
 fun HistoryScreen(
     onNavigateBack: () -> Unit,
-    viewModel: HistoryViewModel = hiltViewModel()
+    onNavigateToNowPlaying: () -> Unit = {},
+    viewModel: HistoryViewModel = hiltViewModel(),
+    playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel()
 ) {
     val playbacks by viewModel.recentPlaybacks.collectAsStateWithLifecycle()
     val videos by viewModel.recentVideos.collectAsStateWithLifecycle()
@@ -111,7 +113,22 @@ fun HistoryScreen(
                         contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
                         items(videos) { video ->
-                            VideoHistoryCard(video)
+                            VideoHistoryCard(
+                                video = video,
+                                onClick = {
+                                    playerViewModel.playMedia(
+                                        com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                                            id = video.videoId,
+                                            title = video.title,
+                                            artist = "",
+                                            artworkUri = video.thumbnailUri?.let { android.net.Uri.parse(it) },
+                                            duration = video.durationMs,
+                                            isVideo = true
+                                        )
+                                    )
+                                    onNavigateToNowPlaying()
+                                }
+                            )
                         }
                     }
                 }
@@ -127,7 +144,22 @@ fun HistoryScreen(
                     )
                 }
                 items(playbacks) { playback ->
-                    PlaybackHistoryRow(playback)
+                    PlaybackHistoryRow(
+                        playback = playback,
+                        onClick = {
+                            playerViewModel.playMedia(
+                                com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                                    id = playback.mediaId,
+                                    title = playback.title,
+                                    artist = playback.artist,
+                                    artworkUri = playback.artworkUri?.let { android.net.Uri.parse(it) },
+                                    duration = playback.totalDurationMs,
+                                    isVideo = false
+                                )
+                            )
+                            onNavigateToNowPlaying()
+                        }
+                    )
                 }
             }
         }
@@ -135,7 +167,10 @@ fun HistoryScreen(
 }
 
 @Composable
-fun VideoHistoryCard(video: VideoHistoryEntity) {
+fun VideoHistoryCard(
+    video: VideoHistoryEntity,
+    onClick: () -> Unit = {}
+) {
     SmartTubeVideoCard(
         video = HomeVideoItem(
             id = video.videoId,
@@ -144,18 +179,21 @@ fun VideoHistoryCard(video: VideoHistoryEntity) {
             thumbnailUrl = video.thumbnailUri ?: "",
             duration = video.durationMs / 1000,
         ),
-        onClick = { /* Restore video */ },
+        onClick = onClick,
         modifier = Modifier.width(280.dp),
         progressFraction = video.completionPercent / 100f,
     )
 }
 
 @Composable
-fun PlaybackHistoryRow(playback: PlaybackHistoryEntity) {
+fun PlaybackHistoryRow(
+    playback: PlaybackHistoryEntity,
+    onClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Restore song */ }
+            .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -182,7 +220,7 @@ fun PlaybackHistoryRow(playback: PlaybackHistoryEntity) {
                 overflow = TextOverflow.Ellipsis
             )
         }
-        IconButton(onClick = { /* Play */ }) {
+        IconButton(onClick = onClick) {
             Icon(Icons.Default.PlayCircle, "Play", tint = Color.White)
         }
     }

@@ -32,7 +32,7 @@ data class ExtractorStreamResult(
     val container: String = "",
     val quality: String = "",
     val isDrm: Boolean = false,
-    val extractorName: String = "NewPipe"
+    val extractorName: String = "SmartTubeInnertube"
 )
 
 interface IExtractorBridge {

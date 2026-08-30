@@ -3,6 +3,7 @@
 
 package com.deepeye.musicpro.ui.playlist
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -50,7 +51,9 @@ constructor(
 fun PlaylistDetailScreen(
     playlistId: Long,
     onNavigateBack: () -> Unit,
+    onNavigateToNowPlaying: () -> Unit = {},
     viewModel: PlaylistDetailViewModel = hiltViewModel(),
+    playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel(),
 ) {
     val songs by viewModel.songs.collectAsStateWithLifecycle()
 
@@ -66,7 +69,18 @@ fun PlaylistDetailScreen(
             }
         }
         items(songs, key = { it.id }) { song ->
-            Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp)) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        val mediaItems = songs.map { com.deepeye.musicpro.domain.model.MediaItem.Local(it) }
+                        val index = songs.indexOfFirst { it.id == song.id }
+                        playerViewModel.setQueue(mediaItems, if (index >= 0) index else 0)
+                        onNavigateToNowPlaying()
+                    }
+                    .padding(horizontal = 20.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Column(Modifier.weight(1f)) {
                     Text(
                         song.title,

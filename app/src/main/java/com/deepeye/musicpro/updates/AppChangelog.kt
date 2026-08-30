@@ -8,17 +8,31 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
-                versionCode = 30036,
-                versionName = "3.0.1.26",
+                versionCode = 30038,
+                versionName = "3.0.1.28",
                 releaseDate = "August 2026",
-                title = "SmartTube-Style YouTube Account Sync 🚀",
+                title = "SmartTube Innertube & SponsorBlock Integration ⚡",
                 highlight = true,
                 items =
                     listOf(
-                        "SmartTube-Style YouTube Sync: Subscriptions, Watch History, Liked Videos, and Watch Later now fully connected to your Google/YouTube account.",
-                        "All Home and YouTube sections (Trending, Music, Movies, Gaming, News) now use real personalized YouTube feeds.",
-                        "Dynamic YouTube category navigation ribbon with Subscriptions and Liked feeds.",
-                        "Fixed view count and upload date extraction across the app.",
+                        "Native SmartTube Innertube Extractor: fast and stable YouTube video and audio stream extraction.",
+                        "SponsorBlock & Return YouTube Dislike integration for enhanced, uninterrupted playback.",
+                        "Mobile OAuth enhancements with Chrome Custom Tabs and Android Keystore secure storage.",
+                        "Optimized search ranking, stream extraction, and responsive UI across all screens.",
+                    ),
+            ),
+            ChangelogEntry(
+                versionCode = 30037,
+                versionName = "3.0.1.27",
+                releaseDate = "August 2026",
+                title = "SmartTube-Style Controls & Account Sync 🚀",
+                highlight = false,
+                items =
+                    listOf(
+                        "SmartTube-style playback controls (Speed, Audio Boost, Sleep Timer, OLED Black, Stats HUD).",
+                        "YouTube Account Sync: Subscriptions, Watch History, Liked Videos, and Watch Later fully connected.",
+                        "Dynamic YouTube category ribbon for logged-in accounts.",
+                        "Fixed Now Playing bottom action row cut-off behind gesture navigation bar.",
                     ),
             ),
             ChangelogEntry(
@@ -42,7 +56,7 @@ object AppChangelog {
                 items =
                     listOf(
                         "Drama & Web Series episodes now play as a playlist — click any episode and the rest auto-play in order!",
-                        "Improved Related Videos: uses NewPipe extractor for more accurate recommendations.",
+                        "Improved Related Videos: uses a direct SmartTube-style Innertube client for more accurate recommendations.",
                         "YouTube API fallback: all content fetchers now gracefully fall back when API quota is exceeded.",
                         "Cloud History Sync: your listening history now backs up to your Google account.",
                     ),

@@ -5,6 +5,8 @@ import com.deepeye.musicpro.data.prefs.SettingsDataStore
 import com.deepeye.musicpro.domain.auth.YouTubeDeviceAuthManager
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -146,8 +148,68 @@ class AuthenticatedYouTubeClient @Inject constructor(
     suspend fun getTrending(): List<HomeVideoItem> =
         search("trending videos")
 
-    suspend fun getMusicFeed(): List<HomeVideoItem> =
-        search("trending songs official music video")
+    suspend fun getMusicFeed(): List<HomeVideoItem> = withContext(Dispatchers.IO) {
+        val token = getValidAccessToken()
+        val accountMusic = mutableListOf<HomeVideoItem>()
+        if (token != null) {
+            try {
+                coroutineScope {
+                    val likedDeferred = async { getLikedVideos() }
+                    val historyDeferred = async { getHistory() }
+                    val subsDeferred = async { getSubscriptionsFeed() }
+                    val homeDeferred = async { getHomeFeed() }
+
+                    val liked = try { likedDeferred.await() } catch (e: Exception) { emptyList() }
+                    val history = try { historyDeferred.await() } catch (e: Exception) { emptyList() }
+                    val subs = try { subsDeferred.await() } catch (e: Exception) { emptyList() }
+                    val home = try { homeDeferred.await() } catch (e: Exception) { emptyList() }
+
+                    val seen = mutableSetOf<String>()
+                    for (item in liked + history + subs + home) {
+                        if (MusicFilter.isMusicTrack(item.title, item.channelName, item.duration) && seen.add(item.id)) {
+                            accountMusic.add(item)
+                        }
+                    }
+                }
+                Log.d("AuthYTClient", "getMusicFeed() found ${accountMusic.size} personalized music items")
+            } catch (e: Exception) {
+                Log.e("AuthYTClient", "getMusicFeed account fetch failed", e)
+            }
+        }
+
+        // Fetch top trending music songs
+        val trendingSongs = try {
+            search("trending songs official audio video")
+        } catch (e: Exception) {
+            emptyList()
+        }
+
+        val combined = mutableListOf<HomeVideoItem>()
+        val seenIds = mutableSetOf<String>()
+        // Prioritize account songs, then trending songs
+        for (item in accountMusic + trendingSongs) {
+            if (MusicFilter.isMusicTrack(item.title, item.channelName, item.duration) && seenIds.add(item.id)) {
+                combined.add(item)
+            }
+        }
+
+        if (combined.isNotEmpty()) {
+            return@withContext combined
+        }
+        trendingSongs.ifEmpty { search("latest bollywood songs hindi hits") }
+    }
+
+    suspend fun getLikedMusic(): List<HomeVideoItem> = withContext(Dispatchers.IO) {
+        val liked = getLikedVideos()
+        val filtered = liked.filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
+        if (filtered.isNotEmpty()) filtered else search("top hit songs official audio")
+    }
+
+    suspend fun getMusicHistory(): List<HomeVideoItem> = withContext(Dispatchers.IO) {
+        val history = getHistory()
+        val filtered = history.filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
+        if (filtered.isNotEmpty()) filtered else search("latest hindi songs audio")
+    }
 
     suspend fun getMoviesFeed(): List<HomeVideoItem> {
         val result = browse("FEmovies_home")

@@ -38,11 +38,4 @@ object NetworkModule {
             .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .build()
     }
-
-    @Provides
-    @Singleton
-    fun provideNewPipeDownloader(
-        client: okhttp3.OkHttpClient
-    ): com.deepeye.musicpro.data.source.remote.youtube.NewPipeDownloader =
-        com.deepeye.musicpro.data.source.remote.youtube.NewPipeDownloader(client)
 }

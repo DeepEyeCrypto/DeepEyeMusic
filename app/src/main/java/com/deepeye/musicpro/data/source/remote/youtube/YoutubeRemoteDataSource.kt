@@ -6,9 +6,9 @@ package com.deepeye.musicpro.data.source.remote.youtube
 import android.util.Log
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
-import org.schabi.newpipe.extractor.Page
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -22,8 +22,25 @@ constructor(
     private val client: okhttp3.OkHttpClient,
     private val rankingManager: com.deepeye.musicpro.diagnostics.ExtractionRankingManager,
     private val headlessExtractor: HeadlessWebViewExtractor,
+    private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
 ) {
-    private val extractor by lazy { com.deepeye.musicpro.extractor.NewPipeExtractorPlugin() }
+    // SmartTube-style direct Innertube client (replaces the NewPipe extractor backend).
+    // OAuth token attached to /player requests bypasses the "confirm you're not a bot" gate.
+    private val extractorClient: okhttp3.OkHttpClient by lazy {
+        client.newBuilder()
+            .connectionPool(okhttp3.ConnectionPool(8, 3, java.util.concurrent.TimeUnit.MINUTES))
+            .connectTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build()
+    }
+
+    private val extractor by lazy {
+        com.deepeye.musicpro.extractor.SmartTubeInnertubeExtractor(extractorClient) {
+            settingsDataStore.settings.first().youtubeAccessToken?.takeIf { it.isNotBlank() }
+        }
+    }
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
     private val fastClient: okhttp3.OkHttpClient by lazy {
@@ -184,106 +201,103 @@ constructor(
     ): StreamResult? =
         withContext(ioDispatcher) {
             val cleanId = videoId.trim().take(11)
-            val rankedLayers = rankingManager.getRankedLayers()
-            Log.d("YoutubeDS", "Resolving stream for video ID: $cleanId with layers: $rankedLayers")
+            Log.d("YoutubeDS", "Resolving stream for video ID: $cleanId (preferVideo=$preferVideo)")
+
+            // ⚡ TIER 1: Instant Direct Google Innertube Extraction (< 300ms)
+            // Talks directly to YouTube's player endpoint without headless WebViews or scrapers!
+            try {
+                val t0 = System.currentTimeMillis()
+                val directResult = kotlinx.coroutines.withTimeoutOrNull(2500L) {
+                    extractSmartTube(cleanId, preferVideo)
+                }
+                if (directResult != null) {
+                    val tookMs = System.currentTimeMillis() - t0
+                    rankingManager.recordSuccess(com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.SMARTTUBE)
+                    Log.i("YoutubeDS", "⚡ TIER 1 Direct Extraction SUCCEEDED in ${tookMs}ms for $cleanId")
+                    return@withContext directResult
+                }
+            } catch (e: Exception) {
+                Log.w("YoutubeDS", "TIER 1 Direct Extraction error for $cleanId: ${e.message}")
+            }
+
+            // 🔄 TIER 2: Fallback Parallel Racing (Only triggered if Tier 1 times out or fails)
+            rankingManager.recordFailure(com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.SMARTTUBE)
+            onLayerFallback?.invoke()
+            Log.w("YoutubeDS", "⚠️ Tier 1 Direct failed for $cleanId. Triggering Tier 2 Fallback Racing...")
+
+            val fallbackLayers = listOf(
+                com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.ALT_EXTRACTOR,
+                com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.PIPED,
+                com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.INVIDIOUS,
+                com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.WEBVIEW_CAPTURE
+            )
 
             var finalResult: StreamResult? = null
-
-            // Run ALL active layers in parallel (including WebView) for true 0-latency racing
-            if (rankedLayers.isNotEmpty()) {
-                Log.d("YoutubeDS", "Running parallel extraction for video ID: $cleanId")
-                try {
-                    finalResult = kotlinx.coroutines.withTimeoutOrNull(30000L) { // Increased timeout to 30s for WebView fallback
-                        kotlinx.coroutines.supervisorScope {
-                            val scope = this
-                            val channel = kotlinx.coroutines.channels.Channel<StreamResult?>(rankedLayers.size)
-                            
-                            val jobs = rankedLayers.map { layer ->
-                                scope.launch {
-                                    var result: StreamResult? = null
-                                    var lastException: Exception? = null
-                                    val maxAttempts = 2
-                                    for (attempt in 1..maxAttempts) {
-                                        try {
-                                            result = when (layer) {
-                                                com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.NEWPIPE -> extractNewPipe(cleanId, preferVideo)
-                                                com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.ALT_EXTRACTOR -> extractAlternative(cleanId, preferVideo)
-                                                com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.PIPED -> extractPiped(cleanId, preferVideo)
-                                                com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.INVIDIOUS -> extractInvidious(cleanId, preferVideo)
-                                                com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.WEBVIEW_CAPTURE -> {
-                                                    val url = headlessExtractor.extractStreamUrl(cleanId, preferVideo)
-                                                    if (url != null) {
-                                                        rankingManager.recordSuccess(com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.WEBVIEW_CAPTURE)
-                                                        StreamResult(url, preferVideo)
-                                                    } else {
-                                                        rankingManager.recordFailure(com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.WEBVIEW_CAPTURE)
-                                                        null
-                                                    }
-                                                }
-                                                else -> null
-                                            }
-                                            if (result != null) break
-                                        } catch (e: Exception) {
-                                            lastException = e
-                                            Log.w("YoutubeDS", "⚠️ Layer $layer attempt $attempt failed for $cleanId: ${e.message}")
+            try {
+                finalResult = kotlinx.coroutines.withTimeoutOrNull(8000L) {
+                    kotlinx.coroutines.supervisorScope {
+                        val scope = this
+                        val channel = kotlinx.coroutines.channels.Channel<StreamResult?>(fallbackLayers.size)
+                        
+                        val jobs = fallbackLayers.map { layer ->
+                            scope.launch {
+                                val result = try {
+                                    when (layer) {
+                                        com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.ALT_EXTRACTOR -> extractAlternative(cleanId, preferVideo)
+                                        com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.PIPED -> extractPiped(cleanId, preferVideo)
+                                        com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.INVIDIOUS -> extractInvidious(cleanId, preferVideo)
+                                        com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.WEBVIEW_CAPTURE -> {
+                                            val url = headlessExtractor.extractStreamUrl(cleanId, preferVideo)
+                                            if (url != null) StreamResult(url, preferVideo) else null
                                         }
+                                        else -> null
                                     }
-                                    
-                                    if (result != null) {
-                                        rankingManager.recordSuccess(layer)
-                                        Log.i("YoutubeDS", "✅ Extraction layer $layer SUCCEEDED for $cleanId")
-                                        channel.trySend(result)
-                                    } else {
-                                        rankingManager.recordFailure(layer)
-                                        if (lastException != null) {
-                                            Log.e("YoutubeDS", "❌ Extraction layer $layer failed completely for $cleanId", lastException)
-                                        } else {
-                                            Log.w("YoutubeDS", "❌ Extraction layer $layer returned null for $cleanId")
-                                        }
-                                        channel.trySend(null)
-                                    }
+                                } catch (e: Exception) {
+                                    Log.w("YoutubeDS", "Fallback Layer $layer error: ${e.message}")
+                                    null
                                 }
-                            }
-
-                            var resResult: StreamResult? = null
-                            var failures = 0
-                            for (i in 1..rankedLayers.size) {
-                                val res = channel.receive()
-                                if (res != null) {
-                                    resResult = res
-                                    // Cancel other ongoing jobs to save resources and bandwidth!
-                                    jobs.forEach { it.cancel() }
-                                    break
+                                
+                                if (result != null) {
+                                    rankingManager.recordSuccess(layer)
+                                    Log.i("YoutubeDS", "✅ Fallback layer $layer SUCCEEDED for $cleanId")
+                                    channel.trySend(result)
                                 } else {
-                                    failures++
+                                    rankingManager.recordFailure(layer)
+                                    channel.trySend(null)
                                 }
                             }
-                            channel.close()
-                            resResult
                         }
+
+                        var resResult: StreamResult? = null
+                        for (i in 1..fallbackLayers.size) {
+                            val res = channel.receive()
+                            if (res != null) {
+                                resResult = res
+                                jobs.forEach { it.cancel() }
+                                break
+                            }
+                        }
+                        channel.close()
+                        resResult
                     }
-                    if (finalResult == null) {
-                        Log.w("YoutubeDS", "⚠️ Parallel extraction timed out after 30000ms for $cleanId")
-                    }
-                } catch (e: Exception) {
-                    Log.w("YoutubeDS", "⚠️ Parallel extraction failed with error: ${e.message}")
                 }
+            } catch (e: Exception) {
+                Log.w("YoutubeDS", "Tier 2 fallback racing failed: ${e.message}")
             }
 
             if (finalResult == null) {
-                Log.e("YoutubeDS", "🚨 All extraction layers failed for $cleanId")
+                Log.e("YoutubeDS", "🚨 All extraction tiers failed for $cleanId")
             }
-
             finalResult
         }
 
-    private suspend fun extractNewPipe(videoId: String, preferVideo: Boolean): StreamResult? {
+    private suspend fun extractSmartTube(videoId: String, preferVideo: Boolean): StreamResult? {
         return try {
             extractor.extractStream(videoId, preferVideo)?.let {
                 StreamResult(it.url, isVideo = it.container != "audio", isAdaptive = it.container == "adaptive")
             }
         } catch (e: Exception) {
-            Log.e("YoutubeDS", "NewPipe extract failed", e)
+            Log.e("YoutubeDS", "SmartTubeInnertube extract failed", e)
             null
         }
     }

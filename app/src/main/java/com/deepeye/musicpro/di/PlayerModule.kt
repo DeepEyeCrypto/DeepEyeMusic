@@ -38,6 +38,7 @@ object PlayerModule {
     fun provideExoPlayer(
         @ApplicationContext context: Context,
         audioAttributes: AudioAttributes,
+        okHttpClient: okhttp3.OkHttpClient,
         vocalRemoverProcessor: com.deepeye.musicpro.dsp.processor.VocalRemoverProcessor,
         crossfeedProcessor: com.deepeye.musicpro.dsp.processor.CrossfeedProcessor,
         tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor,
@@ -69,13 +70,17 @@ object PlayerModule {
                 .setAllowVideoNonSeamlessAdaptiveness(true)
         )
 
-        // Custom load control for music streaming (low latency startup & low sync lag)
+        // Custom load control for music streaming (ultra-low latency startup & responsive playback)
         val loadControl = androidx.media3.exoplayer.DefaultLoadControl.Builder()
             .setBufferDurationsMs(
-                50000, // minBufferMs
-                100000, // maxBufferMs
-                1500,  // bufferForPlaybackMs
-                2500   // bufferForPlaybackAfterRebufferMs
+                15000, // minBufferMs (15s buffer for smooth background playback)
+                50000, // maxBufferMs (50s buffer cap)
+                250,   // bufferForPlaybackMs (Only 250ms buffer needed to start playback instantly!)
+                1000   // bufferForPlaybackAfterRebufferMs (1s buffer after rebuffering)
+            )
+            .setBackBuffer(
+                10000, // backBufferDurationMs (10s back buffer for instant scrubbing/seeking)
+                /* retainBackBufferFromKeyframe = */ true
             )
             .setTargetBufferBytes(-1)
             .setPrioritizeTimeOverSizeThresholds(true)
@@ -84,15 +89,24 @@ object PlayerModule {
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
         val stableSessionId = audioManager.generateAudioSessionId()
 
-        val httpDataSourceFactory = androidx.media3.datasource.DefaultHttpDataSource.Factory()
-            .setUserAgent("Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36")
+        val playerOkHttpClient = okHttpClient.newBuilder()
+            .cache(null) // Disable HTTP disk cache for streaming to avoid 206 caching conflicts and stale conditional headers
+            .addInterceptor { chain ->
+                val request = chain.request()
+                val response = chain.proceed(request)
+                if (!response.isSuccessful) {
+                    val errorBody = try { response.peekBody(2048).string() } catch (e: Exception) { "unavailable: ${e.message}" }
+                    android.util.Log.e("PlayerOkHttp", "Media stream request failed: HTTP ${response.code} ${response.message}\nReq headers: ${request.headers}\nResp headers: ${response.headers}\nBody: $errorBody\n[URL: ${request.url}]")
+                }
+                response
+            }
+            .build()
+
+        val httpDataSourceFactory = androidx.media3.datasource.okhttp.OkHttpDataSource.Factory(playerOkHttpClient)
+            .setUserAgent("com.google.android.youtube/20.10.33 (Linux; U; Android 12) gzip")
             .setDefaultRequestProperties(mapOf(
-                "Referer" to "https://m.youtube.com/",
-                "Origin" to "https://m.youtube.com",
                 "Accept" to "*/*",
-                "sec-ch-ua" to "\"Not.A/Brand\";v=\"8\", \"Chromium\";v=\"114\", \"Android WebView\";v=\"114\"",
-                "sec-ch-ua-mobile" to "?1",
-                "sec-ch-ua-platform" to "\"Android\""
+                "Connection" to "keep-alive",
             ))
         val dataSourceFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpDataSourceFactory)
 
@@ -138,18 +152,11 @@ class WebViewCookieHandler : CookieHandler() {
     ): MutableMap<String, MutableList<String>> {
         val headers = HashMap<String, MutableList<String>>()
         val url = uri?.toString() ?: return headers
-        var cookies = webviewCookieManager.getCookie(url)
-
-        // Map .youtube.com cookies dynamically to .googlevideo.com requests
+        // Do not attach YouTube web cookies to direct googlevideo.com streams as they can invalidate app client signatures
         if (uri?.host?.contains("googlevideo.com") == true) {
-            val ytCookies = webviewCookieManager.getCookie("https://m.youtube.com")
-            if (!ytCookies.isNullOrEmpty()) {
-                cookies = if (cookies.isNullOrEmpty()) ytCookies else "$cookies; $ytCookies"
-                android.util.Log.d("WebViewCookieHandler", "Mapped .youtube.com cookies to googlevideo.com request")
-            }
+            return headers
         }
-
-        android.util.Log.d("WebViewCookieHandler", "Request URL: $url, Found cookies: $cookies")
+        val cookies = webviewCookieManager.getCookie(url)
         if (!cookies.isNullOrEmpty()) {
             headers["Cookie"] = mutableListOf(cookies)
         }

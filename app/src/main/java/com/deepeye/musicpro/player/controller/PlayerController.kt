@@ -391,38 +391,46 @@ constructor(
                                     ensureActive()
                                     android.util.Log.d("PlayerController", "First extraction fetched: $url")
 
-                                    // Audio extraction fallback: if requested audio-only but it failed, retry with video DASH/HLS
+                                    // Reciprocal stream fallbacks:
+                                    //  - Audio-only item failed with video request (preferVideo=true returns
+                                    //    DASH/HLS even for audio-only items) -> retry with preferVideo=false.
+                                    //  - Video item failed with preferVideo=true -> retry with preferVideo=false
+                                    //    so ExoPlayer at least gets a playable audio stream; the shared WebView
+                                    //    player renders the video track in the hybrid architecture.
                                     var finalUrl = url
                                     if (finalUrl == null && !item.isVideo) {
                                         android.util.Log.d("PlayerController", "Audio stream extraction failed. Retrying with video DASH/HLS stream fallback...")
                                         finalUrl = sourceResolverManager.resolve(item.id, true, forceRefresh = isRetry)
                                         ensureActive()
                                         android.util.Log.d("PlayerController", "Fallback video extraction fetched: $finalUrl")
+                                    } else if (finalUrl == null && item.isVideo) {
+                                        android.util.Log.w("PlayerController", "Video stream extraction failed for ${item.title}. Retrying with audio-only stream fallback...")
+                                        finalUrl = sourceResolverManager.resolve(item.id, false, forceRefresh = isRetry)
+                                        ensureActive()
+                                        android.util.Log.d("PlayerController", "Fallback audio-only extraction fetched: $finalUrl")
                                     }
 
                                     if (finalUrl != null) {
-                                        // If the original requested item was audio-only (item.isVideo == false),
-                                        // keep it as isVideo = false so ExoPlayer plays it as audio-only,
-                                        // even if the fallback returned result has isVideo = true (meaning DASH/HLS stream).
+                                        // Keep the original isVideo flag so the UI renders the correct surface
+                                        // (shared WebView for video items) while ExoPlayer plays the stream's audio.
                                         item.copy(
                                             streamUri = Uri.parse(finalUrl),
-                                            isVideo = item.isVideo, // Keep original isVideo setting for proper focus/WebView mute
+                                            isVideo = item.isVideo,
                                         )
                                     } else {
                                         if (item.isVideo) {
-                                            android.util.Log.w("PlayerController", "Video stream extraction failed for ${item.title}! Using YouTube fallback player...")
+                                            // IMPORTANT: Never hand ExoPlayer a watch-page HTML URL — ExoPlayer
+                                            // cannot parse HTML and throws UnrecognizedInputFormatException
+                                            // (Source error), then the Smart Recovery retries 3x and skips.
+                                            android.util.Log.e("PlayerController", "All stream extraction attempts failed for video ${item.title} (${item.id}).")
                                             withContext(Dispatchers.Main) {
                                                 android.widget.Toast.makeText(
                                                     context,
-                                                    "Trying another source...",
+                                                    "Failed to extract stream for ${item.title}",
                                                     android.widget.Toast.LENGTH_SHORT,
                                                 ).show()
                                             }
-                                            item.copy(
-                                                streamUri = Uri.parse("https://www.youtube.com/watch?v=${item.id}"),
-                                                isVideo = true,
-                                                duration = item.duration.takeIf { it > 0 } ?: 180000L,
-                                            )
+                                            throw Exception("Failed to extract stream for ${item.id}")
                                         } else {
                                             android.util.Log.e("PlayerController", "All stream extraction attempts failed for ${item.title}! Audio extraction failed.")
                                             withContext(Dispatchers.Main) {
@@ -554,6 +562,15 @@ constructor(
         if (firstItem != null) {
             playMedia(firstItem)
         }
+    }
+
+    /**
+     * Append a single item to the end of the current playback queue.
+     * Used by "Add to queue" actions (search results, library rows).
+     * Playback continues unaffected; the queue snapshot is updated automatically.
+     */
+    fun addToQueue(item: MediaItem) {
+        queueManager.addItems(listOf(item))
     }
 
     fun playQueueItem(index: Int) {

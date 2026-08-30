@@ -181,7 +181,21 @@ fun LibraryScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(libraryHome.likedTracks.take(10), key = { it.id }) { item ->
-                    LibraryItemCard(item)
+                    LibraryItemCard(
+                        item = item,
+                        onClick = {
+                            playerViewModel.playMedia(
+                                com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                                    id = item.videoId ?: item.id,
+                                    title = item.title,
+                                    artist = item.artist ?: item.subtitle,
+                                    artworkUri = item.artworkUrl?.let { android.net.Uri.parse(it) },
+                                    duration = 0L
+                                )
+                            )
+                            onNavigateToNowPlaying()
+                        }
+                    )
                 }
             }
         } else {
@@ -200,7 +214,21 @@ fun LibraryScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(libraryHome.recentPlays.take(10), key = { it.id }) { item ->
-                    LibraryItemCard(item)
+                    LibraryItemCard(
+                        item = item,
+                        onClick = {
+                            playerViewModel.playMedia(
+                                com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                                    id = item.videoId ?: item.id,
+                                    title = item.title,
+                                    artist = item.artist ?: item.subtitle,
+                                    artworkUri = item.artworkUrl?.let { android.net.Uri.parse(it) },
+                                    duration = 0L
+                                )
+                            )
+                            onNavigateToNowPlaying()
+                        }
+                    )
                 }
             }
         } else {
@@ -340,35 +368,42 @@ private fun LibrarySectionHeader(
 // ── Library Item Card ──
 
 @Composable
-private fun LibraryItemCard(item: LibraryItem) {
-    Column(
+private fun LibraryItemCard(item: LibraryItem, onClick: () -> Unit = {}) {
+    Card(
+        onClick = onClick,
         modifier = Modifier.width(120.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
-        AsyncImage(
-            model = item.artworkUrl,
-            contentDescription = item.title,
-            modifier =
-            Modifier
-                .size(120.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentScale = ContentScale.Crop,
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = item.title,
-            style = MaterialTheme.typography.labelMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = item.subtitle,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            AsyncImage(
+                model = item.artworkUrl,
+                contentDescription = item.title,
+                modifier =
+                Modifier
+                    .size(120.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentScale = ContentScale.Crop,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = item.subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 

@@ -5,21 +5,27 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.CallMade
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.automirrored.filled.CallMade
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +46,7 @@ import com.deepeye.musicpro.ui.youtube.SmartTubeVideoCard
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +62,20 @@ fun SearchScreen(
     val suggestions by viewModel.suggestions.collectAsStateWithLifecycle()
     val recent by viewModel.recentSearches.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val hasMoreResults by viewModel.hasMoreResults.collectAsStateWithLifecycle()
+
+    val listState = rememberLazyListState()
+
+    // Mobile optimization: infinite scroll — fetch more as the user nears the end.
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collectLatest { lastIndex ->
+                val total = results.size
+                if (total > 0 && lastIndex != null && lastIndex >= total - 4) {
+                    viewModel.loadMore()
+                }
+            }
+    }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -117,12 +138,15 @@ fun SearchScreen(
             }
         },
     ) { paddingValues ->
-        Column(
+        PullToRefreshBox(
+            isRefreshing = isLoading && results.isNotEmpty(),
+            onRefresh = { viewModel.refresh() },
             modifier =
             Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
         ) {
+            Column(modifier = Modifier.fillMaxSize()) {
             SearchFilterBar(
                 selected = selectedFilter,
                 onSelected = viewModel::onFilterChange,
@@ -135,7 +159,7 @@ fun SearchScreen(
                     recentSearches = recent,
                     onSuggestionClick = viewModel::onQueryChange,
                 )
-            } else if (isLoading) {
+            } else if (isLoading && results.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -146,6 +170,7 @@ fun SearchScreen(
                 SearchEmptyState(query)
             } else {
                 LazyColumn(
+                    state = listState,
                     contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 180.dp),
                     modifier = Modifier.fillMaxSize(),
                 ) {
@@ -171,13 +196,25 @@ fun SearchScreen(
                                     onNavigateToNowPlaying()
                                 },
                                 onArtistClick = { item.artist?.let(onNavigateToArtist) },
+                                onAddToQueue = { viewModel.addToQueue(item) },
                             )
+                        }
+                    }
+
+                    if (hasMoreResults) {
+                        item(key = "footer_loading") {
+                            LoadingIndicatorRow(modifier = Modifier.padding(vertical = 12.dp))
+                        }
+                    } else if (results.size >= 5) {
+                        item(key = "footer_end") {
+                            EndOfResultsRow(modifier = Modifier.padding(vertical = 12.dp))
                         }
                     }
                 }
             }
         }
     }
+}
 }
 
 @Composable
@@ -340,6 +377,7 @@ fun SearchResultRow(
     item: SearchResultItem,
     onClick: () -> Unit,
     onArtistClick: () -> Unit,
+    onAddToQueue: (() -> Unit)? = null,
 ) {
     Row(
         modifier =
@@ -377,6 +415,19 @@ fun SearchResultRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
             )
+        }
+        if (onAddToQueue != null) {
+            IconButton(
+                onClick = onAddToQueue,
+                modifier = Modifier.padding(start = 8.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add to queue",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
         }
         if (item.artist != null) {
             IconButton(
@@ -418,6 +469,42 @@ fun SearchEmptyState(query: String) {
             style = MaterialTheme.typography.bodyMedium,
             color = com.deepeye.musicpro.ui.theme.TextSecondary,
             modifier = Modifier.padding(top = 8.dp),
+        )
+    }
+}
+
+@Composable
+fun LoadingIndicatorRow(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(22.dp),
+            strokeWidth = 2.dp,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = "Loading more...",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+fun EndOfResultsRow(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "You're all caught up",
+            style = MaterialTheme.typography.bodySmall,
+            color = com.deepeye.musicpro.ui.theme.TextSecondary.copy(alpha = 0.7f),
         )
     }
 }

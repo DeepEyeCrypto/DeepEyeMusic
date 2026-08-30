@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 rootProject.name = "DeepEyeMusicPro"
 include(":app")
 include(":extractor-bridge", ":extractor-plugin")
+include(":tv-app")

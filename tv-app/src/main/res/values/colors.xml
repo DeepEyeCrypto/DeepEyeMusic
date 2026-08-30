@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="tv_background">#0F0F0F</color>
+    <color name="tv_card_background">#1A1A1A</color>
+    <color name="tv_focus_border">#0066CC</color>
+    <color name="tv_text_primary">#FFFFFF</color>
+    <color name="tv_text_secondary">#B0B0B0</color>
+    <color name="tv_accent">#0066CC</color>
+    <color name="tv_surface">#1A1A1A</color>
+    <color name="tv_on_surface">#FFFFFF</color>
+    <color name="tv_primary">#0066CC</color>
+    <color name="tv_on_primary">#FFFFFF</color>
+</resources>

@@ -325,17 +325,20 @@ fun NavGraph(
             val playlistId = backStackEntry.arguments?.getLong("playlistId") ?: return@composable
             PlaylistDetailScreen(
                 playlistId = playlistId,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToNowPlaying = onExpandPlayer
             )
         }
         composable(Routes.Downloads.route) {
             DownloadsScreen(
                 onNavigateBack = { navController.popBackStack() },
+                onNavigateToNowPlaying = onExpandPlayer
             )
         }
         composable(Routes.History.route) {
             HistoryScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToNowPlaying = onExpandPlayer
             )
         }
 

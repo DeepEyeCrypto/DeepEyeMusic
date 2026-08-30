@@ -122,6 +122,17 @@
                 <data android:host="www.youtube.com" />
                 <data android:pathPattern=".*" />
             </intent-filter>
+
+            <!-- OAuth 2.0 callback deep link (com.deepeye.musicpro://oauth-callback) -->
+            <!-- Chrome Custom Tabs returns here after the user authorizes the device code. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="com.deepeye.musicpro"
+                    android:host="oauth-callback" />
+            </intent-filter>
         </activity>
 
         <service

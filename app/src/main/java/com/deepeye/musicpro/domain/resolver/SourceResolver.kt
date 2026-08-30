@@ -9,7 +9,7 @@ package com.deepeye.musicpro.domain.resolver
  */
 interface SourceResolver {
     /**
-     * Unique identifier for this resolver (e.g. "NewPipe", "Innertube", "WebViewBridge").
+     * Unique identifier for this resolver (e.g. "SmartTubeInnertube", "WebViewBridge").
      */
     val name: String
     

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.DeepEyeMusicProTV" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:colorBackground">@color/tv_background</item>
+        <item name="android:windowBackground">@color/tv_background</item>
+        <item name="android:textColorPrimary">@color/tv_text_primary</item>
+        <item name="android:textColorSecondary">@color/tv_text_secondary</item>
+        <item name="android:windowEnableSplitTouch">true</item>
+        <item name="android:splitMotionEvents">true</item>
+    </style>
+</resources>

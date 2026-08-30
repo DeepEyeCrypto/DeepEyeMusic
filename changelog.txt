@@ -1,0 +1,14 @@
+DeepEye Music Pro v3.0.1.28 Release Notes
+
+[SMARTTUBE & PLAYBACK UPGRADES]
+- ⚡ High-performance Native SmartTube Innertube Extractor replacing legacy extractors for fast stream resolution.
+- 🛡️ SponsorBlock Integration: Auto-skip sponsors, intros, outros, and non-music segments.
+- 👎 Return YouTube Dislike (RYD) API integration for real-time dislike counts.
+- 🔐 Enhanced In-App Mobile OAuth with Chrome Custom Tabs & Keystore Token Encryption.
+- 🎧 Improved playback buffering and OkHttp Media3 DataSource integration.
+
+DeepEye Music Pro v3.0.1.27 Release Notes
+- 🎛️ SmartTube-style playback controls (Speed, Audio Boost, Sleep Timer, OLED Black, Stats HUD).
+- 🔄 Full YouTube Account Sync (Subscriptions, Watch History, Liked Videos, Watch Later).
+- 🏷️ Dynamic category navigation ribbon.
+- 📱 Fixed Now Playing layout cut-off behind Android gesture navigation bar.
