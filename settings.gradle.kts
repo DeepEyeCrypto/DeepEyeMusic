@@ -23,4 +23,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "DeepEyeMusicPro"
 include(":app")
-include(":tv-app")
