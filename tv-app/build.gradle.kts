@@ -56,9 +56,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":extractor-bridge"))
-    implementation(project(":extractor-plugin"))
-
     // Compose BOM
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)
