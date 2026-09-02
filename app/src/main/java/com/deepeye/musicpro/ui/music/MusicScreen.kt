@@ -15,11 +15,6 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -32,15 +27,17 @@ import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
+import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SpatialAudioOff
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -55,7 +52,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.Song
-import com.deepeye.musicpro.domain.model.home.HomeMusicItem
+import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedItem
+import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedState
+import com.deepeye.musicpro.domain.model.personalization.PersonalizedItemType
+import com.deepeye.musicpro.domain.model.personalization.PersonalizedSection
+import com.deepeye.musicpro.domain.model.personalization.PersonalizedSectionType
 import com.deepeye.musicpro.ui.components.ShimmerBox
 import com.deepeye.musicpro.ui.motion.premiumScrollHaptics
 import com.deepeye.musicpro.ui.theme.*
@@ -134,7 +135,7 @@ fun MusicScreen(
 
                         // Refresh button
                         if (selectedTab == 0) {
-                            IconButton(onClick = { viewModel.loadRecommendations() }) {
+                            IconButton(onClick = { viewModel.refreshPersonalizedFeed() }) {
                                 Icon(Icons.Default.Refresh, "Refresh", tint = TextSecondary)
                             }
                         } else {
@@ -169,7 +170,13 @@ fun MusicScreen(
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             when (selectedTab) {
-                0 -> DiscoveryTab(uiState, viewModel, onNavigateToNowPlaying, paddingValues)
+                0 -> DiscoveryTab(
+                    uiState,
+                    viewModel,
+                    onNavigateToNowPlaying,
+                    onConnectAccount,
+                    paddingValues,
+                )
                 1 -> LibraryTab(uiState, viewModel, onNavigateToNowPlaying, paddingValues)
             }
         }
@@ -328,172 +335,705 @@ private fun PremiumTabBar(
 }
 
 // ─── Discovery Tab ───────────────────────────────────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DiscoveryTab(
     uiState: MusicUiState,
     viewModel: MusicViewModel,
     onNavigateToNowPlaying: (String) -> Unit,
+    onConnectAccount: () -> Unit,
     paddingValues: PaddingValues,
 ) {
-    val categories = if (uiState.hasAuth) {
-        listOf("For You", "Liked Music", "History", "Trending", "Bollywood", "Punjabi", "Romantic", "Lo-Fi", "Pop", "Hip-Hop", "Devotional")
-    } else {
-        listOf("For You", "Trending", "Bollywood", "Punjabi", "Romantic", "Lo-Fi", "Pop", "Hip-Hop", "Devotional")
+    val feed = uiState.personalizedFeed
+
+    PullToRefreshBox(
+        isRefreshing = feed.isRefreshing,
+        onRefresh = { viewModel.refreshPersonalizedFeed() },
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(top = paddingValues.calculateTopPadding())
+        ) {
+            when {
+                feed.isLoading && feed.sections.isEmpty() -> {
+                    DiscoveryLoadingSkeleton()
+                }
+
+                feed.sections.isEmpty() && feed.globalError != null -> {
+                    DiscoveryGlobalError(
+                        message = feed.globalError,
+                        onRetry = { viewModel.refreshPersonalizedFeed() },
+                    )
+                }
+
+                feed.sections.isEmpty() && !feed.isLoading -> {
+                    DiscoveryEmptyState(
+                        onRefresh = { viewModel.refreshPersonalizedFeed() },
+                    )
+                }
+
+                else -> {
+                    val listState = rememberLazyListState()
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .premiumScrollHaptics(listState),
+                        contentPadding = PaddingValues(bottom = 200.dp),
+                    ) {
+                        item {
+                            Spacer(Modifier.height(6.dp))
+                        }
+                        itemsIndexed(
+                            items = feed.sections,
+                            key = { _, section -> section.id },
+                        ) { index, section ->
+                            PersonalizedSectionRow(
+                                index = index,
+                                section = section,
+                                hasAuth = uiState.hasAuth,
+                                onPlay = { item ->
+                                    viewModel.playPersonalizedItem(item, section.items)
+                                    onNavigateToNowPlaying(item.id)
+                                },
+                                onPlayNext = viewModel::playNextPersonalizedItem,
+                                onAddToQueue = viewModel::addPersonalizedItemToQueue,
+                                onRetry = { viewModel.refreshPersonalizedSection(section.type) },
+                                onConnectAccount = onConnectAccount,
+                            )
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ─── Personalized Section Row ───────────────────────────────────────────────
+@Composable
+private fun PersonalizedSectionRow(
+    index: Int,
+    section: PersonalizedSection,
+    hasAuth: Boolean,
+    onPlay: (PersonalizedFeedItem) -> Unit,
+    onPlayNext: (PersonalizedFeedItem) -> Unit,
+    onAddToQueue: (PersonalizedFeedItem) -> Unit,
+    onRetry: () -> Unit,
+    onConnectAccount: () -> Unit,
+) {
+    // Loading state for this section (only when no items cached yet)
+    if (section.isLoading && section.items.isEmpty()) {
+        Column(Modifier.fillMaxWidth()) {
+            SectionHeaderShimmer()
+            SectionRowSkeleton()
+        }
+        return
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = paddingValues.calculateTopPadding())
+    // Account-required but no auth: render CTA so the user can connect.
+    if (section.isAccountRequired && !hasAuth && section.error == null) {
+        AccountRequiredSectionCard(
+            title = section.title,
+            sourceLabel = section.sourceLabel,
+            onConnectAccount = onConnectAccount,
+        )
+        return
+    }
+
+    // Isolated section error
+    if (section.error != null && section.items.isEmpty()) {
+        SectionErrorCard(
+            title = section.title,
+            message = section.error,
+            onRetry = onRetry,
+        )
+        return
+    }
+
+    // Empty section
+    if (section.items.isEmpty()) {
+        SectionEmptyCard(
+            title = section.title,
+            sourceLabel = section.sourceLabel,
+            onRetry = onRetry,
+        )
+        return
+    }
+
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(
+            animationSpec = tween(400, delayMillis = (index % 5) * 60, easing = EaseOutCubic)
+        ) + slideInVertically(
+            animationSpec = tween(400, delayMillis = (index % 5) * 60, easing = EaseOutCubic),
+            initialOffsetY = { it / 4 }
+        )
     ) {
-        // Category Filter Chips
-        val chipScrollState = rememberLazyListState()
-        LazyRow(
-            state = chipScrollState,
-            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth().premiumScrollHaptics(chipScrollState)
-        ) {
-            items(categories) { category ->
-                val isSelected = uiState.selectedCategory == category
+        Column(Modifier.fillMaxWidth()) {
+            // Section header: title + truthful source label
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = section.title,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.3).sp
+                        ),
+                        color = TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (section.sourceLabel.isNotBlank()) {
+                        Spacer(Modifier.height(2.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Box(
+                                Modifier
+                                    .size(5.dp)
+                                    .clip(CircleShape)
+                                    .background(NeonCyan.copy(alpha = 0.8f))
+                            )
+                            Text(
+                                text = section.sourceLabel,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = TextTertiary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                letterSpacing = 0.3.sp,
+                            )
+                        }
+                    }
+                }
+
+                if (section.error != null && section.items.isNotEmpty()) {
+                    TextButton(onClick = onRetry) {
+                        Text(
+                            "Retry",
+                            color = NeonCyan,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+
+            val rowState = rememberLazyListState()
+            LazyRow(
+                state = rowState,
+                contentPadding = PaddingValues(horizontal = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .premiumScrollHaptics(rowState)
+            ) {
+                items(section.items, key = { it.id }) { item ->
+                    PersonalizedMusicCard(
+                        item = item,
+                        onClick = { onPlay(item) },
+                        onPlayNext = { onPlayNext(item) },
+                        onAddToQueue = { onAddToQueue(item) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ─── Personalized Music Card ────────────────────────────────────────────────
+@Composable
+fun PersonalizedMusicCard(
+    item: PersonalizedFeedItem,
+    onClick: () -> Unit,
+    onPlayNext: () -> Unit,
+    onAddToQueue: () -> Unit,
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "pressScale"
+    )
+
+    Box(
+        modifier = Modifier
+            .width(150.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        CardSurface.copy(alpha = 0.7f),
+                        CardSurfaceElevated.copy(alpha = 0.5f)
+                    )
+                )
+            )
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        ElectricViolet.copy(alpha = 0.3f),
+                        NeonCyan.copy(alpha = 0.2f),
+                        ElectricViolet.copy(alpha = 0.1f)
+                    )
+                ),
+                shape = RoundedCornerShape(20.dp)
+            )
+            .clickable(interactionSource = interactionSource, indication = null) { onClick() }
+    ) {
+        Column(modifier = Modifier.padding(10.dp)) {
+            // Artwork
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color.White.copy(alpha = 0.03f))
+            ) {
+                if (item.artworkUrl != null) {
+                    AsyncImage(
+                        model = item.artworkUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+
+                // Bottom gradient fade
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .align(Alignment.BottomCenter)
                         .background(
-                            if (isSelected) Brush.horizontalGradient(
-                                listOf(ElectricViolet.copy(alpha = 0.4f), NeonCyan.copy(alpha = 0.25f))
-                            ) else Brush.horizontalGradient(
-                                listOf(Color.White.copy(alpha = 0.04f), Color.White.copy(alpha = 0.02f))
+                            Brush.verticalGradient(
+                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
                             )
                         )
-                        .border(
-                            width = if (isSelected) 1.dp else 0.5.dp,
-                            brush = if (isSelected) Brush.horizontalGradient(
-                                listOf(ElectricViolet.copy(alpha = 0.8f), NeonCyan.copy(alpha = 0.6f))
-                            ) else Brush.horizontalGradient(
-                                listOf(Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.04f))
-                            ),
-                            shape = RoundedCornerShape(10.dp)
+                )
+
+                // Item-type badge (playlist vs song/video)
+                if (item.itemType == PersonalizedItemType.PLAYLIST) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(8.dp)
+                            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(5.dp))
+                            .padding(horizontal = 6.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            "PLAYLIST",
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontSize = 7.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 0.5.sp,
                         )
-                        .clickable { viewModel.selectCategory(category) }
-                        .padding(horizontal = 14.dp, vertical = 7.dp),
+                    }
+                }
+
+                // Source badge (truthful provenance)
+                if (item.sourceBadge != null) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(5.dp))
+                            .padding(horizontal = 6.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            item.sourceBadge,
+                            color = NeonCyan,
+                            fontSize = 7.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.4.sp,
+                        )
+                    }
+                }
+
+                // Duration
+                if (item.durationMs > 0) {
+                    Text(
+                        text = formatDuration(item.durationMs),
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(8.dp)
+                            .background(Color.Black.copy(alpha = 0.65f), RoundedCornerShape(5.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                        color = Color.White.copy(alpha = 0.9f),
+                        fontSize = 8.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                }
+
+                // Play button
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                        .size(30.dp)
+                        .background(
+                            Brush.radialGradient(
+                                listOf(
+                                    ElectricViolet.copy(alpha = 0.9f),
+                                    ElectricViolet.copy(alpha = 0.6f)
+                                )
+                            ),
+                            CircleShape
+                        )
+                        .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = category,
-                        fontSize = 12.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isSelected) NeonCyan else TextSecondary
+                    Icon(
+                        Icons.Rounded.PlayArrow,
+                        contentDescription = "Play",
+                        tint = Color.White,
+                        modifier = Modifier.size(17.dp)
                     )
                 }
             }
-        }
 
-        if (uiState.isLoading) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(start = 14.dp, top = 8.dp, end = 14.dp, bottom = 180.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+            Spacer(Modifier.height(10.dp))
+
+            // Title
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.3).sp
+                ),
+                color = TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(3.dp))
+
+            // Artist + overflow menu
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                items(6) {
-                    ShimmerBox(
-                        Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(0.72f)
-                            .clip(RoundedCornerShape(20.dp))
-                    )
-                }
-            }
-        } else if (uiState.error != null) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = uiState.error ?: "Something went wrong",
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                )
-                Spacer(Modifier.height(16.dp))
-                Button(
-                    onClick = { viewModel.loadRecommendations() },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = ElectricViolet
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Retry", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-    } else if (uiState.recommendedMusic.isEmpty()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    Icons.Rounded.SpatialAudioOff,
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp),
-                    tint = TextTertiary
-                )
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    text = "No recommendations yet",
-                    style = MaterialTheme.typography.bodyLarge,
+                    text = item.artist,
+                    style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
                 )
-                Spacer(Modifier.height(16.dp))
-                Button(
-                    onClick = { viewModel.loadRecommendations() },
-                    colors = ButtonDefaults.buttonColors(containerColor = ElectricViolet),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Refresh", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-    } else {
-        val gridState = rememberLazyGridState()
-        LazyVerticalGrid(
-            state = gridState,
-            columns = GridCells.Fixed(2),
-            modifier = Modifier.fillMaxSize().premiumScrollHaptics(gridState),
-            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, bottom = 180.dp, top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            itemsIndexed(uiState.recommendedMusic, key = { _, it -> it.id }) { index, item ->
-                // Staggered entrance animation
-                var visible by remember { mutableStateOf(false) }
-                LaunchedEffect(Unit) { visible = true }
-
-                AnimatedVisibility(
-                    visible = visible,
-                    enter = fadeIn(
-                        animationSpec = tween(
-                            durationMillis = 400,
-                            delayMillis = (index % 6) * 60,
-                            easing = EaseOutCubic
+                Box {
+                    IconButton(
+                        onClick = { menuExpanded = true },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Rounded.MoreVert,
+                            contentDescription = "More options",
+                            tint = TextTertiary,
+                            modifier = Modifier.size(16.dp)
                         )
-                    ) + slideInVertically(
-                        animationSpec = tween(
-                            durationMillis = 400,
-                            delayMillis = (index % 6) * 60,
-                            easing = EaseOutCubic
-                        ),
-                        initialOffsetY = { it / 3 }
-                    )
-                ) {
-                    PremiumMusicGridItem(item, onClick = {
-                        viewModel.playMusic(item)
-                        onNavigateToNowPlaying(item.id)
-                    })
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                        containerColor = CardSurfaceElevated,
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Play next", color = TextPrimary, fontSize = 13.sp) },
+                            onClick = {
+                                menuExpanded = false
+                                onPlayNext()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Rounded.SkipNext,
+                                    contentDescription = null,
+                                    tint = NeonCyan,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Add to queue", color = TextPrimary, fontSize = 13.sp) },
+                            onClick = {
+                                menuExpanded = false
+                                onAddToQueue()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.AutoMirrored.Rounded.PlaylistAdd,
+                                    contentDescription = null,
+                                    tint = NeonCyan,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                        )
+                    }
                 }
             }
         }
     }
 }
+
+// ─── Discovery State Composables ─────────────────────────────────────────────
+@Composable
+private fun DiscoveryLoadingSkeleton() {
+    Column(Modifier.fillMaxSize()) {
+        repeat(3) {
+            Column(Modifier.fillMaxWidth()) {
+                SectionHeaderShimmer()
+                SectionRowSkeleton()
+            }
+        }
+    }
 }
 
+@Composable
+private fun SectionHeaderShimmer() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ShimmerBox(
+            Modifier
+                .width(150.dp)
+                .height(18.dp)
+                .clip(RoundedCornerShape(6.dp))
+        )
+        Spacer(Modifier.width(12.dp))
+        ShimmerBox(
+            Modifier
+                .width(90.dp)
+                .height(12.dp)
+                .clip(RoundedCornerShape(6.dp))
+        )
+    }
+}
+
+@Composable
+private fun SectionRowSkeleton() {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        userScrollEnabled = false,
+    ) {
+        items(4) {
+            ShimmerBox(
+                Modifier
+                    .width(150.dp)
+                    .aspectRatio(0.78f)
+                    .clip(RoundedCornerShape(20.dp))
+            )
+        }
+    }
+}
+
+@Composable
+private fun DiscoveryGlobalError(
+    message: String,
+    onRetry: () -> Unit,
+) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 32.dp),
+            )
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = onRetry,
+                colors = ButtonDefaults.buttonColors(containerColor = ElectricViolet),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Retry", fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DiscoveryEmptyState(onRefresh: () -> Unit) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                Icons.Rounded.SpatialAudioOff,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = TextTertiary
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = "Pull down to discover music",
+                style = MaterialTheme.typography.bodyLarge,
+                color = TextSecondary,
+            )
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = onRefresh,
+                colors = ButtonDefaults.buttonColors(containerColor = ElectricViolet),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Refresh", fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+// ─── Section State Cards ────────────────────────────────────────────────────
+@Composable
+private fun AccountRequiredSectionCard(
+    title: String,
+    sourceLabel: String,
+    onConnectAccount: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                Brush.horizontalGradient(
+                    listOf(ElectricViolet.copy(alpha = 0.12f), NeonCyan.copy(alpha = 0.08f))
+                )
+            )
+            .border(
+                0.5.dp,
+                Brush.horizontalGradient(
+                    listOf(ElectricViolet.copy(alpha = 0.4f), NeonCyan.copy(alpha = 0.3f))
+                ),
+                RoundedCornerShape(16.dp)
+            )
+            .clickable(onClick = onConnectAccount)
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                color = TextPrimary,
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = "Connect your account to see $sourceLabel",
+                fontSize = 11.sp,
+                color = TextSecondary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Icon(
+            Icons.Rounded.ChevronRight,
+            contentDescription = null,
+            tint = NeonCyan,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+@Composable
+private fun SectionErrorCard(
+    title: String,
+    message: String,
+    onRetry: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White.copy(alpha = 0.03f))
+            .border(0.5.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                color = TextPrimary,
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = message,
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.error,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        TextButton(onClick = onRetry) {
+            Text("Retry", color = NeonCyan, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun SectionEmptyCard(
+    title: String,
+    sourceLabel: String,
+    onRetry: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White.copy(alpha = 0.03f))
+            .border(0.5.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                color = TextPrimary,
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = "Nothing here from $sourceLabel yet",
+                fontSize = 11.sp,
+                color = TextSecondary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        TextButton(onClick = onRetry) {
+            Text("Retry", color = NeonCyan, fontWeight = FontWeight.Bold)
+        }
+    }
+}
 // ─── Library Tab ─────────────────────────────────────────────────────────────
 @Composable
 private fun LibraryTab(
@@ -768,197 +1308,6 @@ fun PremiumSongListItem(
                     GlowBadgePill("DSP", DspColor)
                     GlowBadgePill("V4A", V4aColor)
                 }
-            }
-        }
-    }
-}
-
-// ─── Premium Music Grid Item (Discovery Tab) ────────────────────────────────
-@Composable
-fun PremiumMusicGridItem(
-    item: HomeMusicItem,
-    onClick: () -> Unit,
-) {
-    val isHiRes = remember(item.id) { (item.id.hashCode() % 3) == 0 }
-    val isFlac = remember(item.id) { (item.id.hashCode() % 2) == 0 }
-    val bitrate = remember(item.id) { if (isHiRes) "24bit · 48kHz" else "16bit · 44.1kHz" }
-
-    // Shine animation
-
-
-    // Press scale
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "pressScale"
-    )
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        CardSurface.copy(alpha = 0.7f),
-                        CardSurfaceElevated.copy(alpha = 0.5f)
-                    )
-                )
-            )
-            .border(
-                width = 1.dp,
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        ElectricViolet.copy(alpha = 0.3f),
-                        NeonCyan.copy(alpha = 0.2f),
-                        ElectricViolet.copy(alpha = 0.1f)
-                    )
-                ),
-                shape = RoundedCornerShape(20.dp)
-            )
-            .clickable(interactionSource = interactionSource, indication = null) { onClick() }
-    ) {
-        Column(modifier = Modifier.padding(10.dp)) {
-            // Album Art
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color.White.copy(alpha = 0.03f))
-            ) {
-                AsyncImage(
-                    model = item.thumbnailUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-
-
-
-                // Bottom gradient fade for readability
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .align(Alignment.BottomCenter)
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
-                            )
-                        )
-                )
-
-                // Top badges
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    if (isHiRes) {
-                        GlowingBadge("HI-RES", HiResBadge)
-                    }
-                    if (isFlac) {
-                        GlowingBadge("FLAC", FlacBadge)
-                    }
-                }
-
-                // Bitrate at bottom left
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(8.dp)
-                        .background(
-                            Color.Black.copy(alpha = 0.65f),
-                            RoundedCornerShape(6.dp)
-                        )
-                        .border(
-                            0.5.dp,
-                            Color.White.copy(alpha = 0.1f),
-                            RoundedCornerShape(6.dp)
-                        )
-                        .padding(horizontal = 6.dp, vertical = 3.dp)
-                ) {
-                    Text(
-                        bitrate,
-                        color = Color.White.copy(alpha = 0.9f),
-                        fontSize = 8.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace,
-                        letterSpacing = 0.5.sp
-                    )
-                }
-
-                // Play button (center, subtle)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(8.dp)
-                        .size(32.dp)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(
-                                    ElectricViolet.copy(alpha = 0.9f),
-                                    ElectricViolet.copy(alpha = 0.6f)
-                                )
-                            ),
-                            CircleShape
-                        )
-                        .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Rounded.PlayArrow,
-                        contentDescription = "Play",
-                        tint = Color.White,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            // Title
-            Text(
-                text = item.title,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.3).sp
-                ),
-                color = TextPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(3.dp))
-
-            // Artist
-            Text(
-                text = item.artist,
-                style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            // DSP / V4A badges row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                GlowBadgePill("DSP READY", DspColor)
-                GlowBadgePill("V4A READY", V4aColor)
             }
         }
     }

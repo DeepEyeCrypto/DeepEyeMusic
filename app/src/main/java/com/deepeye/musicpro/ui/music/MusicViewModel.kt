@@ -7,30 +7,28 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.deepeye.musicpro.data.prefs.SettingsDataStore
-import com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient
-import com.deepeye.musicpro.data.source.remote.youtube.MusicFilter
-import com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
+import com.deepeye.musicpro.account.AccountSession
+import com.deepeye.musicpro.account.AccountSessionManager
 import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.Song
-import com.deepeye.musicpro.domain.model.home.HomeMusicItem
-import com.deepeye.musicpro.domain.model.home.HomeVideoItem
+import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedItem
+import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedState
+import com.deepeye.musicpro.domain.model.personalization.PersonalizedSectionType
 import com.deepeye.musicpro.domain.repository.MusicRepository
+import com.deepeye.musicpro.domain.repository.PersonalizationRepository
 import com.deepeye.musicpro.player.controller.PlayerController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class MusicUiState(
-    val recommendedMusic: List<HomeMusicItem> = emptyList(),
+    val personalizedFeed: PersonalizedFeedState = PersonalizedFeedState(),
     val localSongs: List<Song> = emptyList(),
-    val selectedCategory: String = "For You",
-    val isLoading: Boolean = false,
-    val error: String? = null,
     val hasAuth: Boolean = false,
 )
 
@@ -38,11 +36,10 @@ data class MusicUiState(
 class MusicViewModel
 @Inject
 constructor(
-    private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
+    private val personalizationRepository: PersonalizationRepository,
+    private val accountSessionManager: AccountSessionManager,
     private val musicRepository: MusicRepository,
     private val playerController: PlayerController,
-    private val authClient: AuthenticatedYouTubeClient,
-    private val settingsDataStore: SettingsDataStore,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MusicUiState())
     val uiState: StateFlow<MusicUiState> = _uiState.asStateFlow()
@@ -52,151 +49,111 @@ constructor(
     }
 
     init {
+        observePersonalizedFeed()
         observeAuth()
         observeLocalSongs()
-        syncLibrary()
+        viewModelScope.launch { musicRepository.syncFromMediaStore() }
     }
 
-    private var isFirstAuthEmission = true
-
-    private fun observeAuth() {
+    private fun observePersonalizedFeed() {
         viewModelScope.launch {
-            settingsDataStore.settings.collect { settings ->
-                val auth = settings.youtubeAccessToken != null
-                val changed = auth != _uiState.value.hasAuth
-                _uiState.value = _uiState.value.copy(hasAuth = auth)
-                // Load on the first emission (covers the initial screen) and whenever
-                // account state changes, so the feed is fetched from the connected
-                // YouTube account (by id).
-                if (changed || isFirstAuthEmission) {
-                    isFirstAuthEmission = false
-                    loadRecommendations()
-                }
+            personalizationRepository.observePersonalizedFeed().collectLatest { feed ->
+                _uiState.update { it.copy(personalizedFeed = feed) }
             }
         }
     }
 
-    private fun HomeVideoItem.toHomeMusic(): HomeMusicItem =
-        HomeMusicItem(
-            id = id,
-            title = title,
-            artist = channelName,
-            thumbnailUrl = thumbnailUrl,
-            duration = duration,
-        )
+    private fun observeAuth() {
+        viewModelScope.launch {
+            accountSessionManager.accountSession.collect { session ->
+                val auth = session is AccountSession.Connected
+                _uiState.update { it.copy(hasAuth = auth) }
+            }
+        }
+    }
 
     private fun observeLocalSongs() {
         viewModelScope.launch {
             musicRepository.getAllSongs().collectLatest { songs ->
-                _uiState.value = _uiState.value.copy(localSongs = songs)
+                _uiState.update { it.copy(localSongs = songs) }
             }
         }
     }
+
+    // ── Personalized Feed Actions ──────────────────────────────────────────
+
+    fun playPersonalizedItem(item: PersonalizedFeedItem, itemsInSection: List<PersonalizedFeedItem>) {
+        val mediaItems = itemsInSection.mapNotNull {
+            it.mediaItem ?: MediaItem.Remote(
+                id = it.id,
+                title = it.title,
+                artist = it.artist,
+                artworkUri = it.artworkUrl?.let { url -> Uri.parse(url) },
+                duration = it.durationMs,
+                isVideo = false,
+            )
+        }
+        val index = itemsInSection.indexOfFirst { it.id == item.id }
+        playerController.setQueue(mediaItems, if (index >= 0) index else 0)
+    }
+
+    fun playNextPersonalizedItem(item: PersonalizedFeedItem) {
+        val mediaItem = resolveMediaItem(item)
+        playerController.addToQueue(mediaItem)
+        // Move the just-appended item to after the currently playing item
+        val q = playerController.playerState.value.queue
+        val currentIdx = playerController.playerState.value.currentIndex
+        if (q.isNotEmpty() && currentIdx in q.indices) {
+            val fromIndex = q.size - 1
+            val toIndex = currentIdx + 1
+            if (fromIndex > toIndex) {
+                playerController.moveQueueItem(fromIndex, toIndex)
+            }
+        }
+        Log.d(TAG, "playNext key=${item.id}")
+    }
+
+    fun addPersonalizedItemToQueue(item: PersonalizedFeedItem) {
+        playerController.addToQueue(resolveMediaItem(item))
+        Log.d(TAG, "addToQueue key=${item.id}")
+    }
+
+    fun refreshPersonalizedFeed() {
+        viewModelScope.launch {
+            personalizationRepository.refreshFeed(forceRefresh = true)
+        }
+    }
+
+    fun refreshPersonalizedSection(sectionType: PersonalizedSectionType) {
+        viewModelScope.launch {
+            personalizationRepository.refreshSection(sectionType)
+        }
+    }
+
+    // ── Local Library ──────────────────────────────────────────────────────
 
     fun syncLibrary() {
         viewModelScope.launch {
-            try {
-                musicRepository.syncFromMediaStore()
-            } catch (e: Exception) {
-                Log.e(TAG, "syncLibrary failed", e)
-                _uiState.value = _uiState.value.copy(error = "Unable to sync local library right now.")
-            }
+            try { musicRepository.syncFromMediaStore() }
+            catch (e: Exception) { Log.e(TAG, "syncLibrary failed", e) }
         }
-    }
-
-    fun selectCategory(category: String) {
-        if (_uiState.value.selectedCategory == category) return
-        _uiState.value = _uiState.value.copy(selectedCategory = category)
-        loadRecommendations(category)
-    }
-
-    fun loadRecommendations(category: String = _uiState.value.selectedCategory) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            try {
-                val auth = _uiState.value.hasAuth
-                Log.d(TAG, "loadRecommendations (hasAuth=$auth, category=$category)")
-                val rawList: List<HomeMusicItem> = when (category) {
-                    "For You" -> {
-                        val trending = youtubeRemoteDataSource.searchMusic("trending songs official audio video")
-                        if (auth) {
-                            val accountMusic = authClient.getMusicFeed()
-                            val personal = accountMusic
-                                .map { it.toHomeMusic() }
-                                .filter { MusicFilter.isMusicTrack(it.title, it.artist, it.duration) }
-                            (personal + trending).distinctBy { it.id }
-                        } else {
-                            trending
-                        }
-                    }
-                    "Liked", "Liked Music" -> {
-                        if (auth) {
-                            val liked = authClient.getLikedMusic()
-                            val filtered = liked
-                                .map { it.toHomeMusic() }
-                                .filter { MusicFilter.isMusicTrack(it.title, it.artist, it.duration) }
-                            filtered.ifEmpty { youtubeRemoteDataSource.searchMusic("top hit songs official audio") }
-                        } else {
-                            youtubeRemoteDataSource.searchMusic("top hit songs official audio")
-                        }
-                    }
-                    "History" -> {
-                        if (auth) {
-                            val history = authClient.getMusicHistory()
-                            val filtered = history
-                                .map { it.toHomeMusic() }
-                                .filter { MusicFilter.isMusicTrack(it.title, it.artist, it.duration) }
-                            filtered.ifEmpty { youtubeRemoteDataSource.searchMusic("latest hindi songs audio") }
-                        } else {
-                            youtubeRemoteDataSource.searchMusic("latest hindi songs audio")
-                        }
-                    }
-                    "Trending" -> youtubeRemoteDataSource.searchMusic("trending songs official audio video")
-                    "Bollywood" -> youtubeRemoteDataSource.searchMusic("latest bollywood songs hindi hits official audio")
-                    "Punjabi" -> youtubeRemoteDataSource.searchMusic("trending punjabi songs latest hits")
-                    "Romantic" -> youtubeRemoteDataSource.searchMusic("romantic hindi love songs audio")
-                    "Lo-Fi" -> youtubeRemoteDataSource.searchMusic("hindi lofi chill songs audio")
-                    "Pop" -> youtubeRemoteDataSource.searchMusic("top pop songs global hits")
-                    "Hip-Hop" -> youtubeRemoteDataSource.searchMusic("trending hip hop rap songs")
-                    "Devotional" -> youtubeRemoteDataSource.searchMusic("hindi bhakti bhajan devotional songs")
-                    else -> youtubeRemoteDataSource.searchMusic("$category songs official audio")
-                }
-                val music = rawList.filter { MusicFilter.isMusicTrack(it.title, it.artist, it.duration) }
-                _uiState.value = _uiState.value.copy(
-                    recommendedMusic = if (music.isNotEmpty()) music else rawList,
-                    isLoading = false
-                )
-            } catch (e: Exception) {
-                Log.e(TAG, "loadRecommendations failed", e)
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = "Couldn't load songs. Check your connection and retry."
-                )
-            }
-        }
-    }
-
-    fun playMusic(music: HomeMusicItem) {
-        val mediaItems =
-            _uiState.value.recommendedMusic.map { item ->
-                MediaItem.Remote(
-                    id = item.id,
-                    title = item.title,
-                    artist = item.artist,
-                    artworkUri = Uri.parse(item.thumbnailUrl),
-                    duration = item.duration * 1000L,
-                    isVideo = false,
-                )
-            }
-        // Use indexOfFirst by ID to avoid object-equality issues with data classes
-        val index = _uiState.value.recommendedMusic.indexOfFirst { it.id == music.id }
-        playerController.setQueue(mediaItems, if (index >= 0) index else 0)
     }
 
     fun playMusicLocal(song: Song) {
         val mediaItems = _uiState.value.localSongs.map { MediaItem.Local(it) }
-        // Use indexOfFirst by ID to avoid object-equality issues with data classes
         val index = _uiState.value.localSongs.indexOfFirst { it.id == song.id }
         playerController.setQueue(mediaItems, if (index >= 0) index else 0)
     }
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+
+    private fun resolveMediaItem(item: PersonalizedFeedItem): MediaItem =
+        item.mediaItem ?: MediaItem.Remote(
+            id = item.id,
+            title = item.title,
+            artist = item.artist,
+            artworkUri = item.artworkUrl?.let { url -> Uri.parse(url) },
+            duration = item.durationMs,
+            isVideo = false,
+        )
 }
