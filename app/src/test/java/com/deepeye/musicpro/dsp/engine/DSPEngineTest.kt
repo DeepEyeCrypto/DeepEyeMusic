@@ -60,7 +60,8 @@ class DSPEngineTest {
     @Test
     fun `attachSession should initialize audio effects`() {
         engine.attachSession(123)
-        assertEquals(EngineState.ATTACHED, engine.engineState.value)
+        // After attachSession -> applyParams is called, which sets state to PROCESSING
+        assertEquals(EngineState.PROCESSING, engine.engineState.value)
         // Note: In Robolectric/Mock environments, creating actual AudioEffects might return null or succeed depending on Shadows.
         // We assume returning default values allows it. 
         // If they are null because we don't use Robolectric for this test, we might only test state.
