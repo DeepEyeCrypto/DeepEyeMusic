@@ -224,7 +224,7 @@ class PersonalizationRepositoryTest {
         assertTrue(sectionTypes.contains(PersonalizedSectionType.TRENDING_MUSIC))
 
         val subsSection = state.sections.first { it.type == PersonalizedSectionType.NEW_FROM_SUBSCRIPTIONS }
-        assertEquals("From your subscriptions", subsSection.sourceLabel)
+        assertEquals("your subscriptions", subsSection.sourceLabel)
         assertEquals("sub_1", subsSection.items.first().id)
     }
 
