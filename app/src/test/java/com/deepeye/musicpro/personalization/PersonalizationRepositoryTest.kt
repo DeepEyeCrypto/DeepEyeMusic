@@ -7,6 +7,7 @@ import android.net.Uri
 import com.deepeye.musicpro.account.AccountSession
 import com.deepeye.musicpro.account.AccountSessionManager
 import com.deepeye.musicpro.data.cache.AccountPersonalizationCache
+import com.deepeye.musicpro.data.cache.HiddenContentManager
 import com.deepeye.musicpro.data.db.*
 import com.deepeye.musicpro.data.repository.PersonalizationRepositoryImpl
 import com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient
@@ -39,6 +40,8 @@ class PersonalizationRepositoryTest {
 
     private val accountSessionManager = mockk<AccountSessionManager>()
     private val accountPersonalizationCache = AccountPersonalizationCache()
+    private val hiddenContentManager = HiddenContentManager()
+    private val personalizationPrefs = FakePersonalizationPreferenceStore()
     private val queueManager = mockk<QueueManager>()
     private val libraryRepository = mockk<LibraryRepository>()
     private val historyDao = mockk<HistoryDao>()
@@ -165,6 +168,8 @@ class PersonalizationRepositoryTest {
         repository = PersonalizationRepositoryImpl(
             accountSessionManager = accountSessionManager,
             accountPersonalizationCache = accountPersonalizationCache,
+            hiddenContentManager = hiddenContentManager,
+            personalizationPrefs = personalizationPrefs,
             queueManager = queueManager,
             libraryRepository = libraryRepository,
             historyDao = historyDao,
@@ -444,5 +449,91 @@ class PersonalizationRepositoryTest {
                 assertFalse("Field '$field' contains forbidden '$bad'", field.contains(bad))
             }
         }
+    }
+
+    // ── Phase 5 integration tests ───────────────────────────────────────────
+
+    @Test
+    fun testHideItem_filtersItemFromFeed() = runTest {
+        accountSessionFlow.value = AccountSession.LoggedOut
+        repository.refreshFeed(forceRefresh = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // v1 is the mocked Continue Listening item id.
+        val wasNew = repository.hideItem("v1", "Recent Song 1")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(wasNew)
+        val state = repository.observePersonalizedFeed().value
+        val continueSection = state.sections.firstOrNull { it.type == PersonalizedSectionType.CONTINUE_LISTENING }
+        // The hidden item should not appear in the Continue Listening section.
+        assertTrue(continueSection == null || continueSection.items.none { it.id == "v1" })
+    }
+
+    @Test
+    fun testUndoHide_restoresItemIntoFeed() = runTest {
+        accountSessionFlow.value = AccountSession.LoggedOut
+        repository.refreshFeed(forceRefresh = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        repository.hideItem("v1", "Recent Song 1")
+        testDispatcher.scheduler.advanceUntilIdle()
+        repository.undoHideItem("v1")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = repository.observePersonalizedFeed().value
+        val continueSection =
+            state.sections.first { it.type == PersonalizedSectionType.CONTINUE_LISTENING }
+        assertTrue(continueSection.items.any { it.id == "v1" })
+    }
+
+    @Test
+    fun testDisableLocalListeningSections_removesLocalSectionsFromFeed() = runTest {
+        accountSessionFlow.value = AccountSession.LoggedOut
+        repository.refreshFeed(forceRefresh = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Ensure local sections are present first
+        var state = repository.observePersonalizedFeed().value
+        assertTrue(state.sections.any { it.type == PersonalizedSectionType.CONTINUE_LISTENING })
+        assertTrue(state.sections.any { it.type == PersonalizedSectionType.RECENTLY_PLAYED })
+
+        personalizationPrefs.update { it.copy(enableLocalListeningSections = false) }
+        repository.refreshFeed(forceRefresh = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        state = repository.observePersonalizedFeed().value
+        assertFalse(state.sections.any { it.type == PersonalizedSectionType.CONTINUE_LISTENING })
+        assertFalse(state.sections.any { it.type == PersonalizedSectionType.RECENTLY_PLAYED })
+    }
+
+    @Test
+    fun testFeedPopulatesDiagnostics() = runTest {
+        accountSessionFlow.value = AccountSession.LoggedOut
+        repository.refreshFeed(forceRefresh = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = repository.observePersonalizedFeed().value
+        // Diagnostics are populated for every assembled section.
+        assertEquals(state.sections.size, state.diagnostics.size)
+        for (diag in state.diagnostics) {
+            assertTrue(diag.sectionId.isNotBlank())
+            assertTrue(diag.itemCount >= 0)
+        }
+    }
+
+    @Test
+    fun testResetHiddenContent_clearsHides() = runTest {
+        accountSessionFlow.value = AccountSession.LoggedOut
+        repository.refreshFeed(forceRefresh = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        repository.hideItem("v1", "Recent Song 1")
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertTrue(hiddenContentManager.isItemHidden("v1"))
+
+        repository.resetAllHiddenContent()
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertFalse(hiddenContentManager.isItemHidden("v1"))
     }
 }

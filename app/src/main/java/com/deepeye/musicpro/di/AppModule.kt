@@ -4,6 +4,9 @@
 package com.deepeye.musicpro.di
 
 import android.content.Context
+import com.deepeye.musicpro.data.prefs.PersonalizationPreferenceStore
+import com.deepeye.musicpro.data.prefs.PersonalizationPreferencesDataStore
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,10 +19,19 @@ import javax.inject.Singleton
  */
 @Module
 @InstallIn(SingletonComponent::class)
-object AppModule {
-    @Provides
+abstract class AppModule {
+
+    @Binds
     @Singleton
-    fun provideApplicationContext(
-        @ApplicationContext context: Context,
-    ): Context = context
+    abstract fun bindPersonalizationPreferenceStore(
+        impl: PersonalizationPreferencesDataStore,
+    ): PersonalizationPreferenceStore
+
+    companion object {
+        @Provides
+        @Singleton
+        fun provideApplicationContext(
+            @ApplicationContext context: Context,
+        ): Context = context
+    }
 }

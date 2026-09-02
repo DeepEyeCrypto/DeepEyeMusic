@@ -8,9 +8,12 @@ import android.util.Log
 import com.deepeye.musicpro.account.AccountSession
 import com.deepeye.musicpro.account.AccountSessionManager
 import com.deepeye.musicpro.data.cache.AccountPersonalizationCache
+import com.deepeye.musicpro.data.cache.HiddenContentManager
 import com.deepeye.musicpro.data.db.HistoryDao
 import com.deepeye.musicpro.data.db.RecommendationDao
 import com.deepeye.musicpro.data.db.TasteDao
+import com.deepeye.musicpro.data.prefs.PersonalizationPreferenceStore
+import com.deepeye.musicpro.data.prefs.PersonalizationPreferences
 import com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient
 import com.deepeye.musicpro.data.source.remote.youtube.MusicFilter
 import com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
@@ -18,6 +21,8 @@ import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.domain.model.personalization.*
+import com.deepeye.musicpro.domain.personalization.DiversityRanker
+import com.deepeye.musicpro.domain.personalization.SectionDiagnostics
 import com.deepeye.musicpro.domain.repository.PersonalizationRepository
 import com.deepeye.musicpro.domain.repository.library.LibraryRepository
 import com.deepeye.musicpro.player.queue.QueueManager
@@ -38,6 +43,8 @@ import javax.inject.Singleton
 class PersonalizationRepositoryImpl @Inject constructor(
     private val accountSessionManager: AccountSessionManager,
     private val accountPersonalizationCache: AccountPersonalizationCache,
+    private val hiddenContentManager: HiddenContentManager,
+    private val personalizationPrefs: PersonalizationPreferenceStore,
     private val queueManager: QueueManager,
     private val libraryRepository: LibraryRepository,
     private val historyDao: HistoryDao,
@@ -109,6 +116,56 @@ class PersonalizationRepositoryImpl @Inject constructor(
         accountPersonalizationCache.invalidateAccount(accountKey)
     }
 
+    // ── Phase 5: Preferences ────────────────────────────────────────────────
+
+    override fun observePreferences() = personalizationPrefs.observe()
+
+    override suspend fun updatePreferences(transform: (PersonalizationPreferences) -> PersonalizationPreferences) {
+        personalizationPrefs.update(transform)
+        // Trigger a feed rebuild so new preferences take effect immediately.
+        buildFeed(forceRefresh = false)
+    }
+
+    // ── Phase 5: Hidden content controls ────────────────────────────────────
+
+    override suspend fun hideItem(itemId: String, label: String, alsoHideArtist: String?): Boolean {
+        val hidden = hiddenContentManager.hideItem(itemId, label, alsoHideArtist)
+        if (hidden) buildFeed(forceRefresh = false)
+        return hidden
+    }
+
+    override suspend fun undoHideItem(itemId: String) {
+        hiddenContentManager.undoHide(itemId)
+        buildFeed(forceRefresh = false)
+    }
+
+    override suspend fun unhideItem(itemId: String) {
+        hiddenContentManager.unhideItem(itemId)
+        buildFeed(forceRefresh = false)
+    }
+
+    override suspend fun unhideArtist(artistName: String) {
+        hiddenContentManager.unhideArtist(artistName)
+        buildFeed(forceRefresh = false)
+    }
+
+    override suspend fun resetAllHiddenContent() {
+        hiddenContentManager.resetAll()
+        buildFeed(forceRefresh = false)
+    }
+
+    // ── Phase 5: Clear data ─────────────────────────────────────────────────
+
+    override suspend fun clearLocalHistory() {
+        historyDao.clearPlaybackHistory()
+        buildFeed(forceRefresh = false)
+    }
+
+    override suspend fun clearPersonalizationCache() {
+        accountPersonalizationCache.clearAll()
+        buildFeed(forceRefresh = false)
+    }
+
     private suspend fun buildFeed(forceRefresh: Boolean) = withContext(ioDispatcher) {
         refreshMutex.withLock {
             _feedState.update { it.copy(isLoading = it.sections.isEmpty(), isRefreshing = it.sections.isNotEmpty()) }
@@ -133,51 +190,87 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 val basedOnListening = basedOnListeningDeferred.await()
                 val trending = trendingDeferred.await()
 
+                if (forceRefresh) {
+                    personalizationPrefs.update { it.copy(lastRefreshMillis = System.currentTimeMillis()) }
+                }
+                
+                val prefs = personalizationPrefs.current()
                 val assembledSections = mutableListOf<PersonalizedSection>()
+                val allDiagnostics = mutableListOf<SectionDiagnostics>()
+                val currentlyPlayingId = queueManager.queue.value.getOrNull(queueManager.currentIndex.value)?.id
 
-                // 1. Continue Listening (if non-empty)
-                if (continueListening.items.isNotEmpty()) {
-                    assembledSections.add(continueListening)
+                // ── Phase 5: Filter hidden content and apply DiversityRanker ──
+                fun addSection(section: PersonalizedSection) {
+                    val filteredItems = section.items.filterNot { item ->
+                        hiddenContentManager.isItemHidden(item.id) ||
+                            hiddenContentManager.isArtistHidden(item.artist) ||
+                            (prefs.hideNonMusicContent && (item.itemType == PersonalizedItemType.VIDEO || (item.mediaItem as? MediaItem.Remote)?.isVideo == true))
+                    }
+                    val filteredSection = section.copy(items = filteredItems)
+                    val processed = DiversityRanker.diversify(
+                        section = filteredSection,
+                        maxRepeatedArtistPerSection = prefs.maxRepeatedArtistPerSection,
+                        currentPlayingItemId = currentlyPlayingId,
+                    )
+                    
+                    if (processed.items.isNotEmpty() || processed.error != null) {
+                        assembledSections.add(processed)
+                        
+                        allDiagnostics.add(
+                            SectionDiagnostics(
+                                sectionId = processed.id,
+                                sectionTitle = processed.title,
+                                source = if (processed.isFromCache) SectionDiagnostics.CacheSource.ROOM_CACHE else SectionDiagnostics.CacheSource.LIVE,
+                                accountScopeHash = if (processed.isAccountRequired) (session as? AccountSession.Connected)?.accountKey?.take(8) else null,
+                                cacheAgeMs = if (processed.lastUpdatedMillis > 0) System.currentTimeMillis() - processed.lastUpdatedMillis else 0L,
+                                refreshState = if (processed.isFromCache) SectionDiagnostics.RefreshState.STALE_WHILE_REVALIDATE else SectionDiagnostics.RefreshState.FRESH,
+                                itemCount = processed.items.size,
+                                reason = processed.explanation,
+                                rebuiltByDiversityRanker = processed.items != filteredItems,
+                                hiddenItemsPruned = section.items.size - filteredItems.size,
+                            )
+                        )
+                    }
                 }
 
-                // 2. Your Queue (if items present)
-                if (yourQueue.items.isNotEmpty()) {
-                    assembledSections.add(yourQueue)
+                // 1. Continue Listening
+                if (prefs.enableLocalListeningSections) {
+                    addSection(continueListening)
                 }
 
-                // 3. Recently Played (if items present)
-                if (recentlyPlayed.items.isNotEmpty()) {
-                    assembledSections.add(recentlyPlayed)
+                // 2. Your Queue (always shown – local playback, not filtered by local pref)
+                addSection(yourQueue)
+
+                // 3. Recently Played
+                if (prefs.enableLocalListeningSections) {
+                    addSection(recentlyPlayed)
                 }
 
                 // 4. Liked Music
-                if (session is AccountSession.Connected || likedMusic.items.isNotEmpty()) {
-                    assembledSections.add(likedMusic)
+                if (prefs.enableAccountSections && (session is AccountSession.Connected || likedMusic.items.isNotEmpty())) {
+                    addSection(likedMusic)
                 }
 
                 // 5. Your Playlists
-                if (playlists.items.isNotEmpty()) {
-                    assembledSections.add(playlists)
-                }
+                addSection(playlists)
 
-                // 6. New From Subscriptions (Connected only)
-                if (session is AccountSession.Connected) {
-                    assembledSections.add(subscriptions)
+                // 6. New From Subscriptions
+                if (prefs.enableAccountSections && session is AccountSession.Connected) {
+                    addSection(subscriptions)
                 }
 
                 // 7. Based on Your Listening
-                if (basedOnListening.items.isNotEmpty()) {
-                    assembledSections.add(basedOnListening)
+                if (prefs.enableLocalListeningSections) {
+                    addSection(basedOnListening)
                 }
 
                 // 8. Trending Music
-                if (trending.items.isNotEmpty() || trending.error != null) {
-                    assembledSections.add(trending)
-                }
+                addSection(trending)
 
                 _feedState.update {
                     it.copy(
                         sections = assembledSections,
+                        diagnostics = allDiagnostics,
                         isLoading = false,
                         isRefreshing = false,
                         lastUpdatedMillis = System.currentTimeMillis(),
@@ -735,8 +828,10 @@ class PersonalizationRepositoryImpl @Inject constructor(
         }
 
         return try {
-            val trendingItems = youtubeRemoteDataSource.searchMusic("trending songs official audio video")
-            val explanation = "Popular track currently trending in your region."
+            val region = personalizationPrefs.current().trendingRegion.ifBlank { "US" }
+            val query = "trending songs $region official audio video"
+            val trendingItems = youtubeRemoteDataSource.searchMusic(query)
+            val explanation = "Popular track currently trending in your region ($region)."
             val filtered = trendingItems
                 .filter { MusicFilter.isMusicTrack(it.title, it.artist, it.duration) }
                 .distinctBy { it.id }

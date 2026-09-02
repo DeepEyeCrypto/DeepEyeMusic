@@ -130,6 +130,45 @@ constructor(
         }
     }
 
+    // ── Phase 5: Personalization quality and user control ───────────────────
+
+    fun hidePersonalizedItem(item: PersonalizedFeedItem, alsoHideArtist: Boolean) {
+        viewModelScope.launch {
+            personalizationRepository.hideItem(
+                itemId = item.id,
+                label = item.title,
+                alsoHideArtist = if (alsoHideArtist) item.artist else null,
+            )
+        }
+    }
+
+    fun undoHidePersonalizedItem(itemId: String) {
+        viewModelScope.launch {
+            personalizationRepository.undoHideItem(itemId)
+        }
+    }
+
+    fun resetAllHiddenContent() {
+        viewModelScope.launch {
+            personalizationRepository.resetAllHiddenContent()
+            personalizationRepository.refreshFeed(forceRefresh = true)
+        }
+    }
+
+    fun clearPersonalizationHistory() {
+        viewModelScope.launch {
+            personalizationRepository.clearLocalHistory()
+            personalizationRepository.refreshFeed(forceRefresh = true)
+        }
+    }
+
+    fun clearPersonalizationCache() {
+        viewModelScope.launch {
+            personalizationRepository.clearPersonalizationCache()
+            personalizationRepository.refreshFeed(forceRefresh = true)
+        }
+    }
+
     // ── Local Library ──────────────────────────────────────────────────────
 
     fun syncLibrary() {
