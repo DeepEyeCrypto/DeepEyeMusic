@@ -13,9 +13,18 @@ import com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
 import com.deepeye.musicpro.data.db.AppDatabase
 import com.deepeye.musicpro.data.prefs.dspDataStore
 import com.deepeye.musicpro.domain.model.MediaItem
+import com.deepeye.musicpro.domain.model.toMedia3Item
 import com.deepeye.musicpro.domain.model.PlayerState
 import com.deepeye.musicpro.domain.resolver.SourceResolverManager
 import com.deepeye.musicpro.player.queue.QueueManager
+import com.deepeye.musicpro.player.smarttube.SmartTubePlaybackFormatRepository
+import com.deepeye.musicpro.player.smarttube.toDeepEyeFormat
+import com.deepeye.musicpro.player.recovery.PlaybackRecoveryCoordinator
+import com.deepeye.musicpro.player.recovery.PlaybackRecoveryErrorMapper
+import com.deepeye.musicpro.player.recovery.PlaybackRecoveryError
+import com.deepeye.musicpro.player.recovery.PlaybackRecoverySnapshot
+import com.deepeye.musicpro.player.recovery.StreamRecoveryPolicy
+import com.deepeye.musicpro.player.recovery.SmartTubeSourceRefreshUseCase
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +35,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -64,8 +75,24 @@ constructor(
     private val dspController: com.deepeye.musicpro.dsp.controller.DSPController,
     private val cloudSyncManager: com.deepeye.musicpro.domain.sync.CloudSyncManager,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
+    val qualitySelectionEngine: com.deepeye.musicpro.player.format.QualitySelectionEngine = com.deepeye.musicpro.player.format.QualitySelectionEngine(com.deepeye.musicpro.player.format.DeviceCodecCapabilities()),
+    val deviceCodecCapabilities: com.deepeye.musicpro.player.format.DeviceCodecCapabilities = com.deepeye.musicpro.player.format.DeviceCodecCapabilities(),
+    val smartTubePlaybackFormatRepository: SmartTubePlaybackFormatRepository = SmartTubePlaybackFormatRepository(),
+    val streamRecoveryPolicy: StreamRecoveryPolicy = StreamRecoveryPolicy(),
+    val playbackRecoveryErrorMapper: PlaybackRecoveryErrorMapper = PlaybackRecoveryErrorMapper(),
+    val playbackRecoveryCoordinator: PlaybackRecoveryCoordinator = PlaybackRecoveryCoordinator(
+        refreshUseCase = SmartTubeSourceRefreshUseCase(sourceResolverManager),
+        policy = streamRecoveryPolicy,
+        smartTubePlaybackFormatRepository = smartTubePlaybackFormatRepository,
+        dspProfileManager = dspProfileManager,
+        dspEngine = dspEngine,
+        context = context
+    ),
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    private val formatInventoryMergePolicy = FormatInventoryMergePolicy()
+    private val formatInventoryMediaGate = FormatInventoryMediaGate()
 
     private val _playerState = MutableStateFlow(PlayerState())
     val playerState: StateFlow<PlayerState> = _playerState.asStateFlow()
@@ -73,8 +100,17 @@ constructor(
     private val _autoplayState = MutableStateFlow(com.deepeye.musicpro.domain.autoplay.AutoplayState())
     val autoplayState: StateFlow<com.deepeye.musicpro.domain.autoplay.AutoplayState> = _autoplayState.asStateFlow()
 
+    val diagnostics: StateFlow<com.deepeye.musicpro.player.format.PlaybackDiagnostics> = _playerState
+        .map { getPlaybackDiagnostics() }
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = getPlaybackDiagnostics()
+        )
+
     private var positionUpdateJob: Job? = null
     private var playJob: Job? = null
+    private var stablePlaybackResetJob: Job? = null
     private val playMutex = Mutex()
     private var lastSkippedSegment: com.deepeye.musicpro.domain.model.SponsorSegment? = null
 
@@ -98,6 +134,18 @@ constructor(
         audioSessionManager.attachToPlayer(player)
         player.addAnalyticsListener(forensics)
         player.addAnalyticsListener(androidx.media3.exoplayer.util.EventLogger(null, "EventLogger"))
+
+        // Sync recovery coordinator state to PlayerState
+        scope.launch {
+            playbackRecoveryCoordinator.isRecovering.collectLatest { recovering ->
+                updateState { it.copy(isRecovering = recovering) }
+            }
+        }
+        scope.launch {
+            playbackRecoveryCoordinator.recoveryMessage.collectLatest { msg ->
+                updateState { it.copy(recoveryMessage = msg) }
+            }
+        }
 
         // Initial load of global DSP profile so DSP works before opening DSP screen
         scope.launch {
@@ -200,6 +248,10 @@ constructor(
                     }
                 }
 
+                override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
+                    stablePlaybackResetJob?.cancel()
+                }
+
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     when (playbackState) {
                         Player.STATE_BUFFERING -> {
@@ -207,36 +259,78 @@ constructor(
                         }
                         Player.STATE_READY -> {
                             updateState { it.copy(isLoading = false) }
+                            playRetryCount = 0
+                            val activeId = currentTrackId ?: player.currentMediaItem?.mediaId
+                            if (activeId != null) {
+                                stablePlaybackResetJob?.cancel()
+                                stablePlaybackResetJob = scope.launch {
+                                    delay(StreamRecoveryPolicy.STABLE_PLAYBACK_RESET_MS)
+                                    if (player.playbackState == Player.STATE_READY && (currentTrackId == activeId || player.currentMediaItem?.mediaId == activeId)) {
+                                        playbackRecoveryCoordinator.recordSuccessfulPlayback(activeId)
+                                        android.util.Log.d("DeepEyeRecovery", "event=budget_reset mediaKeyHash=${activeId.hashCode()} reason=stable_playback_reached")
+                                    }
+                                }
+                            }
                             // Force DSP re-attach since the AudioTrack has been created
                             audioSessionManager.forceReattach()
                         }
                         Player.STATE_ENDED -> {
+                            stablePlaybackResetJob?.cancel()
                             onTrackEnded()
                         }
                     }
                 }
 
                 override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                    android.util.Log.e("PlayerController", "ExoPlayer Error: ${error.message}", error)
+                    stablePlaybackResetJob?.cancel()
+                    android.util.Log.e("PlayerController", "ExoPlayer Error: code=${error.errorCode} (${error.errorCodeName}), message=${error.message}", error)
                     updateState { it.copy(isLoading = false) }
 
-                    val currentPos = player.currentPosition.coerceAtLeast(0)
                     val currentItem = playerState.value.currentItem
+                    val snapshot = captureRecoverySnapshot()
 
-                    // Show non-technical error message and auto-skip to next track
-                    scope.launch {
-                        if (currentItem is MediaItem.Remote && playRetryCount < 3) {
-                            playRetryCount++
-                            android.util.Log.w("PlayerController", "Retrying playMedia for remote track: ${currentItem.title} (Attempt $playRetryCount/3) at position $currentPos due to error: ${error.message}")
-                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                android.widget.Toast.makeText(
-                                    context,
-                                    "Playback error. Retrying stream... (Attempt $playRetryCount/3)",
-                                    android.widget.Toast.LENGTH_SHORT,
-                                ).show()
+                    if (snapshot != null && currentItem is MediaItem.Remote) {
+                        val recoveryError = playbackRecoveryErrorMapper.map(error)
+                        val attemptCount = if (playbackRecoveryCoordinator.canRecover(snapshot.mediaId)) 0 else 1
+                        if (streamRecoveryPolicy.shouldRecover(recoveryError, attemptCount)) {
+                            scope.launch {
+                                val result = playbackRecoveryCoordinator.recover(
+                                    error = recoveryError,
+                                    snapshot = snapshot,
+                                    player = player,
+                                    onApplyState = { refreshedItem, restoredPos, wasPlaying, fallbackReason ->
+                                        updateState { cur ->
+                                            val vFormats = smartTubePlaybackFormatRepository.snapshot.value.videoFormats.map { it.toDeepEyeFormat() }
+                                            val aFormats = smartTubePlaybackFormatRepository.snapshot.value.audioFormats.map { it.toDeepEyeFormat() }
+                                            cur.copy(
+                                                currentItem = refreshedItem,
+                                                isPlaying = wasPlaying,
+                                                isLoading = false,
+                                                position = restoredPos,
+                                                availableVideoFormats = if (vFormats.isNotEmpty()) vFormats.toImmutableList() else cur.availableVideoFormats,
+                                                availableAudioFormats = if (aFormats.isNotEmpty()) aFormats.toImmutableList() else cur.availableAudioFormats,
+                                                selectedVideoFormat = vFormats.firstOrNull { it.id == smartTubePlaybackFormatRepository.snapshot.value.currentVideoFormatId } ?: cur.selectedVideoFormat,
+                                                selectedAudioFormat = aFormats.firstOrNull { it.id == smartTubePlaybackFormatRepository.snapshot.value.currentAudioFormatId } ?: cur.selectedAudioFormat
+                                            )
+                                        }
+                                    }
+                                )
+                                if (!result.recovered) {
+                                    android.util.Log.w("PlayerController", "Recovery failed: ${result.safeReason}. Advancing to next track...")
+                                    kotlinx.coroutines.delay(1000)
+                                    next()
+                                }
                             }
-                            kotlinx.coroutines.delay(500)
-                            playMedia(currentItem, isRetry = true, seekPosition = currentPos)
+                            return
+                        }
+                    }
+
+                    scope.launch {
+                        if (currentItem is MediaItem.Remote && playRetryCount < 2) {
+                            playRetryCount++
+                            android.util.Log.w("PlayerController", "Retrying playMedia for remote track: ${currentItem.title} (Attempt $playRetryCount/2)")
+                            kotlinx.coroutines.delay(500L * playRetryCount)
+                            playMedia(currentItem, isRetry = true, seekPosition = player.currentPosition.coerceAtLeast(0))
                         } else {
                             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                                 android.widget.Toast.makeText(
@@ -246,8 +340,68 @@ constructor(
                                 ).show()
                             }
                             kotlinx.coroutines.delay(500)
+                            playRetryCount = 0
                             next()
                         }
+                    }
+                }
+
+                override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
+                    // Extract runtime inventory from Media3 tracks. Auto rows (isAuto=true) are
+                    // prepended by QualitySelectionEngine and are never counted as real formats.
+                    val vFormats = qualitySelectionEngine.extractVideoFormats(tracks).toImmutableList()
+                    val aFormats = qualitySelectionEngine.extractAudioFormats(tracks).toImmutableList()
+                    val selV = vFormats.firstOrNull { it.isSelected && !it.isAuto }
+                    val selA = aFormats.firstOrNull { it.isSelected && !it.isAuto }
+
+                    val vFormat = player.videoFormat
+                    val aFormat = player.audioFormat
+
+                    updateState { cur ->
+                        // --- Stale-inventory reset gate (media identity check) ---
+                        // SmartTube resolver inventory is authoritative ONLY for the media item it
+                        // was resolved for. If Media3 now reports tracks that belong to a different
+                        // item (e.g. a sparse muxed fallback replaced the expected stream), reset the
+                        // stale catalog to loading/empty BEFORE merging, so item B never shows item A's
+                        // format list while B is still resolving. Fail-safe: null keys never reset.
+                        val incomingMediaId = player.currentMediaItem?.mediaId
+                        val gate = formatInventoryMediaGate
+                        val existingKey = gate.materializeMediaKey(cur.currentItem?.id, cur.position)
+                        val incomingKey = gate.materializeMediaKey(incomingMediaId, player.currentPosition.coerceAtLeast(0))
+                        val inventoryReset = if (gate.shouldReset(existingKey, incomingKey)) {
+                            android.util.Log.i(
+                                "DeepEyeHQ",
+                                "event=format_inventory_reset mediaOp=stale_existing vs incoming reason=media_transition"
+                            )
+                            true
+                        } else {
+                            false
+                        }
+                        val mergeBaseV = if (inventoryReset) persistentListOf() else cur.availableVideoFormats
+                        val mergeBaseA = if (inventoryReset) persistentListOf() else cur.availableAudioFormats
+
+                        // --- Merge SmartTube inventory with Media3 runtime inventory ---
+                        val result = formatInventoryMergePolicy.merge(
+                            existingVideo = mergeBaseV,
+                            existingAudio = mergeBaseA,
+                            incomingVideo = vFormats,
+                            incomingAudio = aFormats
+                        )
+                        android.util.Log.d(
+                            "DeepEyeHQ",
+                            "event=format_inventory_merged existingV=${result.existingRealVideo} incomingV=${result.incomingRealVideo} " +
+                                "existingA=${result.existingRealAudio} incomingA=${result.incomingRealAudio} preserveV=${result.preserveExistingVideoInventory} " +
+                                "preserveA=${result.preserveExistingAudioInventory} reason=${result.decisionReason}"
+                        )
+
+                        cur.copy(
+                            availableVideoFormats = result.videoFormats,
+                            availableAudioFormats = result.audioFormats,
+                            selectedVideoFormat = selV ?: cur.selectedVideoFormat,
+                            selectedAudioFormat = selA ?: cur.selectedAudioFormat,
+                            activeVideoDecoderName = vFormat?.sampleMimeType?.let { mime -> deviceCodecCapabilities.getCodecDisplayName(mime, vFormat.codecs ?: "") } ?: cur.activeVideoDecoderName,
+                            activeAudioDecoderName = aFormat?.sampleMimeType?.let { mime -> deviceCodecCapabilities.getCodecDisplayName(mime, aFormat.codecs ?: "") } ?: cur.activeAudioDecoderName,
+                        )
                     }
                 }
 
@@ -354,6 +508,7 @@ constructor(
     fun playMedia(item: MediaItem, isRetry: Boolean = false, seekPosition: Long = 0L) {
         android.util.Log.d("PlayerController", "playMedia called with item: $item, isRetry: $isRetry, seekPosition: $seekPosition")
 
+        stablePlaybackResetJob?.cancel()
         playJob?.cancel()
         playJob =
             scope.launch {
@@ -387,9 +542,9 @@ constructor(
                                 if (item.streamUri == null || item.streamUri == Uri.EMPTY || isRetry) {
                                     android.util.Log.d("PlayerController", "streamUri needs resolution, fetching getStreamUrl (forceRefresh=$isRetry)...")
                                     
-                                    val url = sourceResolverManager.resolve(item.id, item.isVideo, forceRefresh = isRetry)
+                                    val resolvedSource = sourceResolverManager.resolveSource(item.id, item.isVideo, forceRefresh = isRetry)
                                     ensureActive()
-                                    android.util.Log.d("PlayerController", "First extraction fetched: $url")
+                                    android.util.Log.d("PlayerController", "First extraction fetched: ${resolvedSource?.url}")
 
                                     // Reciprocal stream fallbacks:
                                     //  - Audio-only item failed with video request (preferVideo=true returns
@@ -397,17 +552,61 @@ constructor(
                                     //  - Video item failed with preferVideo=true -> retry with preferVideo=false
                                     //    so ExoPlayer at least gets a playable audio stream; the shared WebView
                                     //    player renders the video track in the hybrid architecture.
-                                    var finalUrl = url
-                                    if (finalUrl == null && !item.isVideo) {
+                                    var finalResolvedSource = resolvedSource
+                                    if (finalResolvedSource == null && !item.isVideo) {
                                         android.util.Log.d("PlayerController", "Audio stream extraction failed. Retrying with video DASH/HLS stream fallback...")
-                                        finalUrl = sourceResolverManager.resolve(item.id, true, forceRefresh = isRetry)
+                                        finalResolvedSource = sourceResolverManager.resolveSource(item.id, true, forceRefresh = isRetry)
                                         ensureActive()
-                                        android.util.Log.d("PlayerController", "Fallback video extraction fetched: $finalUrl")
-                                    } else if (finalUrl == null && item.isVideo) {
+                                        android.util.Log.d("PlayerController", "Fallback video extraction fetched: ${finalResolvedSource?.url}")
+                                    } else if (finalResolvedSource == null && item.isVideo) {
                                         android.util.Log.w("PlayerController", "Video stream extraction failed for ${item.title}. Retrying with audio-only stream fallback...")
-                                        finalUrl = sourceResolverManager.resolve(item.id, false, forceRefresh = isRetry)
+                                        finalResolvedSource = sourceResolverManager.resolveSource(item.id, false, forceRefresh = isRetry)
                                         ensureActive()
-                                        android.util.Log.d("PlayerController", "Fallback audio-only extraction fetched: $finalUrl")
+                                        android.util.Log.d("PlayerController", "Fallback audio-only extraction fetched: ${finalResolvedSource?.url}")
+                                    }
+
+                                    val finalUrl = finalResolvedSource?.url
+                                    if (finalResolvedSource != null) {
+                                        android.util.Log.d("DeepEyeHQ", "event=controller_received_formats videoCount=${finalResolvedSource.videoFormats.size} audioCount=${finalResolvedSource.audioFormats.size} queueSize=${queueManager.queue.value.size}")
+                                        if (finalResolvedSource.videoFormats.isNotEmpty() || finalResolvedSource.audioFormats.isNotEmpty()) {
+                                            smartTubePlaybackFormatRepository.setFormats(
+                                                mediaKey = item.id,
+                                                videoFormats = finalResolvedSource.videoFormats,
+                                                audioFormats = finalResolvedSource.audioFormats
+                                            )
+                                            val vFmts = finalResolvedSource.videoFormats.mapIndexed { idx, f -> f.toDeepEyeFormat(groupIndex = 0, trackIndex = idx) }
+                                            val aFmts = finalResolvedSource.audioFormats.mapIndexed { idx, f -> f.toDeepEyeFormat(groupIndex = 1, trackIndex = idx) }
+                                            val autoVideo = com.deepeye.musicpro.player.format.DeepEyeFormat(
+                                                id = "video_auto",
+                                                groupIndex = -1,
+                                                trackIndex = -1,
+                                                type = com.deepeye.musicpro.player.format.FormatType.VIDEO,
+                                                mimeType = "video/adaptive",
+                                                codecName = "Adaptive Auto",
+                                                qualityLabel = "Auto",
+                                                isAuto = true,
+                                                isSelected = true
+                                            )
+                                            val autoAudio = com.deepeye.musicpro.player.format.DeepEyeFormat(
+                                                id = "audio_auto",
+                                                groupIndex = -1,
+                                                trackIndex = -1,
+                                                type = com.deepeye.musicpro.player.format.FormatType.AUDIO,
+                                                mimeType = "audio/adaptive",
+                                                codecName = "Auto (Highest Quality)",
+                                                qualityLabel = "Auto",
+                                                isAuto = true,
+                                                isSelected = true
+                                            )
+                                            val fullVFmts = if (vFmts.isNotEmpty()) listOf(autoVideo) + vFmts else emptyList()
+                                            val fullAFmts = if (aFmts.isNotEmpty()) listOf(autoAudio) + aFmts else emptyList()
+                                            updateState {
+                                                it.copy(
+                                                    availableVideoFormats = fullVFmts.toImmutableList(),
+                                                    availableAudioFormats = fullAFmts.toImmutableList()
+                                                )
+                                            }
+                                        }
                                     }
 
                                     if (finalUrl != null) {
@@ -787,10 +986,14 @@ constructor(
             scope.launch {
                 while (isActive) {
                     val currentPos = player.currentPosition.coerceAtLeast(0)
+                    val bufferedDuration = player.totalBufferedDuration.coerceAtLeast(0)
+                    val bufferedPct = player.bufferedPercentage
                     updateState {
                         it.copy(
                             position = currentPos,
                             duration = player.duration.coerceAtLeast(0),
+                            bufferedDurationMs = bufferedDuration,
+                            bufferedPercentage = bufferedPct,
                         )
                     }
 
@@ -816,6 +1019,148 @@ constructor(
         positionUpdateJob?.cancel()
         positionUpdateJob = null
     }
+    fun setQualityPreset(preset: com.deepeye.musicpro.player.format.QualityPreset) {
+        updateState { it.copy(qualityPreset = preset) }
+        when (preset) {
+            com.deepeye.musicpro.player.format.QualityPreset.HIGH_QUALITY -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.HIGH_QUALITY)
+            com.deepeye.musicpro.player.format.QualityPreset.ULTRA_HD -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.BEST_COMPATIBLE)
+            com.deepeye.musicpro.player.format.QualityPreset.DATA_SAVER -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.DATA_SAVER)
+            com.deepeye.musicpro.player.format.QualityPreset.BALANCED -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.BALANCED)
+            com.deepeye.musicpro.player.format.QualityPreset.AUTO -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.AUTO)
+            com.deepeye.musicpro.player.format.QualityPreset.CUSTOM -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.CUSTOM)
+        }
+        qualitySelectionEngine.applyPreset(player, preset)
+    }
+
+    fun setVideoFormat(format: com.deepeye.musicpro.player.format.DeepEyeFormat) {
+        val currentItem = _playerState.value.currentItem
+        android.util.Log.d("DeepEyeHQ", "event=user_select_video_format formatId=${format.id} isAuto=${format.isAuto} label=${format.qualityLabel}")
+        updateState {
+            it.copy(
+                selectedVideoFormat = if (format.isAuto) null else format,
+                qualityPreset = if (format.isAuto) com.deepeye.musicpro.player.format.QualityPreset.AUTO else com.deepeye.musicpro.player.format.QualityPreset.CUSTOM
+            )
+        }
+        smartTubePlaybackFormatRepository.selectVideoFormat(format.id)
+        
+        val tracks = player.currentTracks
+        val hasMatchingVideoTrack = tracks.groups.any { group ->
+            group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO &&
+            (0 until group.length).any { tIdx ->
+                val tf = group.getTrackFormat(tIdx)
+                tf.height == format.height && (format.bitrate == 0 || Math.abs(tf.bitrate - format.bitrate) < 500000)
+            }
+        }
+        
+        if (hasMatchingVideoTrack || format.isAuto) {
+            qualitySelectionEngine.selectVideoFormat(player, format)
+        } else {
+            val snapshot = smartTubePlaybackFormatRepository.snapshot.value
+            val targetFormat = snapshot.videoFormats.firstOrNull { it.stableId == format.id }
+            val directUrl = targetFormat?.streamUrl
+            if (directUrl != null && currentItem != null) {
+                scope.launch {
+                    try {
+                        val pos = player.currentPosition
+                        val isPlaying = player.isPlaying
+                        val updatedItem = when (currentItem) {
+                            is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(directUrl), isVideo = true)
+                            is MediaItem.Local -> currentItem
+                        }
+                        player.setMediaItem(updatedItem.toMedia3Item())
+                        player.seekTo(pos)
+                        player.prepare()
+                        if (isPlaying) player.play()
+                        android.util.Log.i("DeepEyeHQ", "event=video_format_switched_direct formatId=${format.id}")
+                    } catch (e: Exception) {
+                        android.util.Log.e("DeepEyeHQ", "event=video_format_switch_failed error=${e.message}")
+                    }
+                }
+            }
+        }
+    }
+
+    fun setAudioFormat(format: com.deepeye.musicpro.player.format.DeepEyeFormat) {
+        val currentItem = _playerState.value.currentItem
+        android.util.Log.d("DeepEyeHQ", "event=user_select_audio_format formatId=${format.id} isAuto=${format.isAuto} label=${format.qualityLabel}")
+        updateState {
+            it.copy(
+                selectedAudioFormat = if (format.isAuto) null else format
+            )
+        }
+        smartTubePlaybackFormatRepository.selectAudioFormat(format.id)
+        
+        val tracks = player.currentTracks
+        val hasMatchingAudioTrack = tracks.groups.any { group ->
+            group.type == androidx.media3.common.C.TRACK_TYPE_AUDIO &&
+            (0 until group.length).any { tIdx ->
+                val tf = group.getTrackFormat(tIdx)
+                tf.bitrate == format.bitrate || (format.bitrate > 0 && Math.abs(tf.bitrate - format.bitrate) < 50000)
+            }
+        }
+        
+        if (hasMatchingAudioTrack || format.isAuto) {
+            qualitySelectionEngine.selectAudioFormat(player, format)
+        } else {
+            val snapshot = smartTubePlaybackFormatRepository.snapshot.value
+            val targetFormat = snapshot.audioFormats.firstOrNull { it.stableId == format.id }
+            val directUrl = targetFormat?.streamUrl
+            if (directUrl != null && currentItem != null) {
+                scope.launch {
+                    try {
+                        val pos = player.currentPosition
+                        val isPlaying = player.isPlaying
+                        val updatedItem = when (currentItem) {
+                            is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(directUrl))
+                            is MediaItem.Local -> currentItem
+                        }
+                        player.setMediaItem(updatedItem.toMedia3Item())
+                        player.seekTo(pos)
+                        player.prepare()
+                        if (isPlaying) player.play()
+                        android.util.Log.i("DeepEyeHQ", "event=audio_format_switched_direct formatId=${format.id}")
+                    } catch (e: Exception) {
+                        android.util.Log.e("DeepEyeHQ", "event=audio_format_switch_failed error=${e.message}")
+                    }
+                }
+            }
+        }
+    }
+
+    fun setBufferProfile(profile: com.deepeye.musicpro.player.format.BufferProfile) {
+        updateState { it.copy(bufferProfile = profile) }
+    }
+
+    fun getPlaybackDiagnostics(): com.deepeye.musicpro.player.format.PlaybackDiagnostics {
+        val state = playerState.value
+        val currentItem = state.currentItem
+        val vFormat = player.videoFormat
+        val aFormat = player.audioFormat
+        val isHw = state.selectedVideoFormat?.isHardwareAccelerated ?: true
+
+        return com.deepeye.musicpro.player.format.PlaybackDiagnostics(
+            videoId = (currentItem as? MediaItem.Remote)?.id ?: currentItem?.id ?: "",
+            mediaTitle = currentItem?.title ?: "No Media Active",
+            activeVideoFormat = state.selectedVideoFormat,
+            activeAudioFormat = state.selectedAudioFormat,
+            activeVideoDecoder = state.activeVideoDecoderName.ifEmpty { vFormat?.sampleMimeType ?: "Default Hardware Sink" },
+            activeAudioDecoder = state.activeAudioDecoderName.ifEmpty { aFormat?.sampleMimeType ?: "Opus Low-Latency Sink" },
+            currentPositionMs = state.position,
+            totalDurationMs = state.duration,
+            bufferedPositionMs = player.bufferedPosition.coerceAtLeast(0),
+            bufferedDurationMs = state.bufferedDurationMs,
+            bufferedPercentage = state.bufferedPercentage,
+            playbackSpeed = state.playbackSpeed,
+            estimatedBandwidthBps = state.estimatedBandwidthBps,
+            droppedFrames = state.droppedFrames,
+            qualityPreset = state.qualityPreset,
+            bufferProfile = state.bufferProfile,
+            isHardwareAccelerated = isHw,
+            audioSinkSpec = "48000Hz • 2ch Float32 • Low-Latency DSP",
+            playerStateName = if (state.isPlaying) "PLAYING" else if (state.isLoading) "BUFFERING" else "PAUSED"
+        )
+    }
+
 
 
 
@@ -867,35 +1212,6 @@ constructor(
 
     private fun updateState(transform: (PlayerState) -> PlayerState) {
         _playerState.update(transform)
-    }
-
-    private fun MediaItem.toMedia3Item(): Media3Item {
-        val uri =
-            when (this) {
-                is MediaItem.Local -> song.uri
-                is MediaItem.Remote -> streamUri ?: Uri.EMPTY
-            }
-
-        val builder = Media3Item.Builder()
-            .setUri(uri)
-            .setMediaId(id)
-            .setMediaMetadata(
-                MediaMetadata.Builder()
-                    .setTitle(title)
-                    .setArtist(artist)
-                    .setArtworkUri(artworkUri)
-                    .build(),
-            )
-            
-        // Help ExoPlayer correctly identify adaptive streams when URLs lack standard extensions
-        val uriStr = uri.toString()
-        if (uriStr.contains("manifest/dash") || uriStr.contains(".mpd")) {
-            builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_MPD)
-        } else if (uriStr.contains("manifest/hls") || uriStr.contains(".m3u8") || uriStr.contains("m3u8")) {
-            builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_M3U8)
-        }
-
-        return builder.build()
     }
 
     private fun recordCurrentTrackPlayStats(finishedSuccessfully: Boolean) {
@@ -1013,5 +1329,70 @@ constructor(
 
     fun applyDSPPreset(preset: com.deepeye.musicpro.dsp.model.DSPPreset) {
         dspController.applyPreset(preset)
+    }
+
+    fun captureRecoverySnapshot(): PlaybackRecoverySnapshot? {
+        val currentItem = _playerState.value.currentItem ?: return null
+        val currentPos = player.currentPosition.coerceAtLeast(0)
+        val dur = player.duration.coerceAtLeast(0)
+        val state = _playerState.value
+        val formatRepoSnap = smartTubePlaybackFormatRepository.snapshot.value
+        val dspParams = dspEngine.currentParams.value
+
+        return PlaybackRecoverySnapshot(
+            mediaId = currentItem.id,
+            title = currentItem.title,
+            isVideo = currentItem is MediaItem.Remote && currentItem.isVideo,
+            queueIndex = queueManager.currentIndex.value,
+            queueSize = queueManager.queue.value.size,
+            positionMs = currentPos,
+            durationMs = dur,
+            wasPlaying = player.isPlaying || state.isPlaying,
+            selectedVideoFormatId = formatRepoSnap.currentVideoFormatId ?: state.selectedVideoFormat?.id,
+            selectedAudioFormatId = formatRepoSnap.currentAudioFormatId ?: state.selectedAudioFormat?.id,
+            qualityMode = state.qualityPreset.name,
+            playbackSpeed = player.playbackParameters.speed,
+            repeatMode = player.repeatMode,
+            shuffleEnabled = player.shuffleModeEnabled,
+            dspEnabled = dspParams.enabled,
+            dspPresetId = dspParams.tubeMode.name,
+            captionsEnabled = false,
+            selectedAudioLanguage = player.trackSelectionParameters.preferredAudioLanguages.firstOrNull()
+        )
+    }
+
+    /**
+     * Debug-only test hook for simulating HTTP 403 stream expiry.
+     */
+    fun simulateStreamExpiryForTesting(): Boolean {
+        val snapshot = captureRecoverySnapshot() ?: return false
+        val simulatedError = PlaybackRecoveryError.HttpStatus(
+            statusCode = 403,
+            safeReason = "DEBUG_SIMULATED_STREAM_EXPIRY"
+        )
+        scope.launch {
+            playbackRecoveryCoordinator.recover(
+                error = simulatedError,
+                snapshot = snapshot,
+                player = player,
+                onApplyState = { refreshedItem, restoredPos, wasPlaying, fallbackReason ->
+                    updateState { cur ->
+                        val vFormats = smartTubePlaybackFormatRepository.snapshot.value.videoFormats.map { it.toDeepEyeFormat() }
+                        val aFormats = smartTubePlaybackFormatRepository.snapshot.value.audioFormats.map { it.toDeepEyeFormat() }
+                        cur.copy(
+                            currentItem = refreshedItem,
+                            isPlaying = wasPlaying,
+                            isLoading = false,
+                            position = restoredPos,
+                            availableVideoFormats = if (vFormats.isNotEmpty()) vFormats.toImmutableList() else cur.availableVideoFormats,
+                            availableAudioFormats = if (aFormats.isNotEmpty()) aFormats.toImmutableList() else cur.availableAudioFormats,
+                            selectedVideoFormat = vFormats.firstOrNull { it.id == smartTubePlaybackFormatRepository.snapshot.value.currentVideoFormatId } ?: cur.selectedVideoFormat,
+                            selectedAudioFormat = aFormats.firstOrNull { it.id == smartTubePlaybackFormatRepository.snapshot.value.currentAudioFormatId } ?: cur.selectedAudioFormat
+                        )
+                    }
+                }
+            )
+        }
+        return true
     }
 }
