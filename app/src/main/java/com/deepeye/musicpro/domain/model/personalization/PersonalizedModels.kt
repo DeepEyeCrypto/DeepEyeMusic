@@ -46,11 +46,12 @@ data class PersonalizedFeedItem(
     val mediaItem: MediaItem? = null,
     val playCount: Long = 0L,
     val lastPlayedAt: Long = 0L,
+    val explanation: String? = null,
 )
 
 /**
  * A single structured section within the personalized Music tab.
- * Contains explicit source labels and isolated error/retry state.
+ * Contains explicit source labels, caching flags, and isolated error/retry state.
  */
 data class PersonalizedSection(
     val id: String,
@@ -58,11 +59,14 @@ data class PersonalizedSection(
     val title: String,
     val subtitle: String? = null,
     val sourceLabel: String,
+    val explanation: String? = null,
     val items: List<PersonalizedFeedItem> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val isAccountRequired: Boolean = false,
     val canRetry: Boolean = false,
+    val isFromCache: Boolean = false,
+    val lastUpdatedMillis: Long = 0L,
 )
 
 /**

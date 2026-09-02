@@ -39,8 +39,10 @@ import androidx.room.RoomDatabase
         DownloadHistoryEntity::class,
         QueueSnapshotEntity::class,
         com.deepeye.musicpro.data.library.entities.SubscribedChannelEntity::class,
+        com.deepeye.musicpro.data.cache.entities.CachedPersonalizedSectionEntity::class,
+        com.deepeye.musicpro.data.cache.entities.CachedPersonalizedItemEntity::class,
     ],
-    version = 10,
+    version = 11,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -57,4 +59,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun libraryDao(): com.deepeye.musicpro.data.library.dao.LibraryDao
 
     abstract fun historyDao(): HistoryDao
+
+    abstract fun personalizedSectionDao(): com.deepeye.musicpro.data.cache.dao.PersonalizedSectionDao
 }

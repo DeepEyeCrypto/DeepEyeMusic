@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.ChevronRight
@@ -345,6 +346,10 @@ private fun DiscoveryTab(
     paddingValues: PaddingValues,
 ) {
     val feed = uiState.personalizedFeed
+    
+    var explanationItem by remember { mutableStateOf<PersonalizedFeedItem?>(null) }
+    var explanationSection by remember { mutableStateOf<PersonalizedSection?>(null) }
+    var showExplanationSheet by remember { mutableStateOf(false) }
 
     PullToRefreshBox(
         isRefreshing = feed.isRefreshing,
@@ -400,6 +405,11 @@ private fun DiscoveryTab(
                                 },
                                 onPlayNext = viewModel::playNextPersonalizedItem,
                                 onAddToQueue = viewModel::addPersonalizedItemToQueue,
+                                onShowWhyThis = { item -> 
+                                    explanationItem = item
+                                    explanationSection = section
+                                    showExplanationSheet = true
+                                },
                                 onRetry = { viewModel.refreshPersonalizedSection(section.type) },
                                 onConnectAccount = onConnectAccount,
                             )
@@ -409,6 +419,14 @@ private fun DiscoveryTab(
                 }
             }
         }
+    }
+    
+    if (showExplanationSheet) {
+        com.deepeye.musicpro.ui.music.components.WhyThisBottomSheet(
+            item = explanationItem,
+            section = explanationSection,
+            onDismiss = { showExplanationSheet = false }
+        )
     }
 }
 
@@ -421,6 +439,7 @@ private fun PersonalizedSectionRow(
     onPlay: (PersonalizedFeedItem) -> Unit,
     onPlayNext: (PersonalizedFeedItem) -> Unit,
     onAddToQueue: (PersonalizedFeedItem) -> Unit,
+    onShowWhyThis: (PersonalizedFeedItem?) -> Unit,
     onRetry: () -> Unit,
     onConnectAccount: () -> Unit,
 ) {
@@ -515,18 +534,43 @@ private fun PersonalizedSectionRow(
                                 overflow = TextOverflow.Ellipsis,
                                 letterSpacing = 0.3.sp,
                             )
+                            if (section.isFromCache) {
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    text = "• Cached",
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextTertiary.copy(alpha = 0.6f),
+                                    letterSpacing = 0.4.sp,
+                                )
+                            }
                         }
                     }
                 }
 
-                if (section.error != null && section.items.isNotEmpty()) {
-                    TextButton(onClick = onRetry) {
-                        Text(
-                            "Retry",
-                            color = NeonCyan,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (section.explanation != null) {
+                        IconButton(
+                            onClick = { onShowWhyThis(null) },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                Icons.Rounded.Info,
+                                contentDescription = "Why this section?",
+                                tint = TextTertiary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                    if (section.error != null && section.items.isNotEmpty()) {
+                        TextButton(onClick = onRetry) {
+                            Text(
+                                "Retry",
+                                color = NeonCyan,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                     }
                 }
             }
@@ -546,6 +590,7 @@ private fun PersonalizedSectionRow(
                         onClick = { onPlay(item) },
                         onPlayNext = { onPlayNext(item) },
                         onAddToQueue = { onAddToQueue(item) },
+                        onWhyThis = { onShowWhyThis(item) },
                     )
                 }
             }
@@ -560,6 +605,7 @@ fun PersonalizedMusicCard(
     onClick: () -> Unit,
     onPlayNext: () -> Unit,
     onAddToQueue: () -> Unit,
+    onWhyThis: () -> Unit = {},
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
@@ -785,6 +831,21 @@ fun PersonalizedMusicCard(
                             leadingIcon = {
                                 Icon(
                                     Icons.AutoMirrored.Rounded.PlaylistAdd,
+                                    contentDescription = null,
+                                    tint = NeonCyan,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Why this recommendation?", color = TextPrimary, fontSize = 13.sp) },
+                            onClick = {
+                                menuExpanded = false
+                                onWhyThis()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Rounded.Info,
                                     contentDescription = null,
                                     tint = NeonCyan,
                                     modifier = Modifier.size(18.dp)

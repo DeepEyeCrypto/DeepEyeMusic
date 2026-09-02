@@ -243,9 +243,13 @@ class PersonalizationRepositoryTest {
 
     @Test
     fun testSectionLevelResilience_remoteFailureDoesNotFailFeed() = runTest {
-        accountSessionFlow.value = AccountSession.Connected(accountKey = "err_acc", displayName = "Error")
+        // Set up the mock FIRST, before triggering account session change
         coEvery { authenticatedYouTubeClient.getSubscriptionsFeed() } throws IOException("Network")
 
+        accountSessionFlow.value = AccountSession.Connected(accountKey = "err_acc", displayName = "Error")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Now force refresh to ensure we hit the network (not cache)
         repository.refreshFeed(forceRefresh = true)
         testDispatcher.scheduler.advanceUntilIdle()
 
@@ -331,5 +335,114 @@ class PersonalizationRepositoryTest {
         val trending = updated.first { it.type == PersonalizedSectionType.TRENDING_MUSIC }
         assertEquals(1, trending.items.size)
         assertEquals("trend_seed", trending.items.first().id)
+    }
+
+    @Test
+    fun testSectionsHaveHonestExplanations() = runTest {
+        accountSessionFlow.value = AccountSession.Connected(accountKey = "explain_key", displayName = "Explain Tester")
+        repository.refreshFeed(forceRefresh = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = repository.observePersonalizedFeed().value
+        assertTrue("Expected non-empty sections", state.sections.isNotEmpty())
+
+        for (section in state.sections) {
+            assertNotNull("Section '${section.title}' must have an explanation", section.explanation)
+            assertTrue(
+                "Section '${section.title}' explanation must not be blank",
+                section.explanation!!.isNotBlank()
+            )
+            // Explanations must not contain backend internals
+            val lower = section.explanation!!.lowercase()
+            assertFalse("Explanation must not contain 'token'", lower.contains("token"))
+            assertFalse("Explanation must not contain 'cookie'", lower.contains("cookie"))
+            assertFalse("Explanation must not contain 'bearer'", lower.contains("bearer"))
+        }
+    }
+
+    @Test
+    fun testItemsHaveExplanations() = runTest {
+        accountSessionFlow.value = AccountSession.Connected(accountKey = "item_explain_key", displayName = "Item Tester")
+        repository.refreshFeed(forceRefresh = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = repository.observePersonalizedFeed().value
+        for (section in state.sections.filter { it.items.isNotEmpty() }) {
+            for (item in section.items) {
+                assertNotNull(
+                    "Item '${item.title}' in section '${section.title}' must have explanation",
+                    item.explanation
+                )
+                assertTrue(
+                    "Item '${item.title}' explanation must not be blank",
+                    item.explanation!!.isNotBlank()
+                )
+            }
+        }
+    }
+
+    @Test
+    fun testSectionsHaveLastUpdatedMillis() = runTest {
+        accountSessionFlow.value = AccountSession.Connected(accountKey = "ts_key", displayName = "TS")
+        repository.refreshFeed(forceRefresh = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = repository.observePersonalizedFeed().value
+        for (section in state.sections) {
+            assertTrue(
+                "Section '${section.title}' must have lastUpdatedMillis > 0",
+                section.lastUpdatedMillis > 0
+            )
+        }
+    }
+
+    @Test
+    fun testIsFromCacheDefaultsFalseOnFreshFeed() = runTest {
+        accountSessionFlow.value = AccountSession.Connected(accountKey = "fresh_key", displayName = "Fresh")
+        repository.refreshFeed(forceRefresh = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = repository.observePersonalizedFeed().value
+        for (section in state.sections) {
+            assertFalse(
+                "Fresh section '${section.title}' should not be from cache",
+                section.isFromCache
+            )
+        }
+    }
+
+    @Test
+    fun testLocalSectionsAreNeverFromCache() = runTest {
+        accountSessionFlow.value = AccountSession.LoggedOut
+        repository.refreshFeed(forceRefresh = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = repository.observePersonalizedFeed().value
+        val localSections = state.sections.filter {
+            it.type == PersonalizedSectionType.CONTINUE_LISTENING ||
+            it.type == PersonalizedSectionType.RECENTLY_PLAYED ||
+            it.type == PersonalizedSectionType.YOUR_QUEUE
+        }
+
+        for (section in localSections) {
+            assertFalse(
+                "Local section '${section.title}' should never be marked as from cache",
+                section.isFromCache
+            )
+        }
+    }
+
+    @Test
+    fun testPrivacyBoundary_explanationFieldsContainNoSecrets() {
+        val forbidden = listOf("token", "cookie", "bearer", "authheader", "email", "password", "secret")
+        val explanationFields = listOf(
+            PersonalizedSection::class.java.getDeclaredField("explanation").name.lowercase(),
+            PersonalizedFeedItem::class.java.getDeclaredField("explanation").name.lowercase(),
+        )
+        for (field in explanationFields) {
+            for (bad in forbidden) {
+                assertFalse("Field '$field' contains forbidden '$bad'", field.contains(bad))
+            }
+        }
     }
 }

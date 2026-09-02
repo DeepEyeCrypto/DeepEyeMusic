@@ -205,6 +205,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
                         durationMs = playback.totalDurationMs,
                         itemType = PersonalizedItemType.SONG,
                         sourceBadge = "RESUME",
+                        explanation = "You listened to ${playback.title} recently on this device.",
                         mediaItem = MediaItem.Remote(
                             id = playback.mediaId,
                             title = playback.title,
@@ -222,7 +223,9 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 title = "Continue Listening",
                 subtitle = "Jump back in",
                 sourceLabel = "Local",
+                explanation = "Tracks you were listening to recently with unplayed progress on this device.",
                 items = items,
+                lastUpdatedMillis = System.currentTimeMillis(),
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to build Continue Listening section", e)
@@ -232,6 +235,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 title = "Continue Listening",
                 subtitle = "Jump back in",
                 sourceLabel = "Local",
+                explanation = "Tracks with saved playback progress.",
                 error = "Could not load continue listening",
                 canRetry = true,
             )
@@ -250,6 +254,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 durationMs = mediaItem.duration,
                 itemType = PersonalizedItemType.SONG,
                 sourceBadge = if (index == queueManager.currentIndex.value) "NOW PLAYING" else "QUEUED",
+                explanation = if (index == queueManager.currentIndex.value) "Currently playing in player." else "Queued in player at position #${index + 1}.",
                 mediaItem = mediaItem,
             )
         }
@@ -260,7 +265,9 @@ class PersonalizationRepositoryImpl @Inject constructor(
             title = "Your Queue",
             subtitle = if (items.isNotEmpty()) "${items.size} tracks queued" else "Queue is empty",
             sourceLabel = "Local Queue",
+            explanation = "Active tracks in your local playback queue.",
             items = items,
+            lastUpdatedMillis = System.currentTimeMillis(),
         )
     }
 
@@ -282,6 +289,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
                             durationMs = event.playedMs,
                             itemType = PersonalizedItemType.SONG,
                             sourceBadge = "RECENT",
+                            explanation = "Played recently on this device.",
                             mediaItem = MediaItem.Remote(
                                 id = event.songId,
                                 title = event.title,
@@ -301,7 +309,9 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 title = "Recently Played",
                 subtitle = "Your listening history",
                 sourceLabel = "Local History",
+                explanation = "Tracks you played on this device, preserved privately and locally.",
                 items = items.take(15),
+                lastUpdatedMillis = System.currentTimeMillis(),
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to build Recently Played section", e)
@@ -311,6 +321,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 title = "Recently Played",
                 subtitle = "Your listening history",
                 sourceLabel = "Local History",
+                explanation = "Playback history on this device.",
                 error = "Could not load playback history",
                 canRetry = true,
             )
@@ -323,18 +334,23 @@ class PersonalizationRepositoryImpl @Inject constructor(
         forceRefresh: Boolean,
     ): PersonalizedSection {
         if (session is AccountSession.Connected) {
-            if (!forceRefresh) {
-                val cached = accountPersonalizationCache.get(session.accountKey, PersonalizedSectionType.LIKED_MUSIC)
-                if (cached != null) {
-                    return PersonalizedSection(
-                        id = "sec_liked_music",
-                        type = PersonalizedSectionType.LIKED_MUSIC,
-                        title = "Liked Music",
-                        subtitle = "From your connected account",
-                        sourceLabel = "Account",
-                        items = cached,
-                    )
-                }
+            val cachedResult = accountPersonalizationCache.getFullSection(
+                session.accountKey,
+                PersonalizedSectionType.LIKED_MUSIC,
+                allowStale = true
+            )
+            if (!forceRefresh && cachedResult != null && !cachedResult.isStale) {
+                return PersonalizedSection(
+                    id = "sec_liked_music",
+                    type = PersonalizedSectionType.LIKED_MUSIC,
+                    title = "Liked Music",
+                    subtitle = "From your connected account",
+                    sourceLabel = "From your account",
+                    explanation = "Songs and tracks you marked as Liked in your connected YouTube account.",
+                    items = cachedResult.items,
+                    isFromCache = cachedResult.isStale,
+                    lastUpdatedMillis = cachedResult.cachedAt,
+                )
             }
 
             return try {
@@ -342,9 +358,22 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 val filtered = likedVideos
                     .filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
                     .distinctBy { it.id }
-                    .map { it.toPersonalizedFeedItem(sourceBadge = "LIKED") }
+                    .map {
+                        it.toPersonalizedFeedItem(
+                            sourceBadge = "LIKED",
+                            explanation = "Added to your Liked Music in your connected YouTube account."
+                        )
+                    }
 
-                accountPersonalizationCache.put(session.accountKey, PersonalizedSectionType.LIKED_MUSIC, filtered)
+                accountPersonalizationCache.put(
+                    accountKey = session.accountKey,
+                    sectionType = PersonalizedSectionType.LIKED_MUSIC,
+                    items = filtered,
+                    title = "Liked Music",
+                    subtitle = "From your connected account",
+                    sourceLabel = "From your account",
+                    explanation = "Songs and tracks you marked as Liked in your connected YouTube account.",
+                )
 
                 PersonalizedSection(
                     id = "sec_liked_music",
@@ -352,19 +381,38 @@ class PersonalizationRepositoryImpl @Inject constructor(
                     title = "Liked Music",
                     subtitle = "From your connected account",
                     sourceLabel = "From your account",
+                    explanation = "Songs and tracks you marked as Liked in your connected YouTube account.",
                     items = filtered,
+                    isFromCache = false,
+                    lastUpdatedMillis = System.currentTimeMillis(),
                 )
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to fetch remote liked music", e)
-                PersonalizedSection(
-                    id = "sec_liked_music",
-                    type = PersonalizedSectionType.LIKED_MUSIC,
-                    title = "Liked Music",
-                    subtitle = "From your connected account",
-                    sourceLabel = "From your account",
-                    error = "Could not load liked music from account",
-                    canRetry = true,
-                )
+                if (cachedResult != null && cachedResult.items.isNotEmpty()) {
+                    PersonalizedSection(
+                        id = "sec_liked_music",
+                        type = PersonalizedSectionType.LIKED_MUSIC,
+                        title = "Liked Music",
+                        subtitle = "Updated earlier • Offline",
+                        sourceLabel = "From your account",
+                        explanation = "Cached from your connected account.",
+                        items = cachedResult.items,
+                        isFromCache = true,
+                        lastUpdatedMillis = cachedResult.cachedAt,
+                        canRetry = true,
+                    )
+                } else {
+                    PersonalizedSection(
+                        id = "sec_liked_music",
+                        type = PersonalizedSectionType.LIKED_MUSIC,
+                        title = "Liked Music",
+                        subtitle = "From your connected account",
+                        sourceLabel = "From your account",
+                        explanation = "Songs and tracks you marked as Liked in your connected YouTube account.",
+                        error = "Could not load liked music from account",
+                        canRetry = true,
+                    )
+                }
             }
         } else {
             // Logged-out fallback: check local library liked tracks
@@ -427,6 +475,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
                     artworkUrl = pl.artworkUrl,
                     itemType = PersonalizedItemType.PLAYLIST,
                     sourceBadge = "PLAYLIST",
+                    explanation = "From your saved or created playlists.",
                 )
             }
 
@@ -436,7 +485,9 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 title = "Your Playlists",
                 subtitle = "Local & customized mixes",
                 sourceLabel = "From your playlists",
+                explanation = "Custom and curated playlists from your device library.",
                 items = items,
+                lastUpdatedMillis = System.currentTimeMillis(),
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load playlists", e)
@@ -446,6 +497,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 title = "Your Playlists",
                 subtitle = "Playlists",
                 sourceLabel = "From your playlists",
+                explanation = "Your playlists collection.",
                 error = "Could not load playlists",
                 canRetry = true,
             )
@@ -464,23 +516,30 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 title = "New From Subscriptions",
                 subtitle = "Sign in to see updates from your subscribed artists",
                 sourceLabel = "From your subscriptions",
+                explanation = "New uploads and music from channels you subscribe to on YouTube.",
                 items = emptyList(),
                 isAccountRequired = true,
             )
         }
 
-        if (!forceRefresh) {
-            val cached = accountPersonalizationCache.get(session.accountKey, PersonalizedSectionType.NEW_FROM_SUBSCRIPTIONS)
-            if (cached != null) {
-                return PersonalizedSection(
-                    id = "sec_subscriptions",
-                    type = PersonalizedSectionType.NEW_FROM_SUBSCRIPTIONS,
-                    title = "New From Subscriptions",
-                    subtitle = "Latest releases from your channels",
-                    sourceLabel = "From your subscriptions",
-                    items = cached,
-                )
-            }
+        val cachedResult = accountPersonalizationCache.getFullSection(
+            session.accountKey,
+            PersonalizedSectionType.NEW_FROM_SUBSCRIPTIONS,
+            allowStale = true
+        )
+
+        if (!forceRefresh && cachedResult != null && !cachedResult.isStale) {
+            return PersonalizedSection(
+                id = "sec_subscriptions",
+                type = PersonalizedSectionType.NEW_FROM_SUBSCRIPTIONS,
+                title = "New From Subscriptions",
+                subtitle = "Latest releases from your channels",
+                sourceLabel = "From your subscriptions",
+                explanation = "New music releases from channels you follow.",
+                items = cachedResult.items,
+                isFromCache = cachedResult.isStale,
+                lastUpdatedMillis = cachedResult.cachedAt,
+            )
         }
 
         return try {
@@ -489,9 +548,22 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 .filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
                 .distinctBy { it.id }
                 .take(20)
-                .map { it.toPersonalizedFeedItem(sourceBadge = "NEW") }
+                .map {
+                    it.toPersonalizedFeedItem(
+                        sourceBadge = "NEW",
+                        explanation = "New release from subscribed channel: ${it.channelName}."
+                    )
+                }
 
-            accountPersonalizationCache.put(session.accountKey, PersonalizedSectionType.NEW_FROM_SUBSCRIPTIONS, filtered)
+            accountPersonalizationCache.put(
+                accountKey = session.accountKey,
+                sectionType = PersonalizedSectionType.NEW_FROM_SUBSCRIPTIONS,
+                items = filtered,
+                title = "New From Subscriptions",
+                subtitle = "Latest releases from your channels",
+                sourceLabel = "From your subscriptions",
+                explanation = "New music releases from channels you follow.",
+            )
 
             PersonalizedSection(
                 id = "sec_subscriptions",
@@ -499,24 +571,64 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 title = "New From Subscriptions",
                 subtitle = "Latest releases from your channels",
                 sourceLabel = "From your subscriptions",
+                explanation = "New music releases from channels you follow.",
                 items = filtered,
+                isFromCache = false,
+                lastUpdatedMillis = System.currentTimeMillis(),
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to fetch subscriptions feed", e)
-            PersonalizedSection(
-                id = "sec_subscriptions",
-                type = PersonalizedSectionType.NEW_FROM_SUBSCRIPTIONS,
-                title = "New From Subscriptions",
-                subtitle = "Latest releases from your channels",
-                sourceLabel = "From your subscriptions",
-                error = "Could not load subscriptions feed",
-                canRetry = true,
-            )
+            if (cachedResult != null && cachedResult.items.isNotEmpty()) {
+                PersonalizedSection(
+                    id = "sec_subscriptions",
+                    type = PersonalizedSectionType.NEW_FROM_SUBSCRIPTIONS,
+                    title = "New From Subscriptions",
+                    subtitle = "Updated earlier • Offline",
+                    sourceLabel = "From your subscriptions",
+                    explanation = "Cached releases from channels you follow.",
+                    items = cachedResult.items,
+                    isFromCache = true,
+                    lastUpdatedMillis = cachedResult.cachedAt,
+                    canRetry = true,
+                )
+            } else {
+                PersonalizedSection(
+                    id = "sec_subscriptions",
+                    type = PersonalizedSectionType.NEW_FROM_SUBSCRIPTIONS,
+                    title = "New From Subscriptions",
+                    subtitle = "Latest releases from your channels",
+                    sourceLabel = "From your subscriptions",
+                    explanation = "New music releases from channels you follow.",
+                    error = "Could not load subscriptions feed",
+                    canRetry = true,
+                )
+            }
         }
     }
 
     // ── 7. Based on Your Listening (On-Device Affinity Model) ───────────────
     private suspend fun buildBasedOnListeningSection(forceRefresh: Boolean): PersonalizedSection {
+        val cacheKey = "__local_listening__"
+        val cachedResult = accountPersonalizationCache.getFullSection(
+            cacheKey,
+            PersonalizedSectionType.BASED_ON_LISTENING,
+            allowStale = true
+        )
+
+        if (!forceRefresh && cachedResult != null && !cachedResult.isStale) {
+            return PersonalizedSection(
+                id = "sec_based_on_listening",
+                type = PersonalizedSectionType.BASED_ON_LISTENING,
+                title = "Based on Your Listening",
+                subtitle = cachedResult.subtitle ?: "Curated for your taste",
+                sourceLabel = "Based on your listening",
+                explanation = cachedResult.explanation ?: "Curated recommendations based on your listening history.",
+                items = cachedResult.items,
+                isFromCache = cachedResult.isStale,
+                lastUpdatedMillis = cachedResult.cachedAt,
+            )
+        }
+
         return try {
             val now = System.currentTimeMillis()
             val last30Days = now - 30L * 24 * 3600 * 1000
@@ -530,17 +642,33 @@ class PersonalizationRepositoryImpl @Inject constructor(
             }
 
             val rawResults = youtubeRemoteDataSource.searchMusic(query)
+            val subtitle = if (!topArtistSeed.isNullOrBlank()) "Based on $topArtistSeed" else "Curated for your taste"
+            val explanation = if (!topArtistSeed.isNullOrBlank()) {
+                "Recommended because you frequently listen to $topArtistSeed on this device."
+            } else {
+                "Curated from your overall on-device listening preferences."
+            }
+
             val filtered = rawResults
                 .filter { MusicFilter.isMusicTrack(it.title, it.artist, it.duration) }
                 .distinctBy { it.id }
                 .take(15)
-                .map { it.toPersonalizedFeedItem(sourceBadge = "RECOMMENDED") }
+                .map {
+                    it.toPersonalizedFeedItem(
+                        sourceBadge = "RECOMMENDED",
+                        explanation = explanation
+                    )
+                }
 
-            val subtitle = if (!topArtistSeed.isNullOrBlank()) {
-                "Based on $topArtistSeed"
-            } else {
-                "Curated for your taste"
-            }
+            accountPersonalizationCache.put(
+                accountKey = cacheKey,
+                sectionType = PersonalizedSectionType.BASED_ON_LISTENING,
+                items = filtered,
+                title = "Based on Your Listening",
+                subtitle = subtitle,
+                sourceLabel = "Based on your listening",
+                explanation = explanation,
+            )
 
             PersonalizedSection(
                 id = "sec_based_on_listening",
@@ -548,31 +676,87 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 title = "Based on Your Listening",
                 subtitle = subtitle,
                 sourceLabel = "Based on your listening",
+                explanation = explanation,
                 items = filtered,
+                isFromCache = false,
+                lastUpdatedMillis = System.currentTimeMillis(),
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to compute Based on Listening section", e)
-            PersonalizedSection(
-                id = "sec_based_on_listening",
-                type = PersonalizedSectionType.BASED_ON_LISTENING,
-                title = "Based on Your Listening",
-                subtitle = "Curated recommendations",
-                sourceLabel = "Based on your listening",
-                error = "Could not generate recommendations",
-                canRetry = true,
-            )
+            if (cachedResult != null && cachedResult.items.isNotEmpty()) {
+                PersonalizedSection(
+                    id = "sec_based_on_listening",
+                    type = PersonalizedSectionType.BASED_ON_LISTENING,
+                    title = "Based on Your Listening",
+                    subtitle = "Updated earlier • Offline",
+                    sourceLabel = "Based on your listening",
+                    explanation = cachedResult.explanation ?: "Curated recommendations based on your listening.",
+                    items = cachedResult.items,
+                    isFromCache = true,
+                    lastUpdatedMillis = cachedResult.cachedAt,
+                    canRetry = true,
+                )
+            } else {
+                PersonalizedSection(
+                    id = "sec_based_on_listening",
+                    type = PersonalizedSectionType.BASED_ON_LISTENING,
+                    title = "Based on Your Listening",
+                    subtitle = "Curated recommendations",
+                    sourceLabel = "Based on your listening",
+                    explanation = "Curated recommendations based on your listening history.",
+                    error = "Could not generate recommendations",
+                    canRetry = true,
+                )
+            }
         }
     }
 
     // ── 8. Trending Music (Public / Region-Aware) ───────────────────────────
     private suspend fun buildTrendingSection(forceRefresh: Boolean): PersonalizedSection {
+        val cacheKey = "__public_trending__"
+        val cachedResult = accountPersonalizationCache.getFullSection(
+            cacheKey,
+            PersonalizedSectionType.TRENDING_MUSIC,
+            allowStale = true
+        )
+
+        if (!forceRefresh && cachedResult != null && !cachedResult.isStale) {
+            return PersonalizedSection(
+                id = "sec_trending",
+                type = PersonalizedSectionType.TRENDING_MUSIC,
+                title = "Trending Music",
+                subtitle = "Popular tracks right now",
+                sourceLabel = "Trending",
+                explanation = "Popular tracks currently trending in your region.",
+                items = cachedResult.items,
+                isFromCache = cachedResult.isStale,
+                lastUpdatedMillis = cachedResult.cachedAt,
+            )
+        }
+
         return try {
             val trendingItems = youtubeRemoteDataSource.searchMusic("trending songs official audio video")
+            val explanation = "Popular track currently trending in your region."
             val filtered = trendingItems
                 .filter { MusicFilter.isMusicTrack(it.title, it.artist, it.duration) }
                 .distinctBy { it.id }
                 .take(20)
-                .map { it.toPersonalizedFeedItem(sourceBadge = "TRENDING") }
+                .map {
+                    it.toPersonalizedFeedItem(
+                        sourceBadge = "TRENDING",
+                        explanation = explanation
+                    )
+                }
+
+            accountPersonalizationCache.put(
+                accountKey = cacheKey,
+                sectionType = PersonalizedSectionType.TRENDING_MUSIC,
+                items = filtered,
+                title = "Trending Music",
+                subtitle = "Popular tracks right now",
+                sourceLabel = "Trending",
+                explanation = "Popular tracks currently trending in your region.",
+            )
 
             PersonalizedSection(
                 id = "sec_trending",
@@ -580,24 +764,46 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 title = "Trending Music",
                 subtitle = "Popular tracks right now",
                 sourceLabel = "Trending",
+                explanation = "Popular tracks currently trending in your region.",
                 items = filtered,
+                isFromCache = false,
+                lastUpdatedMillis = System.currentTimeMillis(),
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load Trending Music section", e)
-            PersonalizedSection(
-                id = "sec_trending",
-                type = PersonalizedSectionType.TRENDING_MUSIC,
-                title = "Trending Music",
-                subtitle = "Popular tracks right now",
-                sourceLabel = "Trending",
-                error = "Could not load trending music",
-                canRetry = true,
-            )
+            if (cachedResult != null && cachedResult.items.isNotEmpty()) {
+                PersonalizedSection(
+                    id = "sec_trending",
+                    type = PersonalizedSectionType.TRENDING_MUSIC,
+                    title = "Trending Music",
+                    subtitle = "Updated earlier • Offline",
+                    sourceLabel = "Trending",
+                    explanation = "Popular tracks currently trending in your region.",
+                    items = cachedResult.items,
+                    isFromCache = true,
+                    lastUpdatedMillis = cachedResult.cachedAt,
+                    canRetry = true,
+                )
+            } else {
+                PersonalizedSection(
+                    id = "sec_trending",
+                    type = PersonalizedSectionType.TRENDING_MUSIC,
+                    title = "Trending Music",
+                    subtitle = "Popular tracks right now",
+                    sourceLabel = "Trending",
+                    explanation = "Popular tracks currently trending in your region.",
+                    error = "Could not load trending music",
+                    canRetry = true,
+                )
+            }
         }
     }
 
     // ── Helper Mappers ───────────────────────────────────────────────────────
-    private fun HomeVideoItem.toPersonalizedFeedItem(sourceBadge: String? = null): PersonalizedFeedItem {
+    private fun HomeVideoItem.toPersonalizedFeedItem(
+        sourceBadge: String? = null,
+        explanation: String? = null,
+    ): PersonalizedFeedItem {
         return PersonalizedFeedItem(
             id = id,
             title = title,
@@ -607,6 +813,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
             durationMs = duration * 1000L,
             itemType = PersonalizedItemType.SONG,
             sourceBadge = sourceBadge ?: "DSP READY",
+            explanation = explanation,
             mediaItem = MediaItem.Remote(
                 id = id,
                 title = title,
@@ -618,7 +825,10 @@ class PersonalizationRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun HomeMusicItem.toPersonalizedFeedItem(sourceBadge: String? = null): PersonalizedFeedItem {
+    private fun HomeMusicItem.toPersonalizedFeedItem(
+        sourceBadge: String? = null,
+        explanation: String? = null,
+    ): PersonalizedFeedItem {
         return PersonalizedFeedItem(
             id = id,
             title = title,
@@ -627,6 +837,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
             durationMs = duration * 1000L,
             itemType = PersonalizedItemType.SONG,
             sourceBadge = sourceBadge ?: "DSP READY",
+            explanation = explanation,
             mediaItem = MediaItem.Remote(
                 id = id,
                 title = title,

@@ -44,12 +44,64 @@ object DatabaseModule {
             }
         }
 
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `cached_personalized_sections` (
+                        `accountKey` TEXT NOT NULL,
+                        `sectionType` TEXT NOT NULL,
+                        `title` TEXT NOT NULL,
+                        `subtitle` TEXT,
+                        `sourceLabel` TEXT NOT NULL,
+                        `explanation` TEXT,
+                        `cachedAt` INTEGER NOT NULL,
+                        `expiresAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`accountKey`, `sectionType`)
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `cached_personalized_items` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `accountKey` TEXT NOT NULL,
+                        `sectionType` TEXT NOT NULL,
+                        `itemId` TEXT NOT NULL,
+                        `title` TEXT NOT NULL,
+                        `artist` TEXT NOT NULL,
+                        `channelId` TEXT,
+                        `artworkUrl` TEXT,
+                        `durationMs` INTEGER NOT NULL,
+                        `itemType` TEXT NOT NULL,
+                        `sourceBadge` TEXT,
+                        `explanation` TEXT,
+                        `rank` INTEGER NOT NULL,
+                        `cachedAt` INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS `index_cached_personalized_items_accountKey_sectionType`
+                    ON `cached_personalized_items` (`accountKey`, `sectionType`)
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS `index_cached_personalized_items_itemId`
+                    ON `cached_personalized_items` (`itemId`)
+                    """.trimIndent()
+                )
+            }
+        }
+
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
             "deepeye_music.db",
         )
-            .addMigrations(MIGRATION_9_10)
+            .addMigrations(MIGRATION_9_10, MIGRATION_10_11)
             .fallbackToDestructiveMigration()
             .build()
     }
@@ -70,6 +122,12 @@ object DatabaseModule {
 
     @Provides
     fun provideCacheDao(database: AppDatabase): com.deepeye.musicpro.data.cache.dao.CacheDao = database.cacheDao()
+
+    @Provides
+    @Singleton
+    fun providePersonalizedSectionDao(
+        database: AppDatabase
+    ): com.deepeye.musicpro.data.cache.dao.PersonalizedSectionDao = database.personalizedSectionDao()
 
     @Provides
     @Singleton
