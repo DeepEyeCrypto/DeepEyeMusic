@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Debug-only recovery test probe components -->
+    <application>
+        
+        <!-- Debug recovery probe receiver (debug only) -->
+        <receiver
+            android:name=".debug.recovery.RecoveryProbeReceiver"
+            android:enabled="true"
+            android:exported="false"
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="com.deepeye.musicpro.debug.action.START_RECOVERY_PROBE" />
+                <action android:name="com.deepeye.musicpro.debug.action.DUMP_RECOVERY_PROBE" />
+                <action android:name="com.deepeye.musicpro.debug.action.TRIGGER_DUPLICATE_EXPIRY" />
+                <action android:name="com.deepeye.musicpro.debug.action.TRIGGER_BUDGET_EXHAUSTION" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>
