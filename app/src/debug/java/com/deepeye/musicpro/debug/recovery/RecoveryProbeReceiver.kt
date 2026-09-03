@@ -8,12 +8,14 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.deepeye.musicpro.player.controller.PlayerController
-import com.deepeye.musicpro.player.recovery.PlaybackRecoveryCoordinator
-import com.deepeye.musicpro.player.smarttube.SmartTubePlaybackFormatRepository
-import com.deepeye.musicpro.dsp.profile.DspProfileManager
-import com.deepeye.musicpro.dsp.engine.DSPEngine
-import com.deepeye.musicpro.player.queue.QueueManager
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.security.MessageDigest
+import javax.inject.Inject
 
 private const val TAG = "RecoveryProbe"
 
@@ -21,9 +23,16 @@ private const val TAG = "RecoveryProbe"
  * Debug-only receiver for recovery test actions.
  * Only active in debug builds via AndroidManifest.xml.
  */
+@AndroidEntryPoint
 class RecoveryProbeReceiver : BroadcastReceiver() {
-    
+
+    @Inject
+    lateinit var playerController: PlayerController
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     companion object {
+        const val ACTION_SIMULATE_STREAM_EXPIRY = "com.deepeye.musicpro.action.SIMULATE_STREAM_EXPIRY"
         const val ACTION_START_PROBE = "com.deepeye.musicpro.debug.action.START_RECOVERY_PROBE"
         const val ACTION_DUMP_PROBE = "com.deepeye.musicpro.debug.action.DUMP_RECOVERY_PROBE"
         const val ACTION_TRIGGER_DUPLICATE = "com.deepeye.musicpro.debug.action.TRIGGER_DUPLICATE_EXPIRY"
@@ -32,42 +41,51 @@ class RecoveryProbeReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null || intent == null) return
-        
+
         val action = intent.action ?: return
-        Log.d(TAG, "Debug action received: $action")
-        
+        Log.i(TAG, "Debug action received: $action")
+
         when (action) {
-            ACTION_START_PROBE -> handleStartProbe(context)
-            ACTION_DUMP_PROBE -> handleDumpProbe(context)
-            ACTION_TRIGGER_DUPLICATE -> handleDuplicateExpiry(context)
-            ACTION_TRIGGER_BUDGET_EXHAUSTION -> handleBudgetExhaustion(context)
+            ACTION_SIMULATE_STREAM_EXPIRY -> handleSimulateExpiry()
+            ACTION_START_PROBE -> handleStartProbe()
+            ACTION_DUMP_PROBE -> handleDumpProbe()
+            ACTION_TRIGGER_DUPLICATE -> handleDuplicateExpiry()
+            ACTION_TRIGGER_BUDGET_EXHAUSTION -> handleBudgetExhaustion()
         }
     }
-    
-    private fun handleStartProbe(context: Context) {
-        // Capture baseline state via dependency injection would happen here
-        // For now, just log that probe mode is active
-        Log.d(TAG, "Recovery probe mode started")
+
+    private fun handleSimulateExpiry() {
+        Log.i(TAG, "Simulating stream expiry (403)...")
+        val success = playerController.simulateStreamExpiryForTesting()
+        Log.i(TAG, "Simulated stream expiry triggered: $success")
     }
-    
-    private fun handleDumpProbe(context: Context) {
-        // Output would go to logcat for ADB capture
-        Log.d(TAG, "=== RECOVERY PROBE DUMP ===")
-        Log.d(TAG, "Probe dump available via dumpsys in production")
+
+    private fun handleStartProbe() {
+        Log.i(TAG, "Recovery probe mode started")
     }
-    
-    private fun handleDuplicateExpiry(context: Context) {
-        Log.d(TAG, "Triggering duplicate expiry test")
-        // Would send two broadcasts with minimal delay
-        val duplicateIntent = Intent("com.deepeye.musicpro.action.SIMULATE_STREAM_EXPIRY")
-        context.sendBroadcast(duplicateIntent)
+
+    private fun handleDumpProbe() {
+        Log.i(TAG, "=== RECOVERY PROBE DUMP ===")
     }
-    
-    private fun handleBudgetExhaustion(context: Context) {
-        Log.d(TAG, "Triggering budget exhaustion test")
-        // Would send second broadcast before 60s reset window
-        val budgetIntent = Intent("com.deepeye.musicpro.action.SIMULATE_STREAM_EXPIRY")
-        context.sendBroadcast(budgetIntent)
+
+    private fun handleDuplicateExpiry() {
+        Log.i(TAG, "Triggering duplicate expiry test (concurrent requests)")
+        scope.launch {
+            playerController.simulateStreamExpiryForTesting()
+            delay(50)
+            playerController.simulateStreamExpiryForTesting()
+        }
+    }
+
+    private fun handleBudgetExhaustion() {
+        Log.i(TAG, "Triggering budget exhaustion test (rapid retries)")
+        scope.launch {
+            playerController.simulateStreamExpiryForTesting()
+            delay(500)
+            playerController.simulateStreamExpiryForTesting()
+            delay(500)
+            playerController.simulateStreamExpiryForTesting()
+        }
     }
 }
 

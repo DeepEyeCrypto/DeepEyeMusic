@@ -9,9 +9,10 @@
         <receiver
             android:name=".debug.recovery.RecoveryProbeReceiver"
             android:enabled="true"
-            android:exported="false"
+            android:exported="true"
             tools:ignore="ExportedReceiver">
             <intent-filter>
+                <action android:name="com.deepeye.musicpro.action.SIMULATE_STREAM_EXPIRY" />
                 <action android:name="com.deepeye.musicpro.debug.action.START_RECOVERY_PROBE" />
                 <action android:name="com.deepeye.musicpro.debug.action.DUMP_RECOVERY_PROBE" />
                 <action android:name="com.deepeye.musicpro.debug.action.TRIGGER_DUPLICATE_EXPIRY" />
