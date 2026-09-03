@@ -5,6 +5,7 @@ package com.deepeye.musicpro.domain.model.personalization
 
 import com.deepeye.musicpro.account.AccountSession
 import com.deepeye.musicpro.domain.model.MediaItem
+import com.deepeye.musicpro.domain.personalization.SectionDiagnostics
 
 /**
  * Types of personalized music feed sections rendered on the Music tab.
@@ -79,4 +80,6 @@ data class PersonalizedFeedState(
     val accountSession: AccountSession = AccountSession.Loading,
     val globalError: String? = null,
     val lastUpdatedMillis: Long = 0L,
+    /** Debug-only diagnostics for each section. Null when diagnostics are disabled (release). */
+    val diagnostics: List<SectionDiagnostics> = emptyList(),
 )

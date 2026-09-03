@@ -32,29 +32,45 @@ constructor(
     @ApplicationContext private val context: Context,
 ) : PersonalizationPreferenceStore {
     companion object {
+        private val KEY_ENABLE_PERSONALIZATION = booleanPreferencesKey("enable_personalization")
         private val KEY_ENABLE_ACCOUNT_SECTIONS = booleanPreferencesKey("enable_account_sections")
         private val KEY_ENABLE_LOCAL_LISTENING = booleanPreferencesKey("enable_local_listening_sections")
         private val KEY_RECENT_SEARCH_INFLUENCE = booleanPreferencesKey("recent_search_influence")
+        private val KEY_ENABLE_LIKED_MUSIC = booleanPreferencesKey("enable_liked_music")
+        private val KEY_ENABLE_SUBSCRIPTIONS = booleanPreferencesKey("enable_subscriptions")
+        private val KEY_ENABLE_LOCAL_MIX = booleanPreferencesKey("enable_local_mix")
+        private val KEY_ENABLE_TRENDING = booleanPreferencesKey("enable_trending")
         private val KEY_TRENDING_REGION = stringPreferencesKey("trending_region")
         private val KEY_HIDE_NON_MUSIC = booleanPreferencesKey("hide_non_music_content")
         private val KEY_DISCOVERY_BLEND = intPreferencesKey("discovery_blend_count")
         private val KEY_MAX_REPEATED_ARTIST = intPreferencesKey("max_repeated_artist_per_section")
+        private val KEY_SKIPPED_COOLDOWN_HOURS = intPreferencesKey("recently_skipped_cooldown_hours")
         private val KEY_LAST_REFRESH = longPreferencesKey("last_refresh_millis")
     }
 
     val preferences: Flow<PersonalizationPreferences> =
         context.personalizationDataStore.data.map { prefs ->
             PersonalizationPreferences(
+                enablePersonalization = prefs[KEY_ENABLE_PERSONALIZATION] ?: true,
                 enableAccountSections = prefs[KEY_ENABLE_ACCOUNT_SECTIONS] ?: true,
                 enableLocalListeningSections = prefs[KEY_ENABLE_LOCAL_LISTENING] ?: true,
                 recentSearchInfluence = prefs[KEY_RECENT_SEARCH_INFLUENCE] ?: true,
+                enableLikedMusic = prefs[KEY_ENABLE_LIKED_MUSIC] ?: true,
+                enableSubscriptions = prefs[KEY_ENABLE_SUBSCRIPTIONS] ?: true,
+                enableLocalMix = prefs[KEY_ENABLE_LOCAL_MIX] ?: true,
+                enableTrending = prefs[KEY_ENABLE_TRENDING] ?: true,
                 trendingRegion = prefs[KEY_TRENDING_REGION] ?: "US",
                 hideNonMusicContent = prefs[KEY_HIDE_NON_MUSIC] ?: false,
                 discoveryBlendCount = prefs[KEY_DISCOVERY_BLEND] ?: 2,
                 maxRepeatedArtistPerSection = prefs[KEY_MAX_REPEATED_ARTIST] ?: 2,
+                recentlySkippedCooldownHours = prefs[KEY_SKIPPED_COOLDOWN_HOURS] ?: 24,
                 lastRefreshMillis = prefs[KEY_LAST_REFRESH] ?: 0L,
             )
         }
+
+    suspend fun setEnablePersonalization(enabled: Boolean) {
+        context.personalizationDataStore.edit { it[KEY_ENABLE_PERSONALIZATION] = enabled }
+    }
 
     suspend fun setEnableAccountSections(enabled: Boolean) {
         context.personalizationDataStore.edit { it[KEY_ENABLE_ACCOUNT_SECTIONS] = enabled }
@@ -66,6 +82,22 @@ constructor(
 
     suspend fun setRecentSearchInfluence(enabled: Boolean) {
         context.personalizationDataStore.edit { it[KEY_RECENT_SEARCH_INFLUENCE] = enabled }
+    }
+
+    suspend fun setEnableLikedMusic(enabled: Boolean) {
+        context.personalizationDataStore.edit { it[KEY_ENABLE_LIKED_MUSIC] = enabled }
+    }
+
+    suspend fun setEnableSubscriptions(enabled: Boolean) {
+        context.personalizationDataStore.edit { it[KEY_ENABLE_SUBSCRIPTIONS] = enabled }
+    }
+
+    suspend fun setEnableLocalMix(enabled: Boolean) {
+        context.personalizationDataStore.edit { it[KEY_ENABLE_LOCAL_MIX] = enabled }
+    }
+
+    suspend fun setEnableTrending(enabled: Boolean) {
+        context.personalizationDataStore.edit { it[KEY_ENABLE_TRENDING] = enabled }
     }
 
     suspend fun setTrendingRegion(region: String) {
@@ -84,6 +116,10 @@ constructor(
         context.personalizationDataStore.edit { it[KEY_MAX_REPEATED_ARTIST] = count.coerceIn(1, 5) }
     }
 
+    suspend fun setRecentlySkippedCooldownHours(hours: Int) {
+        context.personalizationDataStore.edit { it[KEY_SKIPPED_COOLDOWN_HOURS] = hours.coerceIn(1, 720) }
+    }
+
     suspend fun setLastRefreshMillis(millis: Long) {
         context.personalizationDataStore.edit { it[KEY_LAST_REFRESH] = millis }
     }
@@ -94,20 +130,35 @@ constructor(
     override suspend fun current(): PersonalizationPreferences = preferences.first()
 
     override suspend fun update(transform: (PersonalizationPreferences) -> PersonalizationPreferences) {
-        val updated = transform(current())
-        if (updated.enableAccountSections != current().enableAccountSections)
+        val curr = current()
+        val updated = transform(curr)
+        if (updated.enablePersonalization != curr.enablePersonalization)
+            setEnablePersonalization(updated.enablePersonalization)
+        if (updated.enableAccountSections != curr.enableAccountSections)
             setEnableAccountSections(updated.enableAccountSections)
-        if (updated.enableLocalListeningSections != current().enableLocalListeningSections)
+        if (updated.enableLocalListeningSections != curr.enableLocalListeningSections)
             setEnableLocalListeningSections(updated.enableLocalListeningSections)
-        if (updated.recentSearchInfluence != current().recentSearchInfluence)
+        if (updated.recentSearchInfluence != curr.recentSearchInfluence)
             setRecentSearchInfluence(updated.recentSearchInfluence)
-        if (updated.trendingRegion != current().trendingRegion)
+        if (updated.enableLikedMusic != curr.enableLikedMusic)
+            setEnableLikedMusic(updated.enableLikedMusic)
+        if (updated.enableSubscriptions != curr.enableSubscriptions)
+            setEnableSubscriptions(updated.enableSubscriptions)
+        if (updated.enableLocalMix != curr.enableLocalMix)
+            setEnableLocalMix(updated.enableLocalMix)
+        if (updated.enableTrending != curr.enableTrending)
+            setEnableTrending(updated.enableTrending)
+        if (updated.trendingRegion != curr.trendingRegion)
             setTrendingRegion(updated.trendingRegion)
-        if (updated.hideNonMusicContent != current().hideNonMusicContent)
+        if (updated.hideNonMusicContent != curr.hideNonMusicContent)
             setHideNonMusicContent(updated.hideNonMusicContent)
-        if (updated.discoveryBlendCount != current().discoveryBlendCount)
+        if (updated.discoveryBlendCount != curr.discoveryBlendCount)
             setDiscoveryBlendCount(updated.discoveryBlendCount)
-        if (updated.maxRepeatedArtistPerSection != current().maxRepeatedArtistPerSection)
+        if (updated.maxRepeatedArtistPerSection != curr.maxRepeatedArtistPerSection)
             setMaxRepeatedArtistPerSection(updated.maxRepeatedArtistPerSection)
+        if (updated.recentlySkippedCooldownHours != curr.recentlySkippedCooldownHours)
+            setRecentlySkippedCooldownHours(updated.recentlySkippedCooldownHours)
+        if (updated.lastRefreshMillis != curr.lastRefreshMillis)
+            setLastRefreshMillis(updated.lastRefreshMillis)
     }
 }
