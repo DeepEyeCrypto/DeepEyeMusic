@@ -1,6 +1,9 @@
 package com.deepeye.musicpro.extractor
 
 import android.util.Log
+import com.deepeye.musicpro.player.smarttube.DeepEyePlaybackFormat
+import com.deepeye.musicpro.player.smarttube.SmartTubeCodecCapabilityChecker
+import com.deepeye.musicpro.player.smarttube.SmartTubeFormatAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -22,6 +25,7 @@ import java.net.URLEncoder
  */
 class SmartTubeInnertubeExtractor(
     private val client: OkHttpClient,
+    private val formatAdapter: SmartTubeFormatAdapter = SmartTubeFormatAdapter(SmartTubeCodecCapabilityChecker()),
     /** Optional OAuth access-token provider; authenticated player requests bypass YouTube's bot check. */
     private val accessTokenProvider: (suspend () -> String?)? = null,
 ) : IExtractorBridge {
@@ -407,6 +411,8 @@ class SmartTubeInnertubeExtractor(
     }
 
     override suspend fun extractStream(videoId: String, preferVideo: Boolean): ExtractorStreamResult? = withContext(Dispatchers.IO) {
+        // ANDROID client is tried FIRST - it reliably returns progressive muxed formats (itag 18)
+        // that work without PO-Token. IOS/Web may return only adaptive formats which 403 at 59s.
         val contexts = listOf(
             androidClientContext() to ANDROID_UA,
             iosClientContext() to IOS_UA,
@@ -447,14 +453,40 @@ class SmartTubeInnertubeExtractor(
                                 val authAdaptive = authStreaming.optJSONArray("adaptiveFormats")
                                 val authFormats = authStreaming.optJSONArray("formats")
                                 val authDash = authStreaming.optString("dashManifestUrl").takeIf { it.isNotEmpty() }
+                                val authHls = authStreaming.optString("hlsManifestUrl").takeIf { it.isNotEmpty() }
+                                val (authVideoFormats, authAudioFormats) = formatAdapter.parseStreamingData(authStreaming, { streamUrl(it) })
+                                val authDashUri = authDash ?: com.deepeye.musicpro.player.smarttube.SmartTubeDashManifestGenerator.generateDashDataUri(authStreaming) { streamUrl(it) }
+                                // PO-Token Fix: Auth path must also prioritize progressive over DASH to avoid 59s 403
                                 val authRes = if (preferVideo) {
-                                    bestProgressive(authFormats) ?: bestAdaptiveVideo(authAdaptive) ?: authDash?.let {
-                                        ExtractorStreamResult(url = it, container = "adaptive", quality = "DASH", extractorName = "SmartTubeInnertube")
-                                    }
+                                    bestProgressive(authFormats, authVideoFormats, authAudioFormats, authDashUri, authHls)
+                                        ?: bestAdaptiveVideo(authAdaptive, authVideoFormats, authAudioFormats, authDashUri, authHls)
+                                        ?: if (authDashUri != null) {
+                                            ExtractorStreamResult(
+                                                url = authDashUri,
+                                                container = "adaptive",
+                                                quality = "DASH",
+                                                extractorName = "SmartTubeInnertube",
+                                                videoFormats = authVideoFormats,
+                                                audioFormats = authAudioFormats,
+                                                dashManifestUrl = authDashUri,
+                                                hlsManifestUrl = authHls
+                                            )
+                                        } else null
                                 } else {
-                                    bestProgressive(authFormats) ?: bestAdaptiveAudio(authAdaptive) ?: authDash?.let {
-                                        ExtractorStreamResult(url = it, container = "adaptive", quality = "DASH", extractorName = "SmartTubeInnertube")
-                                    }
+                                    bestProgressive(authFormats, authVideoFormats, authAudioFormats, authDashUri, authHls)
+                                        ?: bestAdaptiveAudio(authAdaptive, authVideoFormats, authAudioFormats, authDashUri, authHls)
+                                        ?: if (authDashUri != null) {
+                                            ExtractorStreamResult(
+                                                url = authDashUri,
+                                                container = "adaptive",
+                                                quality = "DASH",
+                                                extractorName = "SmartTubeInnertube",
+                                                videoFormats = authVideoFormats,
+                                                audioFormats = authAudioFormats,
+                                                dashManifestUrl = authDashUri,
+                                                hlsManifestUrl = authHls
+                                            )
+                                        } else null
                                 }
                                 if (authRes != null) return@withContext authRes
                             }
@@ -468,21 +500,45 @@ class SmartTubeInnertubeExtractor(
             val adaptive = streaming.optJSONArray("adaptiveFormats")
             val formats = streaming.optJSONArray("formats")
             val dashManifest = streaming.optString("dashManifestUrl").takeIf { it.isNotEmpty() }
+            val hlsManifest = streaming.optString("hlsManifestUrl").takeIf { it.isNotEmpty() }
 
+            val (allVideoFormats, allAudioFormats) = formatAdapter.parseStreamingData(streaming, { streamUrl(it) })
+            val dashDataUri = dashManifest ?: com.deepeye.musicpro.player.smarttube.SmartTubeDashManifestGenerator.generateDashDataUri(streaming) { streamUrl(it) }
+
+            // PO-Token Enforcement Fix: The synthetic DASH manifest uses adaptiveFormats 
+            // which fail with HTTP 403 Forbidden after ~59 seconds on modern YouTube CDN 
+            // without BotGuard/SABR tokens. We MUST use progressive formats (formats array,
+            // e.g. itag 18) as the primary playback URL so playback never drops at 59s.
             val result = if (preferVideo) {
-                bestProgressive(formats) ?: bestAdaptiveVideo(adaptive) ?: dashManifest?.let {
-                    ExtractorStreamResult(
-                        url = it, container = "adaptive", quality = "DASH",
-                        extractorName = "SmartTubeInnertube",
-                    )
-                }
+                bestProgressive(formats, allVideoFormats, allAudioFormats, dashDataUri, hlsManifest)
+                    ?: bestAdaptiveVideo(adaptive, allVideoFormats, allAudioFormats, dashDataUri, hlsManifest)
+                    ?: if (dashDataUri != null) {
+                        ExtractorStreamResult(
+                            url = dashDataUri,
+                            container = "adaptive",
+                            quality = "DASH",
+                            extractorName = "SmartTubeInnertube",
+                            videoFormats = allVideoFormats,
+                            audioFormats = allAudioFormats,
+                            dashManifestUrl = dashDataUri,
+                            hlsManifestUrl = hlsManifest
+                        )
+                    } else null
             } else {
-                bestProgressive(formats) ?: bestAdaptiveAudio(adaptive) ?: dashManifest?.let {
-                    ExtractorStreamResult(
-                        url = it, container = "adaptive", quality = "DASH",
-                        extractorName = "SmartTubeInnertube",
-                    )
-                }
+                bestProgressive(formats, allVideoFormats, allAudioFormats, dashDataUri, hlsManifest)
+                    ?: bestAdaptiveAudio(adaptive, allVideoFormats, allAudioFormats, dashDataUri, hlsManifest)
+                    ?: if (dashDataUri != null) {
+                        ExtractorStreamResult(
+                            url = dashDataUri,
+                            container = "adaptive",
+                            quality = "DASH",
+                            extractorName = "SmartTubeInnertube",
+                            videoFormats = allVideoFormats,
+                            audioFormats = allAudioFormats,
+                            dashManifestUrl = dashDataUri,
+                            hlsManifestUrl = hlsManifest
+                        )
+                    } else null
             }
 
             if (result != null) {
@@ -494,9 +550,17 @@ class SmartTubeInnertubeExtractor(
         null
     }
 
-    private fun bestProgressive(formats: JSONArray?): ExtractorStreamResult? {
+    private fun bestProgressive(
+        formats: JSONArray?,
+        videoFormats: List<DeepEyePlaybackFormat> = emptyList(),
+        audioFormats: List<DeepEyePlaybackFormat> = emptyList(),
+        dashManifestUrl: String? = null,
+        hlsManifestUrl: String? = null
+    ): ExtractorStreamResult? {
         if (formats == null) return null
         var best: JSONObject? = null
+        // Score formula prioritizes: (1) progressive muxed (video+audio) over video-only, (2) higher bitrate
+        // Format: score = (hasAudio ? 1000000 : 0) + bitrate. This ensures muxed formats always win.
         var bestScore = -1
         for (i in 0 until formats.length()) {
             val f = formats.optJSONObject(i) ?: continue
@@ -504,8 +568,10 @@ class SmartTubeInnertubeExtractor(
             val mime = f.optString("mimeType", "")
             val hasVideo = mime.contains("video")
             val hasAudio = mime.contains("audio")
-            if (!hasVideo) continue
-            val score = f.optInt("width", 0) * (if (hasAudio) 1 else 0) + f.optInt("bitrate", 0)
+            if (!hasVideo) continue  // Skip audio-only progressive formats
+            val bitrate = f.optInt("bitrate", 0)
+            // Score: 1M bonus for muxed formats (hasAudio), plus bitrate as tiebreaker
+            val score = (if (hasAudio) 1_000_000 else 0) + bitrate
             if (score > bestScore) {
                 bestScore = score
                 best = f
@@ -519,11 +585,21 @@ class SmartTubeInnertubeExtractor(
                 container = "",
                 quality = it.optString("qualityLabel").ifEmpty { "${it.optInt("height", 0)}p" },
                 extractorName = "SmartTubeInnertube",
+                videoFormats = videoFormats,
+                audioFormats = audioFormats,
+                dashManifestUrl = dashManifestUrl,
+                hlsManifestUrl = hlsManifestUrl
             )
         }
     }
 
-    private fun bestAdaptiveVideo(adaptive: JSONArray?): ExtractorStreamResult? {
+    private fun bestAdaptiveVideo(
+        adaptive: JSONArray?,
+        videoFormats: List<DeepEyePlaybackFormat> = emptyList(),
+        audioFormats: List<DeepEyePlaybackFormat> = emptyList(),
+        dashManifestUrl: String? = null,
+        hlsManifestUrl: String? = null
+    ): ExtractorStreamResult? {
         if (adaptive == null) return null
         var best: JSONObject? = null
         var bestHeight = -1
@@ -546,11 +622,21 @@ class SmartTubeInnertubeExtractor(
                 container = "adaptive",
                 quality = "${it.optInt("height", 0)}p",
                 extractorName = "SmartTubeInnertube",
+                videoFormats = videoFormats,
+                audioFormats = audioFormats,
+                dashManifestUrl = dashManifestUrl,
+                hlsManifestUrl = hlsManifestUrl
             )
         }
     }
 
-    private fun bestAdaptiveAudio(adaptive: JSONArray?): ExtractorStreamResult? {
+    private fun bestAdaptiveAudio(
+        adaptive: JSONArray?,
+        videoFormats: List<DeepEyePlaybackFormat> = emptyList(),
+        audioFormats: List<DeepEyePlaybackFormat> = emptyList(),
+        dashManifestUrl: String? = null,
+        hlsManifestUrl: String? = null
+    ): ExtractorStreamResult? {
         if (adaptive == null) return null
         var best: JSONObject? = null
         var bestBitrate = 0
@@ -573,6 +659,10 @@ class SmartTubeInnertubeExtractor(
                 container = "audio",
                 quality = "${it.optInt("bitrate", 0) / 1000} kbps",
                 extractorName = "SmartTubeInnertube",
+                videoFormats = videoFormats,
+                audioFormats = audioFormats,
+                dashManifestUrl = dashManifestUrl,
+                hlsManifestUrl = hlsManifestUrl
             )
         }
     }

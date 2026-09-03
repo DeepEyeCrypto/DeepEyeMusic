@@ -23,6 +23,7 @@ constructor(
     private val rankingManager: com.deepeye.musicpro.diagnostics.ExtractionRankingManager,
     private val headlessExtractor: HeadlessWebViewExtractor,
     private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
+    private val formatAdapter: com.deepeye.musicpro.player.smarttube.SmartTubeFormatAdapter = com.deepeye.musicpro.player.smarttube.SmartTubeFormatAdapter(com.deepeye.musicpro.player.smarttube.SmartTubeCodecCapabilityChecker()),
 ) {
     // SmartTube-style direct Innertube client (replaces the NewPipe extractor backend).
     // OAuth token attached to /player requests bypasses the "confirm you're not a bot" gate.
@@ -37,7 +38,10 @@ constructor(
     }
 
     private val extractor by lazy {
-        com.deepeye.musicpro.extractor.SmartTubeInnertubeExtractor(extractorClient) {
+        com.deepeye.musicpro.extractor.SmartTubeInnertubeExtractor(
+            client = extractorClient,
+            formatAdapter = formatAdapter
+        ) {
             settingsDataStore.settings.first().youtubeAccessToken?.takeIf { it.isNotBlank() }
         }
     }
@@ -294,7 +298,20 @@ constructor(
     private suspend fun extractSmartTube(videoId: String, preferVideo: Boolean): StreamResult? {
         return try {
             extractor.extractStream(videoId, preferVideo)?.let {
-                StreamResult(it.url, isVideo = it.container != "audio", isAdaptive = it.container == "adaptive")
+                val res = StreamResult(
+                    url = it.url,
+                    isVideo = it.container != "audio",
+                    isAdaptive = it.container == "adaptive",
+                    videoFormats = it.videoFormats,
+                    audioFormats = it.audioFormats,
+                    dashManifestUrl = it.dashManifestUrl,
+                    hlsManifestUrl = it.hlsManifestUrl
+                )
+                val safeHash = videoId.hashCode().toString()
+                val vLabels = it.videoFormats.take(5).map { vf -> "${vf.height ?: 0}p-${vf.frameRate?.toInt() ?: 30}-${vf.videoCodec?.displayName ?: "UNK"}" }
+                val aLabels = it.audioFormats.take(5).map { af -> "${af.audioCodec?.displayName ?: "UNK"}-${if ((af.channelCount ?: 2) > 2) "Surround" else "Stereo"}-${(af.bitrate ?: 0L) / 1000}kbps" }
+                Log.d("DeepEyeHQ", "event=resolver_inventory mediaKeyHash=$safeHash videoCount=${it.videoFormats.size} audioCount=${it.audioFormats.size} selectedVideo=${it.videoFormats.firstOrNull { f -> f.isSelected }?.stableId} selectedAudio=${it.audioFormats.firstOrNull { f -> f.isSelected }?.stableId} videoLabels=$vLabels audioLabels=$aLabels")
+                res
             }
         } catch (e: Exception) {
             Log.e("YoutubeDS", "SmartTubeInnertube extract failed", e)
@@ -619,6 +636,12 @@ data class StreamResult(
     val url: String,
     val isVideo: Boolean,
     val isAdaptive: Boolean = false,
+    val headers: Map<String, String> = emptyMap(),
+    val expiresAt: Long = 0L,
+    val videoFormats: List<com.deepeye.musicpro.player.smarttube.DeepEyePlaybackFormat> = emptyList(),
+    val audioFormats: List<com.deepeye.musicpro.player.smarttube.DeepEyePlaybackFormat> = emptyList(),
+    val dashManifestUrl: String? = null,
+    val hlsManifestUrl: String? = null,
 )
 
 data class SearchResultPage(

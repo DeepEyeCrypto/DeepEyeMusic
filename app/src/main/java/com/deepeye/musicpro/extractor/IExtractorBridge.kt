@@ -1,5 +1,7 @@
 package com.deepeye.musicpro.extractor
 
+import com.deepeye.musicpro.player.smarttube.DeepEyePlaybackFormat
+
 data class ExtractorVideoItem(
     val id: String,
     val title: String,
@@ -32,7 +34,11 @@ data class ExtractorStreamResult(
     val container: String = "",
     val quality: String = "",
     val isDrm: Boolean = false,
-    val extractorName: String = "SmartTubeInnertube"
+    val extractorName: String = "SmartTubeInnertube",
+    val videoFormats: List<DeepEyePlaybackFormat> = emptyList(),
+    val audioFormats: List<DeepEyePlaybackFormat> = emptyList(),
+    val dashManifestUrl: String? = null,
+    val hlsManifestUrl: String? = null
 )
 
 interface IExtractorBridge {

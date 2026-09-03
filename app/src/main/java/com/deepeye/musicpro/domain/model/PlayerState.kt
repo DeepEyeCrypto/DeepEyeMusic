@@ -27,6 +27,21 @@ data class PlayerState(
     val sponsorSegments: ImmutableList<SponsorSegment> = persistentListOf(),
     val autoplayEnabled: Boolean = true,
     val currentLyrics: com.deepeye.musicpro.domain.model.Lyrics? = null,
+    // Quality, Codec & Buffer Settings
+    val availableVideoFormats: ImmutableList<com.deepeye.musicpro.player.format.DeepEyeFormat> = persistentListOf(),
+    val availableAudioFormats: ImmutableList<com.deepeye.musicpro.player.format.DeepEyeFormat> = persistentListOf(),
+    val selectedVideoFormat: com.deepeye.musicpro.player.format.DeepEyeFormat? = null,
+    val selectedAudioFormat: com.deepeye.musicpro.player.format.DeepEyeFormat? = null,
+    val qualityPreset: com.deepeye.musicpro.player.format.QualityPreset = com.deepeye.musicpro.player.format.QualityPreset.AUTO,
+    val bufferProfile: com.deepeye.musicpro.player.format.BufferProfile = com.deepeye.musicpro.player.format.BufferProfile.BALANCED,
+    val bufferedPercentage: Int = 0,
+    val bufferedDurationMs: Long = 0L,
+    val droppedFrames: Long = 0L,
+    val estimatedBandwidthBps: Long = 0L,
+    val activeVideoDecoderName: String = "",
+    val activeAudioDecoderName: String = "",
+    val isRecovering: Boolean = false,
+    val recoveryMessage: String? = null,
     // Keep legacy field for backward compatibility during migration
     val currentSong: Song? = null,
 )

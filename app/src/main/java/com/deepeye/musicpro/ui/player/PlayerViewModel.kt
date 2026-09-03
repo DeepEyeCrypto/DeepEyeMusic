@@ -305,4 +305,30 @@ constructor(
             next()
         }
     }
+
+    val diagnostics: StateFlow<com.deepeye.musicpro.player.format.PlaybackDiagnostics> =
+        playerController.diagnostics
+
+    val smartTubeFormatSnapshot: StateFlow<com.deepeye.musicpro.player.smarttube.SmartTubeFormatSnapshot> =
+        playerController.smartTubePlaybackFormatRepository.snapshot
+
+    fun setQualityPreset(preset: com.deepeye.musicpro.player.format.QualityPreset) {
+        playerController.setQualityPreset(preset)
+    }
+
+    fun setVideoFormat(format: com.deepeye.musicpro.player.format.DeepEyeFormat) {
+        playerController.setVideoFormat(format)
+    }
+
+    fun setAudioFormat(format: com.deepeye.musicpro.player.format.DeepEyeFormat) {
+        playerController.setAudioFormat(format)
+    }
+
+    fun setBufferProfile(profile: com.deepeye.musicpro.player.format.BufferProfile) {
+        playerController.setBufferProfile(profile)
+    }
+
+    fun getPlaybackDiagnostics(): com.deepeye.musicpro.player.format.PlaybackDiagnostics {
+        return playerController.getPlaybackDiagnostics()
+    }
 }

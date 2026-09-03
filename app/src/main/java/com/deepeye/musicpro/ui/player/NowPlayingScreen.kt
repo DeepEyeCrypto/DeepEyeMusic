@@ -106,11 +106,14 @@ fun NowPlayingScreen(
     var showSpeedDialog by remember { mutableStateOf(false) }
     var showAudioBoostDialog by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
+    var showHqPlaybackSheet by remember { mutableStateOf(false) }
+    var hqSheetInitialTab by remember { mutableStateOf(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) }
     var isOledScreenOffMode by remember { mutableStateOf(false) }
     val showStatsForNerds by viewModel.showStatsForNerds.collectAsStateWithLifecycle()
     val audioBoostLevel by viewModel.audioBoostLevel.collectAsStateWithLifecycle()
     val subtitlesEnabled by viewModel.subtitlesEnabled.collectAsStateWithLifecycle()
     val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsStateWithLifecycle()
+    val diagnostics by viewModel.diagnostics.collectAsStateWithLifecycle()
     
     val recordAudioPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
@@ -127,6 +130,7 @@ fun NowPlayingScreen(
             showDspSheet = false
             showQueueSheet = false
             showInfoSheet = false
+            showHqPlaybackSheet = false
         }
     }
 
@@ -280,7 +284,11 @@ fun NowPlayingScreen(
                         onOpenSpeedDialog = { showSpeedDialog = true },
                         onOpenAudioBoostDialog = { showAudioBoostDialog = true },
                         onOpenSleepTimerDialog = { showSleepTimerDialog = true },
-                        onEnableOledMode = { isOledScreenOffMode = true }
+                        onEnableOledMode = { isOledScreenOffMode = true },
+                        onOpenHqPlaybackSheet = { tab ->
+                            hqSheetInitialTab = tab
+                            showHqPlaybackSheet = true
+                        }
                     )
                 } else {
                     AudioNowPlayingLayout(
@@ -291,7 +299,10 @@ fun NowPlayingScreen(
                         showVisualizer = showVisualizer,
                         onNavigateBack = onNavigateBack,
                         viewModel = viewModel,
-                        onOpenInfo = { showInfoSheet = true },
+                        onOpenInfo = { 
+                            hqSheetInitialTab = com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO
+                            showHqPlaybackSheet = true 
+                        },
                         onToggleVisualizer = { 
                             if (!showVisualizer) {
                                 if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -311,7 +322,11 @@ fun NowPlayingScreen(
                         onOpenSpeedDialog = { showSpeedDialog = true },
                         onOpenAudioBoostDialog = { showAudioBoostDialog = true },
                         onOpenSleepTimerDialog = { showSleepTimerDialog = true },
-                        onEnableOledMode = { isOledScreenOffMode = true }
+                        onEnableOledMode = { isOledScreenOffMode = true },
+                        onOpenHqPlaybackSheet = { tab ->
+                            hqSheetInitialTab = tab
+                            showHqPlaybackSheet = true
+                        }
                     )
                 }
             }
@@ -374,6 +389,20 @@ fun NowPlayingScreen(
                 Spacer(modifier = Modifier.height(48.dp))
             }
         }
+    }
+
+    if (showHqPlaybackSheet) {
+        com.deepeye.musicpro.ui.player.quality.HqPlaybackSheet(
+            playerState = playerState,
+            diagnostics = diagnostics,
+            accentColor = finalAccentColor,
+            initialTab = hqSheetInitialTab,
+            onSelectQualityPreset = { viewModel.setQualityPreset(it) },
+            onSelectVideoFormat = { viewModel.setVideoFormat(it) },
+            onSelectAudioFormat = { viewModel.setAudioFormat(it) },
+            onSelectBufferProfile = { viewModel.setBufferProfile(it) },
+            onDismiss = { showHqPlaybackSheet = false }
+        )
     }
 
     if (showQueueSheet) {
@@ -449,6 +478,7 @@ fun AudioNowPlayingLayout(
     onOpenAudioBoostDialog: () -> Unit,
     onOpenSleepTimerDialog: () -> Unit,
     onEnableOledMode: () -> Unit,
+    onOpenHqPlaybackSheet: (com.deepeye.musicpro.ui.player.quality.HqSheetTab) -> Unit = {},
 ) {
     val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
     val isDownloading = playerState.currentItem?.id != null && activeDownloads.values.any { it.id == playerState.currentItem?.id }
@@ -917,6 +947,7 @@ fun VideoNowPlayingLayout(
     onOpenAudioBoostDialog: () -> Unit,
     onOpenSleepTimerDialog: () -> Unit,
     onEnableOledMode: () -> Unit,
+    onOpenHqPlaybackSheet: (com.deepeye.musicpro.ui.player.quality.HqSheetTab) -> Unit = {},
 ) {
     val videoDetails by viewModel.videoDetails.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
@@ -933,6 +964,7 @@ fun VideoNowPlayingLayout(
     val audioBoostLevel by viewModel.audioBoostLevel.collectAsStateWithLifecycle()
     val subtitlesEnabled by viewModel.subtitlesEnabled.collectAsStateWithLifecycle()
     val sleepTimerMs by viewModel.sleepTimerRemainingMs.collectAsStateWithLifecycle()
+    val diagnostics by viewModel.diagnostics.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val isFullscreen = LocalFullscreenMode.current.isFullscreen || com.deepeye.musicpro.ui.LocalPipMode.current
@@ -1015,7 +1047,8 @@ fun VideoNowPlayingLayout(
                             onOpenQueue()
                         }
                     },
-                    onLockChanged = onLockChanged
+                    onLockChanged = onLockChanged,
+                    onOpenHqSettings = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) }
                 )
             }
 
@@ -1238,26 +1271,9 @@ fun VideoNowPlayingLayout(
                 onOpenAudioBoostDialog = onOpenAudioBoostDialog,
                 onOpenSleepTimerDialog = onOpenSleepTimerDialog,
                 onEnableOledMode = onEnableOledMode,
-                onShowQualityMenu = { showQualityMenu = true }
+                onOpenHqPlaybackSheet = onOpenHqPlaybackSheet,
+                onShowQualityMenu = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) }
             )
-
-            // Quality Dropdown Menu
-            DropdownMenu(
-                expanded = showQualityMenu,
-                onDismissRequest = { showQualityMenu = false }
-            ) {
-                listOf("1080p (60fps)", "720p", "480p", "Auto").forEach { quality ->
-                    DropdownMenuItem(
-                        text = { Text(quality) },
-                        onClick = {
-                            selectedQuality = quality
-                            showQualityMenu = false
-                            viewModel.setVideoQuality(quality)
-                            android.widget.Toast.makeText(context, "Switched video quality to $quality", android.widget.Toast.LENGTH_SHORT).show()
-                        }
-                    )
-                }
-            }
 
             // Stats for Nerds Overlay Card (Live HUD)
             if (showStatsForNerds) {
@@ -1265,6 +1281,8 @@ fun VideoNowPlayingLayout(
                     videoId = currentItem?.id ?: "N/A",
                     quality = selectedQuality,
                     speed = playerState.playbackSpeed,
+                    diagnostics = diagnostics,
+                    onOpenHqSheet = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.STATS) },
                     onDismiss = { viewModel.toggleStatsForNerds() }
                 )
             }
@@ -1963,14 +1981,17 @@ fun SmartTubeStatsForNerdsOverlay(
     videoId: String,
     quality: String,
     speed: Float,
+    diagnostics: com.deepeye.musicpro.player.format.PlaybackDiagnostics? = null,
+    onOpenHqSheet: (() -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = Color.Black.copy(alpha = 0.88f),
+        color = Color(0xFF121218).copy(alpha = 0.95f),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00E676).copy(alpha = 0.4f)),
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onOpenHqSheet?.invoke() }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -1978,18 +1999,43 @@ fun SmartTubeStatsForNerdsOverlay(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("📊 Stats for Nerds (SmartTube HUD)", color = Color(0xFF00E676), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("📊 Stats for Nerds (SmartTube HUD)", color = Color(0xFF00E676), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    if (diagnostics?.isHardwareAccelerated == true) {
+                        Spacer(Modifier.width(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = Color(0xFF00E676).copy(alpha = 0.2f),
+                            border = androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFF00E676).copy(alpha = 0.6f))
+                        ) {
+                            Text(
+                                "HW ACCEL",
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                                fontSize = 8.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFF00E676)
+                            )
+                        }
+                    }
+                }
                 IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
                     Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(16.dp))
                 }
             }
             Spacer(Modifier.height(8.dp))
+            val videoCodecStr = diagnostics?.activeVideoFormat?.codecName ?: "AVC / H.264"
+            val videoResStr = diagnostics?.activeVideoFormat?.formattedVideoResolution ?: quality
+            val audioCodecStr = diagnostics?.activeAudioFormat?.formattedAudioSpec ?: "Opus 160kbps • 48kHz"
+            val bufferStr = diagnostics?.formattedBufferHealth ?: "Optimal Ultra-low Latency"
+            val bandwidthStr = diagnostics?.formattedBandwidth ?: "14.50 Mbps"
+            val dropStr = diagnostics?.let { "Dropped frames: ${it.droppedFrames}" } ?: "Dropped frames: 0"
+
             Text("Video ID: $videoId", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
-            Text("Resolution: $quality", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
-            Text("Playback Speed: ${speed}x", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
-            Text("Audio Codec: Opus 160kbps / 48kHz Stereo", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
-            Text("Buffer Health: 28.4s (Optimal Ultra-low Latency)", color = Color(0xFF00E676), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
-            Text("Player Pipeline: ExoPlayer 2.19 + DSP Filter Enabled", color = Color(0xFF00D2FF), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("Resolution: $videoResStr ($videoCodecStr)", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("Playback Speed: ${speed}x • Bandwidth: $bandwidthStr", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("Audio Codec: $audioCodecStr", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("Buffer Health: $bufferStr • $dropStr", color = Color(0xFF00E676), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+            Text("Decoder: ${diagnostics?.activeVideoDecoder?.ifEmpty { "c2.android.avc.decoder" } ?: "c2.android.avc.decoder"}", color = Color(0xFF00D2FF), fontSize = 11.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
         }
     }
 }
@@ -2029,6 +2075,7 @@ fun SmartTubeVideoControlsPanel(
     onOpenAudioBoostDialog: () -> Unit,
     onOpenSleepTimerDialog: () -> Unit,
     onEnableOledMode: () -> Unit,
+    onOpenHqPlaybackSheet: (com.deepeye.musicpro.ui.player.quality.HqSheetTab) -> Unit = {},
     onShowQualityMenu: () -> Unit
 ) {
         // ============================================================
@@ -2101,7 +2148,7 @@ fun SmartTubeVideoControlsPanel(
                     accentColor = finalAccentColor,
                     isActive = true,
                     modifier = Modifier.weight(1f),
-                    onClick = { onShowQualityMenu() }
+                    onClick = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) }
                 )
 
                 // Audio Boost Card
@@ -2187,7 +2234,7 @@ fun SmartTubeVideoControlsPanel(
                     accentColor = finalAccentColor,
                     isActive = showStatsForNerds,
                     modifier = Modifier.weight(1f),
-                    onClick = { viewModel.toggleStatsForNerds() }
+                    onClick = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.STATS) }
                 )
             }
         }

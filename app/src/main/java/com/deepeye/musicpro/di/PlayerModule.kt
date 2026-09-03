@@ -92,7 +92,18 @@ object PlayerModule {
         val playerOkHttpClient = okHttpClient.newBuilder()
             .cache(null) // Disable HTTP disk cache for streaming to avoid 206 caching conflicts and stale conditional headers
             .addInterceptor { chain ->
-                val request = chain.request()
+                var request = chain.request()
+                val urlStr = request.url.toString()
+                if (urlStr.contains("googlevideo.com")) {
+                    val targetUa = if (urlStr.contains("c=ANDROID")) {
+                        "com.google.android.youtube/20.10.33 (Linux; U; Android 12) gzip"
+                    } else {
+                        "com.google.ios.youtube/20.10.1 (iPhone16,2; U; CPU iOS 18_3 like Mac OS X)"
+                    }
+                    request = request.newBuilder()
+                        .header("User-Agent", targetUa)
+                        .build()
+                }
                 val response = chain.proceed(request)
                 if (!response.isSuccessful) {
                     val errorBody = try { response.peekBody(2048).string() } catch (e: Exception) { "unavailable: ${e.message}" }
@@ -103,7 +114,7 @@ object PlayerModule {
             .build()
 
         val httpDataSourceFactory = androidx.media3.datasource.okhttp.OkHttpDataSource.Factory(playerOkHttpClient)
-            .setUserAgent("com.google.android.youtube/20.10.33 (Linux; U; Android 12) gzip")
+            .setUserAgent("com.google.ios.youtube/20.10.1 (iPhone16,2; U; CPU iOS 18_3 like Mac OS X)")
             .setDefaultRequestProperties(mapOf(
                 "Accept" to "*/*",
                 "Connection" to "keep-alive",

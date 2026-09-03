@@ -4,6 +4,7 @@
 package com.deepeye.musicpro.data.source.remote.youtube.resolver
 
 import com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
+import com.deepeye.musicpro.domain.resolver.ResolvedSource
 import com.deepeye.musicpro.domain.resolver.SourceResolver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -20,14 +21,31 @@ class WebViewBridgeResolver @Inject constructor(
     
     override val priority: Int = 100 // Lowest priority fallback
 
-    override suspend fun resolveStreamUrl(videoId: String, preferVideo: Boolean): String? {
+    override suspend fun resolveSource(videoId: String, preferVideo: Boolean): ResolvedSource? {
         return withContext(Dispatchers.IO) {
             val result = youtubeRemoteDataSource.getStreamUrl(
                 videoId = videoId, 
                 preferVideo = preferVideo, 
                 onLayerFallback = {}
+            ) ?: return@withContext null
+
+            android.util.Log.d("DeepEyeHQ", "event=bridge_result videoCount=${result.videoFormats.size} audioCount=${result.audioFormats.size}")
+
+            ResolvedSource(
+                url = result.url,
+                isDirectStream = !result.isAdaptive,
+                headers = result.headers,
+                isVideo = result.isVideo,
+                expiresAt = result.expiresAt,
+                videoFormats = result.videoFormats,
+                audioFormats = result.audioFormats,
+                dashManifestUrl = result.dashManifestUrl,
+                hlsManifestUrl = result.hlsManifestUrl
             )
-            result?.url
         }
+    }
+
+    override suspend fun resolveStreamUrl(videoId: String, preferVideo: Boolean): String? {
+        return resolveSource(videoId, preferVideo)?.url
     }
 }

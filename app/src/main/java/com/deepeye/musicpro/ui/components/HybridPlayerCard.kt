@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeMute
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.filled.BrightnessMedium
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.SkipNext
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -136,6 +138,7 @@ fun HybridPlayerCard(
     onPrevious: () -> Unit = {},
     onOpenQueue: () -> Unit = {},
     onLockChanged: (Boolean) -> Unit = {},
+    onOpenHqSettings: (() -> Unit)? = null,
 ) {
     var playbackSpeed by remember { mutableStateOf(1.0f) }
     var isMuted by remember { mutableStateOf(false) }
@@ -275,25 +278,28 @@ fun HybridPlayerCard(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .pointerInput(isFullscreen, isLocked) {
-                            if (!isFullscreen || isLocked) return@pointerInput
+                        .pointerInput(isLocked, isInPipMode, isFullscreen) {
+                            if (isLocked || isInPipMode) return@pointerInput
+
                             var initialBrightness = 0f
                             var initialVolume = 0
                             var initialSeek = 0L
-                            var maxVolume = audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
-                            var dragDirection: Int? = null // 1: Horizontal (Seek), 2: Vertical Left (Brightness), 3: Vertical Right (Volume), 4: Exit, 5: Zoom
+                            val maxVolume = audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
+                            var dragDirection: Int? = null // 1: Seek, 2: Brightness, 3: Volume, 4: Exit Fullscreen, 5: Pinch Zoom
                             var initialPinchDistance = 0f
                             var initialScale = 1f
-                            
+                            var lastTapTime = 0L
+                            var lastTapPos = androidx.compose.ui.geometry.Offset.Zero
+
                             awaitEachGesture {
                                 val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                                val downPos = down.position
+                                val downTime = System.currentTimeMillis()
                                 val slopThreshold = viewConfiguration.touchSlop
-                                val screenWidth = size.width
-                                val screenHeight = size.height
-                                
-                                android.util.Log.e("VLC_GESTURE", "pointerInput started")
-                                initialBrightness = activity?.window?.attributes?.screenBrightness ?: -1f
-                                if (initialBrightness < 0f) initialBrightness = 0.5f // fallback
+                                val screenWidth = size.width.toFloat()
+                                val screenHeight = size.height.toFloat()
+
+                                initialBrightness = getScreenBrightness(context, activity)
                                 initialVolume = audioManager.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)
                                 initialSeek = player.currentPosition
                                 dragDirection = null
@@ -302,99 +308,138 @@ fun HybridPlayerCard(
                                 while (true) {
                                     val event = awaitPointerEvent(PointerEventPass.Initial)
                                     val change = event.changes.firstOrNull { it.id == down.id }
+
                                     if (change == null || !change.pressed) {
                                         if (isDragging) {
-                                            // Apply Seek if it was a seek drag
-                                            seekOsd?.let { 
-                                                player.seekTo(it) 
-                                                onSeekTo(it)
+                                            if (dragDirection == 1) {
+                                                seekOsd?.let { target ->
+                                                    player.seekTo(target)
+                                                    onSeekTo(target)
+                                                }
                                             }
                                             volumeOsd = null
                                             brightnessOsd = null
                                             seekOsd = null
                                             isDragging = false
+                                            dragDirection = null
+                                            lastTapTime = 0L
+                                        } else {
+                                            val pressDuration = System.currentTimeMillis() - downTime
+                                            val moveDist = (change?.position ?: downPos).minus(downPos).getDistance()
+                                            if (pressDuration < 400L && moveDist < slopThreshold * 2f) {
+                                                val now = System.currentTimeMillis()
+                                                if (now - lastTapTime < 350L && (downPos - lastTapPos).getDistance() < slopThreshold * 4f) {
+                                                    lastTapTime = 0L
+                                                    resetTimer()
+                                                    if (downPos.x < screenWidth * 0.5f) {
+                                                        val currentPos = player.currentPosition
+                                                        val newPos = (currentPos - 10000L).coerceAtLeast(0L)
+                                                        player.seekTo(newPos)
+                                                        onSeekTo(newPos)
+                                                        showLeftRipple = true
+                                                        scope.launch {
+                                                            delay(650)
+                                                            showLeftRipple = false
+                                                        }
+                                                    } else {
+                                                        val duration = player.duration
+                                                        val currentPos = player.currentPosition
+                                                        val newPos = if (duration > 0) (currentPos + 10000L).coerceAtMost(duration) else currentPos + 10000L
+                                                        player.seekTo(newPos)
+                                                        onSeekTo(newPos)
+                                                        showRightRipple = true
+                                                        scope.launch {
+                                                            delay(650)
+                                                            showRightRipple = false
+                                                        }
+                                                    }
+                                                } else {
+                                                    lastTapTime = now
+                                                    lastTapPos = downPos
+                                                    controlsVisible = !controlsVisible
+                                                    resetTimer()
+                                                }
+                                            }
                                         }
                                         break
                                     }
 
-                                    val dy = change.position.y - down.position.y
-                                    val dx = change.position.x - down.position.x
-                                    
-                                    // Determine direction if not locked yet
-                                    if (dragDirection == null) {
-                                        if (event.changes.size >= 2) {
-                                            val ptr1 = event.changes[0].position
-                                            val ptr2 = event.changes[1].position
-                                            val distance = kotlin.math.hypot(ptr1.x - ptr2.x, ptr1.y - ptr2.y)
-                                            if (distance > 20f) { // Slop for pinch
-                                                dragDirection = 5
-                                                initialPinchDistance = distance
-                                                initialScale = videoScale
-                                                isDragging = true
-                                                android.util.Log.e("VLC_GESTURE", "Pinch Zoom")
+                                    val dy = change.position.y - downPos.y
+                                    val dx = change.position.x - downPos.x
+
+                                    // Multi-touch: Pinch to zoom
+                                    if (event.changes.size >= 2) {
+                                        val ptr1 = event.changes[0].position
+                                        val ptr2 = event.changes[1].position
+                                        val distance = kotlin.math.hypot(ptr1.x - ptr2.x, ptr1.y - ptr2.y)
+                                        if (dragDirection == 5) {
+                                            if (initialPinchDistance > 10f) {
+                                                videoScale = (initialScale * (distance / initialPinchDistance)).coerceIn(0.25f, 5f)
                                             }
-                                        } else if (kotlin.math.abs(dy) > slopThreshold || kotlin.math.abs(dx) > slopThreshold) {
+                                            event.changes.forEach { it.consume() }
+                                        } else {
+                                            dragDirection = 5
+                                            initialPinchDistance = distance
+                                            initialScale = videoScale
                                             isDragging = true
-                                            android.util.Log.e("VLC_GESTURE", "Drag detected. dx=$dx, dy=$dy, slop=$slopThreshold")
-                                            if (kotlin.math.abs(dy) > kotlin.math.abs(dx) * 1.5f) {
-                                                // Vertical drag
-                                                if (dy > 50f && down.position.y < screenHeight * 0.2f) {
-                                                    dragDirection = 4
-                                                    android.util.Log.e("VLC_GESTURE", "Exit Fullscreen")
-                                                } else if (down.position.x < screenWidth / 2) {
-                                                    dragDirection = 2
-                                                    android.util.Log.e("VLC_GESTURE", "Brightness")
+                                            lastTapTime = 0L
+                                        }
+                                    } else if (dragDirection == null) {
+                                        if (kotlin.math.abs(dy) > slopThreshold || kotlin.math.abs(dx) > slopThreshold) {
+                                            isDragging = true
+                                            lastTapTime = 0L
+                                            if (kotlin.math.abs(dy) > kotlin.math.abs(dx) * 1.2f) {
+                                                if (isFullscreen && dy > 60f && downPos.y < screenHeight * 0.25f) {
+                                                    dragDirection = 4 // Exit Fullscreen
+                                                } else if (downPos.x < screenWidth * 0.5f) {
+                                                    dragDirection = 2 // Brightness
                                                 } else {
-                                                    dragDirection = 3
-                                                    android.util.Log.e("VLC_GESTURE", "Volume")
+                                                    dragDirection = 3 // Volume
                                                 }
                                             } else {
-                                                dragDirection = 1
-                                                android.util.Log.e("VLC_GESTURE", "Seek")
+                                                dragDirection = 1 // Seek
                                             }
                                         }
                                     }
 
-                                    // Apply Gesture
-                                    if (dragDirection != null) {
-                                        if (dragDirection == 5) {
-                                            if (event.changes.size >= 2) {
-                                                val ptr1 = event.changes[0].position
-                                                val ptr2 = event.changes[1].position
-                                                val distance = kotlin.math.hypot(ptr1.x - ptr2.x, ptr1.y - ptr2.y)
-                                                videoScale = (initialScale * (distance / initialPinchDistance)).coerceIn(0.25f, 5f)
-                                                event.changes.forEach { it.consume() }
-                                            }
-                                        } else {
-                                            change.consume() // Consume drag so children don't tap
-                                            resetTimer()
-                                            when (dragDirection) {
+                                    if (isDragging && dragDirection != null && dragDirection != 5) {
+                                        change.consume()
+                                        resetTimer()
+                                        when (dragDirection) {
                                             1 -> { // Seek
-                                                val seekDeltaMs = ((dx / screenWidth) * 90000f).toLong() // Max 90s swipe per screen width
-                                                val targetSeek = (initialSeek + seekDeltaMs).coerceIn(0L, player.duration.coerceAtLeast(0L))
+                                                val seekDeltaMs = ((dx / screenWidth.coerceAtLeast(1f)) * 90000f).toLong()
+                                                val duration = player.duration.coerceAtLeast(0L)
+                                                val targetSeek = (initialSeek + seekDeltaMs).coerceIn(0L, duration)
                                                 seekOsd = targetSeek
+                                                brightnessOsd = null
+                                                volumeOsd = null
                                             }
                                             2 -> { // Brightness
-                                                val deltaB = -(dy / screenHeight) * 1.5f // Negative because up is minus Y
+                                                val deltaB = -(dy / screenHeight.coerceAtLeast(1f)) * 1.5f
                                                 val newBrightness = (initialBrightness + deltaB).coerceIn(0.01f, 1f)
-                                                activity?.window?.attributes = activity?.window?.attributes?.apply {
-                                                    screenBrightness = newBrightness
+                                                activity?.window?.let { win ->
+                                                    val lp = win.attributes
+                                                    lp.screenBrightness = newBrightness
+                                                    win.attributes = lp
                                                 }
                                                 brightnessOsd = (newBrightness * 100).toInt()
+                                                volumeOsd = null
+                                                seekOsd = null
                                             }
                                             3 -> { // Volume
-                                                val deltaV = -(dy / screenHeight) * maxVolume * 1.5f
+                                                val deltaV = -(dy / screenHeight.coerceAtLeast(1f)) * maxVolume * 1.5f
                                                 val newVolume = (initialVolume + deltaV).toInt().coerceIn(0, maxVolume)
                                                 audioManager.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, newVolume, 0)
-                                                volumeOsd = ((newVolume.toFloat() / maxVolume) * 100).toInt()
+                                                volumeOsd = ((newVolume.toFloat() / maxVolume.coerceAtLeast(1)) * 100).toInt()
+                                                brightnessOsd = null
+                                                seekOsd = null
                                             }
-                                            4 -> { // Exit
-                                                if (dy > 50f) {
+                                            4 -> { // Exit Fullscreen
+                                                if (dy > 80f) {
                                                     fullscreenMode.exit()
                                                     break
                                                 }
                                             }
-                                        }
                                         }
                                     }
                                 }
@@ -446,184 +491,71 @@ fun HybridPlayerCard(
                         Row(
                             modifier = Modifier.fillMaxSize(),
                         ) {
-                            // Left Column Zone: Skip Backward / Single Tap Play-Pause
-                            Box(
-                                modifier =
-                                Modifier
-                                    .fillMaxHeight()
-                                    .weight(1f)
-                                    .pointerInput(Unit) {
-                                        var lastTapTime = 0L
-                                        awaitEachGesture {
-                                            val down =
-                                                awaitFirstDown(
-                                                    requireUnconsumed = false,
-                                                    pass = PointerEventPass.Main
-                                                )
-                                            val now = System.currentTimeMillis()
-                                            if (now - lastTapTime < 300L) {
-                                                down.consume()
-                                                while (true) {
-                                                    val event = awaitPointerEvent(pass = PointerEventPass.Main)
-                                                    event.changes.forEach { it.consume() }
-                                                    if (event.changes.none { it.pressed }) break
-                                                }
-                                                android.util.Log.e(
-                                                    "HybridPlayerCard",
-                                                    "Double tap left zone! Seeking backward."
-                                                )
-                                                resetTimer()
-                                                val currentPos = player.currentPosition
-                                                val newPos = (currentPos - 10000L).coerceAtLeast(0L)
-                                                onSeekTo(newPos)
-                                                showLeftRipple = true
-                                                scope.launch {
-                                                    delay(650)
-                                                    showLeftRipple = false
-                                                }
-                                                lastTapTime = 0L
-                                            } else {
-                                                lastTapTime = now
-                                                var isClick = true
-                                                while (true) {
-                                                    val event = awaitPointerEvent(pass = PointerEventPass.Main)
-                                                    if (event.changes.any { it.isConsumed }) {
-                                                        isClick = false
-                                                    }
-                                                    if (event.changes.none { it.pressed }) break
-                                                }
-                                                if (isClick && System.currentTimeMillis() - now < 300L) {
-                                                    android.util.Log.e(
-                                                        "HybridPlayerCard",
-                                                        "Single tap left zone! Toggling controls. Current visibility: $controlsVisible",
-                                                    )
-                                                    controlsVisible = !controlsVisible
-                                                    resetTimer()
-                                                }
-                                            }
-                                        }
-                                    },
-                                contentAlignment = Alignment.Center,
+                            // Double-tap Seek Indicator Overlay - Left (-10s)
+                            AnimatedVisibility(
+                                visible = showLeftRipple,
+                                enter = fadeIn(),
+                                exit = fadeOut(),
+                                modifier = Modifier.weight(1f),
                             ) {
-                                if (showLeftRipple) {
-                                    Surface(
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = Color.Black.copy(alpha = 0.75f),
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = Color.Black.copy(alpha = 0.75f),
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.FastRewind,
-                                                contentDescription = null,
-                                                tint = Color.White,
-                                                modifier = Modifier.size(16.dp),
-                                            )
-                                            Spacer(Modifier.width(4.dp))
-                                            Text(
-                                                "-10s",
-                                                color = Color.White,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.Bold,
-                                            )
-                                        }
+                                        Icon(
+                                            imageVector = Icons.Default.FastRewind,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(16.dp),
+                                        )
+                                        Spacer(Modifier.width(4.dp))
+                                        Text(
+                                            "-10s",
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                        )
                                     }
                                 }
                             }
 
-                            // Right Column Zone: Skip Forward / Single Tap Play-Pause
-                            Box(
-                                modifier =
-                                Modifier
-                                    .fillMaxHeight()
-                                    .weight(1f)
-                                    .pointerInput(Unit) {
-                                        var lastTapTime = 0L
-                                        awaitEachGesture {
-                                            val down =
-                                                awaitFirstDown(
-                                                    requireUnconsumed = false,
-                                                    pass = PointerEventPass.Main
-                                                )
-                                            val now = System.currentTimeMillis()
-                                            if (now - lastTapTime < 300L) {
-                                                down.consume()
-                                                while (true) {
-                                                    val event = awaitPointerEvent(pass = PointerEventPass.Main)
-                                                    event.changes.forEach { it.consume() }
-                                                    if (event.changes.none { it.pressed }) break
-                                                }
-                                                android.util.Log.e(
-                                                    "HybridPlayerCard",
-                                                    "Double tap right zone! Seeking forward."
-                                                )
-                                                resetTimer()
-                                                val duration = player.duration
-                                                val currentPos = player.currentPosition
-                                                val newPos =
-                                                    if (duration > 0) {
-                                                        (currentPos + 10000L).coerceAtMost(duration)
-                                                    } else {
-                                                        currentPos + 10000L
-                                                    }
-                                                onSeekTo(newPos)
-                                                showRightRipple = true
-                                                scope.launch {
-                                                    delay(650)
-                                                    showRightRipple = false
-                                                }
-                                                lastTapTime = 0L
-                                            } else {
-                                                lastTapTime = now
-                                                var isClick = true
-                                                while (true) {
-                                                    val event = awaitPointerEvent(pass = PointerEventPass.Main)
-                                                    if (event.changes.any { it.isConsumed }) {
-                                                        isClick = false
-                                                    }
-                                                    if (event.changes.none { it.pressed }) break
-                                                }
-                                                if (isClick && System.currentTimeMillis() - now < 300L) {
-                                                    android.util.Log.e(
-                                                        "HybridPlayerCard",
-                                                        "Single tap right zone! Toggling controls. Current visibility: $controlsVisible",
-                                                    )
-                                                    controlsVisible = !controlsVisible
-                                                    resetTimer()
-                                                }
-                                            }
-                                        }
-                                    },
-                                contentAlignment = Alignment.Center,
+                            // Double-tap Seek Indicator Overlay - Right (+10s)
+                            AnimatedVisibility(
+                                visible = showRightRipple,
+                                enter = fadeIn(),
+                                exit = fadeOut(),
+                                modifier = Modifier.weight(1f),
                             ) {
-                                if (showRightRipple) {
-                                    Surface(
-                                        shape = RoundedCornerShape(12.dp),
-                                        color = Color.Black.copy(alpha = 0.75f),
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = Color.Black.copy(alpha = 0.75f),
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                        ) {
-                                            Text(
-                                                "+10s",
-                                                color = Color.White,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.Bold,
-                                            )
-                                            Spacer(Modifier.width(4.dp))
-                                            Icon(
-                                                imageVector = Icons.Default.FastForward,
-                                                contentDescription = null,
-                                                tint = Color.White,
-                                                modifier = Modifier.size(16.dp),
-                                            )
-                                        }
+                                        Text(
+                                            "+10s",
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                        Spacer(Modifier.width(4.dp))
+                                        Icon(
+                                            imageVector = Icons.Default.FastForward,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(16.dp),
+                                        )
                                     }
                                 }
                             }
                         }
+
 
                         // CENTER PLAY OVERLAY when player is paused
                         AnimatedVisibility(
@@ -943,6 +875,27 @@ fun HybridPlayerCard(
                                             }
                                         }
 
+                                        // 4.5 HQ Settings Button
+                                        if (onOpenHqSettings != null) {
+                                            IconButton(
+                                                onClick = {
+                                                    resetTimer()
+                                                    onOpenHqSettings()
+                                                },
+                                                modifier =
+                                                Modifier
+                                                    .size(32.dp)
+                                                    .background(Color.White.copy(alpha = 0.15f), CircleShape),
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Settings,
+                                                    contentDescription = "HQ Engine Settings",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(16.dp),
+                                                )
+                                            }
+                                        }
+
                                         // 5. Fullscreen Overlay Button
                                         IconButton(
                                             onClick = {
@@ -975,31 +928,32 @@ fun HybridPlayerCard(
                         ) {
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
-                                color = Color.Black.copy(alpha = 0.65f),
+                                color = Color.Black.copy(alpha = 0.75f),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)),
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     if (brightnessOsd != null) {
-                                        Icon(imageVector = Icons.Default.Speed, contentDescription = null, tint = Color.White) // Fallback icon
-                                        Spacer(Modifier.width(8.dp))
+                                        Icon(imageVector = Icons.Default.BrightnessMedium, contentDescription = "Brightness", tint = Color(0xFFFFD54F), modifier = Modifier.size(24.dp))
+                                        Spacer(Modifier.width(10.dp))
                                         Text(text = "${brightnessOsd}%", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
                                     } else if (volumeOsd != null) {
-                                        Icon(imageVector = if (volumeOsd!! == 0) Icons.AutoMirrored.Filled.VolumeMute else Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = Color.White)
-                                        Spacer(Modifier.width(8.dp))
+                                        Icon(imageVector = if (volumeOsd == 0) Icons.AutoMirrored.Filled.VolumeMute else Icons.AutoMirrored.Filled.VolumeUp, contentDescription = "Volume", tint = Color(0xFF64B5F6), modifier = Modifier.size(24.dp))
+                                        Spacer(Modifier.width(10.dp))
                                         Text(text = "${volumeOsd}%", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
                                     } else if (seekOsd != null) {
                                         val delta = seekOsd!! - player.currentPosition
-                                        val sign = if (delta > 0) "+" else ""
-                                        Text(text = "$sign${delta / 1000}s", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(text = "[${com.deepeye.musicpro.core.utils.TimeFormatter.formatDuration(seekOsd!!)}]", color = Color.White.copy(alpha = 0.75f), style = MaterialTheme.typography.bodyLarge)
+                                        val sign = if (delta >= 0) "+" else ""
+                                        Icon(imageVector = if (delta >= 0) Icons.Default.FastForward else Icons.Default.FastRewind, contentDescription = "Seek", tint = Color(0xFFFFB300), modifier = Modifier.size(24.dp))
+                                        Spacer(Modifier.width(10.dp))
+                                        Text(text = "${com.deepeye.musicpro.core.utils.TimeFormatter.formatDuration(seekOsd!!)} ($sign${delta / 1000}s)", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
                                     }
                                 }
                             }
                         }
-                    } // end if (!isInPipMode)
+                    } // end if (!isInPipMode && !isLocked)
 
                     // Top Left Lock/Unlock Button
                     if (isFullscreen && !isInPipMode) {
@@ -1027,7 +981,7 @@ fun HybridPlayerCard(
                                     Icon(
                                         imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
                                         contentDescription = if (isLocked) "Unlock" else "Lock",
-                                        tint = Color.White,
+                                        tint = if (isLocked) Color(0xFFFF5252) else Color.White,
                                         modifier = Modifier.size(24.dp),
                                     )
                                 }
@@ -1234,6 +1188,20 @@ fun MediaInfoOverlay(player: ExoPlayer) {
                 )
             }
         }
+    }
+}
+
+fun getScreenBrightness(context: android.content.Context, activity: android.app.Activity?): Float {
+    val windowBrightness = activity?.window?.attributes?.screenBrightness ?: -1f
+    if (windowBrightness >= 0f) return windowBrightness
+    return try {
+        val sysBrightness = android.provider.Settings.System.getInt(
+            context.contentResolver,
+            android.provider.Settings.System.SCREEN_BRIGHTNESS
+        )
+        (sysBrightness / 255f).coerceIn(0.01f, 1f)
+    } catch (e: Exception) {
+        0.5f
     }
 }
 
