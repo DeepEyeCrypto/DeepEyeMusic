@@ -96,12 +96,48 @@ object DatabaseModule {
             }
         }
 
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `hidden_content` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `accountKey` TEXT,
+                        `itemId` TEXT NOT NULL,
+                        `title` TEXT NOT NULL,
+                        `artist` TEXT,
+                        `itemType` TEXT NOT NULL,
+                        `hiddenAt` INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS `index_hidden_content_accountKey`
+                    ON `hidden_content` (`accountKey`)
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS `index_hidden_content_itemId`
+                    ON `hidden_content` (`itemId`)
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS `index_hidden_content_accountKey_itemType`
+                    ON `hidden_content` (`accountKey`, `itemType`)
+                    """.trimIndent()
+                )
+            }
+        }
+
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
             "deepeye_music.db",
         )
-            .addMigrations(MIGRATION_9_10, MIGRATION_10_11)
+            .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
             .fallbackToDestructiveMigration()
             .build()
     }
@@ -128,6 +164,12 @@ object DatabaseModule {
     fun providePersonalizedSectionDao(
         database: AppDatabase
     ): com.deepeye.musicpro.data.cache.dao.PersonalizedSectionDao = database.personalizedSectionDao()
+
+    @Provides
+    @Singleton
+    fun provideHiddenContentDao(
+        database: AppDatabase
+    ): com.deepeye.musicpro.data.cache.dao.HiddenContentDao = database.hiddenContentDao()
 
     @Provides
     @Singleton

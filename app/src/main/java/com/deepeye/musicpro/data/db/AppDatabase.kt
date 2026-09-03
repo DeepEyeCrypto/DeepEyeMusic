@@ -41,8 +41,9 @@ import androidx.room.RoomDatabase
         com.deepeye.musicpro.data.library.entities.SubscribedChannelEntity::class,
         com.deepeye.musicpro.data.cache.entities.CachedPersonalizedSectionEntity::class,
         com.deepeye.musicpro.data.cache.entities.CachedPersonalizedItemEntity::class,
+        com.deepeye.musicpro.data.cache.entities.HiddenContentEntity::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -61,4 +62,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun historyDao(): HistoryDao
 
     abstract fun personalizedSectionDao(): com.deepeye.musicpro.data.cache.dao.PersonalizedSectionDao
+
+    abstract fun hiddenContentDao(): com.deepeye.musicpro.data.cache.dao.HiddenContentDao
 }

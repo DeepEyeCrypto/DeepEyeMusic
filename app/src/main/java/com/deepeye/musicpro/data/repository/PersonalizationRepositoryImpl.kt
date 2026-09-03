@@ -75,6 +75,8 @@ class PersonalizationRepositoryImpl @Inject constructor(
     private fun observeAccountAndQueue() {
         scope.launch {
             accountSessionManager.accountSession.collectLatest { session ->
+                val accountKey = (session as? AccountSession.Connected)?.accountKey
+                hiddenContentManager.switchAccount(accountKey)
                 _feedState.update { it.copy(accountSession = session) }
                 buildFeed(forceRefresh = false)
             }
@@ -171,111 +173,127 @@ class PersonalizationRepositoryImpl @Inject constructor(
             _feedState.update { it.copy(isLoading = it.sections.isEmpty(), isRefreshing = it.sections.isNotEmpty()) }
             val session = accountSessionManager.accountSession.value
 
-            supervisorScope {
-                val continueListeningDeferred = async { buildContinueListeningSection() }
-                val yourQueueDeferred = async { buildYourQueueSection() }
-                val recentlyPlayedDeferred = async { buildRecentlyPlayedSection() }
-                val likedMusicDeferred = async { buildLikedMusicSection(session, forceRefresh) }
-                val playlistsDeferred = async { buildYourPlaylistsSection(session, forceRefresh) }
-                val subscriptionsDeferred = async { buildSubscriptionsSection(session, forceRefresh) }
-                val basedOnListeningDeferred = async { buildBasedOnListeningSection(forceRefresh) }
-                val trendingDeferred = async { buildTrendingSection(forceRefresh) }
-
-                val continueListening = continueListeningDeferred.await()
-                val yourQueue = yourQueueDeferred.await()
-                val recentlyPlayed = recentlyPlayedDeferred.await()
-                val likedMusic = likedMusicDeferred.await()
-                val playlists = playlistsDeferred.await()
-                val subscriptions = subscriptionsDeferred.await()
-                val basedOnListening = basedOnListeningDeferred.await()
-                val trending = trendingDeferred.await()
-
-                if (forceRefresh) {
-                    personalizationPrefs.update { it.copy(lastRefreshMillis = System.currentTimeMillis()) }
-                }
-                
-                val prefs = personalizationPrefs.current()
-                val assembledSections = mutableListOf<PersonalizedSection>()
-                val allDiagnostics = mutableListOf<SectionDiagnostics>()
-                val currentlyPlayingId = queueManager.queue.value.getOrNull(queueManager.currentIndex.value)?.id
-
-                // ── Phase 5: Filter hidden content and apply DiversityRanker ──
-                fun addSection(section: PersonalizedSection) {
-                    val filteredItems = section.items.filterNot { item ->
-                        hiddenContentManager.isItemHidden(item.id) ||
-                            hiddenContentManager.isArtistHidden(item.artist) ||
-                            (prefs.hideNonMusicContent && (item.itemType == PersonalizedItemType.VIDEO || (item.mediaItem as? MediaItem.Remote)?.isVideo == true))
-                    }
-                    val filteredSection = section.copy(items = filteredItems)
-                    val processed = DiversityRanker.diversify(
-                        section = filteredSection,
-                        maxRepeatedArtistPerSection = prefs.maxRepeatedArtistPerSection,
-                        currentPlayingItemId = currentlyPlayingId,
-                    )
-                    
-                    if (processed.items.isNotEmpty() || processed.error != null) {
-                        assembledSections.add(processed)
-                        
-                        allDiagnostics.add(
-                            SectionDiagnostics(
-                                sectionId = processed.id,
-                                sectionTitle = processed.title,
-                                source = if (processed.isFromCache) SectionDiagnostics.CacheSource.ROOM_CACHE else SectionDiagnostics.CacheSource.LIVE,
-                                accountScopeHash = if (processed.isAccountRequired) (session as? AccountSession.Connected)?.accountKey?.take(8) else null,
-                                cacheAgeMs = if (processed.lastUpdatedMillis > 0) System.currentTimeMillis() - processed.lastUpdatedMillis else 0L,
-                                refreshState = if (processed.isFromCache) SectionDiagnostics.RefreshState.STALE_WHILE_REVALIDATE else SectionDiagnostics.RefreshState.FRESH,
-                                itemCount = processed.items.size,
-                                reason = processed.explanation,
-                                rebuiltByDiversityRanker = processed.items != filteredItems,
-                                hiddenItemsPruned = section.items.size - filteredItems.size,
-                            )
-                        )
-                    }
-                }
-
-                // 1. Continue Listening
-                if (prefs.enableLocalListeningSections) {
-                    addSection(continueListening)
-                }
-
-                // 2. Your Queue (always shown – local playback, not filtered by local pref)
-                addSection(yourQueue)
-
-                // 3. Recently Played
-                if (prefs.enableLocalListeningSections) {
-                    addSection(recentlyPlayed)
-                }
-
-                // 4. Liked Music
-                if (prefs.enableAccountSections && (session is AccountSession.Connected || likedMusic.items.isNotEmpty())) {
-                    addSection(likedMusic)
-                }
-
-                // 5. Your Playlists
-                addSection(playlists)
-
-                // 6. New From Subscriptions
-                if (prefs.enableAccountSections && session is AccountSession.Connected) {
-                    addSection(subscriptions)
-                }
-
-                // 7. Based on Your Listening
-                if (prefs.enableLocalListeningSections) {
-                    addSection(basedOnListening)
-                }
-
-                // 8. Trending Music
-                addSection(trending)
-
+            val prefs = personalizationPrefs.current()
+            if (!prefs.enablePersonalization) {
                 _feedState.update {
                     it.copy(
-                        sections = assembledSections,
-                        diagnostics = allDiagnostics,
+                        sections = emptyList(),
+                        diagnostics = emptyList(),
                         isLoading = false,
                         isRefreshing = false,
                         lastUpdatedMillis = System.currentTimeMillis(),
-                        globalError = null,
                     )
+                }
+            } else {
+                supervisorScope {
+                    val continueListeningDeferred = async { buildContinueListeningSection() }
+                    val yourQueueDeferred = async { buildYourQueueSection() }
+                    val recentlyPlayedDeferred = async { buildRecentlyPlayedSection() }
+                    val likedMusicDeferred = async { buildLikedMusicSection(session, forceRefresh) }
+                    val playlistsDeferred = async { buildYourPlaylistsSection(session, forceRefresh) }
+                    val subscriptionsDeferred = async { buildSubscriptionsSection(session, forceRefresh) }
+                    val basedOnListeningDeferred = async { buildBasedOnListeningSection(forceRefresh) }
+                    val trendingDeferred = async { buildTrendingSection(forceRefresh) }
+
+                    val continueListening = continueListeningDeferred.await()
+                    val yourQueue = yourQueueDeferred.await()
+                    val recentlyPlayed = recentlyPlayedDeferred.await()
+                    val likedMusic = likedMusicDeferred.await()
+                    val playlists = playlistsDeferred.await()
+                    val subscriptions = subscriptionsDeferred.await()
+                    val basedOnListening = basedOnListeningDeferred.await()
+                    val trending = trendingDeferred.await()
+
+                    if (forceRefresh) {
+                        personalizationPrefs.update { it.copy(lastRefreshMillis = System.currentTimeMillis()) }
+                    }
+
+                    val assembledSections = mutableListOf<PersonalizedSection>()
+                    val allDiagnostics = mutableListOf<SectionDiagnostics>()
+                    val currentlyPlayingId = queueManager.queue.value.getOrNull(queueManager.currentIndex.value)?.id
+
+                    // ── Phase 5: Filter hidden content and apply DiversityRanker ──
+                    fun addSection(section: PersonalizedSection) {
+                        val filteredItems = section.items.filterNot { item ->
+                            hiddenContentManager.isItemHidden(item.id) ||
+                                hiddenContentManager.isArtistHidden(item.artist) ||
+                                (prefs.hideNonMusicContent && (item.itemType == PersonalizedItemType.VIDEO || (item.mediaItem as? MediaItem.Remote)?.isVideo == true))
+                        }
+                        val filteredSection = section.copy(items = filteredItems)
+                        val processed = DiversityRanker.diversify(
+                            section = filteredSection,
+                            maxRepeatedArtistPerSection = prefs.maxRepeatedArtistPerSection,
+                            currentPlayingItemId = currentlyPlayingId,
+                        )
+
+                        if (processed.items.isNotEmpty() || processed.error != null) {
+                            assembledSections.add(processed)
+
+                            allDiagnostics.add(
+                                SectionDiagnostics(
+                                    sectionId = processed.id,
+                                    sectionTitle = processed.title,
+                                    source = if (processed.isFromCache) SectionDiagnostics.CacheSource.ROOM_CACHE else SectionDiagnostics.CacheSource.LIVE,
+                                    accountScopeHash = if (processed.isAccountRequired) (session as? AccountSession.Connected)?.accountKey?.take(8) else null,
+                                    cacheAgeMs = if (processed.lastUpdatedMillis > 0) System.currentTimeMillis() - processed.lastUpdatedMillis else 0L,
+                                    refreshState = if (processed.isFromCache) SectionDiagnostics.RefreshState.STALE_WHILE_REVALIDATE else SectionDiagnostics.RefreshState.FRESH,
+                                    itemCount = processed.items.size,
+                                    reason = processed.explanation,
+                                    rebuiltByDiversityRanker = processed.items != filteredItems,
+                                    hiddenItemsPruned = section.items.size - filteredItems.size,
+                                )
+                            )
+                        }
+                    }
+
+                    // 1. Continue Listening
+                    if (prefs.enableLocalListeningSections) {
+                        addSection(continueListening)
+                    }
+
+                    // 2. Your Queue (always shown – local playback, not filtered by local pref)
+                    addSection(yourQueue)
+
+                    // 3. Recently Played
+                    if (prefs.enableLocalListeningSections) {
+                        addSection(recentlyPlayed)
+                    }
+
+                    // 4. Liked Music
+                    if (prefs.enableAccountSections && (session is AccountSession.Connected || likedMusic.items.isNotEmpty()) && prefs.enableLikedMusic) {
+                        addSection(likedMusic)
+                    }
+
+                    // 5. Your Playlists
+                    if (prefs.enableAccountSections) {
+                        addSection(playlists)
+                    }
+
+                    // 6. New From Subscriptions
+                    if (prefs.enableAccountSections && session is AccountSession.Connected && prefs.enableSubscriptions) {
+                        addSection(subscriptions)
+                    }
+
+                    // 7. Based on Your Listening
+                    if (prefs.enableLocalListeningSections && prefs.enableLocalMix) {
+                        addSection(basedOnListening)
+                    }
+
+                    // 8. Trending Music
+                    if (prefs.enableTrending) {
+                        addSection(trending)
+                    }
+
+                    _feedState.update {
+                        it.copy(
+                            sections = assembledSections,
+                            diagnostics = allDiagnostics,
+                            isLoading = false,
+                            isRefreshing = false,
+                            lastUpdatedMillis = System.currentTimeMillis(),
+                            globalError = null,
+                        )
+                    }
                 }
             }
         }
@@ -943,3 +961,4 @@ class PersonalizationRepositoryImpl @Inject constructor(
         )
     }
 }
+
