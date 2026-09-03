@@ -38,6 +38,9 @@ import com.deepeye.musicpro.ui.onboarding.OnboardingScreen
 import com.deepeye.musicpro.ui.playlist.PlaylistDetailScreen
 import com.deepeye.musicpro.ui.search.SearchScreen
 import com.deepeye.musicpro.ui.settings.SettingsScreen
+import com.deepeye.musicpro.ui.settings.PersonalizationSettingsScreen
+import com.deepeye.musicpro.ui.settings.HiddenContentScreen
+import com.deepeye.musicpro.ui.settings.PersonalizationDiagnosticsScreen
 import com.deepeye.musicpro.ui.youtube.YouTubeScreen
 import com.deepeye.musicpro.ui.library.LikedSongsScreen
 import com.deepeye.musicpro.ui.library.PlaylistsScreen
@@ -267,7 +270,29 @@ fun NavGraph(
             SettingsScreen(
                 windowSizeClass = windowSizeClass,
                 onNavigateToAEOS = { navController.navigate(Routes.AEOS.route) },
-                onYouTubeLoginClick = { navController.navigate(Routes.YouTubeLogin.route) }
+                onYouTubeLoginClick = { navController.navigate(Routes.YouTubeLogin.route) },
+                onNavigateToPersonalization = { navController.navigate(Routes.PersonalizationSettings.route) },
+            )
+        }
+
+        composable(Routes.PersonalizationSettings.route) {
+            PersonalizationSettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToHiddenContent = { navController.navigate(Routes.HiddenContent.route) },
+                onNavigateToAccount = { navController.navigate(Routes.YouTubeLogin.route) },
+                onNavigateToDiagnostics = { navController.navigate(Routes.PersonalizationDiagnostics.route) },
+            )
+        }
+
+        composable(Routes.HiddenContent.route) {
+            HiddenContentScreen(
+                onNavigateBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(Routes.PersonalizationDiagnostics.route) {
+            PersonalizationDiagnosticsScreen(
+                onNavigateBack = { navController.popBackStack() },
             )
         }
         

@@ -23,7 +23,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.musicpro.data.prefs.ThemeMode
 import com.deepeye.musicpro.data.source.remote.update.UpdateState
 import com.deepeye.musicpro.ui.components.GlowCard
+import com.deepeye.musicpro.ui.theme.*
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -49,6 +52,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     onNavigateToAEOS: () -> Unit = {},
     onYouTubeLoginClick: () -> Unit = {},
+    onNavigateToPersonalization: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val settings = uiState.settings
@@ -144,7 +148,8 @@ fun SettingsScreen(
                                 item { AppearanceSettingsCard(settings, viewModel) }
                             }
                             1 -> {
-                                item { SectionHeader("Music Taste & Autoplay") }
+                                item { SectionHeader("Music Taste & Personalization") }
+                                item { PersonalizationNavigationCard(onNavigateToPersonalization) }
                                 item { TasteSettingsCard(uiState, viewModel) }
                             }
                             2 -> {
@@ -210,7 +215,8 @@ fun SettingsScreen(
                 item { SectionHeader("Appearance") }
                 item { AppearanceSettingsCard(settings, viewModel) }
 
-                item { SectionHeader("Music Taste & Autoplay") }
+                item { SectionHeader("Music Taste & Personalization") }
+                item { PersonalizationNavigationCard(onNavigateToPersonalization) }
                 item { TasteSettingsCard(uiState, viewModel) }
 
                 item { SectionHeader("Audio") }
@@ -465,6 +471,62 @@ private fun ProfileStat(label: String, value: String, accentColor: Color) {
             fontWeight = FontWeight.Bold,
             color = accentColor
         )
+    }
+}
+
+@Composable
+private fun PersonalizationNavigationCard(
+    onNavigateToPersonalization: () -> Unit,
+) {
+    SettingsCard {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNavigateToPersonalization() }
+                .padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(ElectricViolet.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = ElectricViolet,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            Spacer(Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Music Personalization",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                )
+                Text(
+                    text = "Control feed recommendations, account sync, diversity rules & hidden items",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Open Music Personalization",
+                tint = TextSecondary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
 
