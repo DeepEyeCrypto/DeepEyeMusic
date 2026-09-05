@@ -7,6 +7,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,9 +24,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.LibraryMusic
+import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.MoreVert
@@ -52,6 +55,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.deepeye.musicpro.data.source.remote.youtube.MusicFilter
 import com.deepeye.musicpro.domain.model.Song
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedItem
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedState
@@ -85,7 +89,7 @@ fun MusicScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Discovery", "Library")
+    val tabs = listOf("Discover", "Local Songs")
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -149,6 +153,34 @@ fun MusicScreen(
                     // Premium Search Bar (Clickable Entry Point)
                     PremiumSearchBar(onClick = onNavigateToSearch)
                     Spacer(Modifier.height(8.dp))
+
+                    if (selectedTab == 1 && uiState.localSongs.isNotEmpty()) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                            Button(
+                                onClick = { viewModel.playAllLocalSongs(shuffle = true) },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = ElectricViolet),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Shuffle, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Shuffle All", fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(Modifier.width(8.dp))
+                            Button(
+                                onClick = { viewModel.playAllLocalSongs(shuffle = false) },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = CardSurfaceElevated),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+                            ) {
+                                Icon(Icons.Rounded.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp), tint = NeonCyan)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Play All", fontWeight = FontWeight.Bold, color = TextPrimary)
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
                 }
 
                 // YouTube account connectivity prompt — lets the user connect so the
@@ -317,7 +349,7 @@ private fun PremiumTabBar(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Icon(
-                        imageVector = if (index == 0) Icons.Rounded.SpatialAudioOff else Icons.Rounded.LibraryMusic,
+                        imageVector = if (index == 0) Icons.Rounded.MusicNote else Icons.Rounded.LibraryMusic,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
                         tint = if (isSelected) NeonCyan else TextTertiary
@@ -346,6 +378,20 @@ private fun DiscoveryTab(
     paddingValues: PaddingValues,
 ) {
     val feed = uiState.personalizedFeed
+    val songSections = remember(feed.sections) {
+        feed.sections
+            .filterNot { it.type == PersonalizedSectionType.YOUR_PLAYLISTS }
+            .map { section ->
+                section.copy(
+                    items = section.items.filter {
+                        it.itemType == PersonalizedItemType.SONG &&
+                            it.durationMs !in 1..59_000L &&
+                            MusicFilter.isMusicTrack(it.title, it.artist, it.durationMs / 1000L)
+                    }
+                )
+            }
+            .filter { it.items.isNotEmpty() || it.isLoading || it.error != null }
+    }
     
     var explanationItem by remember { mutableStateOf<PersonalizedFeedItem?>(null) }
     var explanationSection by remember { mutableStateOf<PersonalizedSection?>(null) }
@@ -362,18 +408,18 @@ private fun DiscoveryTab(
                 .padding(top = paddingValues.calculateTopPadding())
         ) {
             when {
-                feed.isLoading && feed.sections.isEmpty() -> {
+                feed.isLoading && songSections.isEmpty() -> {
                     DiscoveryLoadingSkeleton()
                 }
 
-                feed.sections.isEmpty() && feed.globalError != null -> {
+                songSections.isEmpty() && feed.globalError != null -> {
                     DiscoveryGlobalError(
                         message = feed.globalError,
                         onRetry = { viewModel.refreshPersonalizedFeed() },
                     )
                 }
 
-                feed.sections.isEmpty() && !feed.isLoading -> {
+                songSections.isEmpty() && !feed.isLoading -> {
                     DiscoveryEmptyState(
                         onRefresh = { viewModel.refreshPersonalizedFeed() },
                     )
@@ -392,7 +438,7 @@ private fun DiscoveryTab(
                             Spacer(Modifier.height(6.dp))
                         }
                         itemsIndexed(
-                            items = feed.sections,
+                            items = songSections,
                             key = { _, section -> section.id },
                         ) { index, section ->
                             PersonalizedSectionRow(

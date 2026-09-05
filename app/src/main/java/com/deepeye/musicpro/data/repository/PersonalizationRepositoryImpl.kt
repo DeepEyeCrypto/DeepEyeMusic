@@ -217,7 +217,10 @@ class PersonalizationRepositoryImpl @Inject constructor(
                         val filteredItems = section.items.filterNot { item ->
                             hiddenContentManager.isItemHidden(item.id) ||
                                 hiddenContentManager.isArtistHidden(item.artist) ||
-                                (prefs.hideNonMusicContent && (item.itemType == PersonalizedItemType.VIDEO || (item.mediaItem as? MediaItem.Remote)?.isVideo == true))
+                                item.itemType == PersonalizedItemType.VIDEO ||
+                                (item.durationMs in 1..59_000L) ||
+                                (item.mediaItem as? MediaItem.Remote)?.isVideo == true ||
+                                !MusicFilter.isMusicTrack(item.title, item.artist, item.durationMs / 1000L)
                         }
                         val filteredSection = section.copy(items = filteredItems)
                         val processed = DiversityRanker.diversify(
@@ -467,7 +470,9 @@ class PersonalizationRepositoryImpl @Inject constructor(
             return try {
                 val likedVideos = authenticatedYouTubeClient.getLikedVideos()
                 val filtered = likedVideos
-                    .filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
+                    .filterNot { it.isShort }
+                    .filter { it.duration == 0L || it.duration >= 60L }
+                    .filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration, it.isShort) }
                     .distinctBy { it.id }
                     .map {
                         it.toPersonalizedFeedItem(
@@ -656,7 +661,9 @@ class PersonalizationRepositoryImpl @Inject constructor(
         return try {
             val subsVideos = authenticatedYouTubeClient.getSubscriptionsFeed()
             val filtered = subsVideos
-                .filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
+                .filterNot { it.isShort }
+                .filter { it.duration == 0L || it.duration >= 60L }
+                .filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration, it.isShort) }
                 .distinctBy { it.id }
                 .take(20)
                 .map {
@@ -761,6 +768,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
             }
 
             val filtered = rawResults
+                .filter { it.duration == 0L || it.duration >= 60L }
                 .filter { MusicFilter.isMusicTrack(it.title, it.artist, it.duration) }
                 .distinctBy { it.id }
                 .take(15)
@@ -851,6 +859,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
             val trendingItems = youtubeRemoteDataSource.searchMusic(query)
             val explanation = "Popular track currently trending in your region ($region)."
             val filtered = trendingItems
+                .filter { it.duration == 0L || it.duration >= 60L }
                 .filter { MusicFilter.isMusicTrack(it.title, it.artist, it.duration) }
                 .distinctBy { it.id }
                 .take(20)
@@ -924,7 +933,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
             channelId = channelId,
             artworkUrl = thumbnailUrl,
             durationMs = duration * 1000L,
-            itemType = PersonalizedItemType.SONG,
+            itemType = if (isShort || duration in 1..59) PersonalizedItemType.VIDEO else PersonalizedItemType.SONG,
             sourceBadge = sourceBadge ?: "DSP READY",
             explanation = explanation,
             mediaItem = MediaItem.Remote(
@@ -933,7 +942,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 artist = channelName,
                 artworkUri = Uri.parse(thumbnailUrl),
                 duration = duration * 1000L,
-                isVideo = isShort,
+                isVideo = false,
             )
         )
     }

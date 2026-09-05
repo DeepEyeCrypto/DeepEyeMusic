@@ -15,6 +15,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -81,6 +82,7 @@ fun NowPlayingScreen(
     onNavigateToV4A: () -> Unit,
     onNavigateToQueue: () -> Unit,
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToPersonalization: () -> Unit = {},
     viewModel: PlayerViewModel = hiltViewModel(),
     sheetViewModel: MiniPlayerSheetViewModel = hiltViewModel()
 ) {
@@ -279,6 +281,7 @@ fun NowPlayingScreen(
                         onOpenDsp = { showDspSheet = true },
                         onOpenQueue = { showQueueSheet = true },
                         onNavigateToSettings = onNavigateToSettings,
+                        onNavigateToPersonalization = onNavigateToPersonalization,
                         onLockChanged = { isLocked -> sheetViewModel.setGestureLocked(isLocked); fullscreenMode.isGestureLocked = isLocked },
                         onOpenLyrics = { showLyricsSheet = true },
                         onOpenSpeedDialog = { showSpeedDialog = true },
@@ -317,6 +320,7 @@ fun NowPlayingScreen(
                         onOpenDsp = { showDspSheet = true },
                         onOpenQueue = { showQueueSheet = true },
                         onNavigateToSettings = onNavigateToSettings,
+                        onNavigateToPersonalization = onNavigateToPersonalization,
                         pagerState = pagerState,
                         onOpenLyrics = { showLyricsSheet = true },
                         onOpenSpeedDialog = { showSpeedDialog = true },
@@ -472,6 +476,7 @@ fun AudioNowPlayingLayout(
     onOpenDsp: () -> Unit,
     onOpenQueue: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToPersonalization: () -> Unit = {},
     pagerState: androidx.compose.foundation.pager.PagerState,
     onOpenLyrics: () -> Unit,
     onOpenSpeedDialog: () -> Unit,
@@ -508,14 +513,18 @@ fun AudioNowPlayingLayout(
         ) {
             // Header
             if (!isInPipMode) {
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp, bottom = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    contentAlignment = Alignment.Center
                 ) {
-                    IconButton(onClick = onNavigateBack, modifier = Modifier.size(44.dp)) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .size(44.dp)
+                    ) {
                         Icon(Icons.Default.KeyboardArrowDown, "Close", tint = headerColor, modifier = Modifier.size(32.dp))
                     }
                     Text(
@@ -526,11 +535,19 @@ fun AudioNowPlayingLayout(
                         color = headerColor.copy(alpha = 0.7f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = 96.dp),
                         textAlign = TextAlign.Center
                     )
-                    IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(44.dp)) {
-                        Icon(Icons.Default.Settings, "Settings", tint = headerColor, modifier = Modifier.size(24.dp))
+                    Row(
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = onNavigateToPersonalization, modifier = Modifier.size(44.dp)) {
+                            Icon(Icons.Default.AutoAwesome, "Personalization", tint = finalAccentColor, modifier = Modifier.size(24.dp))
+                        }
+                        IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(44.dp)) {
+                            Icon(Icons.Default.Settings, "Settings", tint = headerColor, modifier = Modifier.size(24.dp))
+                        }
                     }
                 }
             }
@@ -818,7 +835,7 @@ fun AudioNowPlayingLayout(
                     )
                 }
 
-                // Row 2: Queue, Visualizer, Download, Info, OLED
+                // Row 2: Queue, Personal, Visualizer, Download, Info
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -832,6 +849,15 @@ fun AudioNowPlayingLayout(
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),
                         onClick = onOpenQueue
+                    )
+                    QuickToolButton(
+                        icon = Icons.Default.AutoAwesome,
+                        label = "Personal",
+                        isActive = true,
+                        accentColor = finalAccentColor,
+                        headerColor = headerColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToPersonalization
                     )
                     QuickToolButton(
                         icon = Icons.Default.GraphicEq,
@@ -859,15 +885,6 @@ fun AudioNowPlayingLayout(
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),
                         onClick = onOpenInfo
-                    )
-                    QuickToolButton(
-                        icon = Icons.Default.PowerSettingsNew,
-                        label = "OLED",
-                        isActive = false,
-                        accentColor = finalAccentColor,
-                        headerColor = headerColor,
-                        modifier = Modifier.weight(1f),
-                        onClick = onEnableOledMode
                     )
                 }
             }
@@ -941,6 +958,7 @@ fun VideoNowPlayingLayout(
     onOpenDsp: () -> Unit,
     onOpenQueue: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToPersonalization: () -> Unit = {},
     onLockChanged: (Boolean) -> Unit,
     onOpenLyrics: () -> Unit,
     onOpenSpeedDialog: () -> Unit,
@@ -980,27 +998,43 @@ fun VideoNowPlayingLayout(
     ) {
         // 1. Header Row
         if (!isFullscreen) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 32.dp, end = 32.dp, top = 16.dp, bottom = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onNavigateBack, modifier = Modifier.size(44.dp)) {
-                Icon(Icons.Default.KeyboardArrowDown, "Close", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(32.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .size(44.dp)
+                ) {
+                    Icon(Icons.Default.KeyboardArrowDown, "Close", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(32.dp))
+                }
+                Text(
+                    text = "YOUTUBE VIDEO PLAYER",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(horizontal = 96.dp),
+                    textAlign = TextAlign.Center
+                )
+                Row(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onNavigateToPersonalization, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.AutoAwesome, "Personalization", tint = finalAccentColor, modifier = Modifier.size(24.dp))
+                    }
+                    IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.Settings, "Settings", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(24.dp))
+                    }
+                }
             }
-            Text(
-                text = "YOUTUBE VIDEO PLAYER",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 4.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
-            )
-            IconButton(onClick = onNavigateToSettings) {
-                Icon(Icons.Default.Settings, "Settings", tint = MaterialTheme.colorScheme.onSurface)
-            }
-        }
         }
 
         // 2. Video Player Section (WebView) - Fixed 16:9 Aspect Ratio
@@ -1011,16 +1045,16 @@ fun VideoNowPlayingLayout(
         } else {
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 32.dp)
+                .padding(horizontal = 16.dp)
                 .aspectRatio(16 / 9f)
                 .shadow(
-                    elevation = 24.dp,
-                    shape = RoundedCornerShape(24.dp),
+                    elevation = 20.dp,
+                    shape = RoundedCornerShape(20.dp),
                     spotColor = finalAccentColor,
                     ambientColor = finalAccentColor
                 )
-                .clip(RoundedCornerShape(24.dp))
-                .border(1.5.dp, finalAccentColor.copy(alpha = 0.35f), RoundedCornerShape(24.dp))
+                .clip(RoundedCornerShape(20.dp))
+                .border(1.2.dp, finalAccentColor.copy(alpha = 0.35f), RoundedCornerShape(20.dp))
                 .background(Color.Transparent)
         }
         Box(
@@ -1087,31 +1121,31 @@ fun VideoNowPlayingLayout(
 
         // 3. Scrollable Detail Panel
         if (!isFullscreen) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(horizontal = 32.dp)
-                .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Spacer(Modifier.height(8.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Spacer(Modifier.height(4.dp))
 
             // Video Metadata Card
             val currentItem = playerState.currentItem
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .glassCard(elevation = 12.dp, cornerRadius = 24.dp)
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .glassCard(elevation = 12.dp, cornerRadius = 20.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 // Title and Views
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         text = currentItem?.title ?: "Unknown Video",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Black,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
@@ -1121,139 +1155,158 @@ fun VideoNowPlayingLayout(
                     if (viewText.isNotBlank()) {
                         Text(
                             text = viewText + uploadText,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
                     }
                 }
                 
-                // Channel Info
+                // Channel Info Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Channel Avatar (Async Image or Glass initial)
-                        val effectiveChannelName = videoDetails?.channelName?.takeIf { it.isNotBlank() }
-                            ?: currentItem?.artist?.takeIf { !it.contains("view", ignoreCase = true) }
-                            ?: "YouTube Channel"
-                        val firstChar = effectiveChannelName.firstOrNull()?.toString() ?: "Y"
-                        val avatarUrl = videoDetails?.channelAvatarUrl?.takeIf { it.isNotBlank() }
+                    val effectiveChannelName = videoDetails?.channelName?.takeIf { it.isNotBlank() }
+                        ?: currentItem?.artist?.takeIf { !it.contains("view", ignoreCase = true) }
+                        ?: "YouTube Channel"
+                    val firstChar = effectiveChannelName.firstOrNull()?.toString() ?: "Y"
+                    val avatarUrl = videoDetails?.channelAvatarUrl?.takeIf { it.isNotBlank() }
 
-                        if (avatarUrl != null) {
-                            AsyncImage(
-                                model = avatarUrl,
-                                contentDescription = effectiveChannelName,
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .border(1.dp, finalAccentColor.copy(alpha=0.5f), CircleShape),
-                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                            )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(Brush.linearGradient(listOf(finalAccentColor.copy(alpha=0.3f), finalAccentColor.copy(alpha=0.05f))))
-                                    .border(1.dp, finalAccentColor.copy(alpha=0.5f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(firstChar.uppercase(), color = finalAccentColor, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
-                            }
-                        }
-                        
-                        Spacer(Modifier.width(16.dp))
-                        
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = effectiveChannelName,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            val subText = videoDetails?.subscriberCount?.takeIf { it > 0 }?.let { com.deepeye.musicpro.util.formatCompactNumber(it) + " Subscribers" } ?: ""
-                            if (subText.isNotBlank()) {
-                                Text(
-                                    text = subText,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                )
-                            }
-                        }
-
-                        // Subscribe Button
-                        val channelName = effectiveChannelName
-                        val channelId = currentItem?.artist ?: ""
-                        val isSubscribed by libraryViewModel.isChannelSubscribed(channelId).collectAsStateWithLifecycle(initialValue = false)
-
-                        Button(
-                            onClick = { libraryViewModel.toggleSubscription(channelId, channelName) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isSubscribed) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary,
-                                contentColor = if (isSubscribed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onPrimary
-                            ),
-                            shape = CircleShape,
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    if (avatarUrl != null) {
+                        AsyncImage(
+                            model = avatarUrl,
+                            contentDescription = effectiveChannelName,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .border(1.dp, finalAccentColor.copy(alpha=0.5f), CircleShape),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(Brush.linearGradient(listOf(finalAccentColor.copy(alpha=0.3f), finalAccentColor.copy(alpha=0.05f))))
+                                .border(1.dp, finalAccentColor.copy(alpha=0.5f), CircleShape),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = if (isSubscribed) androidx.compose.material.icons.Icons.Default.NotificationsActive else androidx.compose.material.icons.Icons.Default.AddAlert,
-                                contentDescription = "Subscribe",
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(if (isSubscribed) "Subscribed" else "Subscribe", fontWeight = FontWeight.Bold)
+                            Text(firstChar.uppercase(), color = finalAccentColor, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                         }
+                    }
+                    
+                    Spacer(Modifier.width(12.dp))
+                    
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = effectiveChannelName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        val subText = videoDetails?.subscriberCount?.takeIf { it > 0 }?.let { com.deepeye.musicpro.util.formatCompactNumber(it) + " Subscribers" } ?: ""
+                        if (subText.isNotBlank()) {
+                            Text(
+                                text = subText,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.width(10.dp))
+
+                    // Subscribe Button
+                    val channelName = effectiveChannelName
+                    val channelId = currentItem?.artist ?: ""
+                    val isSubscribed by libraryViewModel.isChannelSubscribed(channelId).collectAsStateWithLifecycle(initialValue = false)
+
+                    Button(
+                        onClick = { libraryViewModel.toggleSubscription(channelId, channelName) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isSubscribed) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary,
+                            contentColor = if (isSubscribed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onPrimary
+                        ),
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isSubscribed) androidx.compose.material.icons.Icons.Default.NotificationsActive else androidx.compose.material.icons.Icons.Default.AddAlert,
+                            contentDescription = "Subscribe",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(if (isSubscribed) "Subscribed" else "Subscribe", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     }
                 }
 
-                Spacer(Modifier.height(8.dp))
-
-                // Interaction Row
+                // YouTube-Style Action Pills Row
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceAround,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val feedback by viewModel.currentSongFeedback.collectAsStateWithLifecycle()
                     val isLiked = feedback?.liked == true
                     val context = androidx.compose.ui.platform.LocalContext.current
-                    
-                    InteractionButton(
-                        icon = Icons.Default.ThumbUp,
-                        label = "Like",
-                        isActive = isLiked,
+
+                    // 1. Segmented Like / Dislike Pill
+                    SegmentedLikeDislikePill(
+                        isLiked = isLiked,
                         activeColor = finalAccentColor,
-                        onClick = { viewModel.likeTrack(!isLiked) }
-                    )
-                    InteractionButton(icon = Icons.Default.ThumbDown, label = "Dislike", onClick = {
-                        viewModel.dislikeTrack()
-                        android.widget.Toast.makeText(context, "Marked as Disliked", android.widget.Toast.LENGTH_SHORT).show()
-                    })
-                    InteractionButton(icon = Icons.Default.Share, label = "Share", onClick = {
-                        val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(android.content.Intent.EXTRA_TEXT, "Listen to ${currentItem?.title ?: "this"} on DeepEye Music Pro!")
+                        onLikeClick = { viewModel.likeTrack(!isLiked) },
+                        onDislikeClick = {
+                            viewModel.dislikeTrack()
+                            android.widget.Toast.makeText(context, "Marked as Disliked", android.widget.Toast.LENGTH_SHORT).show()
                         }
-                        context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Track"))
-                    })
-                    InteractionButton(
+                    )
+
+                    // 2. Share Pill
+                    ActionPill(
+                        icon = Icons.Default.Share,
+                        label = "Share",
+                        onClick = {
+                            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(android.content.Intent.EXTRA_TEXT, "Listen to ${currentItem?.title ?: "this"} on DeepEye Music Pro!")
+                            }
+                            context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Track"))
+                        }
+                    )
+
+                    // 3. Download Pill
+                    ActionPill(
                         icon = Icons.Default.Download,
                         label = "Download",
                         onClick = { viewModel.downloadCurrentTrack() }
                     )
-                    InteractionButton(icon = Icons.Default.Add, label = "Save", onClick = {
-                        showPlaylistSheet = true
-                    })
-                    InteractionButton(icon = Icons.Default.MusicNote, label = "Lyrics", onClick = onOpenLyrics)
+
+                    // 4. Save Pill
+                    ActionPill(
+                        icon = Icons.Default.Add,
+                        label = "Save",
+                        onClick = { showPlaylistSheet = true }
+                    )
+
+                    // 5. Personalization Pill
+                    ActionPill(
+                        icon = Icons.Default.AutoAwesome,
+                        label = "Personal",
+                        isActive = true,
+                        activeColor = finalAccentColor,
+                        onClick = onNavigateToPersonalization
+                    )
+
+                    // 6. Lyrics Pill
+                    ActionPill(
+                        icon = Icons.Default.MusicNote,
+                        label = "Lyrics",
+                        onClick = onOpenLyrics
+                    )
                 }
             }
 
@@ -1709,6 +1762,114 @@ fun PremiumActionPill(icon: androidx.compose.ui.graphics.vector.ImageVector, tex
 }
 
 @Composable
+fun ActionPill(
+    icon: ImageVector,
+    label: String,
+    isActive: Boolean = false,
+    activeColor: Color = Color.White,
+    isLoading: Boolean = false,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = CircleShape,
+        color = if (isActive) activeColor.copy(alpha = 0.18f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+        border = androidx.compose.foundation.BorderStroke(
+            0.5.dp,
+            if (isActive) activeColor.copy(alpha = 0.55f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+        ),
+        modifier = Modifier
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), color = if (isActive) activeColor else MaterialTheme.colorScheme.onSurface, strokeWidth = 2.dp)
+            } else {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = if (isActive) activeColor else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium),
+                color = if (isActive) activeColor else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+fun SegmentedLikeDislikePill(
+    isLiked: Boolean,
+    activeColor: Color,
+    onLikeClick: () -> Unit,
+    onDislikeClick: () -> Unit
+) {
+    Surface(
+        shape = CircleShape,
+        color = if (isLiked) activeColor.copy(alpha = 0.18f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+        border = androidx.compose.foundation.BorderStroke(
+            0.5.dp,
+            if (isLiked) activeColor.copy(alpha = 0.55f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+        )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp))
+                    .clickable(onClick = onLikeClick)
+                    .padding(start = 14.dp, end = 10.dp, top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = if (isLiked) Icons.Default.ThumbUp else Icons.Outlined.ThumbUp,
+                    contentDescription = "Like",
+                    tint = if (isLiked) activeColor else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = if (isLiked) "Liked" else "Like",
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = if (isLiked) FontWeight.Bold else FontWeight.Medium),
+                    color = if (isLiked) activeColor else MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .width(1.dp)
+                    .height(16.dp)
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f))
+            )
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp))
+                    .clickable(onClick = onDislikeClick)
+                    .padding(start = 10.dp, end = 14.dp, top = 8.dp, bottom = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.ThumbDown,
+                    contentDescription = "Dislike",
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun InteractionButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, isActive: Boolean = false, activeColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.White, isLoading: Boolean = false, onClick: () -> Unit) {
     val tintColor = if (isActive) activeColor else MaterialTheme.colorScheme.onSurface
     androidx.compose.foundation.layout.Column(
@@ -1720,11 +1881,11 @@ fun InteractionButton(icon: androidx.compose.ui.graphics.vector.ImageVector, lab
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.size(28.dp), color = tintColor, strokeWidth = 2.dp)
+            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = tintColor, strokeWidth = 2.dp)
         } else {
-            Icon(icon, contentDescription = label, tint = tintColor, modifier = Modifier.size(28.dp))
+            Icon(icon, contentDescription = label, tint = tintColor, modifier = Modifier.size(24.dp))
         }
-        Text(label, fontSize = 12.sp, color = tintColor, fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal)
+        Text(label, fontSize = 11.sp, color = tintColor, fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -1739,36 +1900,38 @@ fun SmartTubePlaybackControlCard(
     onClick: () -> Unit
 ) {
     Surface(
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(12.dp),
         color = if (isActive) accentColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
         border = androidx.compose.foundation.BorderStroke(
             0.5.dp,
             if (isActive) accentColor.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
         ),
         modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = title,
                 tint = if (isActive) accentColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(15.dp)
             )
             Column {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = value,
-                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, fontSize = 11.sp),
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, fontSize = 10.5.sp),
                     color = if (isActive) accentColor else MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -2219,7 +2382,7 @@ fun SmartTubeVideoControlsPanel(
                 SmartTubePlaybackControlCard(
                     icon = Icons.Default.PowerSettingsNew,
                     title = "OLED",
-                    value = "Screen Off",
+                    value = "Saver",
                     accentColor = finalAccentColor,
                     isActive = false,
                     modifier = Modifier.weight(1f),

@@ -184,6 +184,17 @@ constructor(
         playerController.setQueue(mediaItems, if (index >= 0) index else 0)
     }
 
+    fun playAllLocalSongs(shuffle: Boolean = false) {
+        val songs = _uiState.value.localSongs
+        if (songs.isEmpty()) return
+        val mediaItems = if (shuffle) {
+            songs.shuffled().map { MediaItem.Local(it) }
+        } else {
+            songs.map { MediaItem.Local(it) }
+        }
+        playerController.setQueue(mediaItems, 0)
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────
 
     private fun resolveMediaItem(item: PersonalizedFeedItem): MediaItem =

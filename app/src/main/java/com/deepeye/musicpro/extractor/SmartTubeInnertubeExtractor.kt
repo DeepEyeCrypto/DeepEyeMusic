@@ -391,17 +391,22 @@ class SmartTubeInnertubeExtractor(
     }
 
     override suspend fun searchMusic(query: String): List<ExtractorMusicItem> = withContext(Dispatchers.IO) {
-        val page = searchVideosFirstPage("$query music")
-        page.videos.take(24).map {
-            ExtractorMusicItem(
-                id = it.id,
-                title = it.title,
-                artist = it.artist,
-                album = "YouTube",
-                duration = if (it.duration > 0) it.duration else 0L,
-                thumbnailUrl = it.thumbnailUrl,
-            )
-        }
+        val page = searchVideosFirstPage("$query official audio song")
+        page.videos
+            .filterNot { it.isShort }
+            .filter { it.duration == 0L || it.duration >= 60L }
+            .filter { com.deepeye.musicpro.data.source.remote.youtube.MusicFilter.isMusicTrack(it.title, it.artist, it.duration, it.isShort) }
+            .take(24)
+            .map {
+                ExtractorMusicItem(
+                    id = it.id,
+                    title = it.title,
+                    artist = it.artist,
+                    album = "YouTube",
+                    duration = if (it.duration > 0) it.duration else 0L,
+                    thumbnailUrl = it.thumbnailUrl,
+                )
+            }
     }
 
     override suspend fun getShorts(): List<ExtractorVideoItem> = withContext(Dispatchers.IO) {

@@ -29,7 +29,7 @@ data class PersonalizationPreferences(
     /** Region code used for the Trending Music section (e.g. "US", "IN", "GB"). Empty = auto. */
     val trendingRegion: String = "US",
     /** Hide video / non-music content (shorts, podcasts without audio overlap). */
-    val hideNonMusicContent: Boolean = false,
+    val hideNonMusicContent: Boolean = true,
     /** Blend a controlled number of discovery candidates into familiar sections. */
     val discoveryBlendCount: Int = 2,
     /** Maximum times an artist may appear at the top of a single section. */

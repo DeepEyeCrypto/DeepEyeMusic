@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient
+import com.deepeye.musicpro.data.source.remote.youtube.MusicFilter
 import com.deepeye.musicpro.data.prefs.SettingsDataStore
 import javax.inject.Singleton
 
@@ -120,20 +121,23 @@ constructor(
             if (hasAuth) {
                 trending = if (authTrending.isNotEmpty()) authTrending else authHome.take(15)
                 shorts = (authHome + authSubscriptions).filter { it.duration in 1..60 || it.isShort }.distinctBy { it.id }.take(20)
-                val musicItems = (authMusic + authLiked).map {
+                val filteredLiked = authLiked.filter { !it.isShort && (it.duration == 0L || it.duration >= 60L) && MusicFilter.isMusicTrack(it.title, it.channelName, it.duration, it.isShort) }
+                val filteredSubs = authSubscriptions.filter { !it.isShort && (it.duration == 0L || it.duration >= 60L) && MusicFilter.isMusicTrack(it.title, it.channelName, it.duration, it.isShort) }
+                val filteredHome = authHome.filter { !it.isShort && (it.duration == 0L || it.duration >= 60L) && MusicFilter.isMusicTrack(it.title, it.channelName, it.duration, it.isShort) }
+                val musicItems = (authMusic + filteredLiked).map {
                     HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
                 }.distinctBy { it.id }
                 music = musicItems.take(15)
-                discoverMix = authHome.drop(8).take(15).map {
+                discoverMix = filteredHome.take(15).map {
                     HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
                 }
-                supermix = (authLiked + authSubscriptions).map {
+                supermix = (filteredLiked + filteredSubs).map {
                     HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
                 }.distinctBy { it.id }.take(20)
-                becauseYouLikedMix = authLiked.drop(5).take(15).map {
+                becauseYouLikedMix = filteredLiked.drop(5).take(15).map {
                     HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
                 }
-                newReleases = authSubscriptions.take(15).map {
+                newReleases = filteredSubs.take(15).map {
                     HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
                 }
             } else {

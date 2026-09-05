@@ -60,7 +60,7 @@ constructor(
                 enableLocalMix = prefs[KEY_ENABLE_LOCAL_MIX] ?: true,
                 enableTrending = prefs[KEY_ENABLE_TRENDING] ?: true,
                 trendingRegion = prefs[KEY_TRENDING_REGION] ?: "US",
-                hideNonMusicContent = prefs[KEY_HIDE_NON_MUSIC] ?: false,
+                hideNonMusicContent = prefs[KEY_HIDE_NON_MUSIC] ?: true,
                 discoveryBlendCount = prefs[KEY_DISCOVERY_BLEND] ?: 2,
                 maxRepeatedArtistPerSection = prefs[KEY_MAX_REPEATED_ARTIST] ?: 2,
                 recentlySkippedCooldownHours = prefs[KEY_SKIPPED_COOLDOWN_HOURS] ?: 24,

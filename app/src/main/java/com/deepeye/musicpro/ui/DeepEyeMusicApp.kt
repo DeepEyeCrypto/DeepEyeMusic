@@ -489,6 +489,10 @@ fun DeepEyeMusicApp(
                             sheetViewModel.collapse()
                             navController.navigate(Routes.Settings.route)
                         },
+                        onNavigateToPersonalization = {
+                            sheetViewModel.collapse()
+                            navController.navigate(Routes.PersonalizationSettings.route)
+                        },
                     )
                 }
             }

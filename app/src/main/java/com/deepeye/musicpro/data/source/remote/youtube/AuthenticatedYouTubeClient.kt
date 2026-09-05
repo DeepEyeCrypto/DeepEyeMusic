@@ -166,7 +166,11 @@ class AuthenticatedYouTubeClient @Inject constructor(
 
                     val seen = mutableSetOf<String>()
                     for (item in liked + history + subs + home) {
-                        if (MusicFilter.isMusicTrack(item.title, item.channelName, item.duration) && seen.add(item.id)) {
+                        if (!item.isShort &&
+                            (item.duration == 0L || item.duration >= 60L) &&
+                            MusicFilter.isMusicTrack(item.title, item.channelName, item.duration, item.isShort) &&
+                            seen.add(item.id)
+                        ) {
                             accountMusic.add(item)
                         }
                     }
