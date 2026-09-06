@@ -207,11 +207,11 @@ constructor(
             val cleanId = videoId.trim().take(11)
             Log.d("YoutubeDS", "Resolving stream for video ID: $cleanId (preferVideo=$preferVideo)")
 
-            // ⚡ TIER 1: Instant Direct Google Innertube Extraction (< 300ms)
+            // ⚡ TIER 1: Instant Direct Google Innertube Extraction
             // Talks directly to YouTube's player endpoint without headless WebViews or scrapers!
             try {
                 val t0 = System.currentTimeMillis()
-                val directResult = kotlinx.coroutines.withTimeoutOrNull(2500L) {
+                val directResult = kotlinx.coroutines.withTimeoutOrNull(6000L) {
                     extractSmartTube(cleanId, preferVideo)
                 }
                 if (directResult != null) {

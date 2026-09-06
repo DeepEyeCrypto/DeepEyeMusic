@@ -218,4 +218,18 @@ class SmartTubePlaybackFormatRepositoryTest {
         assertEquals("1080p", deepEyeFmt.qualityLabel)
         assertEquals(4000000, deepEyeFmt.bitrate)
     }
+
+    @Test
+    fun `setFormats preserves dashManifestUrl and hlsManifestUrl`() = runTest {
+        repository.setFormats(
+            mediaKey = "media_dash",
+            videoFormats = listOf(video1080pAvc),
+            audioFormats = listOf(audioAac128),
+            dashManifestUrl = "data:application/dash+xml;base64,test",
+            hlsManifestUrl = "https://example.com/master.m3u8"
+        )
+        val snapshot = repository.snapshot.value
+        assertEquals("data:application/dash+xml;base64,test", snapshot.dashManifestUrl)
+        assertEquals("https://example.com/master.m3u8", snapshot.hlsManifestUrl)
+    }
 }

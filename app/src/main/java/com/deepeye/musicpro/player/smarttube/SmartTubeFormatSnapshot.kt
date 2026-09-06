@@ -32,6 +32,8 @@ data class SmartTubeFormatSnapshot(
     val audioQualityPreference: AudioQualityPreference = AudioQualityPreference.AUTO,
     val audioCodecPreference: AudioCodecPreference = AudioCodecPreference.AUTO,
     val channelPreference: ChannelPreference = ChannelPreference.AUTO,
+    val dashManifestUrl: String? = null,
+    val hlsManifestUrl: String? = null,
     val isLoading: Boolean = false,
     val lastError: String? = null
 ) {

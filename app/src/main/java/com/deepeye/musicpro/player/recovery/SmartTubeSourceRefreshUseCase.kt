@@ -80,16 +80,16 @@ class SmartTubeSourceRefreshUseCase @Inject constructor(
                 }
             }
 
-            // Determine effective playback URL (direct stream if manual format selected with streamUrl)
-            var effectiveUrl = resolved.url
+            // Determine effective playback URL
+            var effectiveUrl = resolved.hlsManifestUrl ?: resolved.url
             if (isVideo && chosenVideoFormatId != null) {
                 val targetVFormat = resolved.videoFormats.firstOrNull { it.stableId == chosenVideoFormatId }
-                if (!targetVFormat?.streamUrl.isNullOrEmpty()) {
+                if (!targetVFormat?.streamUrl.isNullOrEmpty() && (targetVFormat?.isProgressive == true || resolved.hlsManifestUrl != null)) {
                     effectiveUrl = targetVFormat!!.streamUrl
                 }
             } else if (!isVideo && chosenAudioFormatId != null) {
                 val targetAFormat = resolved.audioFormats.firstOrNull { it.stableId == chosenAudioFormatId }
-                if (!targetAFormat?.streamUrl.isNullOrEmpty()) {
+                if (!targetAFormat?.streamUrl.isNullOrEmpty() && (targetAFormat?.isProgressive == true || resolved.hlsManifestUrl != null)) {
                     effectiveUrl = targetAFormat!!.streamUrl
                 }
             }

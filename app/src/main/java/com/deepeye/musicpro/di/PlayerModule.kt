@@ -95,14 +95,26 @@ object PlayerModule {
                 var request = chain.request()
                 val urlStr = request.url.toString()
                 if (urlStr.contains("googlevideo.com")) {
-                    val targetUa = if (urlStr.contains("c=ANDROID")) {
-                        "com.google.android.youtube/20.10.33 (Linux; U; Android 12) gzip"
+                    val isIos = urlStr.contains("c=IOS") || urlStr.contains("c=IPHONE")
+                    val isWeb = urlStr.contains("c=WEB")
+                    val reqBuilder = request.newBuilder()
+                    if (isIos) {
+                        reqBuilder
+                            .header("User-Agent", "com.google.ios.youtube/20.10.1 (iPhone16,2; U; CPU iOS 18_3 like Mac OS X)")
+                            .removeHeader("Origin")
+                            .removeHeader("Referer")
+                    } else if (isWeb) {
+                        reqBuilder
+                            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+                            .header("Origin", "https://www.youtube.com")
+                            .header("Referer", "https://www.youtube.com/")
                     } else {
-                        "com.google.ios.youtube/20.10.1 (iPhone16,2; U; CPU iOS 18_3 like Mac OS X)"
+                        reqBuilder
+                            .header("User-Agent", "com.google.android.youtube/20.10.33 (Linux; U; Android 12) gzip")
+                            .removeHeader("Origin")
+                            .removeHeader("Referer")
                     }
-                    request = request.newBuilder()
-                        .header("User-Agent", targetUa)
-                        .build()
+                    request = reqBuilder.build()
                 }
                 val response = chain.proceed(request)
                 if (!response.isSuccessful) {
@@ -114,7 +126,7 @@ object PlayerModule {
             .build()
 
         val httpDataSourceFactory = androidx.media3.datasource.okhttp.OkHttpDataSource.Factory(playerOkHttpClient)
-            .setUserAgent("com.google.ios.youtube/20.10.1 (iPhone16,2; U; CPU iOS 18_3 like Mac OS X)")
+            .setUserAgent("com.google.android.youtube/20.10.33 (Linux; U; Android 12) gzip")
             .setDefaultRequestProperties(mapOf(
                 "Accept" to "*/*",
                 "Connection" to "keep-alive",

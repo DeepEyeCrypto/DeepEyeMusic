@@ -16,6 +16,11 @@ object SmartTubeDashManifestGenerator {
         val audioFormats = mutableListOf<AdaptiveFormatItem>()
         var maxDurationSec = 0.0
 
+        // Pass 1: Prioritize ISO-BMFF (MP4) streams.
+        // YouTube DASH On-Demand profile (urn:mpeg:dash:profile:isoff-on-demand:2011) requires ISO-BMFF (MP4)
+        // containers with valid `sidx` (Segment Index) boxes at indexRange.
+        // WebM containers (VP9/Opus) use EBML Cues at indexRange, which ExoPlayer cannot parse as `sidx`,
+        // causing DASH subsegment indexing to stall after the initial burst (~59 seconds).
         for (i in 0 until adaptive.length()) {
             val f = adaptive.optJSONObject(i) ?: continue
             val url = urlResolver(f)?.takeIf { it.isNotBlank() } ?: continue
@@ -30,16 +35,52 @@ object SmartTubeDashManifestGenerator {
             val itag = f.optInt("itag", -1)
             if (itag <= 0) continue
             val mimeType = f.optString("mimeType", "")
+            val cleanMime = mimeType.substringBefore(";").trim()
+            
+            // Accept ISO-BMFF MP4 video and audio
+            val isMp4 = cleanMime.startsWith("video/mp4") || cleanMime.startsWith("audio/mp4")
+            if (!isMp4) continue
+
             val bitrate = f.optLong("bitrate", 0L).takeIf { it > 0 } ?: f.optLong("averageBitrate", 0L)
             val approxDurMs = f.optLong("approxDurationMs", 0L)
             val durSec = if (approxDurMs > 0) approxDurMs / 1000.0 else 0.0
             if (durSec > maxDurationSec) maxDurationSec = durSec
             val codecs = if (mimeType.contains("codecs=\"")) mimeType.substringAfter("codecs=\"").substringBefore("\"") else ""
-            val cleanMime = mimeType.substringBefore(";").trim()
             val item = AdaptiveFormatItem(itag, url, cleanMime, codecs, bitrate, f.optInt("width", 0), f.optInt("height", 0), f.optDouble("fps", 30.0).toFloat(), f.optString("audioSampleRate").ifEmpty { "44100" }, "$initStart-$initEnd", "$idxStart-$idxEnd")
             
             if (cleanMime.startsWith("video/")) videoFormats.add(item)
             else if (cleanMime.startsWith("audio/")) audioFormats.add(item)
+        }
+
+        // Pass 2: Fallback to all formats if no MP4 video or audio was found
+        if (videoFormats.isEmpty() || audioFormats.isEmpty()) {
+            videoFormats.clear()
+            audioFormats.clear()
+            maxDurationSec = 0.0
+            for (i in 0 until adaptive.length()) {
+                val f = adaptive.optJSONObject(i) ?: continue
+                val url = urlResolver(f)?.takeIf { it.isNotBlank() } ?: continue
+                val initRange = f.optJSONObject("initRange") ?: continue
+                val indexRange = f.optJSONObject("indexRange") ?: continue
+                val initStart = initRange.optLong("start", -1L)
+                val initEnd = initRange.optLong("end", -1L)
+                val idxStart = indexRange.optLong("start", -1L)
+                val idxEnd = indexRange.optLong("end", -1L)
+                if (initStart < 0 || initEnd < 0 || idxStart < 0 || idxEnd < 0) continue
+                val itag = f.optInt("itag", -1)
+                if (itag <= 0) continue
+                val mimeType = f.optString("mimeType", "")
+                val cleanMime = mimeType.substringBefore(";").trim()
+                val bitrate = f.optLong("bitrate", 0L).takeIf { it > 0 } ?: f.optLong("averageBitrate", 0L)
+                val approxDurMs = f.optLong("approxDurationMs", 0L)
+                val durSec = if (approxDurMs > 0) approxDurMs / 1000.0 else 0.0
+                if (durSec > maxDurationSec) maxDurationSec = durSec
+                val codecs = if (mimeType.contains("codecs=\"")) mimeType.substringAfter("codecs=\"").substringBefore("\"") else ""
+                val item = AdaptiveFormatItem(itag, url, cleanMime, codecs, bitrate, f.optInt("width", 0), f.optInt("height", 0), f.optDouble("fps", 30.0).toFloat(), f.optString("audioSampleRate").ifEmpty { "44100" }, "$initStart-$initEnd", "$idxStart-$idxEnd")
+                
+                if (cleanMime.startsWith("video/")) videoFormats.add(item)
+                else if (cleanMime.startsWith("audio/")) audioFormats.add(item)
+            }
         }
 
         if (videoFormats.isEmpty() && audioFormats.isEmpty()) return null
@@ -92,7 +133,12 @@ object SmartTubeDashManifestGenerator {
         urlResolver: (JSONObject) -> String?
     ): String? {
         val xml = generateDashManifest(streamingData, urlResolver) ?: return null
-        val base64 = Base64.getEncoder().encodeToString(xml.toByteArray(Charsets.UTF_8))
+        val base64 = try {
+            val encoded = android.util.Base64.encodeToString(xml.toByteArray(Charsets.UTF_8), android.util.Base64.NO_WRAP)
+            encoded ?: java.util.Base64.getEncoder().encodeToString(xml.toByteArray(Charsets.UTF_8))
+        } catch (_: Throwable) {
+            java.util.Base64.getEncoder().encodeToString(xml.toByteArray(Charsets.UTF_8))
+        }
         return "data:application/dash+xml;charset=utf-8;base64,$base64"
     }
 

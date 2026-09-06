@@ -28,7 +28,9 @@ class SmartTubePlaybackFormatRepository @Inject constructor() {
         videoFormats: List<DeepEyePlaybackFormat>,
         audioFormats: List<DeepEyePlaybackFormat>,
         activeVideoId: String? = null,
-        activeAudioId: String? = null
+        activeAudioId: String? = null,
+        dashManifestUrl: String? = null,
+        hlsManifestUrl: String? = null
     ) {
         _snapshot.update { cur ->
             val vid = activeVideoId ?: resolveBestVideo(videoFormats, cur)
@@ -40,6 +42,8 @@ class SmartTubePlaybackFormatRepository @Inject constructor() {
                 audioFormats = audioFormats.map { it.copy(isSelected = (it.stableId == aud)) },
                 currentVideoFormatId = vid,
                 currentAudioFormatId = aud,
+                dashManifestUrl = dashManifestUrl ?: cur.dashManifestUrl,
+                hlsManifestUrl = hlsManifestUrl ?: cur.hlsManifestUrl,
                 isLoading = false,
                 lastError = null
             )
@@ -51,8 +55,10 @@ class SmartTubePlaybackFormatRepository @Inject constructor() {
         videoFormats: List<DeepEyePlaybackFormat>,
         audioFormats: List<DeepEyePlaybackFormat>,
         activeVideoId: String? = null,
-        activeAudioId: String? = null
-    ) = setFormats(mediaKey, videoFormats, audioFormats, activeVideoId, activeAudioId)
+        activeAudioId: String? = null,
+        dashManifestUrl: String? = null,
+        hlsManifestUrl: String? = null
+    ) = setFormats(mediaKey, videoFormats, audioFormats, activeVideoId, activeAudioId, dashManifestUrl, hlsManifestUrl)
 
     fun selectVideoFormat(formatId: String) {
         _snapshot.update { cur ->

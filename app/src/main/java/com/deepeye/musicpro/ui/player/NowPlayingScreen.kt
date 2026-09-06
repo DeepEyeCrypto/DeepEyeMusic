@@ -969,7 +969,10 @@ fun VideoNowPlayingLayout(
 ) {
     val videoDetails by viewModel.videoDetails.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
-    var selectedQuality by remember { mutableStateOf("1080p") }
+    val currentVideoFormat = playerState.selectedVideoFormat
+    val selectedQuality = currentVideoFormat?.qualityLabel?.takeIf { it.isNotBlank() }
+        ?: playerState.availableVideoFormats.firstOrNull { it.isSelected && !it.isAuto }?.qualityLabel
+        ?: (viewModel.player.videoFormat?.height?.takeIf { it > 0 }?.let { "${it}p" } ?: "Auto")
     var showQualityMenu by remember { mutableStateOf(false) }
     var selectedAudioTrack by remember { mutableStateOf("Stereo (Original)") }
     var showAudioTrackMenu by remember { mutableStateOf(false) }

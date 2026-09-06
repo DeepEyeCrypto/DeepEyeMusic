@@ -9,7 +9,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.junit.Test
 import java.io.File
 
@@ -25,28 +27,25 @@ class YoutubeExtractionTest {
     }
 
     @Test
-    fun testStreamExtraction() = runBlocking {
+    fun testStreamExtractionAudioAndVideo() = runBlocking {
         mockLogger()
         val client = OkHttpClient.Builder().build()
         val extractor = SmartTubeInnertubeExtractor(client)
+        val videoId = "D2AzqA5emWk"
 
-        val videoId = "68RLvhxk_4g" // Bollywood Dj Non Stop Remix
-        val result = extractor.extractStream(videoId, preferVideo = false)
-        val resultText =
-            buildString {
-                appendLine("=== extractStream Result ===")
-                if (result != null) {
-                    appendLine("URL: ${result.url}")
-                    appendLine("Container: ${result.container}")
-                    appendLine("Quality: ${result.quality}")
-                    appendLine("ExtractorName: ${result.extractorName}")
-                } else {
-                    appendLine("FAILED: result is null")
-                }
-            }
-        println(resultText)
-        File("scratch").mkdirs()
-        File("scratch/smarttube_stream_result.txt").writeText(resultText)
+        val audioRes = extractor.extractStream(videoId, preferVideo = false)
+        val videoRes = extractor.extractStream(videoId, preferVideo = true)
+
+        println("Audio extraction result: url=${audioRes?.url?.take(80)} itag=${audioRes?.itag} container=${audioRes?.container} videoCount=${audioRes?.videoFormats?.size} audioCount=${audioRes?.audioFormats?.size}")
+        println("Video extraction result: url=${videoRes?.url?.take(80)} itag=${videoRes?.itag} container=${videoRes?.container} videoCount=${videoRes?.videoFormats?.size} audioCount=${videoRes?.audioFormats?.size}")
+
+        org.junit.Assert.assertNotNull("Audio stream must not be null", audioRes)
+        org.junit.Assert.assertTrue("Audio stream URL must not be blank", audioRes!!.url.isNotBlank())
+        org.junit.Assert.assertTrue("Audio stream URL must be progressive MP4 or valid manifest", !audioRes.url.contains("base64,null"))
+
+        org.junit.Assert.assertNotNull("Video stream must not be null", videoRes)
+        org.junit.Assert.assertTrue("Video stream URL must not be blank", videoRes!!.url.isNotBlank())
+        org.junit.Assert.assertTrue("Video stream URL must be valid manifest or progressive", !videoRes.url.contains("base64,null"))
     }
 
     @Test

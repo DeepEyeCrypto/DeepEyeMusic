@@ -190,33 +190,48 @@ class QualitySelectionEngine @Inject constructor(
             builder.clearOverridesOfType(C.TRACK_TYPE_VIDEO)
             builder.clearVideoSizeConstraints()
             builder.setMaxVideoBitrate(Int.MAX_VALUE)
+            builder.setMaxVideoFrameRate(Int.MAX_VALUE)
         } else {
             val tracks = player.currentTracks
-            var realGroupIndex = 0
             var matched = false
             for (group in tracks.groups) {
                 if (group.type == C.TRACK_TYPE_VIDEO) {
-                    if (realGroupIndex == format.groupIndex && format.trackIndex < group.length) {
-                        val override = TrackSelectionOverride(group.mediaTrackGroup, format.trackIndex)
+                    var bestTrackIdx = -1
+                    var minBitrateDiff = Long.MAX_VALUE
+                    for (tIdx in 0 until group.length) {
+                        val tf = group.getTrackFormat(tIdx)
+                        val idMatch = tf.id != null && (tf.id == format.id || tf.id == format.id.substringAfterLast("_"))
+                        val heightMatch = format.height > 0 && tf.height == format.height
+                        if (idMatch) {
+                            bestTrackIdx = tIdx
+                            break
+                        }
+                        if (heightMatch) {
+                            val diff = if (format.bitrate > 0 && tf.bitrate != Format.NO_VALUE) {
+                                Math.abs(tf.bitrate.toLong() - format.bitrate.toLong())
+                            } else 0L
+                            if (diff < minBitrateDiff) {
+                                minBitrateDiff = diff
+                                bestTrackIdx = tIdx
+                            }
+                        }
+                    }
+
+                    if (bestTrackIdx >= 0) {
+                        val override = TrackSelectionOverride(group.mediaTrackGroup, bestTrackIdx)
                         builder.clearOverridesOfType(C.TRACK_TYPE_VIDEO)
                         builder.addOverride(override)
                         matched = true
                         break
                     }
-                    if (!matched) {
-                        for (tIdx in 0 until group.length) {
-                            val tf = group.getTrackFormat(tIdx)
-                            if (tf.height == format.height && (format.bitrate == 0 || Math.abs(tf.bitrate - format.bitrate) < 500000)) {
-                                val override = TrackSelectionOverride(group.mediaTrackGroup, tIdx)
-                                builder.clearOverridesOfType(C.TRACK_TYPE_VIDEO)
-                                builder.addOverride(override)
-                                matched = true
-                                break
-                            }
-                        }
-                    }
                 }
-                realGroupIndex++
+            }
+            if (format.height > 0) {
+                val maxW = if (format.width > 0) format.width else (format.height * 16 / 9)
+                builder.setMaxVideoSize(maxW, format.height)
+                if (format.frameRate > 0) {
+                    builder.setMaxVideoFrameRate(format.frameRate.toInt() + 1)
+                }
             }
         }
         player.trackSelectionParameters = builder.build()
@@ -228,31 +243,32 @@ class QualitySelectionEngine @Inject constructor(
             builder.clearOverridesOfType(C.TRACK_TYPE_AUDIO)
         } else {
             val tracks = player.currentTracks
-            var realGroupIndex = 0
-            var matched = false
             for (group in tracks.groups) {
                 if (group.type == C.TRACK_TYPE_AUDIO) {
-                    if (realGroupIndex == format.groupIndex && format.trackIndex < group.length) {
-                        val override = TrackSelectionOverride(group.mediaTrackGroup, format.trackIndex)
-                        builder.clearOverridesOfType(C.TRACK_TYPE_AUDIO)
-                        builder.addOverride(override)
-                        matched = true
-                        break
-                    }
-                    if (!matched) {
-                        for (tIdx in 0 until group.length) {
-                            val tf = group.getTrackFormat(tIdx)
-                            if (tf.bitrate == format.bitrate || (format.bitrate > 0 && Math.abs(tf.bitrate - format.bitrate) < 50000)) {
-                                val override = TrackSelectionOverride(group.mediaTrackGroup, tIdx)
-                                builder.clearOverridesOfType(C.TRACK_TYPE_AUDIO)
-                                builder.addOverride(override)
-                                matched = true
-                                break
-                            }
+                    var bestTrackIdx = -1
+                    var minBitrateDiff = Long.MAX_VALUE
+                    for (tIdx in 0 until group.length) {
+                        val tf = group.getTrackFormat(tIdx)
+                        val idMatch = tf.id != null && (tf.id == format.id || tf.id == format.id.substringAfterLast("_"))
+                        if (idMatch) {
+                            bestTrackIdx = tIdx
+                            break
+                        }
+                        val diff = if (format.bitrate > 0 && tf.bitrate != Format.NO_VALUE) {
+                            Math.abs(tf.bitrate.toLong() - format.bitrate.toLong())
+                        } else 0L
+                        if (diff < minBitrateDiff) {
+                            minBitrateDiff = diff
+                            bestTrackIdx = tIdx
                         }
                     }
+                    if (bestTrackIdx >= 0) {
+                        val override = TrackSelectionOverride(group.mediaTrackGroup, bestTrackIdx)
+                        builder.clearOverridesOfType(C.TRACK_TYPE_AUDIO)
+                        builder.addOverride(override)
+                        break
+                    }
                 }
-                realGroupIndex++
             }
         }
         player.trackSelectionParameters = builder.build()

@@ -572,7 +572,9 @@ constructor(
                                             smartTubePlaybackFormatRepository.setFormats(
                                                 mediaKey = item.id,
                                                 videoFormats = finalResolvedSource.videoFormats,
-                                                audioFormats = finalResolvedSource.audioFormats
+                                                audioFormats = finalResolvedSource.audioFormats,
+                                                dashManifestUrl = finalResolvedSource.dashManifestUrl,
+                                                hlsManifestUrl = finalResolvedSource.hlsManifestUrl
                                             )
                                             val vFmts = finalResolvedSource.videoFormats.mapIndexed { idx, f -> f.toDeepEyeFormat(groupIndex = 0, trackIndex = idx) }
                                             val aFmts = finalResolvedSource.audioFormats.mapIndexed { idx, f -> f.toDeepEyeFormat(groupIndex = 1, trackIndex = idx) }
@@ -609,11 +611,15 @@ constructor(
                                         }
                                     }
 
-                                    if (finalUrl != null) {
+                                    val streamToPlay = finalUrl
+                                        ?: finalResolvedSource?.hlsManifestUrl
+                                        ?: finalResolvedSource?.dashManifestUrl
+
+                                    if (streamToPlay != null) {
                                         // Keep the original isVideo flag so the UI renders the correct surface
                                         // (shared WebView for video items) while ExoPlayer plays the stream's audio.
                                         item.copy(
-                                            streamUri = Uri.parse(finalUrl),
+                                            streamUri = Uri.parse(streamToPlay),
                                             isVideo = item.isVideo,
                                         )
                                     } else {
@@ -1029,7 +1035,34 @@ constructor(
             com.deepeye.musicpro.player.format.QualityPreset.AUTO -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.AUTO)
             com.deepeye.musicpro.player.format.QualityPreset.CUSTOM -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.CUSTOM)
         }
-        qualitySelectionEngine.applyPreset(player, preset)
+        val tracks = player.currentTracks
+        val isMultiTrackDASH = tracks.groups.any { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO && it.length > 1 }
+        val snapshot = smartTubePlaybackFormatRepository.snapshot.value
+        val dashUrl = snapshot.dashManifestUrl ?: snapshot.hlsManifestUrl
+        val currentItem = _playerState.value.currentItem
+        if (!isMultiTrackDASH && dashUrl != null && currentItem != null && preset != com.deepeye.musicpro.player.format.QualityPreset.AUTO) {
+            scope.launch {
+                try {
+                    val pos = player.currentPosition.coerceAtLeast(0L)
+                    val isPlaying = player.isPlaying
+                    val updatedItem = when (currentItem) {
+                        is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(dashUrl), isVideo = true)
+                        is MediaItem.Local -> currentItem
+                    }
+                    player.pause()
+                    player.setMediaItem(updatedItem.toMedia3Item())
+                    qualitySelectionEngine.applyPreset(player, preset)
+                    if (pos > 0L) player.seekTo(pos)
+                    player.prepare()
+                    if (isPlaying) player.play()
+                    android.util.Log.i("DeepEyeHQ", "event=preset_switched_dash preset=$preset")
+                } catch (e: Exception) {
+                    android.util.Log.e("DeepEyeHQ", "event=preset_dash_switch_failed error=${e.message}", e)
+                }
+            }
+        } else {
+            qualitySelectionEngine.applyPreset(player, preset)
+        }
     }
 
     fun setVideoFormat(format: com.deepeye.musicpro.player.format.DeepEyeFormat) {
@@ -1044,38 +1077,44 @@ constructor(
         smartTubePlaybackFormatRepository.selectVideoFormat(format.id)
         
         val tracks = player.currentTracks
-        val hasMatchingVideoTrack = tracks.groups.any { group ->
+        val hasMatchingVideoTrack = !format.isAuto && tracks.groups.any { group ->
             group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO &&
             (0 until group.length).any { tIdx ->
                 val tf = group.getTrackFormat(tIdx)
-                tf.height == format.height && (format.bitrate == 0 || Math.abs(tf.bitrate - format.bitrate) < 500000)
+                tf.id == format.id || tf.id == format.id.substringAfterLast("_") ||
+                (format.height > 0 && tf.height == format.height)
             }
         }
+        val isMultiTrackDASH = tracks.groups.any { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO && it.length > 1 }
         
-        if (hasMatchingVideoTrack || format.isAuto) {
+        if (hasMatchingVideoTrack || (format.isAuto && isMultiTrackDASH)) {
             qualitySelectionEngine.selectVideoFormat(player, format)
+            android.util.Log.i("DeepEyeHQ", "event=video_format_applied_in_player formatId=${format.id} height=${format.height}")
         } else {
             val snapshot = smartTubePlaybackFormatRepository.snapshot.value
-            val targetFormat = snapshot.videoFormats.firstOrNull { it.stableId == format.id }
-            val directUrl = targetFormat?.streamUrl
-            if (directUrl != null && currentItem != null) {
+            val dashUrl = snapshot.dashManifestUrl ?: snapshot.hlsManifestUrl
+            if (dashUrl != null && currentItem != null) {
                 scope.launch {
                     try {
-                        val pos = player.currentPosition
+                        val pos = player.currentPosition.coerceAtLeast(0L)
                         val isPlaying = player.isPlaying
                         val updatedItem = when (currentItem) {
-                            is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(directUrl), isVideo = true)
+                            is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(dashUrl), isVideo = true)
                             is MediaItem.Local -> currentItem
                         }
+                        player.pause()
                         player.setMediaItem(updatedItem.toMedia3Item())
-                        player.seekTo(pos)
+                        qualitySelectionEngine.selectVideoFormat(player, format)
+                        if (pos > 0L) player.seekTo(pos)
                         player.prepare()
                         if (isPlaying) player.play()
-                        android.util.Log.i("DeepEyeHQ", "event=video_format_switched_direct formatId=${format.id}")
+                        android.util.Log.i("DeepEyeHQ", "event=video_format_switched_dash formatId=${format.id} height=${format.height}")
                     } catch (e: Exception) {
-                        android.util.Log.e("DeepEyeHQ", "event=video_format_switch_failed error=${e.message}")
+                        android.util.Log.e("DeepEyeHQ", "event=video_format_dash_switch_failed error=${e.message}", e)
                     }
                 }
+            } else {
+                qualitySelectionEngine.selectVideoFormat(player, format)
             }
         }
     }
@@ -1091,38 +1130,44 @@ constructor(
         smartTubePlaybackFormatRepository.selectAudioFormat(format.id)
         
         val tracks = player.currentTracks
-        val hasMatchingAudioTrack = tracks.groups.any { group ->
+        val hasMatchingAudioTrack = !format.isAuto && tracks.groups.any { group ->
             group.type == androidx.media3.common.C.TRACK_TYPE_AUDIO &&
             (0 until group.length).any { tIdx ->
                 val tf = group.getTrackFormat(tIdx)
+                tf.id == format.id || tf.id == format.id.substringAfterLast("_") ||
                 tf.bitrate == format.bitrate || (format.bitrate > 0 && Math.abs(tf.bitrate - format.bitrate) < 50000)
             }
         }
+        val isMultiTrackDASH = tracks.groups.any { it.type == androidx.media3.common.C.TRACK_TYPE_AUDIO && it.length > 1 }
         
-        if (hasMatchingAudioTrack || format.isAuto) {
+        if (hasMatchingAudioTrack || (format.isAuto && isMultiTrackDASH)) {
             qualitySelectionEngine.selectAudioFormat(player, format)
+            android.util.Log.i("DeepEyeHQ", "event=audio_format_applied_in_player formatId=${format.id}")
         } else {
             val snapshot = smartTubePlaybackFormatRepository.snapshot.value
-            val targetFormat = snapshot.audioFormats.firstOrNull { it.stableId == format.id }
-            val directUrl = targetFormat?.streamUrl
-            if (directUrl != null && currentItem != null) {
+            val dashUrl = snapshot.dashManifestUrl ?: snapshot.hlsManifestUrl
+            if (dashUrl != null && currentItem != null) {
                 scope.launch {
                     try {
-                        val pos = player.currentPosition
+                        val pos = player.currentPosition.coerceAtLeast(0L)
                         val isPlaying = player.isPlaying
                         val updatedItem = when (currentItem) {
-                            is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(directUrl))
+                            is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(dashUrl))
                             is MediaItem.Local -> currentItem
                         }
+                        player.pause()
                         player.setMediaItem(updatedItem.toMedia3Item())
-                        player.seekTo(pos)
+                        qualitySelectionEngine.selectAudioFormat(player, format)
+                        if (pos > 0L) player.seekTo(pos)
                         player.prepare()
                         if (isPlaying) player.play()
-                        android.util.Log.i("DeepEyeHQ", "event=audio_format_switched_direct formatId=${format.id}")
+                        android.util.Log.i("DeepEyeHQ", "event=audio_format_switched_dash formatId=${format.id}")
                     } catch (e: Exception) {
-                        android.util.Log.e("DeepEyeHQ", "event=audio_format_switch_failed error=${e.message}")
+                        android.util.Log.e("DeepEyeHQ", "event=audio_format_dash_switch_failed error=${e.message}", e)
                     }
                 }
+            } else {
+                qualitySelectionEngine.selectAudioFormat(player, format)
             }
         }
     }
