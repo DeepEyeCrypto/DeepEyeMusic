@@ -148,7 +148,7 @@ constructor(
                 artist = it.artist,
                 artworkUri = Uri.parse(it.thumbnailUrl),
                 duration = it.duration * 1000L,
-                isVideo = false,
+                isVideo = true,
             )
         }
         playerController.setQueue(queue, index)

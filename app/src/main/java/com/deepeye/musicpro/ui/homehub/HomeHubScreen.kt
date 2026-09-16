@@ -39,7 +39,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.repeatOnLifecycle
+
 import com.deepeye.musicpro.ui.components.DynamicLabel
 import com.deepeye.musicpro.ui.components.SecondaryLabel
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -68,6 +68,8 @@ fun HomeHubScreen(
     onNavigateToLibrary: () -> Unit,
     onNavigateToChat: () -> Unit = {},
     onOpenV4A: () -> Unit,
+    onLaunchTvMode: () -> Unit = {},
+
     onNavigateToSettings: () -> Unit,
     viewModel: HomeHubViewModel = hiltViewModel(),
     playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel(),
@@ -153,10 +155,10 @@ fun HomeHubScreen(
                 ),
             verticalArrangement = Arrangement.spacedBy(24.dp),
             contentPadding = PaddingValues(
-                start = if (isExpanded) 32.dp else 0.dp,
-                top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 130.dp,
-                end = if (isExpanded) 32.dp else 0.dp,
-                bottom = 260.dp, // Increased from 200.dp to ensure no overlap with Dock & Mini-Player
+                start = if (isExpanded) 24.dp else 16.dp,
+                top = 16.dp,
+                end = if (isExpanded) 24.dp else 16.dp,
+                bottom = 120.dp,
             ),
         ) {
             item {
@@ -166,24 +168,6 @@ fun HomeHubScreen(
                     onNavigateToSettings = onNavigateToSettings,
                     onNavigateToChat = onNavigateToChat
                 )
-            }
-
-            // 1b. Featured Premium Audio Hero Card (AEOS Premium Feature)
-            val featuredMusic = feedState.featuredMusic
-            if (featuredMusic != null) {
-                item {
-                    PremiumHeroCard(
-                        title = featuredMusic.title,
-                        subtitle = featuredMusic.artist,
-                        imageUrl = featuredMusic.thumbnailUrl,
-                        badge = "Featured Premium Audio",
-                        onClick = {
-                            viewModel.playMusic(featuredMusic)
-                            onNavigateToMusic(featuredMusic.id)
-                        },
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                    )
-                }
             }
 
             // 3. Continue Listening rail (Phase 7)
@@ -210,7 +194,6 @@ fun HomeHubScreen(
             if (feedState.moodMixes.isNotEmpty()) {
                 item {
                     val context = androidx.compose.ui.platform.LocalContext.current
-                    android.util.Log.d("HomeHubScreen", "Calling MoodChipsRow with ${feedState.moodMixes.size} moods")
                     MoodChipsRow(
                         moods = feedState.moodMixes,
                         onMoodClick = { mood -> 
@@ -218,10 +201,6 @@ fun HomeHubScreen(
                             viewModel.onMoodClick(mood) 
                         },
                     )
-                }
-            } else {
-                item {
-                    android.util.Log.d("HomeHubScreen", "MoodMixes is empty!")
                 }
             }
 
@@ -232,7 +211,6 @@ fun HomeHubScreen(
                         title = if (feedState.hasAuth) "🌟 For You" else "🔥 Trending",
                         items = feedState.trending,
                         onClick = { 
-                            android.util.Log.e("HomeHubScreen", "Trending clicked: ${it.id}")
                             viewModel.playVideo(it)
                             onNavigateToVideo(it.id) 
                         }
@@ -245,7 +223,6 @@ fun HomeHubScreen(
                     ShortsRail(
                         items = feedState.shorts,
                         onClick = { 
-                            android.util.Log.e("HomeHubScreen", "Short clicked: ${it.id}")
                             viewModel.playVideo(it)
                             onNavigateToVideo(it.id) 
                         }
@@ -255,12 +232,10 @@ fun HomeHubScreen(
 
             if (feedState.supermix.isNotEmpty()) {
                 item {
-                    android.util.Log.e("HomeHubScreen", "RENDERING SUPERMIX: size=${feedState.supermix.size}")
                     HomeMusicRail(
                         title = "✨ My Supermix",
                         items = feedState.supermix,
                         onClick = { 
-                            android.util.Log.e("HomeHubScreen", "Supermix clicked: ${it.id}")
                             viewModel.playMusic(it)
                             onNavigateToMusic(it.id) 
                         }
@@ -270,12 +245,10 @@ fun HomeHubScreen(
 
             if (feedState.discoverMix.isNotEmpty()) {
                 item {
-                    android.util.Log.e("HomeHubScreen", "RENDERING DISCOVER: size=${feedState.discoverMix.size}")
                     HomeMusicRail(
                         title = "🔭 Discover Mix",
                         items = feedState.discoverMix,
                         onClick = { 
-                            android.util.Log.e("HomeHubScreen", "Discover clicked: ${it.id}")
                             viewModel.playMusic(it)
                             onNavigateToMusic(it.id) 
                         }
@@ -315,7 +288,6 @@ fun HomeHubScreen(
                         title = "🎵 Quick Picks",
                         items = feedState.quickPicks,
                         onClick = { 
-                            android.util.Log.e("HomeHubScreen", "Music clicked: ${it.id}")
                             viewModel.playMusic(it)
                             onNavigateToMusic(it.id) 
                         }
@@ -712,7 +684,7 @@ private fun playRecMusic(
                 artist = it.artist,
                 artworkUri = android.net.Uri.parse("https://i.ytimg.com/vi/${it.videoId}/hqdefault.jpg"),
                 duration = 180000L, // Mock duration
-                isVideo = false,
+                isVideo = true,
             )
         }
     val index = contextList.indexOfFirst { it.videoId == video.videoId }

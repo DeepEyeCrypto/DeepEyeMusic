@@ -198,7 +198,7 @@ constructor(
 
     private fun applyParams(params: DspParams) {
         if (!isAttached()) {
-            Log.w(TAG, "⚠️ applyParams called but engine NOT attached! State=${_engineState.value}")
+            // Expected when no audio is playing — silently skip
             return
         }
         Log.d(TAG, "Applying DSP Params: enabled=${params.enabled}, eq=${params.eqEnabled}, bass=${params.bassBoostEnabled}, viperBass=${params.viperBassEnabled}(gain=${params.viperBassGain}), loudness=${params.loudnessEnabled}(mb=${params.loudnessTargetGainMb}), tube=${params.tubeEnabled}(drive=${params.tubeDrive}), pgc=${params.pgcGain}, limiter=${params.limiterEnabled}(threshold=${params.limiterThreshold})")

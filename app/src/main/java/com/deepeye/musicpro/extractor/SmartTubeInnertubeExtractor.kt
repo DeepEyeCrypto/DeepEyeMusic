@@ -50,6 +50,12 @@ class SmartTubeInnertubeExtractor(
         const val IOS_UA =
             "com.google.ios.youtube/20.10.1 (iPhone16,2; U; CPU iOS 18_3 like Mac OS X)"
 
+        const val TV_UA =
+            "Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/76.0.3809.146 TV Safari/537.36"
+
+        const val VR_UA =
+            "Mozilla/5.0 (Android 12; Mobile; VR; rv:105.0) Gecko/105.0 Firefox/105.0"
+
         // "3:45" or "1:01:02" -> seconds
         fun parseDurationSeconds(text: String?): Long {
             if (text.isNullOrBlank()) return 0L
@@ -183,6 +189,44 @@ class SmartTubeInnertubeExtractor(
         return context
     }
 
+    private fun tvClientContext(): JSONObject {
+        val clientCtx = JSONObject()
+        clientCtx.put("clientName", "TVHTML5")
+        clientCtx.put("clientVersion", "7.20240701.00.00")
+        clientCtx.put("deviceModel", "SmartTV")
+        clientCtx.put("hl", "en")
+        clientCtx.put("gl", "IN")
+        clientCtx.put("utcOffsetMinutes", 330)
+        val context = JSONObject()
+        context.put("client", clientCtx)
+        return context
+    }
+
+    private fun tvEmbeddedClientContext(): JSONObject {
+        val clientCtx = JSONObject()
+        clientCtx.put("clientName", "TVHTML5_SIMPLY_EMBEDDED_PLAYER")
+        clientCtx.put("clientVersion", "2.0")
+        clientCtx.put("hl", "en")
+        clientCtx.put("gl", "IN")
+        val context = JSONObject()
+        context.put("client", clientCtx)
+        context.put("thirdParty", JSONObject().put("embedUrl", "https://www.youtube.com"))
+        return context
+    }
+
+    private fun androidVrClientContext(): JSONObject {
+        val clientCtx = JSONObject()
+        clientCtx.put("clientName", "ANDROID_VR")
+        clientCtx.put("clientVersion", "1.60.19")
+        clientCtx.put("androidSdkVersion", 32)
+        clientCtx.put("hl", "en")
+        clientCtx.put("gl", "IN")
+        clientCtx.put("utcOffsetMinutes", 330)
+        val context = JSONObject()
+        context.put("client", clientCtx)
+        return context
+    }
+
     private suspend fun postInnertube(
         endpoint: String,
         body: JSONObject,
@@ -196,12 +240,18 @@ class SmartTubeInnertubeExtractor(
             .addHeader("Accept-Language", "hi-IN,en-IN;q=0.9,en-US;q=0.8")
             .addHeader("Content-Type", "application/json")
             .apply {
-                if (userAgent == IOS_UA) {
+                if (userAgent == VR_UA) {
+                    addHeader("X-YouTube-Client-Name", "28")
+                    addHeader("X-YouTube-Client-Version", "1.60.19")
+                } else if (userAgent == IOS_UA) {
                     addHeader("X-YouTube-Client-Name", "5")
                     addHeader("X-YouTube-Client-Version", "20.10.1")
                 } else if (userAgent == ANDROID_UA) {
                     addHeader("X-YouTube-Client-Name", "3")
                     addHeader("X-YouTube-Client-Version", "20.10.33")
+                } else if (userAgent == TV_UA) {
+                    addHeader("X-YouTube-Client-Name", "7")
+                    addHeader("X-YouTube-Client-Version", "7.20240701.00.00")
                 }
                 if (!authToken.isNullOrBlank()) {
                     addHeader("Authorization", "Bearer $authToken")
@@ -423,9 +473,12 @@ class SmartTubeInnertubeExtractor(
     }
 
     override suspend fun extractStream(videoId: String, preferVideo: Boolean): ExtractorStreamResult? = withContext(Dispatchers.IO) {
-        // IOS client is tried FIRST - returns official HLS master playlist and rich multi-res streams.
-        // ANDROID and WEB clients act as robust fallbacks.
+        // ANDROID_VR client is tried FIRST - returns official 4K/HDR direct streams with 0 bot challenges.
+        // TV, Android, iOS, and Web clients act as robust fallbacks.
         val contexts = listOf(
+            androidVrClientContext() to VR_UA,
+            tvClientContext() to TV_UA,
+            tvEmbeddedClientContext() to TV_UA,
             androidClientContext() to ANDROID_UA,
             iosClientContext() to IOS_UA,
             webClientContext() to UA

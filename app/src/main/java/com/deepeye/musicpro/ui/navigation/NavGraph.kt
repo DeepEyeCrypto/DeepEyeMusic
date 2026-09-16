@@ -200,6 +200,7 @@ fun NavGraph(
                 onNavigateToLibrary = { navController.navigate(Routes.Library.route) },
                 onNavigateToChat = { navController.navigate(Routes.ChatAuth.route) },
                 onOpenV4A = { navController.navigate(Routes.DSP.route) },
+                onLaunchTvMode = { navController.navigate(Routes.TvDashboard.route) },
                 onNavigateToSettings = { navController.navigate(Routes.Settings.route) },
             )
         }
@@ -265,6 +266,40 @@ fun NavGraph(
                 },
             )
         }
+        composable(Routes.TvDashboard.route) {
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val tvRepo = remember(context) {
+                com.deepeye.musicpro.hometheater.scanner.MediaLibraryRepository(
+                    com.deepeye.musicpro.hometheater.scanner.LibraryScanner(context)
+                )
+            }
+            val playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel()
+            val movies by tvRepo.movies.collectAsStateWithLifecycle(emptyList())
+
+            androidx.compose.runtime.LaunchedEffect(Unit) {
+                tvRepo.refreshLibrary()
+            }
+
+            com.deepeye.musicpro.hometheater.ui.TvDashboardScreen(
+                movies = movies,
+                onMediaSelected = { media ->
+                    val item = com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                        id = media.id,
+                        title = media.title,
+                        artist = "",
+                        artworkUri = media.posterUrl?.let(android.net.Uri::parse),
+                        duration = media.durationMs,
+                        streamUri = android.net.Uri.parse(media.uri),
+                        isVideo = media.mediaType == com.deepeye.musicpro.hometheater.model.MediaType.MOVIE ||
+                            media.mediaType == com.deepeye.musicpro.hometheater.model.MediaType.EPISODE
+                    )
+                    playerViewModel.playMedia(item)
+                    onExpandPlayer()
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
 
         composable(Routes.Settings.route) {
             SettingsScreen(
@@ -272,6 +307,8 @@ fun NavGraph(
                 onNavigateToAEOS = { navController.navigate(Routes.AEOS.route) },
                 onYouTubeLoginClick = { navController.navigate(Routes.YouTubeLogin.route) },
                 onNavigateToPersonalization = { navController.navigate(Routes.PersonalizationSettings.route) },
+                onLaunchTvMode = { navController.navigate(Routes.TvDashboard.route) },
+
             )
         }
 

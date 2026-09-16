@@ -61,29 +61,34 @@ class MainActivity : FragmentActivity() {
 
     private val themeViewModel: ThemeViewModel by viewModels()
 
+    fun hideSystemBars() {
+        val windowInsetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            window.attributes.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+        }
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            hideSystemBars()
+        }
+    }
+
     /** Fullscreen mode controller for auto-rotate to landscape on fullscreen */
     val fullscreenMode = FullscreenMode().apply {
-        onEnterFullscreen = { forceLandscape ->
-            // Lock to sensor landscape for fullscreen video only if requested (e.g. via button)
-            if (forceLandscape) {
-                this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            }
-            val windowInsetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
-            windowInsetsController.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            windowInsetsController.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
-            // Fix for SurfaceView edge-to-edge black bar bug on Android 14+
-            window.attributes.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+        onEnterFullscreen = { _ ->
+            // Strict Kodi/SmartTube-style landscape mode
+            this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            hideSystemBars()
         }
         onExitFullscreen = {
-            // Restore to unspecified so the user can freely rotate again
-            this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            val windowInsetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
-            windowInsetsController.show(androidx.core.view.WindowInsetsCompat.Type.systemBars())
-            enableEdgeToEdge(
-                statusBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
-                navigationBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
-            )
+            // In Kodi mode, stay in sensor landscape orientation and keep system bars hidden
+            this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            hideSystemBars()
         }
     }
 
@@ -143,10 +148,7 @@ class MainActivity : FragmentActivity() {
         val splashScreen = installSplashScreen()
 
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge(
-            statusBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
-        )
+        hideSystemBars()
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             window.attributes.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
@@ -168,22 +170,7 @@ class MainActivity : FragmentActivity() {
 
         orientationEventListener = object : android.view.OrientationEventListener(this) {
             override fun onOrientationChanged(orientation: Int) {
-                if (orientation == ORIENTATION_UNKNOWN) return
-                
-                // Allow a generous range for landscape and portrait
-                val isPortrait = (orientation in 0..30) || (orientation in 330..359) || (orientation in 150..210)
-                val isLandscape = (orientation in 60..120) || (orientation in 240..300)
-                
-                if (fullscreenMode.isFullscreen) {
-                    if (isLandscape) {
-                        hasRotatedToLandscape = true
-                    } else if (isPortrait && hasRotatedToLandscape) {
-                        // User physically rotated back to portrait after being in landscape!
-                        fullscreenMode.exit()
-                    }
-                } else {
-                    hasRotatedToLandscape = false
-                }
+                // In strict Kodi landscape mode, do not auto-exit fullscreen on orientation change
             }
         }
         if (orientationEventListener?.canDetectOrientation() == true) {
@@ -494,6 +481,7 @@ class MainActivity : FragmentActivity() {
 
     override fun onResume() {
         super.onResume()
+        hideSystemBars()
         // Audio focus is re-requested automatically by ExoPlayer when playback resumes,
         // or we can manually trigger it if needed, but since we use AudioSessionManager,
         // the playerController handles it via MediaSession.

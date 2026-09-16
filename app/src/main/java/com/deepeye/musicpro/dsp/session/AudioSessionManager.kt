@@ -48,13 +48,12 @@ constructor(
         // Register as AnalyticsListener for more robust session tracking
         player.addAnalyticsListener(this)
 
-        // Initial check
+        // Do NOT eagerly attach here. The DSP/Visualizer effects need an active
+        // AudioTrack to initialize successfully (error -3 otherwise).
+        // The onAudioSessionIdChanged callback will trigger attachment once
+        // the player actually begins audio rendering.
         val sessionId = player.audioSessionId
-        if (sessionId != 0) {
-            handleSessionChange(sessionId)
-        }
-
-        Log.i(TAG, "Attached to ExoPlayer as AnalyticsListener, initial session: $sessionId")
+        Log.i(TAG, "Registered AnalyticsListener on ExoPlayer, current session: $sessionId (will attach on playback)")
     }
 
     override fun onAudioSessionIdChanged(

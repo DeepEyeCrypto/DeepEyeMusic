@@ -53,6 +53,7 @@
         <activity
             android:name="com.deepeye.musicpro.MainActivity"
             android:exported="true"
+            android:screenOrientation="sensorLandscape"
             android:supportsPictureInPicture="true"
             android:hardwareAccelerated="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"

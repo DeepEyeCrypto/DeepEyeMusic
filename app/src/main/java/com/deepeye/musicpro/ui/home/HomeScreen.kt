@@ -263,7 +263,7 @@ private fun playMusic(
                 artist = it.artist,
                 artworkUri = Uri.parse("https://i.ytimg.com/vi/${it.videoId}/hqdefault.jpg"),
                 duration = 180000L, // Mock duration
-                isVideo = false,
+                isVideo = true,
             )
         }
     val index = contextList.indexOfFirst { it.videoId == video.videoId }

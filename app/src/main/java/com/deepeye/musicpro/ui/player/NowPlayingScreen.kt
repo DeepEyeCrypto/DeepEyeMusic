@@ -73,6 +73,8 @@ import com.deepeye.musicpro.ui.LocalPipMode
 import com.deepeye.musicpro.ui.components.GlassButton
 import com.deepeye.musicpro.ui.components.GlassPill
 import com.deepeye.musicpro.ui.components.glassCard
+import com.deepeye.musicpro.ui.player.overlay.DeepEyeVideoPlayerOverlay
+import com.deepeye.musicpro.ui.player.overlay.VideoPlayerOverlayActions
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -153,14 +155,11 @@ fun NowPlayingScreen(
         }
     }
 
-    LaunchedEffect(configuration.orientation, isVideoMode) {
+    LaunchedEffect(isVideoMode) {
         if (isVideoMode) {
-            if (configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
-                if (!fullscreenMode.isFullscreen) fullscreenMode.enter(forceLandscape = false)
-            } else if (configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT) {
-                if (fullscreenMode.isFullscreen && !sheetState.isGestureLocked) {
-                    fullscreenMode.exit()
-                }
+            // Kodi-style: Exclusively landscape mode for video playback
+            if (!fullscreenMode.isFullscreen) {
+                fullscreenMode.enter(forceLandscape = true)
             }
         }
     }
@@ -988,7 +987,9 @@ fun VideoNowPlayingLayout(
     val diagnostics by viewModel.diagnostics.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
-    val isFullscreen = LocalFullscreenMode.current.isFullscreen || com.deepeye.musicpro.ui.LocalPipMode.current
+    val fullscreenMode = LocalFullscreenMode.current
+    val isInPipMode = com.deepeye.musicpro.ui.LocalPipMode.current
+    val isFullscreen = fullscreenMode.isFullscreen || isInPipMode
     
     val columnModifier = if (!isFullscreen) {
         Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()
@@ -1065,28 +1066,120 @@ fun VideoNowPlayingLayout(
         ) {
             val innerItem = playerState.currentItem
             if (innerItem != null) {
-                com.deepeye.musicpro.ui.components.HybridPlayerCard(
-                    item = innerItem,
-                    player = viewModel.player,
-                    isVideo = true,
-                    isLoading = playerState.isLoading,
-                    isPlaying = playerState.isPlaying,
-                    playbackPosition = playerState.position,
-                    modifier = Modifier.fillMaxSize(),
-                    onTogglePlayPause = { viewModel.togglePlayPause() },
-                    onSeekTo = { viewModel.seekTo(it) },
-                    onNext = { viewModel.next() },
-                    onPrevious = { viewModel.previous() },
-                    onOpenQueue = {
-                        if (isFullscreen) {
-                            showFullscreenQueue = !showFullscreenQueue
-                        } else {
-                            onOpenQueue()
-                        }
-                    },
-                    onLockChanged = onLockChanged,
-                    onOpenHqSettings = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) }
-                )
+                if (isFullscreen) {
+                    var videoScale by remember { mutableFloatStateOf(1f) }
+                    var videoOffsetX by remember { mutableFloatStateOf(0f) }
+                    var videoOffsetY by remember { mutableFloatStateOf(0f) }
+
+                    // Native Video Surface with scale & pan
+                    val stablePlayer = remember(viewModel.player) { com.deepeye.musicpro.ui.components.StablePlayerHolder(viewModel.player) }
+                    com.deepeye.musicpro.ui.components.VideoPlayerView(
+                        playerHolder = stablePlayer,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                scaleX = videoScale
+                                scaleY = videoScale
+                                translationX = videoOffsetX
+                                translationY = videoOffsetY
+                            }
+                    )
+
+                    // DeepEye Video Player Overlay — Full Kodi, SmartTube & VLC TV/Landscape OSD
+                    val overlayActions = remember(viewModel, fullscreenMode) {
+                        VideoPlayerOverlayActions.fromLambdas(
+                            playPause = { viewModel.togglePlayPause() },
+                            previous = { viewModel.previous() },
+                            next = { viewModel.next() },
+                            toggleRepeat = { viewModel.toggleRepeat() },
+                            openSpeed = onOpenSpeedDialog,
+                            openPipOrBackgroundPlay = {
+                                (context as? android.app.Activity)?.let {
+                                    (it as? com.deepeye.musicpro.MainActivity)?.enterPipMode()
+                                }
+                            },
+                            skipSegment = { },
+                            openQueue = { showFullscreenQueue = !showFullscreenQueue },
+                            openSearch = { /* handle search */ },
+                            seekStarted = { },
+                            seekChanged = { target -> viewModel.seekTo(target) },
+                            seekFinished = { target -> viewModel.seekTo(target) },
+                            openQuality = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) },
+                            openAudioTrack = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO) },
+                            toggleLike = { viewModel.likeTrack(playerState.isLiked) },
+                            toggleDislike = { viewModel.dislikeTrack() },
+                            toggleCaptions = { viewModel.toggleSubtitles() },
+                            addToPlaylist = { },
+                            openChannel = { },
+                            openInfo = { },
+                            openStats = { viewModel.toggleStatsForNerds() },
+                            dismiss = { fullscreenMode.exit() },
+                            rewind10 = {
+                                val currentPos = playerState.position
+                                val newPos = (currentPos - 10000L).coerceAtLeast(0L)
+                                viewModel.seekTo(newPos)
+                            },
+                            forward10 = {
+                                val currentPos = playerState.position
+                                val duration = playerState.duration
+                                val newPos = if (duration > 0) (currentPos + 10000L).coerceAtMost(duration) else currentPos + 10000L
+                                viewModel.seekTo(newPos)
+                            },
+                            toggleMute = {
+                                val curVol = viewModel.player.volume
+                                viewModel.player.volume = if (curVol > 0f) 0f else 1f
+                            },
+                            toggleLock = {
+                                fullscreenMode.isGestureLocked = !fullscreenMode.isGestureLocked
+                                onLockChanged(fullscreenMode.isGestureLocked)
+                            }
+                        )
+                    }
+
+                    if (!isInPipMode) {
+                        DeepEyeVideoPlayerOverlay(
+                            playerState = playerState,
+                            actions = overlayActions,
+                            modifier = Modifier.fillMaxSize(),
+                            videoScale = videoScale,
+                            onScaleChange = { videoScale = it },
+                            videoOffsetX = videoOffsetX,
+                            videoOffsetY = videoOffsetY,
+                            onOffsetChange = { x, y ->
+                                videoOffsetX = x
+                                videoOffsetY = y
+                            },
+                            diagnostics = diagnostics,
+                            showStats = showStatsForNerds,
+                            onToggleStats = { viewModel.toggleStatsForNerds() },
+                            onSeekTo = { target -> viewModel.seekTo(target) },
+                            onSetSpeed = { speed -> viewModel.setPlaybackSpeed(speed) }
+                        )
+                    }
+                } else {
+                    com.deepeye.musicpro.ui.components.HybridPlayerCard(
+                        item = innerItem,
+                        player = viewModel.player,
+                        isVideo = true,
+                        isLoading = playerState.isLoading,
+                        isPlaying = playerState.isPlaying,
+                        playbackPosition = playerState.position,
+                        modifier = Modifier.fillMaxSize(),
+                        onTogglePlayPause = { viewModel.togglePlayPause() },
+                        onSeekTo = { viewModel.seekTo(it) },
+                        onNext = { viewModel.next() },
+                        onPrevious = { viewModel.previous() },
+                        onOpenQueue = {
+                            if (isFullscreen) {
+                                showFullscreenQueue = !showFullscreenQueue
+                            } else {
+                                onOpenQueue()
+                            }
+                        },
+                        onLockChanged = onLockChanged,
+                        onOpenHqSettings = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) }
+                    )
+                }
             }
 
             androidx.compose.animation.AnimatedVisibility(

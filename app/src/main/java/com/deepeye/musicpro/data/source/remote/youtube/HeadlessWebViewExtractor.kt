@@ -306,27 +306,12 @@ class HeadlessWebViewExtractor @Inject constructor(
                             return response
                         }
 
-                        if (url.contains(".googlevideo.com/videoplayback")) {
+                        if (url.contains(".googlevideo.com/videoplayback") || url.contains("googlevideo.com")) {
                             val uriParam = Uri.parse(url)
                             val mime = uriParam.getQueryParameter("mime")
                             val itag = uriParam.getQueryParameter("itag")
-                            Log.d(tag, "🎥 Intercepted videoplayback: itag=$itag mime=$mime preferVideo=$preferVideo")
-                            
-                            if (preferVideo) {
-                                // For video mode: accept any video mime stream (adaptive or progressive)
-                                if (mime?.startsWith("video") == true) {
-                                    val reqHeaders = request?.requestHeaders ?: HashMap()
-                                    Log.i(tag, "🎥 Intercepted videoplayback request headers for $videoId: $reqHeaders")
-                                    onCapturedLocal(url)
-                                }
-                            } else {
-                                // For audio mode: accept audio streams
-                                if (mime?.startsWith("audio") == true) {
-                                    val reqHeaders = request?.requestHeaders ?: HashMap()
-                                    Log.i(tag, "🎥 Intercepted audio request headers for $videoId: $reqHeaders")
-                                    onCapturedLocal(url)
-                                }
-                            }
+                            Log.d(tag, "🎥 Intercepted videoplayback: itag=$itag mime=$mime preferVideo=$preferVideo url=$url")
+                            onCapturedLocal(url)
                         }
                         return super.shouldInterceptRequest(view, request)
                     }

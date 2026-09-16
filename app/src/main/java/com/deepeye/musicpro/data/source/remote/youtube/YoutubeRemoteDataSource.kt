@@ -224,69 +224,36 @@ constructor(
                 Log.w("YoutubeDS", "TIER 1 Direct Extraction error for $cleanId: ${e.message}")
             }
 
-            // 🔄 TIER 2: Fallback Parallel Racing (Only triggered if Tier 1 times out or fails)
+            // 🔄 TIER 2: Direct Headless WebView + Alt Extractor (Bypasses bot gates & PO-token blocks)
             rankingManager.recordFailure(com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.SMARTTUBE)
             onLayerFallback?.invoke()
-            Log.w("YoutubeDS", "⚠️ Tier 1 Direct failed for $cleanId. Triggering Tier 2 Fallback Racing...")
-
-            val fallbackLayers = listOf(
-                com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.ALT_EXTRACTOR,
-                com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.PIPED,
-                com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.INVIDIOUS,
-                com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.WEBVIEW_CAPTURE
-            )
+            Log.w("YoutubeDS", "⚠️ Tier 1 Direct failed for $cleanId. Triggering Tier 2 Headless WebView / Alt Extractor...")
 
             var finalResult: StreamResult? = null
             try {
-                finalResult = kotlinx.coroutines.withTimeoutOrNull(8000L) {
-                    kotlinx.coroutines.supervisorScope {
-                        val scope = this
-                        val channel = kotlinx.coroutines.channels.Channel<StreamResult?>(fallbackLayers.size)
-                        
-                        val jobs = fallbackLayers.map { layer ->
-                            scope.launch {
-                                val result = try {
-                                    when (layer) {
-                                        com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.ALT_EXTRACTOR -> extractAlternative(cleanId, preferVideo)
-                                        com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.PIPED -> extractPiped(cleanId, preferVideo)
-                                        com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.INVIDIOUS -> extractInvidious(cleanId, preferVideo)
-                                        com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.WEBVIEW_CAPTURE -> {
-                                            val url = headlessExtractor.extractStreamUrl(cleanId, preferVideo)
-                                            if (url != null) StreamResult(url, preferVideo) else null
-                                        }
-                                        else -> null
-                                    }
-                                } catch (e: Exception) {
-                                    Log.w("YoutubeDS", "Fallback Layer $layer error: ${e.message}")
-                                    null
-                                }
-                                
-                                if (result != null) {
-                                    rankingManager.recordSuccess(layer)
-                                    Log.i("YoutubeDS", "✅ Fallback layer $layer SUCCEEDED for $cleanId")
-                                    channel.trySend(result)
-                                } else {
-                                    rankingManager.recordFailure(layer)
-                                    channel.trySend(null)
-                                }
-                            }
-                        }
-
-                        var resResult: StreamResult? = null
-                        for (i in 1..fallbackLayers.size) {
-                            val res = channel.receive()
-                            if (res != null) {
-                                resResult = res
-                                jobs.forEach { it.cancel() }
-                                break
-                            }
-                        }
-                        channel.close()
-                        resResult
-                    }
+                // First try Headless WebView Extractor (100% bypass for BotGate)
+                val webViewUrl = kotlinx.coroutines.withTimeoutOrNull(12000L) {
+                    headlessExtractor.extractStreamUrl(cleanId, preferVideo)
+                }
+                if (webViewUrl != null) {
+                    Log.i("YoutubeDS", "✅ Tier 2 Headless WebView SUCCEEDED for $cleanId: $webViewUrl")
+                    return@withContext StreamResult(webViewUrl, preferVideo)
                 }
             } catch (e: Exception) {
-                Log.w("YoutubeDS", "Tier 2 fallback racing failed: ${e.message}")
+                Log.w("YoutubeDS", "Tier 2 Headless WebView failed: ${e.message}")
+            }
+
+            try {
+                // Fallback to Alternative Extractor
+                val altResult = kotlinx.coroutines.withTimeoutOrNull(6000L) {
+                    extractAlternative(cleanId, preferVideo)
+                }
+                if (altResult != null) {
+                    Log.i("YoutubeDS", "✅ Tier 2 Alt Extractor SUCCEEDED for $cleanId")
+                    return@withContext altResult
+                }
+            } catch (e: Exception) {
+                Log.w("YoutubeDS", "Tier 2 Alt Extractor failed: ${e.message}")
             }
 
             if (finalResult == null) {

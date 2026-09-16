@@ -53,6 +53,8 @@ sealed class Routes(val route: String) {
     data object PersonalizationDiagnostics : Routes("personalization_diagnostics")
 
 
+    data object TvDashboard : Routes("tv_dashboard")
+
     // Parameterized routes
     data object AlbumDetail : Routes("album/{albumId}") {
         fun createRoute(albumId: Long) = "album/$albumId"

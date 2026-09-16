@@ -53,6 +53,7 @@ fun SettingsScreen(
     onNavigateToAEOS: () -> Unit = {},
     onYouTubeLoginClick: () -> Unit = {},
     onNavigateToPersonalization: () -> Unit = {},
+    onLaunchTvMode: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val settings = uiState.settings
@@ -208,6 +209,17 @@ fun SettingsScreen(
                         ) {
                             Text("Connect YouTube (TV Mode)", color = androidx.compose.ui.graphics.Color.White)
                         }
+                    }
+                }
+
+                item { SectionHeader("Home Theater (Kodi Mode)") }
+                item { 
+                    Button(
+                        onClick = { onLaunchTvMode() },
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp).fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF0F172A))
+                    ) {
+                        Text("Launch 10-Foot TV UI", color = androidx.compose.ui.graphics.Color.White)
                     }
                 }
 

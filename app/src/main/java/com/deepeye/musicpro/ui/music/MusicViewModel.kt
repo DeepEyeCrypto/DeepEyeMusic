@@ -90,7 +90,7 @@ constructor(
                 artist = it.artist,
                 artworkUri = it.artworkUrl?.let { url -> Uri.parse(url) },
                 duration = it.durationMs,
-                isVideo = false,
+                isVideo = true,
             )
         }
         val index = itemsInSection.indexOfFirst { it.id == item.id }

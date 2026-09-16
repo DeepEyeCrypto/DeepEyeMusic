@@ -194,10 +194,25 @@ fun DeepEyeMusicApp(
         }
     }
 
+    val currentDensity = androidx.compose.ui.platform.LocalDensity.current
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val scaledDensity = remember(currentDensity, isLandscape) {
+        if (isLandscape) {
+            androidx.compose.ui.unit.Density(
+                density = currentDensity.density * 0.58f,
+                fontScale = currentDensity.fontScale * 0.65f
+            )
+        } else {
+            currentDensity
+        }
+    }
+
     CompositionLocalProvider(
         LocalPipMode provides isInPipMode,
         LocalFullscreenMode provides fullscreenMode,
         LocalSharedWebView provides sharedWebView,
+        androidx.compose.ui.platform.LocalDensity provides scaledDensity,
     ) {
         val navController = rememberNavController()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -447,53 +462,77 @@ fun DeepEyeMusicApp(
                 }
             }
         
-        // Overlay AnchoredMiniPlayer (Outside the scaffold conditional, so it covers everything)
+        // Overlay AnchoredMiniPlayer or Floating In-App Video PiP
         if (playerState.currentItem != null) {
-            androidx.activity.compose.BackHandler(
-                enabled = (sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.EXPANDED ||
-                    sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.HALF_EXPANDED)
-            ) {
-                if (!sheetState.isGestureLocked) {
-                    sheetViewModel.collapse()
+            val isVideo = playerState.isVideo
+            val isPipActive = !fullscreenMode.isFullscreen && isVideo && !isInPipMode
+
+            if (isPipActive) {
+                val stablePlayer = remember(playerController.player) {
+                    com.deepeye.musicpro.ui.components.StablePlayerHolder(playerController.player)
                 }
-            }
-
-            val exactDockHeight = if (isBottomBar && showBottomBar) {
-                WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 100.dp
+                com.deepeye.musicpro.ui.player.FloatingVideoPipOverlay(
+                    playerHolder = stablePlayer,
+                    playerState = playerState,
+                    onExpandFullscreen = {
+                        fullscreenMode.enter()
+                        sheetViewModel.expand()
+                    },
+                    onPlayPause = { playerController.togglePlayPause() },
+                    onClose = {
+                        playerController.togglePlayPause()
+                    }
+                )
             } else {
-                0.dp
-            }
-
-            com.deepeye.musicpro.ui.player.AnchoredMiniPlayer(
-                sheetState = sheetState,
-                onExpand = { sheetViewModel.expand() },
-                onCollapse = { sheetViewModel.collapse() },
-                onHalfExpand = { sheetViewModel.halfExpand() },
-                onNext = { sheetViewModel.nextTrack() },
-                onPrev = { sheetViewModel.previousTrack() },
-                onPlayPause = { sheetViewModel.togglePlayPause() },
-                bottomBarHeight = exactDockHeight,
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize().hazeEffect(state = hazeState, style = dev.chrisbanes.haze.HazeStyle(blurRadius = 20.dp, tint = dev.chrisbanes.haze.HazeTint(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.2f)), noiseFactor = 0f)),
+                androidx.activity.compose.BackHandler(
+                    enabled = (sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.EXPANDED ||
+                        sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.HALF_EXPANDED)
                 ) {
-                    com.deepeye.musicpro.ui.player.NowPlayingScreen(
-                        windowSizeClass = windowSizeClass,
-                        onNavigateBack = { sheetViewModel.collapse() },
-                        onNavigateToV4A = {
-                            sheetViewModel.collapse()
-                            navController.navigate(Routes.DSP.route)
-                        },
-                        onNavigateToQueue = { /* Implement full queue view logic later */ },
-                        onNavigateToSettings = {
-                            sheetViewModel.collapse()
-                            navController.navigate(Routes.Settings.route)
-                        },
-                        onNavigateToPersonalization = {
-                            sheetViewModel.collapse()
-                            navController.navigate(Routes.PersonalizationSettings.route)
-                        },
-                    )
+                    if (!sheetState.isGestureLocked) {
+                        sheetViewModel.collapse()
+                    }
+                }
+
+                val exactDockHeight = if (isBottomBar && showBottomBar) {
+                    WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 100.dp
+                } else {
+                    0.dp
+                }
+
+                com.deepeye.musicpro.ui.player.AnchoredMiniPlayer(
+                    sheetState = sheetState,
+                    onExpand = { sheetViewModel.expand() },
+                    onCollapse = { sheetViewModel.collapse() },
+                    onHalfExpand = { sheetViewModel.halfExpand() },
+                    onNext = { sheetViewModel.nextTrack() },
+                    onPrev = { sheetViewModel.previousTrack() },
+                    onPlayPause = { sheetViewModel.togglePlayPause() },
+                    bottomBarHeight = exactDockHeight,
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().hazeEffect(state = hazeState, style = dev.chrisbanes.haze.HazeStyle(blurRadius = 20.dp, tint = dev.chrisbanes.haze.HazeTint(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.2f)), noiseFactor = 0f)),
+                    ) {
+                        com.deepeye.musicpro.ui.player.NowPlayingScreen(
+                            windowSizeClass = windowSizeClass,
+                            onNavigateBack = {
+                                fullscreenMode.exit()
+                                sheetViewModel.collapse()
+                            },
+                            onNavigateToV4A = {
+                                sheetViewModel.collapse()
+                                navController.navigate(Routes.DSP.route)
+                            },
+                            onNavigateToQueue = { /* Implement full queue view logic later */ },
+                            onNavigateToSettings = {
+                                sheetViewModel.collapse()
+                                navController.navigate(Routes.Settings.route)
+                            },
+                            onNavigateToPersonalization = {
+                                sheetViewModel.collapse()
+                                navController.navigate(Routes.PersonalizationSettings.route)
+                            },
+                        )
+                    }
                 }
             }
         }
