@@ -1080,8 +1080,8 @@ fun VideoNowPlayingLayout(
                             .graphicsLayer {
                                 scaleX = videoScale
                                 scaleY = videoScale
-                                translationX = videoOffsetX
-                                translationY = videoOffsetY
+                                translationX = if (videoScale <= 1.02f) 0f else videoOffsetX
+                                translationY = if (videoScale <= 1.02f) 0f else videoOffsetY
                             }
                     )
 

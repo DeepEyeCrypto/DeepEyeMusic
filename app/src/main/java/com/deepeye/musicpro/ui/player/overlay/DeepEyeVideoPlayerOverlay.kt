@@ -329,12 +329,21 @@ fun DeepEyeVideoPlayerOverlay(
 
                                 if (dragDirection == 5) {
                                     if (initialPinchDistance > 10f) {
-                                        val newScale = (initialScale * (distance / initialPinchDistance)).coerceIn(0.25f, 5.0f)
-                                        val deltaX = currentCentroid.x - initialCentroid.x
-                                        val deltaY = currentCentroid.y - initialCentroid.y
-                                        onScaleChange(newScale)
-                                        onOffsetChange(initialOffsetX + deltaX, initialOffsetY + deltaY)
-                                        val label = "${(newScale * 100).toInt()}%"
+                                        val newScale = (initialScale * (distance / initialPinchDistance)).coerceIn(1.0f, 4.0f)
+                                        if (newScale <= 1.02f) {
+                                            onScaleChange(1.0f)
+                                            onOffsetChange(0f, 0f)
+                                        } else {
+                                            val maxOffsetX = (screenWidth * (newScale - 1f)) / 2f
+                                            val maxOffsetY = (screenHeight * (newScale - 1f)) / 2f
+                                            val deltaX = currentCentroid.x - initialCentroid.x
+                                            val deltaY = currentCentroid.y - initialCentroid.y
+                                            val clampedX = (initialOffsetX + deltaX).coerceIn(-maxOffsetX, maxOffsetX)
+                                            val clampedY = (initialOffsetY + deltaY).coerceIn(-maxOffsetY, maxOffsetY)
+                                            onScaleChange(newScale)
+                                            onOffsetChange(clampedX, clampedY)
+                                        }
+                                        val label = if (newScale <= 1.02f) "FIT (100%)" else "${(newScale * 100).toInt()}%"
                                         zoomOsd = label
                                         scope.launch {
                                             delay(1200)
@@ -370,7 +379,7 @@ fun DeepEyeVideoPlayerOverlay(
                                         }
                                     } else if (abs(dx) > abs(dy) * 1.1f) {
                                         dragDirection = 1 // Scrub / Seek (Horizontal)
-                                    } else if (currentScale > 1.15f) {
+                                    } else if (currentScale > 1.05f) {
                                         dragDirection = 5 // Pan zoomed video
                                         initialOffsetX = currentOffsetX
                                         initialOffsetY = currentOffsetY
@@ -382,9 +391,15 @@ fun DeepEyeVideoPlayerOverlay(
                                 change.consume()
                                 resetTimer()
                                 when (dragDirection) {
-                                    5 -> { // Pan single touch when zoomed
-                                        if (currentScale > 1.15f) {
-                                            onOffsetChange(initialOffsetX + dx, initialOffsetY + dy)
+                                    5 -> { // Pan single touch when zoomed (strictly clamped)
+                                        if (currentScale > 1.05f) {
+                                            val maxOffsetX = (screenWidth * (currentScale - 1f)) / 2f
+                                            val maxOffsetY = (screenHeight * (currentScale - 1f)) / 2f
+                                            val clampedX = (initialOffsetX + dx).coerceIn(-maxOffsetX, maxOffsetX)
+                                            val clampedY = (initialOffsetY + dy).coerceIn(-maxOffsetY, maxOffsetY)
+                                            onOffsetChange(clampedX, clampedY)
+                                        } else {
+                                            onOffsetChange(0f, 0f)
                                         }
                                     }
                                     1 -> { // Scrub / Seek
