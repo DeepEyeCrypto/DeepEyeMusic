@@ -122,40 +122,22 @@ class HeadlessWebViewExtractor @Inject constructor(
 
     @SuppressLint("SetJavaScriptEnabled")
     suspend fun extractStreamUrl(videoId: String, preferVideo: Boolean = false): String? =
-        mutex.withLock {
-            withContext(Dispatchers.Main) {
-                suspendCancellableCoroutine { continuation ->
+        withContext(Dispatchers.Main) {
+            suspendCancellableCoroutine { continuation ->
                 var isResumed = false
                 val activity = currentActivity
                 
-                if (activity == null) {
-                    Log.w(tag, "⚠️ No active Activity context found! Using ApplicationContext (might be throttled by OS).")
-                }
-                
-                // Clear all Web Storage (including registered Service Workers) via the official thread-safe API
-                try {
-                    android.webkit.WebStorage.getInstance().deleteAllData()
-                    Log.i(tag, "🧹 Cleared WebStorage databases and storage directories via thread-safe API.")
-                } catch (e: Exception) {
-                    Log.w(tag, "Failed to clear WebStorage: ${e.message}")
-                }
-
-                val webView = pooledWebView ?: WebView(context).apply {
-                    clearCache(true)
+                val webView = WebView(context).apply {
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
+                    settings.databaseEnabled = true
                     settings.mediaPlaybackRequiresUserGesture = false
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                         settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                     }
                     settings.userAgentString =
                         "Mozilla/5.0 (Linux; Android 14; motorola edge 30 pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6422.112 Mobile Safari/537.36"
-                }.also { pooledWebView = it }
-
-                // Reset webview state before reuse
-                webView.stopLoading()
-                webView.loadUrl("about:blank")
-                webView.clearHistory()
+                }
 
                 // Enable cookies for WebView
                 try {
@@ -168,7 +150,6 @@ class HeadlessWebViewExtractor @Inject constructor(
                     Log.w(tag, "Failed to enable cookies: ${e.message}")
                 }
 
-                // If Activity context is available, attach the WebView to layout hierarchy to bypass Chromium background throttling
                 var addedToRoot = false
                 var rootView: android.view.ViewGroup? = null
                 if (activity != null) {
@@ -177,20 +158,12 @@ class HeadlessWebViewExtractor @Inject constructor(
                         if (rootView != null) {
                             val params = android.view.ViewGroup.LayoutParams(320, 180)
                             webView.visibility = android.view.View.VISIBLE
-                            webView.alpha = 1.0f
+                            webView.alpha = 0.01f // Non-zero alpha prevents OS from freezing rendering
                             webView.isFocusable = false
                             webView.isClickable = false
                             webView.isLongClickable = false
-                            
-                            // Only add if not already attached to this root
-                            if (webView.parent != rootView) {
-                                (webView.parent as? android.view.ViewGroup)?.removeView(webView)
-                                rootView.addView(webView, 0, params)
-                            }
+                            rootView.addView(webView, 0, params)
                             addedToRoot = true
-                            isWebViewAttachedToRoot = true
-                            attachedRootView = rootView
-                            Log.d(tag, "Attached pooled WebView to Activity root view hierarchy at index 0.")
                         }
                     } catch (e: Exception) {
                         Log.e(tag, "Failed to attach WebView to root view: ${e.message}")
@@ -206,17 +179,16 @@ class HeadlessWebViewExtractor @Inject constructor(
                 }
 
                 val cleanupWebView = {
-                    // Do NOT destroy the pooled WebView. Just stop loading and remove from view hierarchy.
-                    webView.stopLoading()
-                    webView.loadUrl("about:blank")
-                    if (isWebViewAttachedToRoot && attachedRootView != null) {
-                        try {
-                            attachedRootView?.removeView(webView)
-                        } catch (e: Exception) {
-                            Log.w(tag, "Failed to detach pooled WebView: ${e.message}")
+                    try {
+                        activeSession = null
+                        webView.stopLoading()
+                        webView.loadUrl("about:blank")
+                        if (addedToRoot && rootView != null) {
+                            rootView.removeView(webView)
                         }
-                        isWebViewAttachedToRoot = false
-                        attachedRootView = null
+                        webView.destroy()
+                    } catch (e: Exception) {
+                        Log.w(tag, "Failed to cleanup WebView: ${e.message}")
                     }
                 }
 
@@ -224,14 +196,13 @@ class HeadlessWebViewExtractor @Inject constructor(
                     if (!isResumed) {
                         Log.w(tag, "Extraction timed out for $videoId")
                         isResumed = true
-                        activeSession = null
                         cleanupWebView()
                         continuation.resume(null)
                     }
                 }
 
                 val handler = android.os.Handler(android.os.Looper.getMainLooper())
-                handler.postDelayed(timeoutRunnable, 25000L) // 25s timeout
+                handler.postDelayed(timeoutRunnable, 12000L)
 
                 val onCapturedLocal = { url: String ->
                     if (!isResumed) {
@@ -239,7 +210,6 @@ class HeadlessWebViewExtractor @Inject constructor(
                         Log.i(tag, "✅ Intercepted stream URL for $videoId (URL: $url)")
                         handler.removeCallbacks(timeoutRunnable)
                         handler.post {
-                            activeSession = null
                             cleanupWebView()
                             continuation.resume(url)
                         }
@@ -408,9 +378,8 @@ class HeadlessWebViewExtractor @Inject constructor(
 
                 Log.d(tag, "Loading YouTube embed page to bypass bot checks for videoId: $videoId")
                 val headers = HashMap<String, String>()
-                headers["Referer"] = "https://www.youtube.com"
-                webView.loadUrl("https://www.youtube.com/embed/$videoId?autoplay=1", headers)
+                headers["Referer"] = "https://www.youtube.com/"
+                webView.loadUrl("https://www.youtube.com/embed/$videoId?autoplay=1&enablejsapi=1&playsinline=1&controls=0&origin=https://www.youtube.com", headers)
             }
         }
-    }
 }

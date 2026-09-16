@@ -592,8 +592,7 @@ class SmartTubeInnertubeExtractor(
                     dashManifestUrl = dashDataUri,
                     hlsManifestUrl = hlsManifest
                 )
-            } else if (!authToken.isNullOrBlank() && dashDataUri != null && allVideoFormats.isNotEmpty() && allAudioFormats.isNotEmpty()) {
-                // Authenticated requests have full DASH authorization without 403 range restrictions
+            } else if (dashDataUri != null && allVideoFormats.isNotEmpty() && allAudioFormats.isNotEmpty()) {
                 ExtractorStreamResult(
                     url = dashDataUri,
                     container = "adaptive",
@@ -606,6 +605,11 @@ class SmartTubeInnertubeExtractor(
                 )
             } else {
                 bestProgressive(formats, allVideoFormats, allAudioFormats, dashDataUri, hlsManifest)
+                    ?: if (preferVideo) {
+                        bestAdaptiveVideo(adaptive, allVideoFormats, allAudioFormats, dashDataUri, hlsManifest)
+                    } else {
+                        bestAdaptiveAudio(adaptive, allVideoFormats, allAudioFormats, dashDataUri, hlsManifest)
+                    }
             }
 
             if (result != null) {

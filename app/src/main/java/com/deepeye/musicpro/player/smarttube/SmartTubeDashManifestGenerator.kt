@@ -83,6 +83,37 @@ object SmartTubeDashManifestGenerator {
             }
         }
 
+        // Check progressive formats for unthrottled audio stream (immune to 403 range restrictions)
+        val progressiveFormats = streamingData.optJSONArray("formats")
+        if (progressiveFormats != null && progressiveFormats.length() > 0) {
+            for (i in 0 until progressiveFormats.length()) {
+                val f = progressiveFormats.optJSONObject(i) ?: continue
+                val url = urlResolver(f)?.takeIf { it.isNotBlank() } ?: continue
+                val itag = f.optInt("itag", -1)
+                val mimeType = f.optString("mimeType", "")
+                val codecs = if (mimeType.contains("codecs=\"")) mimeType.substringAfter("codecs=\"").substringBefore("\"") else ""
+                val audioCodecs = if (codecs.contains("mp4a")) "mp4a.40.2" else codecs
+                val bitrate = f.optLong("bitrate", 128000L).takeIf { it > 0 } ?: 128000L
+                val approxDurMs = f.optLong("approxDurationMs", 0L)
+                val durSec = if (approxDurMs > 0) approxDurMs / 1000.0 else 0.0
+                if (durSec > maxDurationSec) maxDurationSec = durSec
+                
+                audioFormats.add(0, AdaptiveFormatItem(
+                    itag = itag,
+                    url = url,
+                    mimeType = "audio/mp4",
+                    codecs = audioCodecs,
+                    bitrate = bitrate,
+                    width = 0,
+                    height = 0,
+                    frameRate = 0f,
+                    audioSampleRate = "44100",
+                    initRange = "",
+                    indexRange = ""
+                ))
+            }
+        }
+
         if (videoFormats.isEmpty() && audioFormats.isEmpty()) return null
         if (maxDurationSec <= 0.0) maxDurationSec = 300.0
         val durationAttr = String.format(Locale.US, "PT%.3fS", maxDurationSec)
@@ -101,9 +132,15 @@ object SmartTubeDashManifestGenerator {
                 val codecAttr = if (v.codecs.isNotBlank()) " codecs=\"${escapeXml(v.codecs)}\"" else ""
                 sb.append("      <Representation id=\"${v.itag}\" bandwidth=\"${v.bitrate}\"$dimAttr$fpsAttr$codecAttr>\n")
                 sb.append("        <BaseURL>${escapeXml(v.url)}</BaseURL>\n")
-                sb.append("        <SegmentBase indexRange=\"${v.indexRange}\">\n")
-                sb.append("          <Initialization range=\"${v.initRange}\"/>\n")
-                sb.append("        </SegmentBase>\n")
+                if (v.indexRange.isNotBlank() && v.initRange.isNotBlank()) {
+                    sb.append("        <SegmentBase indexRange=\"${v.indexRange}\">\n")
+                    sb.append("          <Initialization range=\"${v.initRange}\"/>\n")
+                    sb.append("        </SegmentBase>\n")
+                } else {
+                    sb.append("        <SegmentBase>\n")
+                    sb.append("          <Initialization/>\n")
+                    sb.append("        </SegmentBase>\n")
+                }
                 sb.append("      </Representation>\n")
             }
             sb.append("    </AdaptationSet>\n")
@@ -116,9 +153,15 @@ object SmartTubeDashManifestGenerator {
                 val codecAttr = if (a.codecs.isNotBlank()) " codecs=\"${escapeXml(a.codecs)}\"" else ""
                 sb.append("      <Representation id=\"${a.itag}\" bandwidth=\"${a.bitrate}\" audioSamplingRate=\"${a.audioSampleRate}\"$codecAttr>\n")
                 sb.append("        <BaseURL>${escapeXml(a.url)}</BaseURL>\n")
-                sb.append("        <SegmentBase indexRange=\"${a.indexRange}\">\n")
-                sb.append("          <Initialization range=\"${a.initRange}\"/>\n")
-                sb.append("        </SegmentBase>\n")
+                if (a.indexRange.isNotBlank() && a.initRange.isNotBlank()) {
+                    sb.append("        <SegmentBase indexRange=\"${a.indexRange}\">\n")
+                    sb.append("          <Initialization range=\"${a.initRange}\"/>\n")
+                    sb.append("        </SegmentBase>\n")
+                } else {
+                    sb.append("        <SegmentBase>\n")
+                    sb.append("          <Initialization/>\n")
+                    sb.append("        </SegmentBase>\n")
+                }
                 sb.append("      </Representation>\n")
             }
             sb.append("    </AdaptationSet>\n")
