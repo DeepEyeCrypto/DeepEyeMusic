@@ -31,7 +31,12 @@ constructor(
     private val bassProcessor: com.deepeye.musicpro.dsp.bass.BassProcessor,
     private val vocalRemoverProcessor: com.deepeye.musicpro.dsp.processor.VocalRemoverProcessor,
     private val crossfeedProcessor: com.deepeye.musicpro.dsp.processor.CrossfeedProcessor,
-    private val tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor
+    private val tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor,
+    private val viperBassProcessor: com.deepeye.musicpro.dsp.processor.ViperBassAudioProcessor,
+    private val viperClarityProcessor: com.deepeye.musicpro.dsp.processor.ViperClarityProcessor,
+    private val fieldSurroundProcessor: com.deepeye.musicpro.dsp.processor.FieldSurroundProcessor,
+    private val playbackGainProcessor: com.deepeye.musicpro.dsp.processor.PlaybackGainProcessor,
+    private val masterLimiterProcessor: com.deepeye.musicpro.dsp.processor.MasterLimiterProcessor
 ) {
     companion object {
         private const val TAG = "DSPEngine"
@@ -216,10 +221,36 @@ constructor(
             )
 
             // ── Custom Audio Processors (ExoPlayer Pipeline) ──
+            viperBassProcessor.setConfig(
+                enabled = isEnabled && params.viperBassEnabled,
+                mode = params.viperBassMode,
+                freqHz = params.viperBassFreq,
+                gainDb = params.viperBassGain
+            )
+            viperClarityProcessor.setConfig(
+                enabled = isEnabled && params.viperClarityEnabled,
+                mode = params.viperClarityMode,
+                gainDb = params.viperClarityGain
+            )
+            fieldSurroundProcessor.setConfig(
+                enabled = isEnabled && (params.fieldSurroundEnabled || params.surroundEnabled),
+                strength = if (params.fieldSurroundEnabled) params.fieldSurroundStrength else params.surroundStrength,
+                midStrength = params.fieldMidImageStrength
+            )
             tubeSimulatorProcessor.setConfig(
                 enabled = isEnabled && params.tubeEnabled,
                 mode = params.tubeMode,
                 drivePercent = params.tubeDrive
+            )
+            playbackGainProcessor.setConfig(
+                enabled = isEnabled && params.pgcEnabled,
+                maxGainFactor = 2.5f,
+                thresholdDb = params.pgcGain
+            )
+            masterLimiterProcessor.setConfig(
+                enabled = isEnabled && params.limiterEnabled,
+                thresholdDb = params.limiterThreshold,
+                ceilingDb = -0.2f
             )
             vocalRemoverProcessor.setEnabled(isEnabled && params.karaokeModeEnabled)
             crossfeedProcessor.setEnabled(isEnabled && params.crossfeedEnabled)

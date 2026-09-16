@@ -41,7 +41,12 @@ object PlayerModule {
         okHttpClient: okhttp3.OkHttpClient,
         vocalRemoverProcessor: com.deepeye.musicpro.dsp.processor.VocalRemoverProcessor,
         crossfeedProcessor: com.deepeye.musicpro.dsp.processor.CrossfeedProcessor,
+        viperBassProcessor: com.deepeye.musicpro.dsp.processor.ViperBassAudioProcessor,
+        viperClarityProcessor: com.deepeye.musicpro.dsp.processor.ViperClarityProcessor,
+        fieldSurroundProcessor: com.deepeye.musicpro.dsp.processor.FieldSurroundProcessor,
         tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor,
+        playbackGainProcessor: com.deepeye.musicpro.dsp.processor.PlaybackGainProcessor,
+        masterLimiterProcessor: com.deepeye.musicpro.dsp.processor.MasterLimiterProcessor,
         lufsAnalyzerProcessor: com.deepeye.musicpro.dsp.processor.LufsAnalyzerProcessor
     ): ExoPlayer {
         val renderersFactory = object : androidx.media3.exoplayer.DefaultRenderersFactory(context) {
@@ -53,7 +58,19 @@ object PlayerModule {
                 return androidx.media3.exoplayer.audio.DefaultAudioSink.Builder(context)
                     .setEnableFloatOutput(enableFloatOutput)
                     .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
-                    .setAudioProcessors(arrayOf(vocalRemoverProcessor, crossfeedProcessor, tubeSimulatorProcessor, lufsAnalyzerProcessor))
+                    .setAudioProcessors(
+                        arrayOf(
+                            vocalRemoverProcessor,
+                            crossfeedProcessor,
+                            viperBassProcessor,
+                            viperClarityProcessor,
+                            fieldSurroundProcessor,
+                            tubeSimulatorProcessor,
+                            playbackGainProcessor,
+                            masterLimiterProcessor,
+                            lufsAnalyzerProcessor
+                        )
+                    )
                     .build()
             }
         }

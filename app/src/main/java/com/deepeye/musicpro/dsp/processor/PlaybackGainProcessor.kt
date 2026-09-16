@@ -9,7 +9,6 @@ import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.AudioFormat
-import com.deepeye.musicpro.dsp.model.TubeMode
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.inject.Inject
@@ -17,15 +16,13 @@ import javax.inject.Singleton
 import kotlin.math.*
 
 /**
- * ViPER4Android-inspired 6J1 Vacuum Tube & AnalogX Harmonic AudioProcessor.
+ * ViPER4Android-inspired Playback Gain Control (AGC) AudioProcessor.
  *
- * Simulates analog tube warmth:
- * - Triode Mode: Asymmetric clipping curve producing warm 2nd/4th even-order harmonics.
- * - Pentode Mode: Symmetric clipping curve adding punchy odd-order dynamic harmonics.
- * - DC Blocking Filter: Prevents DC bias accumulation from asymmetric saturation.
+ * Automatically normalizes audio volume levels across dynamic tracks
+ * using smooth envelope tracking and anti-pumping release curves.
  */
 @Singleton
-class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
+class PlaybackGainProcessor @Inject constructor() : AudioProcessor {
 
     private var active = false
     private var inputAudioFormat = AudioFormat.NOT_SET
@@ -34,18 +31,18 @@ class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
     private var outputBuffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
     private var inputEnded = false
 
-    private var tubeMode = TubeMode.TRIODE
-    private var drive = 1.0f
+    private var maxGain = 2.0f // 1x .. 8x
+    private var targetThreshold = 0.85f // ~ -1.4 dBFS
+    private var envelope = 0.0f
+    private var currentGain = 1.0f
 
-    // DC Blocker State
-    private var dc_x1_L = 0f; private var dc_y1_L = 0f
-    private var dc_x1_R = 0f; private var dc_y1_R = 0f
+    private var attackCoeff = 0.05f
+    private var releaseCoeff = 0.0005f
 
-    fun setConfig(enabled: Boolean, mode: TubeMode, drivePercent: Int) {
-        active = enabled && drivePercent > 0
-        tubeMode = mode
-        // Map 0-100% to 1.0x - 3.5x analog drive
-        drive = 1.0f + (drivePercent.coerceIn(0, 100) / 100f) * 2.5f
+    fun setConfig(enabled: Boolean, maxGainFactor: Float, thresholdDb: Float) {
+        active = enabled
+        maxGain = maxGainFactor.coerceIn(1.0f, 6.0f)
+        targetThreshold = 10.0f.pow(thresholdDb.coerceIn(-12f, -0.1f) / 20f)
     }
 
     override fun configure(inputAudioFormat: AudioFormat): AudioFormat {
@@ -54,6 +51,12 @@ class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
         }
         this.inputAudioFormat = inputAudioFormat
         this.outputAudioFormat = inputAudioFormat
+
+        // Attack: 10ms, Release: 300ms
+        val sr = inputAudioFormat.sampleRate.toFloat()
+        attackCoeff = 1.0f - exp(-1.0f / (0.010f * sr))
+        releaseCoeff = 1.0f - exp(-1.0f / (0.300f * sr))
+
         return outputAudioFormat
     }
 
@@ -78,35 +81,38 @@ class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
         if (!active || inputAudioFormat.channelCount != 2) {
             buffer.put(inputBuffer)
         } else {
-            val comp = 1.0f / tanh(drive)
-
             while (inputBuffer.position() < limit) {
-                var sL = (inputBuffer.short.toFloat() / 32768f) * drive
-                var sR = (inputBuffer.short.toFloat() / 32768f) * drive
+                val inL = inputBuffer.short.toFloat() / 32768f
+                val inR = inputBuffer.short.toFloat() / 32768f
 
-                // Tube Non-Linear Transfer Curve
-                if (tubeMode == TubeMode.TRIODE) {
-                    // Asymmetric transfer function generating even harmonics
-                    sL = if (sL > 0f) tanh(sL) else tanh(sL * 0.82f) + 0.05f * (sL * sL)
-                    sR = if (sR > 0f) tanh(sR) else tanh(sR * 0.82f) + 0.05f * (sR * sR)
+                val peak = max(abs(inL), abs(inR))
+
+                // Fast attack, slow smooth release envelope
+                if (peak > envelope) {
+                    envelope += attackCoeff * (peak - envelope)
                 } else {
-                    // Symmetric Pentode Saturation
-                    sL = tanh(sL)
-                    sR = tanh(sR)
+                    envelope += releaseCoeff * (peak - envelope)
                 }
 
-                sL *= comp
-                sR *= comp
+                // Compute required target gain
+                val desiredGain = if (envelope > 0.001f) {
+                    (targetThreshold / envelope).coerceIn(0.5f, maxGain)
+                } else {
+                    1.0f
+                }
 
-                // DC-Blocking Filter: y[n] = x[n] - x[n-1] + 0.995 * y[n-1]
-                val dcOutL = sL - dc_x1_L + 0.995f * dc_y1_L
-                dc_x1_L = sL; dc_y1_L = dcOutL
+                // Smooth gain transition
+                currentGain += 0.001f * (desiredGain - currentGain)
 
-                val dcOutR = sR - dc_x1_R + 0.995f * dc_y1_R
-                dc_x1_R = sR; dc_y1_R = dcOutR
+                var outL = inL * currentGain
+                var outR = inR * currentGain
 
-                val outShortL = (dcOutL.coerceIn(-1.0f, 1.0f) * 32767f).toInt().toShort()
-                val outShortR = (dcOutR.coerceIn(-1.0f, 1.0f) * 32767f).toInt().toShort()
+                // Soft saturation clamp
+                if (abs(outL) > 0.95f) outL = tanh(outL)
+                if (abs(outR) > 0.95f) outR = tanh(outR)
+
+                val outShortL = (outL * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
+                val outShortR = (outR * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
 
                 buffer.putShort(outShortL)
                 buffer.putShort(outShortR)
@@ -133,8 +139,8 @@ class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
     override fun flush() {
         outputBuffer = AudioProcessor.EMPTY_BUFFER
         inputEnded = false
-        dc_x1_L = 0f; dc_y1_L = 0f
-        dc_x1_R = 0f; dc_y1_R = 0f
+        envelope = 0.0f
+        currentGain = 1.0f
     }
 
     override fun reset() {

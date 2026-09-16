@@ -5,7 +5,7 @@ package com.deepeye.musicpro.dsp.model
 
 enum class ViperBassMode { NATURAL, PURE, DYNAMIC }
 
-enum class ViperClarityMode { NATURAL, OZONE_PLUS, FEELING }
+enum class ViperClarityMode { NATURAL, OZONE_PLUS, FEELING, X_HIFI }
 
 enum class TubeMode { TRIODE, PENTODE }
 

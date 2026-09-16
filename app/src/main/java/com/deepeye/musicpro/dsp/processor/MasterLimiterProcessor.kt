@@ -9,7 +9,6 @@ import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.AudioProcessor.AudioFormat
-import com.deepeye.musicpro.dsp.model.TubeMode
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.inject.Inject
@@ -17,35 +16,28 @@ import javax.inject.Singleton
 import kotlin.math.*
 
 /**
- * ViPER4Android-inspired 6J1 Vacuum Tube & AnalogX Harmonic AudioProcessor.
+ * ViPER4Android-inspired Master Limiter & Anti-Clipping AudioProcessor.
  *
- * Simulates analog tube warmth:
- * - Triode Mode: Asymmetric clipping curve producing warm 2nd/4th even-order harmonics.
- * - Pentode Mode: Symmetric clipping curve adding punchy odd-order dynamic harmonics.
- * - DC Blocking Filter: Prevents DC bias accumulation from asymmetric saturation.
+ * Employs a soft-knee hyperbolic curve with configurable ceiling
+ * to prevent DAC inter-sample clipping and digital harshness.
  */
 @Singleton
-class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
+class MasterLimiterProcessor @Inject constructor() : AudioProcessor {
 
-    private var active = false
+    private var active = true
     private var inputAudioFormat = AudioFormat.NOT_SET
     private var outputAudioFormat = AudioFormat.NOT_SET
     private var buffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
     private var outputBuffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
     private var inputEnded = false
 
-    private var tubeMode = TubeMode.TRIODE
-    private var drive = 1.0f
+    private var threshold = 0.89f // -1.0 dBFS
+    private var ceiling = 0.98f   // -0.2 dBFS
 
-    // DC Blocker State
-    private var dc_x1_L = 0f; private var dc_y1_L = 0f
-    private var dc_x1_R = 0f; private var dc_y1_R = 0f
-
-    fun setConfig(enabled: Boolean, mode: TubeMode, drivePercent: Int) {
-        active = enabled && drivePercent > 0
-        tubeMode = mode
-        // Map 0-100% to 1.0x - 3.5x analog drive
-        drive = 1.0f + (drivePercent.coerceIn(0, 100) / 100f) * 2.5f
+    fun setConfig(enabled: Boolean, thresholdDb: Float, ceilingDb: Float = -0.2f) {
+        active = enabled
+        ceiling = 10.0f.pow(ceilingDb.coerceIn(-3.0f, 0.0f) / 20f)
+        threshold = 10.0f.pow(thresholdDb.coerceIn(-6.0f, -0.1f) / 20f).coerceAtMost(ceiling)
     }
 
     override fun configure(inputAudioFormat: AudioFormat): AudioFormat {
@@ -78,35 +70,30 @@ class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
         if (!active || inputAudioFormat.channelCount != 2) {
             buffer.put(inputBuffer)
         } else {
-            val comp = 1.0f / tanh(drive)
+            val headroom = ceiling - threshold
 
             while (inputBuffer.position() < limit) {
-                var sL = (inputBuffer.short.toFloat() / 32768f) * drive
-                var sR = (inputBuffer.short.toFloat() / 32768f) * drive
+                var sL = inputBuffer.short.toFloat() / 32768f
+                var sR = inputBuffer.short.toFloat() / 32768f
 
-                // Tube Non-Linear Transfer Curve
-                if (tubeMode == TubeMode.TRIODE) {
-                    // Asymmetric transfer function generating even harmonics
-                    sL = if (sL > 0f) tanh(sL) else tanh(sL * 0.82f) + 0.05f * (sL * sL)
-                    sR = if (sR > 0f) tanh(sR) else tanh(sR * 0.82f) + 0.05f * (sR * sR)
-                } else {
-                    // Symmetric Pentode Saturation
-                    sL = tanh(sL)
-                    sR = tanh(sR)
+                // Left channel soft knee limit
+                val absL = abs(sL)
+                if (absL > threshold) {
+                    val excess = absL - threshold
+                    val compressed = threshold + headroom * tanh(excess / headroom)
+                    sL = if (sL > 0) compressed else -compressed
                 }
 
-                sL *= comp
-                sR *= comp
+                // Right channel soft knee limit
+                val absR = abs(sR)
+                if (absR > threshold) {
+                    val excess = absR - threshold
+                    val compressed = threshold + headroom * tanh(excess / headroom)
+                    sR = if (sR > 0) compressed else -compressed
+                }
 
-                // DC-Blocking Filter: y[n] = x[n] - x[n-1] + 0.995 * y[n-1]
-                val dcOutL = sL - dc_x1_L + 0.995f * dc_y1_L
-                dc_x1_L = sL; dc_y1_L = dcOutL
-
-                val dcOutR = sR - dc_x1_R + 0.995f * dc_y1_R
-                dc_x1_R = sR; dc_y1_R = dcOutR
-
-                val outShortL = (dcOutL.coerceIn(-1.0f, 1.0f) * 32767f).toInt().toShort()
-                val outShortR = (dcOutR.coerceIn(-1.0f, 1.0f) * 32767f).toInt().toShort()
+                val outShortL = (sL * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
+                val outShortR = (sR * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
 
                 buffer.putShort(outShortL)
                 buffer.putShort(outShortR)
@@ -133,8 +120,6 @@ class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
     override fun flush() {
         outputBuffer = AudioProcessor.EMPTY_BUFFER
         inputEnded = false
-        dc_x1_L = 0f; dc_y1_L = 0f
-        dc_x1_R = 0f; dc_y1_R = 0f
     }
 
     override fun reset() {
