@@ -45,6 +45,10 @@ constructor(
             settingsDataStore.settings.first().youtubeAccessToken?.takeIf { it.isNotBlank() }
         }
     }
+
+    private val newPipeExtractor by lazy {
+        com.deepeye.musicpro.extractor.newpipe.NewPipeExtractorBridge(extractorClient)
+    }
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
     private val fastClient: okhttp3.OkHttpClient by lazy {
@@ -207,8 +211,21 @@ constructor(
             val cleanId = videoId.trim().take(11)
             Log.d("YoutubeDS", "Resolving stream for video ID: $cleanId (preferVideo=$preferVideo)")
 
-            // ⚡ TIER 1: Instant Direct Google Innertube Extraction
-            // Talks directly to YouTube's player endpoint without headless WebViews or scrapers!
+            // ⚡ TIER 1: NewPipe Extractor & Direct SmartTube Innertube Extraction
+            try {
+                val t0 = System.currentTimeMillis()
+                val newPipeResult = kotlinx.coroutines.withTimeoutOrNull(6000L) {
+                    extractNewPipe(cleanId, preferVideo)
+                }
+                if (newPipeResult != null) {
+                    val tookMs = System.currentTimeMillis() - t0
+                    Log.i("YoutubeDS", "⚡ TIER 1 NewPipe Extraction SUCCEEDED in ${tookMs}ms for $cleanId")
+                    return@withContext newPipeResult
+                }
+            } catch (e: Exception) {
+                Log.w("YoutubeDS", "TIER 1 NewPipe Extraction error for $cleanId: ${e.message}")
+            }
+
             try {
                 val t0 = System.currentTimeMillis()
                 val directResult = kotlinx.coroutines.withTimeoutOrNull(6000L) {
@@ -261,6 +278,25 @@ constructor(
             }
             finalResult
         }
+
+    private suspend fun extractNewPipe(videoId: String, preferVideo: Boolean): StreamResult? {
+        return try {
+            newPipeExtractor.extractStream(videoId, preferVideo)?.let {
+                StreamResult(
+                    url = it.url,
+                    isVideo = it.container != "audio",
+                    isAdaptive = it.container == "adaptive" || it.container == "dash",
+                    videoFormats = it.videoFormats,
+                    audioFormats = it.audioFormats,
+                    dashManifestUrl = it.dashManifestUrl,
+                    hlsManifestUrl = it.hlsManifestUrl
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("YoutubeDS", "NewPipe extract failed for $videoId", e)
+            null
+        }
+    }
 
     private suspend fun extractSmartTube(videoId: String, preferVideo: Boolean): StreamResult? {
         return try {

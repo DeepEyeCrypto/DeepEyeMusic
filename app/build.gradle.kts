@@ -218,6 +218,7 @@ dependencies {
     // SmartTube-style Innertube client (primary) and YouTube Extractor (fallback)
     implementation(libs.okhttp)
     implementation("io.github.ajaydhattarwal:youtube-extractor-android:1.0.2")
+    implementation("com.github.TeamNewPipe:NewPipeExtractor:v0.26.5")
 
     // Palette & Splash
     implementation(libs.palette)
