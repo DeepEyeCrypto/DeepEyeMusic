@@ -305,7 +305,10 @@ fun DeepEyeMusicApp(
                         NavGraph(
                             navController = navController,
                             windowSizeClass = windowSizeClass,
-                            onExpandPlayer = { sheetViewModel.expand() }
+                            onExpandPlayer = { 
+                                fullscreenMode.enter()
+                                sheetViewModel.expand() 
+                            }
                         )
                     }
                 }
@@ -371,7 +374,10 @@ fun DeepEyeMusicApp(
                         NavGraph(
                             navController = navController,
                             windowSizeClass = windowSizeClass,
-                            onExpandPlayer = { sheetViewModel.expand() }
+                            onExpandPlayer = { 
+                                fullscreenMode.enter()
+                                sheetViewModel.expand() 
+                            }
                         )
                     }
                 }

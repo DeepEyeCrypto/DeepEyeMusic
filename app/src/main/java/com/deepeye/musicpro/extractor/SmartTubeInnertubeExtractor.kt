@@ -54,7 +54,7 @@ class SmartTubeInnertubeExtractor(
             "Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/76.0.3809.146 TV Safari/537.36"
 
         const val VR_UA =
-            "Mozilla/5.0 (Android 12; Mobile; VR; rv:105.0) Gecko/105.0 Firefox/105.0"
+            "com.google.android.apps.youtube.vr.oculus/1.61.48 (Linux; U; Android 12; Quest 3)"
 
         // "3:45" or "1:01:02" -> seconds
         fun parseDurationSeconds(text: String?): Long {
@@ -217,7 +217,11 @@ class SmartTubeInnertubeExtractor(
     private fun androidVrClientContext(): JSONObject {
         val clientCtx = JSONObject()
         clientCtx.put("clientName", "ANDROID_VR")
-        clientCtx.put("clientVersion", "1.60.19")
+        clientCtx.put("clientVersion", "1.61.48")
+        clientCtx.put("deviceMake", "Oculus")
+        clientCtx.put("deviceModel", "Quest 3")
+        clientCtx.put("osName", "Android")
+        clientCtx.put("osVersion", "12")
         clientCtx.put("androidSdkVersion", 32)
         clientCtx.put("hl", "en")
         clientCtx.put("gl", "IN")
@@ -473,22 +477,31 @@ class SmartTubeInnertubeExtractor(
     }
 
     override suspend fun extractStream(videoId: String, preferVideo: Boolean): ExtractorStreamResult? = withContext(Dispatchers.IO) {
-        // ANDROID_VR client is tried FIRST - returns official 4K/HDR direct streams with 0 bot challenges.
-        // TV, Android, iOS, and Web clients act as robust fallbacks.
-        val contexts = listOf(
-            androidVrClientContext() to VR_UA,
-            tvClientContext() to TV_UA,
-            tvEmbeddedClientContext() to TV_UA,
-            androidClientContext() to ANDROID_UA,
-            iosClientContext() to IOS_UA,
-            webClientContext() to UA
-        )
-
         val authToken = try {
             accessTokenProvider?.invoke()?.takeIf { it.isNotBlank() }
         } catch (e: Exception) {
             Log.w(TAG, "accessTokenProvider failed reason=${e.message}")
             null
+        }
+
+        // Client contexts prioritized for reliable playback:
+        // When authenticated: Android / iOS / VR clients provide full 4K DASH streams.
+        // When unauthenticated: Android client provides progressive streams immune to 403 drops.
+        val contexts = if (!authToken.isNullOrBlank()) {
+            listOf(
+                androidVrClientContext() to VR_UA,
+                iosClientContext() to IOS_UA,
+                androidClientContext() to ANDROID_UA,
+                tvClientContext() to TV_UA,
+                webClientContext() to UA
+            )
+        } else {
+            listOf(
+                androidClientContext() to ANDROID_UA,
+                tvClientContext() to TV_UA,
+                webClientContext() to UA,
+                iosClientContext() to IOS_UA
+            )
         }
 
         for ((context, userAgent) in contexts) {
@@ -579,24 +592,20 @@ class SmartTubeInnertubeExtractor(
                     dashManifestUrl = dashDataUri,
                     hlsManifestUrl = hlsManifest
                 )
+            } else if (!authToken.isNullOrBlank() && dashDataUri != null && allVideoFormats.isNotEmpty() && allAudioFormats.isNotEmpty()) {
+                // Authenticated requests have full DASH authorization without 403 range restrictions
+                ExtractorStreamResult(
+                    url = dashDataUri,
+                    container = "adaptive",
+                    quality = "DASH",
+                    extractorName = "SmartTubeInnertube",
+                    videoFormats = allVideoFormats,
+                    audioFormats = allAudioFormats,
+                    dashManifestUrl = dashDataUri,
+                    hlsManifestUrl = hlsManifest
+                )
             } else {
                 bestProgressive(formats, allVideoFormats, allAudioFormats, dashDataUri, hlsManifest)
-                    ?: if (dashDataUri != null && allVideoFormats.isNotEmpty() && allAudioFormats.isNotEmpty()) {
-                        ExtractorStreamResult(
-                            url = dashDataUri,
-                            container = "adaptive",
-                            quality = "DASH",
-                            extractorName = "SmartTubeInnertube",
-                            videoFormats = allVideoFormats,
-                            audioFormats = allAudioFormats,
-                            dashManifestUrl = dashDataUri,
-                            hlsManifestUrl = hlsManifest
-                        )
-                    } else if (preferVideo) {
-                        bestAdaptiveVideo(adaptive, allVideoFormats, allAudioFormats, dashDataUri, hlsManifest)
-                    } else {
-                        bestAdaptiveAudio(adaptive, allVideoFormats, allAudioFormats, dashDataUri, hlsManifest)
-                    }
             }
 
             if (result != null) {

@@ -346,13 +346,43 @@ constructor(
                     }
                 }
 
-                override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
-                    // Extract runtime inventory from Media3 tracks. Auto rows (isAuto=true) are
-                    // prepended by QualitySelectionEngine and are never counted as real formats.
-                    val vFormats = qualitySelectionEngine.extractVideoFormats(tracks).toImmutableList()
-                    val aFormats = qualitySelectionEngine.extractAudioFormats(tracks).toImmutableList()
-                    val selV = vFormats.firstOrNull { it.isSelected && !it.isAuto }
-                    val selA = aFormats.firstOrNull { it.isSelected && !it.isAuto }
+                    override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
+                        // Extract runtime inventory from Media3 tracks. Auto rows (isAuto=true) are
+                        // prepended by QualitySelectionEngine and are never counted as real formats.
+                        val vFormats = qualitySelectionEngine.extractVideoFormats(tracks).toImmutableList()
+                        val aFormats = qualitySelectionEngine.extractAudioFormats(tracks).toImmutableList()
+                        val selV = vFormats.firstOrNull { it.isSelected && !it.isAuto }
+                        val selA = aFormats.firstOrNull { it.isSelected && !it.isAuto }
+
+                        // Auto-lock Full HD 1080p if currently playing lower resolution in BALANCED mode
+                        if (_playerState.value.qualityPreset == com.deepeye.musicpro.player.format.QualityPreset.BALANCED) {
+                            val has1080p = tracks.groups.any { group ->
+                                group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO &&
+                                (0 until group.length).any { group.getTrackFormat(it).height == 1080 }
+                            }
+                            val is1080pSelected = tracks.groups.any { group ->
+                                group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO &&
+                                (0 until group.length).any { group.isTrackSelected(it) && group.getTrackFormat(it).height == 1080 }
+                            }
+                            if (has1080p && !is1080pSelected) {
+                                for (group in tracks.groups) {
+                                    if (group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO) {
+                                        for (tIdx in 0 until group.length) {
+                                            val tf = group.getTrackFormat(tIdx)
+                                            if (tf.height == 1080) {
+                                                val override1080 = androidx.media3.common.TrackSelectionOverride(group.mediaTrackGroup, tIdx)
+                                                val b = player.trackSelectionParameters.buildUpon()
+                                                b.clearOverridesOfType(androidx.media3.common.C.TRACK_TYPE_VIDEO)
+                                                b.addOverride(override1080)
+                                                player.trackSelectionParameters = b.build()
+                                                android.util.Log.i("DeepEyeHQ", "event=auto_locked_1080p_override id=${tf.id} bitrate=${tf.bitrate}")
+                                                break
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
 
                     val vFormat = player.videoFormat
                     val aFormat = player.audioFormat
@@ -1038,15 +1068,15 @@ constructor(
         val tracks = player.currentTracks
         val isMultiTrackDASH = tracks.groups.any { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO && it.length > 1 }
         val snapshot = smartTubePlaybackFormatRepository.snapshot.value
-        val dashUrl = snapshot.dashManifestUrl ?: snapshot.hlsManifestUrl
+        val manifestUrl = snapshot.hlsManifestUrl ?: snapshot.dashManifestUrl
         val currentItem = _playerState.value.currentItem
-        if (!isMultiTrackDASH && dashUrl != null && currentItem != null && preset != com.deepeye.musicpro.player.format.QualityPreset.AUTO) {
+        if (!isMultiTrackDASH && manifestUrl != null && currentItem != null && preset != com.deepeye.musicpro.player.format.QualityPreset.AUTO) {
             scope.launch {
                 try {
                     val pos = player.currentPosition.coerceAtLeast(0L)
                     val isPlaying = player.isPlaying
                     val updatedItem = when (currentItem) {
-                        is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(dashUrl), isVideo = true)
+                        is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(manifestUrl), isVideo = true)
                         is MediaItem.Local -> currentItem
                     }
                     player.pause()
@@ -1055,13 +1085,40 @@ constructor(
                     if (pos > 0L) player.seekTo(pos)
                     player.prepare()
                     if (isPlaying) player.play()
-                    android.util.Log.i("DeepEyeHQ", "event=preset_switched_dash preset=$preset")
+                    android.util.Log.i("DeepEyeHQ", "event=preset_switched_manifest manifestUrl=$manifestUrl preset=$preset")
                 } catch (e: Exception) {
-                    android.util.Log.e("DeepEyeHQ", "event=preset_dash_switch_failed error=${e.message}", e)
+                    android.util.Log.e("DeepEyeHQ", "event=preset_manifest_switch_failed error=${e.message}", e)
                 }
             }
         } else {
-            qualitySelectionEngine.applyPreset(player, preset)
+            val target1080 = if (preset == com.deepeye.musicpro.player.format.QualityPreset.BALANCED) {
+                var override1080: androidx.media3.common.TrackSelectionOverride? = null
+                for (group in player.currentTracks.groups) {
+                    if (group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO) {
+                        for (tIdx in 0 until group.length) {
+                            val tf = group.getTrackFormat(tIdx)
+                            if (tf.height == 1080) {
+                                override1080 = androidx.media3.common.TrackSelectionOverride(group.mediaTrackGroup, tIdx)
+                                break
+                            }
+                        }
+                    }
+                    if (override1080 != null) break
+                }
+                override1080
+            } else null
+
+            val builder = player.trackSelectionParameters.buildUpon()
+            builder.clearOverridesOfType(androidx.media3.common.C.TRACK_TYPE_VIDEO)
+            if (target1080 != null) {
+                builder.addOverride(target1080)
+            } else {
+                builder.setMinVideoSize(1920, 1080)
+                builder.setMaxVideoSize(1920, 1080)
+                builder.setMaxVideoBitrate(Int.MAX_VALUE)
+                builder.setMaxVideoFrameRate(60)
+            }
+            player.trackSelectionParameters = builder.build()
         }
     }
 
@@ -1092,14 +1149,14 @@ constructor(
             android.util.Log.i("DeepEyeHQ", "event=video_format_applied_in_player formatId=${format.id} height=${format.height}")
         } else {
             val snapshot = smartTubePlaybackFormatRepository.snapshot.value
-            val dashUrl = snapshot.dashManifestUrl ?: snapshot.hlsManifestUrl
-            if (dashUrl != null && currentItem != null) {
+            val manifestUrl = snapshot.hlsManifestUrl ?: snapshot.dashManifestUrl
+            if (manifestUrl != null && currentItem != null) {
                 scope.launch {
                     try {
                         val pos = player.currentPosition.coerceAtLeast(0L)
                         val isPlaying = player.isPlaying
                         val updatedItem = when (currentItem) {
-                            is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(dashUrl), isVideo = true)
+                            is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(manifestUrl), isVideo = true)
                             is MediaItem.Local -> currentItem
                         }
                         player.pause()
@@ -1108,9 +1165,9 @@ constructor(
                         if (pos > 0L) player.seekTo(pos)
                         player.prepare()
                         if (isPlaying) player.play()
-                        android.util.Log.i("DeepEyeHQ", "event=video_format_switched_dash formatId=${format.id} height=${format.height}")
+                        android.util.Log.i("DeepEyeHQ", "event=video_format_switched_manifest formatId=${format.id} height=${format.height}")
                     } catch (e: Exception) {
-                        android.util.Log.e("DeepEyeHQ", "event=video_format_dash_switch_failed error=${e.message}", e)
+                        android.util.Log.e("DeepEyeHQ", "event=video_format_manifest_switch_failed error=${e.message}", e)
                     }
                 }
             } else {
@@ -1145,14 +1202,14 @@ constructor(
             android.util.Log.i("DeepEyeHQ", "event=audio_format_applied_in_player formatId=${format.id}")
         } else {
             val snapshot = smartTubePlaybackFormatRepository.snapshot.value
-            val dashUrl = snapshot.dashManifestUrl ?: snapshot.hlsManifestUrl
-            if (dashUrl != null && currentItem != null) {
+            val manifestUrl = snapshot.hlsManifestUrl ?: snapshot.dashManifestUrl
+            if (manifestUrl != null && currentItem != null) {
                 scope.launch {
                     try {
                         val pos = player.currentPosition.coerceAtLeast(0L)
                         val isPlaying = player.isPlaying
                         val updatedItem = when (currentItem) {
-                            is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(dashUrl))
+                            is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(manifestUrl))
                             is MediaItem.Local -> currentItem
                         }
                         player.pause()
@@ -1161,9 +1218,9 @@ constructor(
                         if (pos > 0L) player.seekTo(pos)
                         player.prepare()
                         if (isPlaying) player.play()
-                        android.util.Log.i("DeepEyeHQ", "event=audio_format_switched_dash formatId=${format.id}")
+                        android.util.Log.i("DeepEyeHQ", "event=audio_format_switched_manifest formatId=${format.id}")
                     } catch (e: Exception) {
-                        android.util.Log.e("DeepEyeHQ", "event=audio_format_dash_switch_failed error=${e.message}", e)
+                        android.util.Log.e("DeepEyeHQ", "event=audio_format_manifest_switch_failed error=${e.message}", e)
                     }
                 }
             } else {

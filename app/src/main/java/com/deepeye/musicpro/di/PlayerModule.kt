@@ -64,9 +64,11 @@ object PlayerModule {
         val trackSelector = androidx.media3.exoplayer.trackselection.DefaultTrackSelector(context)
         trackSelector.setParameters(
             trackSelector.buildUponParameters()
-                .setPreferredVideoMimeTypes("video/av01", "video/vp9") // Prefer AV1/VP9 for highest quality
+                .setPreferredVideoMimeTypes("video/avc", "video/av01", "video/vp9") // Prefer AVC/AV1/VP9 for hardware acceleration and reliable 1080p rendering
+                .setMinVideoSize(1920, 1080) // Lock minimum to Full HD 1080p
+                .setMaxVideoSize(1920, 1080) // Default target: Full HD (1080p)
                 .setTunnelingEnabled(false) // Tunneling breaks AudioProcessors and causes video failure on many devices
-                .setForceHighestSupportedBitrate(false) // Don't force highest, let ExoPlayer adapt to network and device decoding limits
+                .setForceHighestSupportedBitrate(true) // Force highest supported bitrate for Full HD quality
                 .setAllowVideoNonSeamlessAdaptiveness(true)
         )
 
@@ -95,24 +97,21 @@ object PlayerModule {
                 var request = chain.request()
                 val urlStr = request.url.toString()
                 if (urlStr.contains("googlevideo.com")) {
-                    val isIos = urlStr.contains("c=IOS") || urlStr.contains("c=IPHONE")
-                    val isWeb = urlStr.contains("c=WEB")
                     val reqBuilder = request.newBuilder()
-                    if (isIos) {
-                        reqBuilder
-                            .header("User-Agent", "com.google.ios.youtube/20.10.1 (iPhone16,2; U; CPU iOS 18_3 like Mac OS X)")
-                            .removeHeader("Origin")
-                            .removeHeader("Referer")
-                    } else if (isWeb) {
-                        reqBuilder
-                            .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
-                            .header("Origin", "https://www.youtube.com")
-                            .header("Referer", "https://www.youtube.com/")
+                    val ua = when {
+                        urlStr.contains("c=ANDROID_VR") -> "com.google.android.apps.youtube.vr.oculus/1.61.48 (Linux; U; Android 12; Quest 3)"
+                        urlStr.contains("c=IOS") || urlStr.contains("c=IPHONE") -> "com.google.ios.youtube/20.10.1 (iPhone16,2; U; CPU iOS 18_3 like Mac OS X)"
+                        urlStr.contains("c=TVHTML5") -> "Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/76.0.3809.146 TV Safari/537.36"
+                        urlStr.contains("c=WEB") -> "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+                        else -> "com.google.android.youtube/20.10.33 (Linux; U; Android 12) gzip"
+                    }
+                    reqBuilder.header("User-Agent", ua)
+                    if (urlStr.contains("c=WEB") || urlStr.contains("c=TVHTML5")) {
+                        reqBuilder.header("Origin", "https://www.youtube.com")
+                        reqBuilder.header("Referer", "https://www.youtube.com/")
                     } else {
-                        reqBuilder
-                            .header("User-Agent", "com.google.android.youtube/20.10.33 (Linux; U; Android 12) gzip")
-                            .removeHeader("Origin")
-                            .removeHeader("Referer")
+                        reqBuilder.removeHeader("Origin")
+                        reqBuilder.removeHeader("Referer")
                     }
                     request = reqBuilder.build()
                 }

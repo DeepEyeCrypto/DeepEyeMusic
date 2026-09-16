@@ -32,7 +32,7 @@ data class PlayerState(
     val availableAudioFormats: ImmutableList<com.deepeye.musicpro.player.format.DeepEyeFormat> = persistentListOf(),
     val selectedVideoFormat: com.deepeye.musicpro.player.format.DeepEyeFormat? = null,
     val selectedAudioFormat: com.deepeye.musicpro.player.format.DeepEyeFormat? = null,
-    val qualityPreset: com.deepeye.musicpro.player.format.QualityPreset = com.deepeye.musicpro.player.format.QualityPreset.AUTO,
+    val qualityPreset: com.deepeye.musicpro.player.format.QualityPreset = com.deepeye.musicpro.player.format.QualityPreset.BALANCED,
     val bufferProfile: com.deepeye.musicpro.player.format.BufferProfile = com.deepeye.musicpro.player.format.BufferProfile.BALANCED,
     val bufferedPercentage: Int = 0,
     val bufferedDurationMs: Long = 0L,

@@ -165,8 +165,9 @@ class QualitySelectionEngine @Inject constructor(
                 builder.setMaxVideoFrameRate(30)
             }
             QualityPreset.BALANCED -> {
+                builder.setMinVideoSize(1920, 1080)
                 builder.setMaxVideoSize(1920, 1080)
-                builder.setMaxVideoBitrate(6_000_000)
+                builder.setMaxVideoBitrate(Int.MAX_VALUE)
                 builder.setMaxVideoFrameRate(60)
             }
             QualityPreset.HIGH_QUALITY -> {

@@ -356,20 +356,24 @@ fun DeepEyeVideoPlayerOverlay(
                                 if (abs(dy) > slopThreshold || abs(dx) > slopThreshold) {
                                     isDragging = true
                                     lastTapTime = 0L
-                                    if (currentScale > 1.15f) {
+                                    // VLC gesture priorities:
+                                    // 1. If 2 fingers or scale > 1.15f with diagonal/multi-touch -> Pan
+                                    // 2. If single finger vertical swipe -> Brightness (Left half) or Volume (Right half)
+                                    // 3. If single finger horizontal swipe -> Scrub / Seek
+                                    if (abs(dy) > abs(dx) * 1.1f) {
+                                        if (isFullscreen && dy > 80f && downPos.y < screenHeight * 0.20f) {
+                                            dragDirection = 4 // Exit Fullscreen swipe down from top edge
+                                        } else if (downPos.x < screenWidth * 0.5f) {
+                                            dragDirection = 2 // Brightness (Left 50% screen)
+                                        } else {
+                                            dragDirection = 3 // Volume (Right 50% screen)
+                                        }
+                                    } else if (abs(dx) > abs(dy) * 1.1f) {
+                                        dragDirection = 1 // Scrub / Seek (Horizontal)
+                                    } else if (currentScale > 1.15f) {
                                         dragDirection = 5 // Pan zoomed video
                                         initialOffsetX = currentOffsetX
                                         initialOffsetY = currentOffsetY
-                                    } else if (abs(dy) > abs(dx) * 1.2f) {
-                                        if (isFullscreen && dy > 60f && downPos.y < screenHeight * 0.25f) {
-                                            dragDirection = 4 // Exit Fullscreen
-                                        } else if (downPos.x < screenWidth * 0.5f) {
-                                            dragDirection = 2 // Brightness (Left half)
-                                        } else {
-                                            dragDirection = 3 // Volume (Right half)
-                                        }
-                                    } else {
-                                        dragDirection = 1 // Scrub / Seek (Horizontal)
                                     }
                                 }
                             }
