@@ -195,6 +195,15 @@ constructor(
 
     fun removeAutoplayQueueItem(videoId: String) = playerController.removeAutoplayQueueItem(videoId)
 
+    fun toggleVideoMode() {
+        val current = playerState.value.currentItem ?: return
+        if (current is com.deepeye.musicpro.domain.model.MediaItem.Remote) {
+            val targetIsVideo = !playerState.value.isVideo
+            val currentPos = playerController.player.currentPosition
+            playerController.playMedia(current.copy(isVideo = targetIsVideo), seekPosition = currentPos)
+        }
+    }
+
     fun playMedia(item: com.deepeye.musicpro.domain.model.MediaItem) {
         playerController.playMedia(item)
     }

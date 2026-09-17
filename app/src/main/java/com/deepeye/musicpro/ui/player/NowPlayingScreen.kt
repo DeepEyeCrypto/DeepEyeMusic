@@ -541,6 +541,19 @@ fun AudioNowPlayingLayout(
                         modifier = Modifier.align(Alignment.CenterEnd),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        if (playerState.currentItem is MediaItem.Remote) {
+                            IconButton(
+                                onClick = { viewModel.toggleVideoMode() },
+                                modifier = Modifier.size(44.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Videocam,
+                                    contentDescription = "Switch to Video",
+                                    tint = finalAccentColor,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+                        }
                         IconButton(onClick = onNavigateToPersonalization, modifier = Modifier.size(44.dp)) {
                             Icon(Icons.Default.AutoAwesome, "Personalization", tint = finalAccentColor, modifier = Modifier.size(24.dp))
                         }
@@ -612,7 +625,12 @@ fun AudioNowPlayingLayout(
                                     )
                                     .clip(RoundedCornerShape(28.dp))
                                     .background(Brush.linearGradient(listOf(Color(0xFF2A2A35), Color(0xFF1E1E28))))
-                                    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(28.dp)),
+                                    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(28.dp))
+                                    .then(
+                                        if (innerItem is MediaItem.Remote) {
+                                            Modifier.clickable { viewModel.toggleVideoMode() }
+                                        } else Modifier
+                                    ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(

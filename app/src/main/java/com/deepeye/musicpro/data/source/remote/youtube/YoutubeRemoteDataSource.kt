@@ -211,67 +211,34 @@ constructor(
             val cleanId = videoId.trim().take(11)
             Log.d("YoutubeDS", "Resolving stream for video ID: $cleanId (preferVideo=$preferVideo)")
 
-            // ⚡ TIER 1: Direct SmartTube Innertube (1080p DASH MPD Dual-Stream) & NewPipe Extractor
-            if (preferVideo) {
-                // For video: Prefer SmartTube Innertube which synthesizes Full HD 1080p DASH MPD with hardware decoding
-                try {
-                    val t0 = System.currentTimeMillis()
-                    val directResult = kotlinx.coroutines.withTimeoutOrNull(6000L) {
-                        extractSmartTube(cleanId, preferVideo = true)
-                    }
-                    if (directResult != null) {
-                        val tookMs = System.currentTimeMillis() - t0
-                        rankingManager.recordSuccess(com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.SMARTTUBE)
-                        Log.i("YoutubeDS", "⚡ TIER 1 SmartTube 1080p Extraction SUCCEEDED in ${tookMs}ms for $cleanId")
-                        return@withContext directResult
-                    }
-                } catch (e: Exception) {
-                    Log.w("YoutubeDS", "TIER 1 SmartTube Extraction error for $cleanId: ${e.message}")
+            // ⚡ TIER 1: NewPipe Extractor (Rock-solid, official NewPipe v0.26.5 engine)
+            try {
+                val t0 = System.currentTimeMillis()
+                val newPipeResult = kotlinx.coroutines.withTimeoutOrNull(8000L) {
+                    extractNewPipe(cleanId, preferVideo)
                 }
+                if (newPipeResult != null) {
+                    val tookMs = System.currentTimeMillis() - t0
+                    Log.i("YoutubeDS", "⚡ TIER 1 NewPipe Extraction SUCCEEDED in ${tookMs}ms for $cleanId (preferVideo=$preferVideo)")
+                    return@withContext newPipeResult
+                }
+            } catch (e: Exception) {
+                Log.w("YoutubeDS", "TIER 1 NewPipe Extraction error for $cleanId: ${e.message}")
+            }
 
-                try {
-                    val t0 = System.currentTimeMillis()
-                    val newPipeResult = kotlinx.coroutines.withTimeoutOrNull(6000L) {
-                        extractNewPipe(cleanId, preferVideo = true)
-                    }
-                    if (newPipeResult != null) {
-                        val tookMs = System.currentTimeMillis() - t0
-                        Log.i("YoutubeDS", "⚡ TIER 1 NewPipe Extraction SUCCEEDED in ${tookMs}ms for $cleanId")
-                        return@withContext newPipeResult
-                    }
-                } catch (e: Exception) {
-                    Log.w("YoutubeDS", "TIER 1 NewPipe Extraction error for $cleanId: ${e.message}")
+            // ⚡ TIER 1 Fallback: SmartTube Extractor
+            try {
+                val t0 = System.currentTimeMillis()
+                val directResult = kotlinx.coroutines.withTimeoutOrNull(6000L) {
+                    extractSmartTube(cleanId, preferVideo)
                 }
-            } else {
-                // For audio: Try NewPipe then SmartTube
-                try {
-                    val t0 = System.currentTimeMillis()
-                    val newPipeResult = kotlinx.coroutines.withTimeoutOrNull(6000L) {
-                        extractNewPipe(cleanId, preferVideo = false)
-                    }
-                    if (newPipeResult != null) {
-                        val tookMs = System.currentTimeMillis() - t0
-                        Log.i("YoutubeDS", "⚡ TIER 1 NewPipe Extraction SUCCEEDED in ${tookMs}ms for $cleanId")
-                        return@withContext newPipeResult
-                    }
-                } catch (e: Exception) {
-                    Log.w("YoutubeDS", "TIER 1 NewPipe Extraction error for $cleanId: ${e.message}")
+                if (directResult != null) {
+                    val tookMs = System.currentTimeMillis() - t0
+                    Log.i("YoutubeDS", "⚡ TIER 1 Fallback SmartTube Extraction SUCCEEDED in ${tookMs}ms for $cleanId")
+                    return@withContext directResult
                 }
-
-                try {
-                    val t0 = System.currentTimeMillis()
-                    val directResult = kotlinx.coroutines.withTimeoutOrNull(6000L) {
-                        extractSmartTube(cleanId, preferVideo = false)
-                    }
-                    if (directResult != null) {
-                        val tookMs = System.currentTimeMillis() - t0
-                        rankingManager.recordSuccess(com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.SMARTTUBE)
-                        Log.i("YoutubeDS", "⚡ TIER 1 SmartTube Extraction SUCCEEDED in ${tookMs}ms for $cleanId")
-                        return@withContext directResult
-                    }
-                } catch (e: Exception) {
-                    Log.w("YoutubeDS", "TIER 1 SmartTube Extraction error for $cleanId: ${e.message}")
-                }
+            } catch (e: Exception) {
+                Log.w("YoutubeDS", "TIER 1 SmartTube Extraction error for $cleanId: ${e.message}")
             }
 
             // 🔄 TIER 2: Direct Headless WebView + Alt Extractor (Bypasses bot gates & PO-token blocks)
