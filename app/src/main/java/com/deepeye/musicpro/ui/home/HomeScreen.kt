@@ -4,112 +4,153 @@
 package com.deepeye.musicpro.ui.home
 
 import android.net.Uri
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.deepeye.musicpro.ui.components.DynamicLabel
-import com.deepeye.musicpro.ui.components.SecondaryLabel
-import com.deepeye.musicpro.ui.components.TertiaryLabel
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.Brush
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.recommendation.RecommendationRow
 import com.deepeye.musicpro.domain.recommendation.VideoItem
+import com.deepeye.musicpro.ui.components.GlassCard
 import com.deepeye.musicpro.ui.components.ShimmerBox
-
-import com.deepeye.musicpro.ui.theme.GlowTeal
-import com.deepeye.musicpro.ui.theme.ElectricViolet
-import com.deepeye.musicpro.ui.theme.RichBlack
-import com.deepeye.musicpro.ui.theme.TextPrimary
-import com.deepeye.musicpro.ui.theme.TextSecondary
-import com.deepeye.musicpro.ui.theme.GlowOrange
-import com.deepeye.musicpro.ui.theme.NeonCyan
-import com.deepeye.musicpro.ui.theme.GlassBorderLight
 import com.deepeye.musicpro.ui.motion.premiumScrollHaptics
+import com.deepeye.musicpro.ui.theme.*
+import java.util.Calendar
 
-val White = Color.White
+private val MoodFilters = listOf(
+    "All",
+    "⚡ Energize",
+    "🌌 Chill & Relax",
+    "🎧 Studio Hi-Fi",
+    "🔥 Trending",
+    "📻 Focus & Flow",
+    "🌙 Night Drive"
+)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopBar() {
-    com.deepeye.musicpro.ui.components.GlassTopAppBar(
-        title = {
+fun HomeTopBar(
+    onSearchClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+) {
+    val greeting = remember { getDynamicGreeting() }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "DEEPEYE",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.5.sp,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(NeonCyan)
+                        .shadow(6.dp, CircleShape, spotColor = NeonCyan)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "PRO",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 1.sp,
+                    color = GlowOrange,
+                    modifier = Modifier
+                        .background(GlowOrange.copy(alpha = 0.15f), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "DeepEye Music",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                text = greeting,
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.White.copy(alpha = 0.6f)
             )
-        },
-        navigationIcon = {
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Box(
                 modifier = Modifier
-                    .padding(start = 16.dp, end = 12.dp)
-                    .size(36.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
-                    .background(GlowTeal.copy(alpha = 0.2f)),
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                    .clickable(onClick = onSearchClick),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile",
-                    tint = GlowTeal,
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = Color.White,
                     modifier = Modifier.size(20.dp)
                 )
             }
-        },
-        actions = {
-            IconButton(onClick = { /* Search */ }) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
-            }
-            IconButton(onClick = { /* Settings */ }) {
+
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                    .clickable(onClick = onSettingsClick),
+                contentAlignment = Alignment.Center
+            ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Settings",
-                    tint = MaterialTheme.colorScheme.onBackground
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
-    )
+    }
 }
 
 @Composable
@@ -123,219 +164,380 @@ fun HomeScreen(
     val recs by viewModel.recommendations.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
-
     val listState = rememberLazyListState()
 
+    var selectedMoodIndex by remember { mutableIntStateOf(0) }
+
+    val cardWidth = remember(windowSizeClass) {
+        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) 148.dp else 168.dp
+    }
+
     Scaffold(
-        topBar = { HomeTopBar() },
+        topBar = {
+            HomeTopBar(
+                onSearchClick = { /* Search Navigation */ },
+                onSettingsClick = { /* Settings Navigation */ }
+            )
+        },
         containerColor = Color.Transparent
     ) { paddingValues ->
         LazyColumn(
             state = listState,
             contentPadding = PaddingValues(
                 top = paddingValues.calculateTopPadding(),
-                bottom = 160.dp // High bottom padding for mini-player overlap!
+                bottom = 180.dp // mini-player and nav-bar safe inset
             ),
-            modifier = Modifier.fillMaxSize().premiumScrollHaptics(listState)
+            modifier = Modifier
+                .fillMaxSize()
+                .premiumScrollHaptics(listState)
         ) {
-            // ── Hero section ──────────────────────────
-        item {
-            HeroSection()
-        }
-
-        // ── Refresh Indicator (Network reload in progress) ──
-        if (isRefreshing && recs != null) {
+            // 1. Mood / Vibe Filter Carousel
             item {
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp),
-                    color = GlowTeal,
-                    trackColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
-                )
-            }
-        }
-
-        // ── Error/Empty State with Retry ───────────────────
-        if (recs == null && error != null) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = "Unable to load recommendations",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.error,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = error ?: "An unknown error occurred",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = { viewModel.loadRecommendations() },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = GlowTeal,
-                            contentColor = Color.Black
-                        )
+                    itemsIndexed(MoodFilters) { index, mood ->
+                        val isSelected = selectedMoodIndex == index
+                        val bgBrush = if (isSelected) {
+                            Brush.horizontalGradient(listOf(NeonCyan.copy(alpha = 0.25f), ElectricViolet.copy(alpha = 0.35f)))
+                        } else {
+                            Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.05f), Color.White.copy(alpha = 0.05f)))
+                        }
+                        val borderColor = if (isSelected) NeonCyan.copy(alpha = 0.8f) else Color.White.copy(alpha = 0.12f)
+                        val textColor = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f)
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(bgBrush)
+                                .border(1.dp, borderColor, RoundedCornerShape(20.dp))
+                                .clickable { selectedMoodIndex = index }
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = mood,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = textColor
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // 2. Quick-Play 2-Column Grid (Spotify / Apple Music style top 6 tracks)
+            recs?.perfectForNow?.items?.take(6)?.takeIf { it.isNotEmpty() }?.let { quickItems ->
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 6.dp)
                     ) {
-                        Text("Retry")
+                        val rows = quickItems.chunked(2)
+                        rows.forEach { rowItems ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                rowItems.forEach { video ->
+                                    QuickGridItem(
+                                        video = video,
+                                        modifier = Modifier.weight(1f),
+                                        onClick = {
+                                            playMusic(video, quickItems, playerViewModel, onNavigateToNowPlaying)
+                                        }
+                                    )
+                                }
+                                if (rowItems.size == 1) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
+            }
+
+            // 3. Featured Cinematic Hero Banner
+            item {
+                FeaturedHeroBanner(
+                    onPlayMix = {
+                        recs?.perfectForNow?.items?.firstOrNull()?.let { firstVideo ->
+                            playMusic(firstVideo, recs?.perfectForNow?.items ?: emptyList(), playerViewModel, onNavigateToNowPlaying)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // 4. Pull-to-refresh / background sync progress line
+            if (isRefreshing && recs != null) {
+                item {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 4.dp)
+                            .clip(RoundedCornerShape(2.dp)),
+                        color = NeonCyan,
+                        trackColor = Color.White.copy(alpha = 0.08f)
+                    )
+                }
+            }
+
+            // 5. Error & Retry State
+            if (recs == null && error != null) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Connection Offline",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = error ?: "Check network and tap to reload recommendations.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White.copy(alpha = 0.7f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { viewModel.loadRecommendations() },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = NeonCyan,
+                                contentColor = Color.Black
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Retry", fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
+
+            // 6. Recommendation Carousels
+            recs?.let { result ->
+                // Because You Listened
+                items(result.becauseYouListened) { row ->
+                    ModernRecommendationRow(
+                        row = row,
+                        cardWidth = cardWidth,
+                        accentColor = NeonCyan,
+                        onVideoClick = { video ->
+                            playMusic(video, row.items, playerViewModel, onNavigateToNowPlaying)
+                        }
+                    )
+                }
+
+                // Perfect for right now
+                item {
+                    ModernRecommendationRow(
+                        row = result.perfectForNow,
+                        cardWidth = cardWidth,
+                        accentColor = GlowOrange,
+                        isHighlighted = true,
+                        onVideoClick = { video ->
+                            playMusic(video, result.perfectForNow.items, playerViewModel, onNavigateToNowPlaying)
+                        }
+                    )
+                }
+
+                // Favorite artists
+                items(result.favoriteArtists) { row ->
+                    ModernRecommendationRow(
+                        row = row,
+                        cardWidth = cardWidth,
+                        accentColor = ElectricViolet,
+                        onVideoClick = { video ->
+                            playMusic(video, row.items, playerViewModel, onNavigateToNowPlaying)
+                        }
+                    )
+                }
+
+                // Trending
+                item {
+                    ModernRecommendationRow(
+                        row = result.trending,
+                        cardWidth = cardWidth,
+                        accentColor = NeonCyan,
+                        onVideoClick = { video ->
+                            playMusic(video, result.trending.items, playerViewModel, onNavigateToNowPlaying)
+                        }
+                    )
+                }
+
+                // Genre dives
+                items(result.genreDive) { row ->
+                    ModernRecommendationRow(
+                        row = row,
+                        cardWidth = cardWidth,
+                        accentColor = GlowTeal,
+                        onVideoClick = { video ->
+                            playMusic(video, row.items, playerViewModel, onNavigateToNowPlaying)
+                        }
+                    )
+                }
+
+                // Hidden gems
+                item {
+                    ModernRecommendationRow(
+                        row = result.hiddenGems,
+                        cardWidth = cardWidth,
+                        accentColor = GlowOrange,
+                        isHighlighted = true,
+                        onVideoClick = { video ->
+                            playMusic(video, result.hiddenGems.items, playerViewModel, onNavigateToNowPlaying)
+                        }
+                    )
+                }
+            }
+
+            // Loading Shimmer Skeletons
+            if (isRefreshing && recs == null) {
+                items(4) {
+                    ShimmerRecommendationRow(cardWidth = cardWidth)
+                }
+            }
         }
-
-        // ── Recommendation rows ───────────────────
-        recs?.let { result ->
-
-            // Because you listened
-            items(result.becauseYouListened) { row ->
-                RecommendationRowUI(row, windowSizeClass) { video ->
-                    playMusic(video, row.items, playerViewModel, onNavigateToNowPlaying)
-                }
-            }
-
-            // Perfect for right now
-            item {
-                RecommendationRowUI(result.perfectForNow, windowSizeClass, isHighlighted = true) { video ->
-                    playMusic(video, result.perfectForNow.items, playerViewModel, onNavigateToNowPlaying)
-                }
-            }
-
-            // Favorite artists
-            items(result.favoriteArtists) { row ->
-                RecommendationRowUI(row, windowSizeClass) { video ->
-                    playMusic(video, row.items, playerViewModel, onNavigateToNowPlaying)
-                }
-            }
-
-            // Trending
-            item {
-                RecommendationRowUI(result.trending, windowSizeClass) { video ->
-                    playMusic(video, result.trending.items, playerViewModel, onNavigateToNowPlaying)
-                }
-            }
-
-            // Genre dives
-            items(result.genreDive) { row ->
-                RecommendationRowUI(row, windowSizeClass) { video ->
-                    playMusic(video, row.items, playerViewModel, onNavigateToNowPlaying)
-                }
-            }
-
-            // Hidden gems
-            item {
-                RecommendationRowUI(result.hiddenGems, windowSizeClass, isHighlighted = true) { video ->
-                    playMusic(video, result.hiddenGems.items, playerViewModel, onNavigateToNowPlaying)
-                }
-            }
-        }
-        
-        // Loading shimmer
-        if (isRefreshing && recs == null) {
-            items(3) { ShimmerRecommendationRow() }
-        }
-        // Removed Spacer since contentPadding now handles bottom insets
     }
-    }
-}
-
-private fun playMusic(
-    video: VideoItem,
-    contextList: List<VideoItem>,
-    playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel,
-    onNavigateToNowPlaying: () -> Unit,
-) {
-    val mediaItems =
-        contextList.map {
-            MediaItem.Remote(
-                id = it.videoId,
-                title = it.title,
-                artist = it.artist,
-                artworkUri = Uri.parse("https://i.ytimg.com/vi/${it.videoId}/hqdefault.jpg"),
-                duration = 180000L, // Mock duration
-                isVideo = true,
-            )
-        }
-    val index = contextList.indexOfFirst { it.videoId == video.videoId }
-    playerViewModel.setQueue(mediaItems, if (index >= 0) index else 0)
-    onNavigateToNowPlaying()
 }
 
 @Composable
-fun HeroSection() {
-    var btcPrice by remember { mutableStateOf("Fetching BTC...") }
-    val timeFormatter = remember { java.text.SimpleDateFormat("hh:mm a", java.util.Locale.getDefault()) }
-    var timeString by remember { mutableStateOf(timeFormatter.format(java.util.Date())) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            try {
-                btcPrice = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                    val url = java.net.URL("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT")
-                    val connection = url.openConnection() as java.net.HttpURLConnection
-                    connection.connectTimeout = 3000
-                    connection.readTimeout = 3000
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val priceStr = response.substringAfter("\"price\":\"").substringBefore("\"")
-                    val formattedPrice = String.format("%,.2f", priceStr.toDoubleOrNull() ?: 0.0)
-                    "₿ $$formattedPrice"
-                }
-            } catch (e: Exception) {
-                if (btcPrice == "Fetching BTC...") {
-                    btcPrice = "₿ ---"
-                }
-            }
-            timeString = timeFormatter.format(java.util.Date())
-            kotlinx.coroutines.delay(5000) // Update every 5 seconds
+private fun QuickGridItem(
+    video: VideoItem,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
+) {
+    Box(
+        modifier = modifier
+            .height(56.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.07f))
+            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = "https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg",
+                contentDescription = video.title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp))
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = video.title,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
+            )
         }
     }
+}
 
-    val gradientBrush = remember {
-        androidx.compose.ui.graphics.Brush.linearGradient(
-            colors = listOf(
-                GlowOrange,
-                GlowTeal,
-                ElectricViolet
-            )
-        )
-    }
-
-    com.deepeye.musicpro.ui.components.GlassCard(
+@Composable
+private fun FeaturedHeroBanner(
+    onPlayMix: () -> Unit = {}
+) {
+    GlassCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
-        tintColor = ElectricViolet.copy(alpha = 0.1f),
-        cornerRadius = 24.dp,
-        refractionHeight = 0.4f
+            .padding(horizontal = 20.dp),
+        tintColor = ElectricViolet.copy(alpha = 0.15f),
+        cornerRadius = 20.dp,
+        refractionHeight = 0.35f
     ) {
         Box(
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(NeonCyan.copy(alpha = 0.2f), ElectricViolet.copy(alpha = 0.15f), Color.Transparent),
+                        center = androidx.compose.ui.geometry.Offset(200f, 100f),
+                        radius = 600f
+                    )
+                )
+                .padding(18.dp)
         ) {
-        Column {
-            Text(
-                text = "$btcPrice • $timeString",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    brush = gradientBrush
-                ),
-                fontWeight = FontWeight.ExtraBold,
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Here's what we curated for you today",
-                style = MaterialTheme.typography.titleMedium,
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.GraphicEq,
+                            contentDescription = null,
+                            tint = NeonCyan,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "SPATIAL STUDIO AUDIO",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.2.sp,
+                            color = NeonCyan
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Today's Discovery Mix",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Curated high-bitrate lossless audio for your session",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.65f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(NeonCyan)
+                        .shadow(8.dp, CircleShape, spotColor = NeonCyan)
+                        .clickable(onClick = onPlayMix),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.PlayArrow,
+                        contentDescription = "Play Mix",
+                        tint = Color.Black,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -347,76 +549,95 @@ fun RecommendationRowUI(
     isHighlighted: Boolean = false,
     onVideoClick: (VideoItem) -> Unit,
 ) {
+    val cardWidth = if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) 148.dp else 168.dp
+    ModernRecommendationRow(
+        row = row,
+        cardWidth = cardWidth,
+        accentColor = if (isHighlighted) GlowOrange else NeonCyan,
+        isHighlighted = isHighlighted,
+        onVideoClick = onVideoClick
+    )
+}
+
+@Composable
+fun ModernRecommendationRow(
+    row: RecommendationRow,
+    cardWidth: Dp,
+    accentColor: Color = NeonCyan,
+    isHighlighted: Boolean = false,
+    onVideoClick: (VideoItem) -> Unit,
+) {
     if (row.items.isEmpty()) return
 
-    Column(Modifier.fillMaxWidth().padding(vertical = 16.dp)) {
-        // Row header
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp)
+    ) {
+        // Row Header
         Row(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Colored dot indicator
                 Box(
                     modifier = Modifier
-                        .size(8.dp)
+                        .size(6.dp)
                         .clip(CircleShape)
-                        .background(if (isHighlighted) GlowTeal else ElectricViolet)
+                        .background(accentColor)
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Column {
-                    DynamicLabel(
+                    Text(
                         text = row.title,
-                        backgroundColor = Color.Black,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        
+                        color = Color.White
                     )
                     if (row.subtitle.isNotBlank()) {
-                        SecondaryLabel(
+                        Text(
                             text = row.subtitle,
-                            backgroundColor = Color.Black,
-                            style = MaterialTheme.typography.labelMedium,
-                            
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.55f)
                         )
                     }
                 }
             }
-            IconButton(
-                onClick = { /* show all */ },
+
+            Box(
                 modifier = Modifier
-                    .size(32.dp)
-                    .background(Color.White.copy(alpha = 0.05f), CircleShape)
+                    .size(30.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.06f))
+                    .clickable { /* View all */ },
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = "See all",
-                    tint = GlowTeal,
-                    modifier = Modifier.size(16.dp)
+                    tint = accentColor,
+                    modifier = Modifier.size(15.dp)
                 )
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Horizontal scrollable cards
+        // Horizontal Carousel
         val rowState = rememberLazyListState()
         LazyRow(
             state = rowState,
             modifier = Modifier.premiumScrollHaptics(rowState),
             contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            // Composite key (index + videoId): recommendation rows can legitimately
-            // contain the same videoId more than once, and a plain videoId key crashes
-            // Compose with "Key was already used". Index guarantees uniqueness.
             itemsIndexed(row.items, key = { index, video -> "$index-${video.videoId}" }) { _, video ->
-                VideoRecommendationCard(
+                ModernVideoCard(
                     video = video,
-                    cardWidth = 100.dp,
+                    cardWidth = cardWidth,
                     onClick = { onVideoClick(video) },
                 )
             }
@@ -425,7 +646,7 @@ fun RecommendationRowUI(
 }
 
 @Composable
-fun VideoRecommendationCard(
+fun ModernVideoCard(
     video: VideoItem,
     cardWidth: Dp,
     onClick: () -> Unit = {},
@@ -433,20 +654,20 @@ fun VideoRecommendationCard(
     Column(
         modifier = Modifier
             .width(cardWidth)
-            .clickable(onClick = onClick)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            )
     ) {
-        // Thumbnail with 24dp radius and glass border
+        // Thumbnail Card
         Box(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1f) // Cinematic square for albums/mixes
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color.White.copy(0.05f))
-                .border(
-                    width = 1.dp,
-                    color = GlassBorderLight,
-                    shape = RoundedCornerShape(24.dp)
-                ),
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(18.dp))
+                .background(Color.White.copy(alpha = 0.05f))
+                .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(18.dp))
         ) {
             AsyncImage(
                 model = "https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg",
@@ -454,101 +675,130 @@ fun VideoRecommendationCard(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
             )
-            
-            // Play overlay centered
+
+            // Bottom Gradient Overlay for readability
             Box(
-                Modifier.fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f)),
+                            startY = 100f
+                        )
+                    )
+            )
+
+            // Duration Pill Badge
+            if (video.duration.isNotBlank()) {
                 Box(
-                    Modifier.size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.4f))
-                        .border(1.dp, Color.White.copy(0.1f), CircleShape),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                        .background(Color.Black.copy(alpha = 0.75f), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.PlayCircle,
-                        contentDescription = "Play",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
+                    Text(
+                        text = video.duration,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
                     )
                 }
             }
-
-            // Duration badge
-            Box(
-                Modifier.align(Alignment.BottomEnd)
-                    .padding(8.dp)
-                    .background(
-                        RichBlack.copy(0.85f),
-                        RoundedCornerShape(8.dp),
-                    )
-                    .padding(horizontal = 6.dp, vertical = 4.dp),
-            ) {
-                TertiaryLabel(
-                    text = video.duration,
-                    backgroundColor = RichBlack,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        DynamicLabel(
+        // Title (2 lines max)
+        Text(
             text = video.title,
-            backgroundColor = Color.Black,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
+            color = Color.White,
             maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            
+            overflow = TextOverflow.Ellipsis
         )
-        Spacer(Modifier.height(4.dp))
-        SecondaryLabel(
-            text = video.artist,
-            backgroundColor = Color.Black,
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            
-        )
+
+        // Artist (1 line)
+        if (video.artist.isNotBlank()) {
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = video.artist,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.6f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
 @Composable
-fun ShimmerRecommendationRow() {
-    Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+fun ShimmerRecommendationRow(cardWidth: Dp = 148.dp) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp)
+    ) {
         Row(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
-                ShimmerBox(Modifier.width(150.dp).height(20.dp).clip(RoundedCornerShape(8.dp)))
+                ShimmerBox(Modifier.width(140.dp).height(18.dp).clip(RoundedCornerShape(6.dp)))
                 Spacer(Modifier.height(4.dp))
-                ShimmerBox(Modifier.width(100.dp).height(12.dp).clip(RoundedCornerShape(8.dp)))
+                ShimmerBox(Modifier.width(90.dp).height(12.dp).clip(RoundedCornerShape(4.dp)))
             }
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(12.dp))
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             items(4) {
-                Column(Modifier.width(170.dp)) { // Match the new card width roughly
-                    // Match the 24dp rounded corner and square ratio of new cards
-                    ShimmerBox(Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(24.dp)))
-                    Spacer(Modifier.height(12.dp))
-                    ShimmerBox(Modifier.fillMaxWidth(0.8f).height(16.dp).clip(RoundedCornerShape(4.dp)))
-                    Spacer(Modifier.height(6.dp))
-                    ShimmerBox(Modifier.width(100.dp).height(12.dp).clip(RoundedCornerShape(4.dp)))
+                Column(Modifier.width(cardWidth)) {
+                    ShimmerBox(Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(18.dp)))
+                    Spacer(Modifier.height(8.dp))
+                    ShimmerBox(Modifier.fillMaxWidth(0.85f).height(14.dp).clip(RoundedCornerShape(4.dp)))
+                    Spacer(Modifier.height(4.dp))
+                    ShimmerBox(Modifier.width(80.dp).height(12.dp).clip(RoundedCornerShape(4.dp)))
                 }
             }
         }
+    }
+}
+
+private fun playMusic(
+    video: VideoItem,
+    contextList: List<VideoItem>,
+    playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel,
+    onNavigateToNowPlaying: () -> Unit,
+) {
+    val mediaItems = contextList.map {
+        MediaItem.Remote(
+            id = it.videoId,
+            title = it.title,
+            artist = it.artist,
+            artworkUri = Uri.parse("https://i.ytimg.com/vi/${it.videoId}/hqdefault.jpg"),
+            duration = 180000L,
+            isVideo = true,
+        )
+    }
+    val index = contextList.indexOfFirst { it.videoId == video.videoId }
+    playerViewModel.setQueue(mediaItems, if (index >= 0) index else 0)
+    onNavigateToNowPlaying()
+}
+
+private fun getDynamicGreeting(): String {
+    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+    return when (hour) {
+        in 5..11 -> "Good Morning ☀️"
+        in 12..16 -> "Good Afternoon 🌤️"
+        in 17..21 -> "Good Evening 🌆"
+        else -> "Night Owl Session 🌙"
     }
 }
