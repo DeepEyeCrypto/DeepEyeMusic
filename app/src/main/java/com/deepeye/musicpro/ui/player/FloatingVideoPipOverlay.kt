@@ -5,7 +5,6 @@ package com.deepeye.musicpro.ui.player
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -15,7 +14,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -34,11 +32,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,9 +55,11 @@ import kotlin.math.roundToInt
  * Smoothly floats over all browsable screens (Home Hub, YouTube, Library) when exiting fullscreen.
  * Features:
  * - Continuous video playback (0 buffer interruptions)
- * - Draggable anywhere on the landscape canvas with boundary clamping
+ * - 2-Finger Pinch-to-Resize: Dynamically resize the entire PiP card window from small to large
+ * - Double-Tap to cycle PiP card sizes (Small / Medium / Large)
+ * - Draggable anywhere on the canvas with fluid boundary clamping
  * - Quick touch controls (Play/Pause, Expand Fullscreen, Dismiss)
- * - Smooth spring animations and glassmorphism styling
+ * - Glassmorphism cyan neon aesthetic styling
  */
 @Composable
 fun FloatingVideoPipOverlay(
@@ -73,7 +72,7 @@ fun FloatingVideoPipOverlay(
 ) {
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
-    var videoScale by remember { mutableFloatStateOf(1f) }
+    var pipWidthDp by remember { mutableStateOf(300.dp) }
     var showControls by remember { mutableStateOf(true) }
 
     // Auto-hide floating controls after 3 seconds
@@ -85,7 +84,6 @@ fun FloatingVideoPipOverlay(
     }
 
     val title = playerState.currentSong?.title ?: playerState.currentItem?.title ?: "Playing Video"
-    val artist = playerState.currentSong?.artist ?: playerState.currentItem?.artist ?: ""
     val isPlaying = playerState.isPlaying
 
     BoxWithConstraints(
@@ -95,142 +93,140 @@ fun FloatingVideoPipOverlay(
         val parentWidthPx = constraints.maxWidth.toFloat()
         val parentHeightPx = constraints.maxHeight.toFloat()
 
-        val pipWidthPx = with(density) { 320.dp.toPx() }
-        val pipHeightPx = with(density) { 180.dp.toPx() }
+        val minWidthPx = with(density) { 180.dp.toPx() }
+        val maxWidthPx = (parentWidthPx - with(density) { 16.dp.toPx() }).coerceAtLeast(minWidthPx)
+
+        val currentPipWidthPx = with(density) { pipWidthDp.toPx() }.coerceIn(minWidthPx, maxWidthPx)
+        val currentPipHeightPx = currentPipWidthPx * (9f / 16f)
 
         // Draggable boundary clamping
         val minX = 0f
-        val maxX = (parentWidthPx - pipWidthPx).coerceAtLeast(0f)
+        val maxX = (parentWidthPx - currentPipWidthPx).coerceAtLeast(0f)
         val minY = 0f
-        val maxY = (parentHeightPx - pipHeightPx).coerceAtLeast(0f)
+        val maxY = (parentHeightPx - currentPipHeightPx).coerceAtLeast(0f)
 
-        // Initialize to bottom-right corner on first composition
-        LaunchedEffect(parentWidthPx, parentHeightPx) {
+        // Keep inside bounds if screen size or PiP size changes
+        LaunchedEffect(currentPipWidthPx, currentPipHeightPx, parentWidthPx, parentHeightPx) {
             if (offsetX == 0f && offsetY == 0f && maxX > 0 && maxY > 0) {
-                offsetX = maxX - with(density) { 20.dp.toPx() }
-                offsetY = maxY - with(density) { 20.dp.toPx() }
+                // Initialize to bottom-right corner
+                offsetX = (maxX - with(density) { 16.dp.toPx() }).coerceIn(minX, maxX)
+                offsetY = (maxY - with(density) { 16.dp.toPx() }).coerceIn(minY, maxY)
+            } else {
+                offsetX = offsetX.coerceIn(minX, maxX)
+                offsetY = offsetY.coerceIn(minY, maxY)
             }
         }
 
-        // Zoom and pan gestures (similar to NowPlayingScreen)
-        var scale by remember { mutableFloatStateOf(1f) }
-        var panX by remember { mutableFloatStateOf(0f) }
-        var panY by remember { mutableFloatStateOf(0f) }
-        var isPanning by remember { mutableStateOf(false) }
+        var isPinching by remember { mutableStateOf(false) }
         var lastTapTime by remember { mutableStateOf(0L) }
         var lastTapPos by remember { mutableStateOf(Offset(0f, 0f)) }
-        val slopThreshold by remember { mutableStateOf(with(density) { 10f }) }
+        val slopThreshold = with(density) { 12f }
 
-        // Single finger tap gesture
+        // Double-tap cycle or single-tap controls toggle
         fun handleTap(pos: Offset) {
             val now = System.currentTimeMillis()
             val sinceLastTap = now - lastTapTime
             val movedSinceLastTap = kotlin.math.hypot(pos.x - lastTapPos.x, pos.y - lastTapPos.y) > slopThreshold
 
-            if (!movedSinceLastTap) {
-                if (sinceLastTap < 300L) {
-                    // Double tap: reset zoom
-                    scale = 1f
-                    panX = 0f
-                    panY = 0f
-                    lastTapTime = 0L
-                    return
+            if (!movedSinceLastTap && sinceLastTap < 350L) {
+                // Double tap: cycle card size (Small -> Medium -> Large -> Medium)
+                val smallDp = 200.dp
+                val medDp = 300.dp
+                val maxDp = with(density) { maxWidthPx.toDp() }
+
+                pipWidthDp = when {
+                    pipWidthDp < 250.dp -> medDp
+                    pipWidthDp < 350.dp -> maxDp
+                    else -> smallDp
                 }
+                lastTapTime = 0L
+                return
             }
 
             lastTapTime = now
             lastTapPos = pos
             showControls = !showControls
         }
+
         Box(
             modifier = Modifier
                 .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
-                .size(width = 320.dp, height = 180.dp)
-                .pointerInput(Unit) {
+                .size(
+                    width = with(density) { currentPipWidthPx.toDp() },
+                    height = with(density) { currentPipHeightPx.toDp() }
+                )
+                .pointerInput(parentWidthPx, parentHeightPx) {
                     awaitPointerEventScope {
                         var initialDistance = 0f
-                        var initialScale = scale
-                        isPanning = false
-                        var initialPanX = panX
-                        var initialPanY = panY
+                        var initialWidth = currentPipWidthPx
+                        var initialOffsetX = offsetX
+                        var initialOffsetY = offsetY
+                        var initialCentroid = Offset.Zero
+                        isPinching = false
 
                         while (true) {
                             val event = awaitPointerEvent()
                             val changes = event.changes
-
                             if (changes.isEmpty()) continue
 
                             val downCount = changes.count { it.pressed }
 
                             if (downCount == 1) {
-                                // Single pointer: Drag PiP window OR Pan Video
                                 val change = changes.first()
                                 if (change.pressed) {
-                                    if (isPanning) {
-                                        // Still in pan recovery mode from zoom
-                                        val deltaX = change.position.x - change.previousPosition.x
-                                        val deltaY = change.position.y - change.previousPosition.y
-                                        
-                                        val maxPanX = (pipWidthPx * (scale - 1f)) / 2f
-                                        val maxPanY = (pipHeightPx * (scale - 1f)) / 2f
-                                        
-                                        panX = (panX + deltaX).coerceIn(-maxPanX, maxPanX)
-                                        panY = (panY + deltaY).coerceIn(-maxPanY, maxPanY)
-                                        showControls = true
-                                    } else {
-                                        // Standard dragging of the PiP Window
-                                        val dragAmountX = change.position.x - change.previousPosition.x
-                                        val dragAmountY = change.position.y - change.previousPosition.y
-                                        offsetX = (offsetX + dragAmountX).coerceIn(minX, maxX)
-                                        offsetY = (offsetY + dragAmountY).coerceIn(minY, maxY)
+                                    if (!isPinching) {
+                                        // 1-Finger Drag PiP Card
+                                        val dragX = change.position.x - change.previousPosition.x
+                                        val dragY = change.position.y - change.previousPosition.y
+                                        offsetX = (offsetX + dragX).coerceIn(minX, maxX)
+                                        offsetY = (offsetY + dragY).coerceIn(minY, maxY)
                                         showControls = true
                                     }
                                 } else {
-                                    // Pointer released
-                                    val upPressChange = changes.firstOrNull { !it.pressed && !it.isConsumed }
-                                    if (upPressChange != null && !isPanning) {
-                                        handleTap(upPressChange.position)
+                                    val upChange = changes.firstOrNull { !it.pressed && !it.isConsumed }
+                                    if (upChange != null && !isPinching) {
+                                        handleTap(upChange.position)
                                     }
-                                    isPanning = false
+                                    isPinching = false
                                 }
                                 change.consume()
                             } else if (downCount >= 2) {
-                                // Pinch-to-zoom OR 2-finger pan
-                                isPanning = true
+                                // 2-Finger Pinch: Resize Card directly
+                                isPinching = true
                                 showControls = false
+
                                 val p1 = changes[0].position
                                 val p2 = changes[1].position
                                 val currentDistance = kotlin.math.hypot(p1.x - p2.x, p1.y - p2.y)
+                                val currentCentroid = Offset((p1.x + p2.x) / 2f, (p1.y + p2.y) / 2f)
 
-                                if (initialDistance == 0f) {
+                                if (initialDistance <= 0f) {
                                     initialDistance = currentDistance
-                                    initialScale = scale
-                                    initialPanX = panX
-                                    initialPanY = panY
-                                } else {
-                                    // Scale Calculation
-                                    val newScale = (initialScale * (currentDistance / initialDistance)).coerceIn(1.0f, 4.0f)
-                                    
-                                    // Pan Delta Calculation for 2-finger pan
-                                    val maxPanX = (pipWidthPx * (newScale - 1f)) / 2f
-                                    val maxPanY = (pipHeightPx * (newScale - 1f)) / 2f
-                                    val deltaX = (changes[0].position.x - changes[0].previousPosition.x + changes[1].position.x - changes[1].previousPosition.x) / 2f
-                                    val deltaY = (changes[0].position.y - changes[0].previousPosition.y + changes[1].position.y - changes[1].previousPosition.y) / 2f
-                                    
-                                    if (newScale <= 1.02f) {
-                                        scale = 1.0f
-                                        panX = 0f
-                                        panY = 0f
-                                    } else {
-                                        scale = newScale
-                                        panX = (panX + deltaX).coerceIn(-maxPanX, maxPanX)
-                                        panY = (panY + deltaY).coerceIn(-maxPanY, maxPanY)
-                                    }
+                                    initialWidth = currentPipWidthPx
+                                    initialOffsetX = offsetX
+                                    initialOffsetY = offsetY
+                                    initialCentroid = currentCentroid
+                                } else if (initialDistance > 10f) {
+                                    val scaleRatio = currentDistance / initialDistance
+                                    val targetWidthPx = (initialWidth * scaleRatio).coerceIn(minWidthPx, maxWidthPx)
+                                    val targetHeightPx = targetWidthPx * (9f / 16f)
+
+                                    // Expand/shrink smoothly around pinch centroid
+                                    val widthDiff = targetWidthPx - initialWidth
+                                    val heightDiff = targetHeightPx - (initialWidth * (9f / 16f))
+
+                                    val targetMaxX = (parentWidthPx - targetWidthPx).coerceAtLeast(0f)
+                                    val targetMaxY = (parentHeightPx - targetHeightPx).coerceAtLeast(0f)
+
+                                    offsetX = (initialOffsetX - (widthDiff * 0.5f)).coerceIn(0f, targetMaxX)
+                                    offsetY = (initialOffsetY - (heightDiff * 0.5f)).coerceIn(0f, targetMaxY)
+
+                                    pipWidthDp = with(density) { targetWidthPx.toDp() }
                                 }
                                 changes.forEach { it.consume() }
                             } else {
-                                // 0 pointers
                                 initialDistance = 0f
+                                isPinching = false
                             }
                         }
                     }
@@ -253,19 +249,12 @@ fun FloatingVideoPipOverlay(
                     RoundedCornerShape(16.dp)
                 )
         ) {
-            // 1. Live Video Surface View
+            // 1. Live Video Surface View (Fills the Card Box directly)
             VideoPlayerView(
                 playerHolder = playerHolder,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        translationX = if (scale <= 1.02f) 0f else panX
-                        translationY = if (scale <= 1.02f) 0f else panY
-                    }
+                modifier = Modifier.fillMaxSize()
             )
-            
+
             // 2. Floating Quick Controls Overlay
             AnimatedVisibility(
                 visible = showControls,
