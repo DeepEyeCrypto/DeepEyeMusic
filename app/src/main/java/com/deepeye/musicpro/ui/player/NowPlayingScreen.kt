@@ -409,20 +409,20 @@ fun NowPlayingScreen(
     }
 
     if (showQueueSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showQueueSheet = false },
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            modifier = Modifier.fillMaxHeight(0.9f)
-        ) {
-            QueueSheetContent(
-                queue = playerState.queue,
-                currentIndex = playerState.currentIndex,
-                onItemClick = { index -> viewModel.seekToMediaItem(index) },
-                onItemMove = { from, to -> viewModel.moveMediaItem(from, to) },
-                onItemRemove = { index -> viewModel.removeMediaItem(index) },
-                accentColor = finalAccentColor
-            )
-        }
+        val currentQueue by viewModel.queue.collectAsStateWithLifecycle()
+        val currentQueueIndex by viewModel.currentQueueIndex.collectAsStateWithLifecycle()
+
+        QueueBottomSheet(
+            queue = currentQueue,
+            currentIndex = currentQueueIndex,
+            playerState = playerState,
+            dominantColor = finalAccentColor,
+            onTrackSelected = { index -> viewModel.seekToMediaItem(index) },
+            onMoveItem = { from, to -> viewModel.moveMediaItem(from, to) },
+            onRemoveItem = { index -> viewModel.removeMediaItem(index) },
+            onClearQueue = { viewModel.clearQueue() },
+            onDismissRequest = { showQueueSheet = false }
+        )
     }
 
     if (showSpeedDialog) {

@@ -228,6 +228,9 @@ constructor() {
         _currentIndex.value = -1
     }
 
+    @Synchronized
+    fun clearQueue() = clear()
+
     /**
      * Jumps to a specific index in the queue.
      */

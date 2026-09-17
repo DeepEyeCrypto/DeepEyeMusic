@@ -684,60 +684,11 @@ fun EqualizerCard(
             if (showContent) {
                 Column {
                     Spacer(Modifier.height(14.dp))
-                    val bandLabels =
-                        listOf("31Hz", "62Hz", "125Hz", "250Hz", "500Hz", "1kHz", "2kHz", "4kHz", "8kHz", "16kHz")
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        params.eqBands.forEachIndexed { i, value ->
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.width(42.dp),
-                            ) {
-                                Text(
-                                    text = "${value.toInt()}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF00E5FF),
-                                )
-                                Box(
-                                    modifier =
-                                    Modifier
-                                        .height(130.dp)
-                                        .width(36.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Slider(
-                                        value = value,
-                                        onValueChange = { onUpdateEqBand(i, it) },
-                                        valueRange = -12f..12f,
-                                        modifier =
-                                        Modifier
-                                            .requiredWidth(130.dp)
-                                            .testTag("eq_band_$i")
-                                            .graphicsLayer {
-                                                rotationZ = -90f
-                                                transformOrigin = TransformOrigin(0.5f, 0.5f)
-                                            },
-                                        colors =
-                                        SliderDefaults.colors(
-                                            thumbColor = Color(0xFF00E5FF),
-                                            activeTrackColor = Color(0xFF00E5FF),
-                                            inactiveTrackColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.1f),
-                                        ),
-                                    )
-                                }
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    text = bandLabels[i],
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.5f),
-                                )
-                            }
-                        }
-                    }
+                    com.deepeye.musicpro.ui.dsp.components.EqualizerCurveVisualizer(
+                        eqBands = params.eqBands,
+                        isEnabled = isEnabled && isMasterEnabled,
+                        onBandGainChanged = onUpdateEqBand
+                    )
                 }
             }
         }

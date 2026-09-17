@@ -833,6 +833,13 @@ constructor(
         }
     }
 
+    fun clearQueue() {
+        queueManager.clearQueue()
+    }
+
+    val currentQueue = queueManager.queue
+    val currentQueueIndex = queueManager.currentIndex
+
     fun togglePlayPause() {
         if (player.isPlaying) player.pause() else player.play()
     }

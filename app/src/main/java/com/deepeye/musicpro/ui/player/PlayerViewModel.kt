@@ -215,6 +215,13 @@ constructor(
         playerController.setQueue(items, startIndex)
     }
 
+    val queue = playerController.currentQueue
+    val currentQueueIndex = playerController.currentQueueIndex
+
+    fun clearQueue() {
+        playerController.clearQueue()
+    }
+
     fun moveMediaItem(fromIndex: Int, toIndex: Int) {
         playerController.moveQueueItem(fromIndex, toIndex)
     }
