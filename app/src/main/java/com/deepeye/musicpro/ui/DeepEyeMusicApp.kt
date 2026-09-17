@@ -197,22 +197,10 @@ fun DeepEyeMusicApp(
     val currentDensity = androidx.compose.ui.platform.LocalDensity.current
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-    val scaledDensity = remember(currentDensity, isLandscape) {
-        if (isLandscape) {
-            androidx.compose.ui.unit.Density(
-                density = currentDensity.density * 0.58f,
-                fontScale = currentDensity.fontScale * 0.65f
-            )
-        } else {
-            currentDensity
-        }
-    }
-
     CompositionLocalProvider(
         LocalPipMode provides isInPipMode,
         LocalFullscreenMode provides fullscreenMode,
         LocalSharedWebView provides sharedWebView,
-        androidx.compose.ui.platform.LocalDensity provides scaledDensity,
     ) {
         val navController = rememberNavController()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
