@@ -395,8 +395,10 @@ fun DeepEyeVideoPlayerOverlay(
                                         if (currentScale > 1.05f) {
                                             val maxOffsetX = (screenWidth * (currentScale - 1f)) / 2f
                                             val maxOffsetY = (screenHeight * (currentScale - 1f)) / 2f
-                                            val clampedX = (initialOffsetX + dx).coerceIn(-maxOffsetX, maxOffsetX)
-                                            val clampedY = (initialOffsetY + dy).coerceIn(-maxOffsetY, maxOffsetY)
+                                            val panDx = change.position.x - change.previousPosition.x
+                                            val panDy = change.position.y - change.previousPosition.y
+                                            val clampedX = (currentOffsetX + panDx).coerceIn(-maxOffsetX, maxOffsetX)
+                                            val clampedY = (currentOffsetY + panDy).coerceIn(-maxOffsetY, maxOffsetY)
                                             onOffsetChange(clampedX, clampedY)
                                         } else {
                                             onOffsetChange(0f, 0f)
