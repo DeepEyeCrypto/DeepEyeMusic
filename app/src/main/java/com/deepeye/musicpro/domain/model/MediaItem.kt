@@ -58,9 +58,9 @@ fun MediaItem.toMedia3Item(): Media3Item {
         )
 
     val uriStr = uri.toString()
-    if (uriStr.startsWith("data:application/dash+xml") || uriStr.contains("manifest/dash") || uriStr.contains(".mpd") || uriStr.contains("dash")) {
+    if (uriStr.startsWith("data:application/dash+xml") || uriStr.contains("/manifest/dash/") || uriStr.endsWith(".mpd") || uriStr.contains(".mpd?")) {
         builder.setMimeType(MimeTypes.APPLICATION_MPD)
-    } else if (uriStr.contains("manifest/hls") || uriStr.contains(".m3u8") || uriStr.contains("m3u8")) {
+    } else if (uriStr.contains("/manifest/hls_variant/") || uriStr.contains("/manifest/hls_live/") || uriStr.endsWith(".m3u8") || uriStr.contains(".m3u8?")) {
         builder.setMimeType(MimeTypes.APPLICATION_M3U8)
     }
 
