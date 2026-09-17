@@ -36,7 +36,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -71,6 +73,7 @@ fun FloatingVideoPipOverlay(
 ) {
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
+    var videoScale by remember { mutableFloatStateOf(1f) }
     var showControls by remember { mutableStateOf(true) }
 
     // Auto-hide floating controls after 3 seconds
@@ -92,8 +95,8 @@ fun FloatingVideoPipOverlay(
         val parentWidthPx = constraints.maxWidth.toFloat()
         val parentHeightPx = constraints.maxHeight.toFloat()
 
-        val pipWidthPx = with(density) { 240.dp.toPx() }
-        val pipHeightPx = with(density) { 135.dp.toPx() }
+        val pipWidthPx = with(density) { 320.dp.toPx() }
+        val pipHeightPx = with(density) { 180.dp.toPx() }
 
         // Draggable boundary clamping
         val minX = 0f
@@ -109,16 +112,127 @@ fun FloatingVideoPipOverlay(
             }
         }
 
+        // Zoom and pan gestures (similar to NowPlayingScreen)
+        var scale by remember { mutableFloatStateOf(1f) }
+        var panX by remember { mutableFloatStateOf(0f) }
+        var panY by remember { mutableFloatStateOf(0f) }
+        var isPanning by remember { mutableStateOf(false) }
+        var lastTapTime by remember { mutableStateOf(0L) }
+        var lastTapPos by remember { mutableStateOf(Offset(0f, 0f)) }
+        val slopThreshold by remember { mutableStateOf(with(density) { 10f }) }
+
+        // Single finger tap gesture
+        fun handleTap(pos: Offset) {
+            val now = System.currentTimeMillis()
+            val sinceLastTap = now - lastTapTime
+            val movedSinceLastTap = kotlin.math.hypot(pos.x - lastTapPos.x, pos.y - lastTapPos.y) > slopThreshold
+
+            if (!movedSinceLastTap) {
+                if (sinceLastTap < 300L) {
+                    // Double tap: reset zoom
+                    scale = 1f
+                    panX = 0f
+                    panY = 0f
+                    lastTapTime = 0L
+                    return
+                }
+            }
+
+            lastTapTime = now
+            lastTapPos = pos
+            showControls = !showControls
+        }
         Box(
             modifier = Modifier
                 .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
-                .size(width = 240.dp, height = 135.dp)
+                .size(width = 320.dp, height = 180.dp)
                 .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        offsetX = (offsetX + dragAmount.x).coerceIn(minX, maxX)
-                        offsetY = (offsetY + dragAmount.y).coerceIn(minY, maxY)
-                        showControls = true
+                    awaitPointerEventScope {
+                        var initialDistance = 0f
+                        var initialScale = scale
+                        isPanning = false
+                        var initialPanX = panX
+                        var initialPanY = panY
+
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val changes = event.changes
+
+                            if (changes.isEmpty()) continue
+
+                            val downCount = changes.count { it.pressed }
+
+                            if (downCount == 1) {
+                                // Single pointer: Drag PiP window OR Pan Video
+                                val change = changes.first()
+                                if (change.pressed) {
+                                    if (isPanning) {
+                                        // Still in pan recovery mode from zoom
+                                        val deltaX = change.position.x - change.previousPosition.x
+                                        val deltaY = change.position.y - change.previousPosition.y
+                                        
+                                        val maxPanX = (pipWidthPx * (scale - 1f)) / 2f
+                                        val maxPanY = (pipHeightPx * (scale - 1f)) / 2f
+                                        
+                                        panX = (panX + deltaX).coerceIn(-maxPanX, maxPanX)
+                                        panY = (panY + deltaY).coerceIn(-maxPanY, maxPanY)
+                                        showControls = true
+                                    } else {
+                                        // Standard dragging of the PiP Window
+                                        val dragAmountX = change.position.x - change.previousPosition.x
+                                        val dragAmountY = change.position.y - change.previousPosition.y
+                                        offsetX = (offsetX + dragAmountX).coerceIn(minX, maxX)
+                                        offsetY = (offsetY + dragAmountY).coerceIn(minY, maxY)
+                                        showControls = true
+                                    }
+                                } else {
+                                    // Pointer released
+                                    val upPressChange = changes.firstOrNull { !it.pressed && !it.isConsumed }
+                                    if (upPressChange != null && !isPanning) {
+                                        handleTap(upPressChange.position)
+                                    }
+                                    isPanning = false
+                                }
+                                change.consume()
+                            } else if (downCount >= 2) {
+                                // Pinch-to-zoom OR 2-finger pan
+                                isPanning = true
+                                showControls = false
+                                val p1 = changes[0].position
+                                val p2 = changes[1].position
+                                val currentDistance = kotlin.math.hypot(p1.x - p2.x, p1.y - p2.y)
+
+                                if (initialDistance == 0f) {
+                                    initialDistance = currentDistance
+                                    initialScale = scale
+                                    initialPanX = panX
+                                    initialPanY = panY
+                                } else {
+                                    // Scale Calculation
+                                    val newScale = (initialScale * (currentDistance / initialDistance)).coerceIn(1.0f, 4.0f)
+                                    
+                                    // Pan Delta Calculation for 2-finger pan
+                                    val maxPanX = (pipWidthPx * (newScale - 1f)) / 2f
+                                    val maxPanY = (pipHeightPx * (newScale - 1f)) / 2f
+                                    val deltaX = (changes[0].position.x - changes[0].previousPosition.x + changes[1].position.x - changes[1].previousPosition.x) / 2f
+                                    val deltaY = (changes[0].position.y - changes[0].previousPosition.y + changes[1].position.y - changes[1].previousPosition.y) / 2f
+                                    
+                                    if (newScale <= 1.02f) {
+                                        scale = 1.0f
+                                        panX = 0f
+                                        panY = 0f
+                                    } else {
+                                        scale = newScale
+                                        panX = (panX + deltaX).coerceIn(-maxPanX, maxPanX)
+                                        panY = (panY + deltaY).coerceIn(-maxPanY, maxPanY)
+                                    }
+                                }
+                                changes.forEach { it.consume() }
+                            } else {
+                                // 0 pointers
+                                initialDistance = 0f
+                            }
+                        }
                     }
                 }
                 .shadow(
@@ -138,19 +252,20 @@ fun FloatingVideoPipOverlay(
                     ),
                     RoundedCornerShape(16.dp)
                 )
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    showControls = !showControls
-                }
         ) {
             // 1. Live Video Surface View
             VideoPlayerView(
                 playerHolder = playerHolder,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        translationX = if (scale <= 1.02f) 0f else panX
+                        translationY = if (scale <= 1.02f) 0f else panY
+                    }
             )
-
+            
             // 2. Floating Quick Controls Overlay
             AnimatedVisibility(
                 visible = showControls,
@@ -175,7 +290,7 @@ fun FloatingVideoPipOverlay(
                             color = Color.Black.copy(alpha = 0.7f),
                             border = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.8f)),
                             modifier = Modifier
-                                .size(28.dp)
+                                .size(34.dp)
                                 .clickable { onExpandFullscreen() }
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -183,7 +298,7 @@ fun FloatingVideoPipOverlay(
                                     imageVector = Icons.Default.Fullscreen,
                                     contentDescription = "Expand Fullscreen",
                                     tint = NeonCyan,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
                         }
@@ -193,7 +308,7 @@ fun FloatingVideoPipOverlay(
                             color = Color.Black.copy(alpha = 0.7f),
                             border = BorderStroke(1.dp, Color.White.copy(alpha = 0.4f)),
                             modifier = Modifier
-                                .size(28.dp)
+                                .size(34.dp)
                                 .clickable { onClose() }
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -201,7 +316,7 @@ fun FloatingVideoPipOverlay(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = "Close",
                                     tint = Color.White,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
