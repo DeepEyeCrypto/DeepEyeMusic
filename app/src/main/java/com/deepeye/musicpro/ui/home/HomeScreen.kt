@@ -349,10 +349,6 @@ fun RecommendationRowUI(
 ) {
     if (row.items.isEmpty()) return
 
-    val cardWidth = remember(windowSizeClass) {
-        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) 156.dp else 176.dp
-    }
-
     Column(Modifier.fillMaxWidth().padding(vertical = 16.dp)) {
         // Row header
         Row(
@@ -377,12 +373,14 @@ fun RecommendationRowUI(
                         backgroundColor = Color.Black,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
+                        
                     )
                     if (row.subtitle.isNotBlank()) {
                         SecondaryLabel(
                             text = row.subtitle,
                             backgroundColor = Color.Black,
                             style = MaterialTheme.typography.labelMedium,
+                            
                         )
                     }
                 }
@@ -412,10 +410,13 @@ fun RecommendationRowUI(
             contentPadding = PaddingValues(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            // Composite key (index + videoId): recommendation rows can legitimately
+            // contain the same videoId more than once, and a plain videoId key crashes
+            // Compose with "Key was already used". Index guarantees uniqueness.
             itemsIndexed(row.items, key = { index, video -> "$index-${video.videoId}" }) { _, video ->
                 VideoRecommendationCard(
                     video = video,
-                    cardWidth = cardWidth,
+                    cardWidth = 100.dp,
                     onClick = { onVideoClick(video) },
                 )
             }
