@@ -651,7 +651,7 @@ fun DeepEyeVideoPlayerOverlay(
                 Modifier
                     .fillMaxWidth()
                     .background(brush = Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.80f), Color.Black.copy(alpha = 0.35f), Color.Transparent)))
-                    .padding(top = 8.dp, start = 12.dp, end = 12.dp, bottom = 10.dp)
+                    .padding(top = 60.dp, start = 12.dp, end = 12.dp, bottom = 10.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
