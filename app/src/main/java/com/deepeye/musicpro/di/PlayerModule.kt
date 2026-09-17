@@ -120,9 +120,10 @@ object PlayerModule {
                         urlStr.contains("c=IOS") || urlStr.contains("c=IPHONE") -> "com.google.ios.youtube/20.10.1 (iPhone16,2; U; CPU iOS 18_3 like Mac OS X)"
                         urlStr.contains("c=TVHTML5") -> "Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/76.0.3809.146 TV Safari/537.36"
                         urlStr.contains("c=WEB") -> "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-                        else -> "com.google.android.youtube/20.10.33 (Linux; U; Android 12) gzip"
+                        else -> "com.google.android.youtube/20.10.33 (Linux; U; Android 12)"
                     }
                     reqBuilder.header("User-Agent", ua)
+                    reqBuilder.header("Accept-Encoding", "identity")
                     if (urlStr.contains("c=WEB") || urlStr.contains("c=TVHTML5")) {
                         reqBuilder.header("Origin", "https://www.youtube.com")
                         reqBuilder.header("Referer", "https://www.youtube.com/")
@@ -142,9 +143,10 @@ object PlayerModule {
             .build()
 
         val httpDataSourceFactory = androidx.media3.datasource.okhttp.OkHttpDataSource.Factory(playerOkHttpClient)
-            .setUserAgent("com.google.android.youtube/20.10.33 (Linux; U; Android 12) gzip")
+            .setUserAgent("com.google.android.youtube/20.10.33 (Linux; U; Android 12)")
             .setDefaultRequestProperties(mapOf(
                 "Accept" to "*/*",
+                "Accept-Encoding" to "identity",
                 "Connection" to "keep-alive",
             ))
         val dataSourceFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpDataSourceFactory)
