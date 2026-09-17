@@ -110,7 +110,9 @@ object PlayerModule {
 
         val playerOkHttpClient = okHttpClient.newBuilder()
             .cache(null) // Disable HTTP disk cache for streaming to avoid 206 caching conflicts and stale conditional headers
-            .addInterceptor { chain ->
+            .connectTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(25, java.util.concurrent.TimeUnit.SECONDS)
+            .addNetworkInterceptor { chain ->
                 var request = chain.request()
                 val urlStr = request.url.toString()
                 if (urlStr.contains("googlevideo.com")) {
@@ -123,7 +125,6 @@ object PlayerModule {
                         else -> "com.google.android.youtube/20.10.33 (Linux; U; Android 12)"
                     }
                     reqBuilder.header("User-Agent", ua)
-                    reqBuilder.header("Accept-Encoding", "identity")
                     if (urlStr.contains("c=WEB") || urlStr.contains("c=TVHTML5")) {
                         reqBuilder.header("Origin", "https://www.youtube.com")
                         reqBuilder.header("Referer", "https://www.youtube.com/")
@@ -133,12 +134,7 @@ object PlayerModule {
                     }
                     request = reqBuilder.build()
                 }
-                val response = chain.proceed(request)
-                if (!response.isSuccessful) {
-                    val errorBody = try { response.peekBody(2048).string() } catch (e: Exception) { "unavailable: ${e.message}" }
-                    android.util.Log.e("PlayerOkHttp", "Media stream request failed: HTTP ${response.code} ${response.message}\nReq headers: ${request.headers}\nResp headers: ${response.headers}\nBody: $errorBody\n[URL: ${request.url}]")
-                }
-                response
+                chain.proceed(request)
             }
             .build()
 
@@ -146,7 +142,6 @@ object PlayerModule {
             .setUserAgent("com.google.android.youtube/20.10.33 (Linux; U; Android 12)")
             .setDefaultRequestProperties(mapOf(
                 "Accept" to "*/*",
-                "Accept-Encoding" to "identity",
                 "Connection" to "keep-alive",
             ))
         val dataSourceFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpDataSourceFactory)
