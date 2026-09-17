@@ -11,7 +11,9 @@ import com.deepeye.musicpro.player.controller.PlayerController
 import com.deepeye.musicpro.player.visualizer.VisualizerEngine
 import com.deepeye.musicpro.util.ColorExtractor
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,6 +30,7 @@ constructor(
     private val sleepTimerManager: com.deepeye.musicpro.player.timer.SleepTimerManager,
     private val recommendationEngine: com.deepeye.musicpro.domain.recommendation.RecommendationEngine,
     private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
+    private val authClient: com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient,
     private val youtubeRemoteDataSource: com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
 ) : ViewModel() {
     val playerState: StateFlow<PlayerState> = playerController.playerState
@@ -135,7 +138,28 @@ constructor(
                     _videoDetails.value = null
                     if (mediaItem is com.deepeye.musicpro.domain.model.MediaItem.Remote) {
                         try {
-                            _videoDetails.value = youtubeRemoteDataSource.getVideoDetails(mediaItem.id)
+                                                        _videoDetails.value = youtubeRemoteDataSource.getVideoDetails(mediaItem.id)
+                            
+                            // Check YouTube Interaction Status (Likes/Dislikes/Subscriptions)
+                            try {
+                                val intStatus = authClient.getVideoInteractionStatus(mediaItem.id)
+                                if (intStatus != null) {
+                                    playerController.updateLikeState(isLiked = intStatus.isLiked, isDisliked = intStatus.isDisliked)
+                                    // Make sure local DB agrees with remote truth on Likes
+                                    if (intStatus.isLiked) {
+                                        libraryRepository.likeTrack(mediaItem.id, mediaItem.title, mediaItem.artist, "")
+                                    } else if (!intStatus.isLiked) {
+                                        libraryRepository.unlikeTrack(mediaItem.id, mediaItem.title, mediaItem.artist, "")
+                                    }
+                                } else {
+                                    // if Not Auth'd / no response, check local DB
+                                    val isLikedOffline = libraryRepository.isTrackLiked(mediaItem.id).first()
+                                    playerController.updateLikeState(isLiked = isLikedOffline, isDisliked = false)
+                                }
+                            } catch (e: Exception) {
+                                android.util.Log.e("PlayerViewModel", "Failed to sync YouTube interaction status", e)
+                            }
+
                         } catch (e: Exception) {
                             // ignore
                         }
@@ -243,72 +267,52 @@ constructor(
         }
     }
 
-    fun likeTrack(liked: Boolean) {
+        fun likeTrack(liked: Boolean) {
         val currentItem = playerState.value.currentItem ?: return
         val currentId = currentItem.id
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
+            // Update YouTube remote first!
+            try {
+                if (liked) authClient.likeVideo(currentId) else authClient.removeLike(currentId)
+            } catch(e: Exception) {}
+            
+            // Sync local state
+            playerController.updateLikeState(isLiked = liked, isDisliked = false)
+
             kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
                 tasteProfileRepository.recordFeedback(currentId, liked = liked, dontPlayAgain = false)
-                
                 if (liked) {
-                    // Sync with Library UI
-                    libraryRepository.likeTrack(
-                        videoId = currentId,
-                        title = currentItem.title,
-                        artist = currentItem.artist,
-                        channelId = "",
-                        artworkUrl = currentItem.artworkUri?.toString()
-                    )
-                    
-                    // Fire an immediate listen event so the Recommendation Engine picks it up as a Liked Song right away
-                    recommendationEngine.trackListenEvent(
-                        videoId = currentId,
-                        title = currentItem.title,
-                        artist = currentItem.artist,
-                        channelId = "", // Not critically needed for pure likes
-                        listenDurationMs = 1000L,
-                        totalDurationMs = 1000L,
-                        wasSkipped = false,
-                        wasLiked = true,
-                        wasDisliked = false,
-                        wasAddedToPlaylist = false,
-                        wasReplayed = false
-                    )
+                    libraryRepository.likeTrack(currentId, currentItem.title, currentItem.artist, "")
+                    recommendationEngine.trackListenEvent(currentId, currentItem.title, currentItem.artist, "", 1000L, 1000L, false, true, false, false, false)
                 } else {
-                    // Remove from Library UI
-                    libraryRepository.unlikeTrack(
-                        videoId = currentId,
-                        title = currentItem.title,
-                        artist = currentItem.artist,
-                        channelId = ""
-                    )
+                    libraryRepository.unlikeTrack(currentId, currentItem.title, currentItem.artist, "")
                 }
             }
         }
     }
 
-    fun dislikeTrack() {
+
+        fun dislikeTrack() {
         val currentItem = playerState.value.currentItem ?: return
         val currentId = currentItem.id
-        viewModelScope.launch {
+        val currentlyDisliked = playerState.value.isDisliked
+        
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (currentlyDisliked) authClient.removeLike(currentId) else authClient.dislikeVideo(currentId)
+            } catch(e: Exception) {}
+            
+            playerController.updateLikeState(isLiked = false, isDisliked = !currentlyDisliked)
+
             kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
                 tasteProfileRepository.recordFeedback(currentId, liked = false, dontPlayAgain = true)
-                recommendationEngine.trackListenEvent(
-                    videoId = currentId,
-                    title = currentItem.title,
-                    artist = currentItem.artist,
-                    channelId = "",
-                    listenDurationMs = 1000L,
-                    totalDurationMs = 1000L,
-                    wasSkipped = true,
-                    wasLiked = false,
-                    wasDisliked = true,
-                    wasAddedToPlaylist = false,
-                    wasReplayed = false
-                )
+                if (!currentlyDisliked) {
+                    recommendationEngine.trackListenEvent(currentId, currentItem.title, currentItem.artist, "", 1000L, 1000L, true, false, true, false, false)
+                }
             }
         }
     }
+
 
     fun blockTrack() {
         val currentId = playerState.value.currentItem?.id ?: return

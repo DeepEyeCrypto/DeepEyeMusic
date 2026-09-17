@@ -840,6 +840,11 @@ constructor(
     val currentQueue = queueManager.queue
     val currentQueueIndex = queueManager.currentIndex
 
+    
+    fun updateLikeState(isLiked: Boolean, isDisliked: Boolean) {
+        _playerState.update { it.copy(isLiked = isLiked, isDisliked = isDisliked) }
+    }
+
     fun togglePlayPause() {
         if (player.isPlaying) player.pause() else player.play()
     }

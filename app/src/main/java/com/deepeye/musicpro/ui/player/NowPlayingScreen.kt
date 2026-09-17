@@ -1124,7 +1124,7 @@ fun VideoNowPlayingLayout(
                             seekFinished = { target -> viewModel.seekTo(target) },
                             openQuality = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) },
                             openAudioTrack = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO) },
-                            toggleLike = { viewModel.likeTrack(playerState.isLiked) },
+                            toggleLike = { viewModel.likeTrack(!playerState.isLiked) },
                             toggleDislike = { viewModel.dislikeTrack() },
                             toggleCaptions = { viewModel.toggleSubtitles() },
                             addToPlaylist = { },

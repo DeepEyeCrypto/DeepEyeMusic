@@ -26,6 +26,7 @@ class LibraryRepository
 @Inject
 constructor(
     private val dao: LibraryDao,
+    private val authClient: com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient,
 ) {
     // ── Aggregate Library Home ──
 
@@ -363,7 +364,8 @@ constructor(
         )
 
     // ── Subscribed Channels ──
-    suspend fun subscribeChannel(channelId: String, channelName: String) {
+            suspend fun subscribeChannel(channelId: String, channelName: String) {
+        try { authClient.subscribeChannel(channelId) } catch(e: Exception) {}
         dao.subscribeChannel(
             com.deepeye.musicpro.data.library.entities.SubscribedChannelEntity(
                 channelId = channelId,
@@ -373,6 +375,7 @@ constructor(
     }
 
     suspend fun unsubscribeChannel(channelId: String) {
+        try { authClient.unsubscribeChannel(channelId) } catch(e: Exception) {}
         dao.unsubscribeChannel(channelId)
     }
 
