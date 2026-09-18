@@ -739,7 +739,7 @@ fun DeepEyeVideoPlayerOverlay(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // ─── Quick System Group ───
@@ -969,7 +969,7 @@ private fun DeepEyeTimeRow(
                         size = Size(progW, trackHeight)
                     )
                     // 4. Scrubber Thumb
-                    val thumbRadius = if (isScrubbing) 13.dp.toPx() else 9.dp.toPx()
+                    val thumbRadius = if (isScrubbing) 15.dp.toPx() else 10.5.dp.toPx()
                     drawCircle(
                         color = NeonCyan,
                         radius = thumbRadius,
@@ -985,11 +985,11 @@ private fun DeepEyeTimeRow(
 
             Text(
                 text = durStr,
-                style = MaterialTheme.typography.titleSmall,
-                color = Color.White.copy(0.95f),
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp,
-                modifier = Modifier.width(54.dp),
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 16.sp,
+                modifier = Modifier.width(62.dp),
                 textAlign = TextAlign.End
             )
         }
@@ -999,23 +999,23 @@ private fun DeepEyeTimeRow(
 // ─── Pro Reusable Components ───
 
 @Composable
-private fun ProBadge(text: String, bg: Color, textColor: Color, fontSize: androidx.compose.ui.unit.TextUnit = 16.5.sp) {
+private fun ProBadge(text: String, bg: Color, textColor: Color, fontSize: androidx.compose.ui.unit.TextUnit = 18.sp) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         color = bg,
-        border = BorderStroke(1.5.dp, Color.White.copy(alpha = 0.40f)),
+        border = BorderStroke(2.dp, Color.White.copy(alpha = 0.50f)),
         modifier = Modifier.padding(vertical = 2.dp)
     ) {
         Box(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 26.dp, vertical = 11.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = text,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 color = textColor,
                 fontSize = fontSize,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Black,
                 letterSpacing = 0.8.sp
             )
         }
