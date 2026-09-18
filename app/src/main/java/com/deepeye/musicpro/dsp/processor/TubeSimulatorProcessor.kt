@@ -105,8 +105,12 @@ class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
                 val dcOutR = sR - dc_x1_R + 0.995f * dc_y1_R
                 dc_x1_R = sR; dc_y1_R = dcOutR
 
-                val outShortL = (dcOutL.coerceIn(-1.0f, 1.0f) * 32767f).toInt().toShort()
-                val outShortR = (dcOutR.coerceIn(-1.0f, 1.0f) * 32767f).toInt().toShort()
+                // Soft knee clamp to eliminate harsh inter-sample overshoot
+                val cleanL = softClip(dcOutL)
+                val cleanR = softClip(dcOutR)
+
+                val outShortL = (cleanL * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
+                val outShortR = (cleanR * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
 
                 buffer.putShort(outShortL)
                 buffer.putShort(outShortR)
@@ -116,6 +120,17 @@ class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
         inputBuffer.position(limit)
         buffer.flip()
         outputBuffer = this.buffer
+    }
+
+    private fun softClip(x: Float): Float {
+        val absX = kotlin.math.abs(x)
+        return if (absX <= 0.88f) {
+            x
+        } else {
+            val sign = if (x >= 0.0f) 1.0f else -1.0f
+            val excess = absX - 0.88f
+            sign * (0.88f + 0.10f * kotlin.math.tanh((excess / 0.10f).toDouble()).toFloat())
+        }
     }
 
     override fun queueEndOfStream() {

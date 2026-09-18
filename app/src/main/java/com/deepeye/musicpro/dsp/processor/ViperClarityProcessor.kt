@@ -151,12 +151,12 @@ class ViperClarityProcessor @Inject constructor() : AudioProcessor {
                     }
                 }
 
-                // 3. Peak Safe Normalization
-                finalL = finalL.coerceIn(-1.0, 1.0)
-                finalR = finalR.coerceIn(-1.0, 1.0)
+                // 3. Peak Safe Soft-Knee Saturation (Prevents high-freq harsh clipping)
+                finalL = softClip(finalL)
+                finalR = softClip(finalR)
 
-                val outIntL = (finalL * 32767.0).toInt().toShort()
-                val outIntR = (finalR * 32767.0).toInt().toShort()
+                val outIntL = (finalL * 32767.0).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
+                val outIntR = (finalR * 32767.0).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
 
                 buffer.putShort(outIntL)
                 buffer.putShort(outIntR)
@@ -166,6 +166,17 @@ class ViperClarityProcessor @Inject constructor() : AudioProcessor {
         inputBuffer.position(limit)
         buffer.flip()
         outputBuffer = this.buffer
+    }
+
+    private fun softClip(x: Double): Double {
+        val absX = abs(x)
+        return if (absX <= 0.88) {
+            x
+        } else {
+            val sign = if (x >= 0.0) 1.0 else -1.0
+            val excess = absX - 0.88
+            sign * (0.88 + 0.10 * tanh(excess / 0.10))
+        }
     }
 
     override fun queueEndOfStream() {

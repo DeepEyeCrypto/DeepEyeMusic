@@ -154,9 +154,13 @@ class ViperBassAudioProcessor @Inject constructor() : AudioProcessor {
                     finalR += harmR
                 }
 
-                // 3. Dynamic Soft Saturation to Prevent Harsh Clipping
-                finalL = tanh(finalL)
-                finalR = tanh(finalR)
+                // 3. Dynamic Auto-Headroom & Transparent Soft-Knee Saturation (Prevents "fata aawaj")
+                val headroomScale = 1.0 / (1.0 + (linearGain - 1.0) * 0.18)
+                finalL *= headroomScale
+                finalR *= headroomScale
+
+                finalL = softClip(finalL)
+                finalR = softClip(finalR)
 
                 val outIntL = (finalL * 32767.0).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
                 val outIntR = (finalR * 32767.0).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
@@ -169,6 +173,17 @@ class ViperBassAudioProcessor @Inject constructor() : AudioProcessor {
         inputBuffer.position(limit)
         buffer.flip()
         outputBuffer = this.buffer
+    }
+
+    private fun softClip(x: Double): Double {
+        val absX = abs(x)
+        return if (absX <= 0.85) {
+            x
+        } else {
+            val sign = if (x >= 0.0) 1.0 else -1.0
+            val excess = absX - 0.85
+            sign * (0.85 + 0.13 * tanh(excess / 0.13))
+        }
     }
 
     override fun queueEndOfStream() {

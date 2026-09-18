@@ -274,9 +274,9 @@ constructor(
                 }
             }
 
-            // ── Bass Boost ──
+            // ── Bass Boost (Framework Effect - ONLY active when custom ViperBass is disabled) ──
             bassBoost?.let { bb ->
-                bb.enabled = isEnabled && (params.bassBoostEnabled || params.viperBassEnabled)
+                bb.enabled = isEnabled && params.bassBoostEnabled && !params.viperBassEnabled
                 if (bb.enabled) {
                     val strength = bassProcessor.computeLegacyBassBoostStrength(bassConfig)
                     bb.setStrength(strength.coerceIn(0, 1000).toShort())
@@ -285,7 +285,7 @@ constructor(
 
             // ── Virtualizer ──
             virtualizer?.let { virt ->
-                virt.enabled = isEnabled && params.virtualizerEnabled
+                virt.enabled = isEnabled && params.virtualizerEnabled && !params.fieldSurroundEnabled
                 if (virt.enabled) {
                     virt.setStrength(params.virtualizerStrength.toShort())
                 }
@@ -303,28 +303,28 @@ constructor(
             loudnessEnhancer?.let { loud ->
                 loud.enabled = isEnabled && params.loudnessEnabled
                 if (loud.enabled) {
-                    loud.setTargetGain(params.loudnessTargetGainMb.coerceAtLeast(0))
+                    loud.setTargetGain(params.loudnessTargetGainMb.coerceIn(0, 500))
                 }
             }
 
-            // ── Dynamics Processing (API 28+) ──
+            // ── Dynamics Processing (API 28+ Safety Limiter) ──
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 dynamicsProcessing?.let { dp ->
-                    if (isEnabled && (params.viperBassEnabled || params.bassBoostEnabled)) {
+                    if (isEnabled && params.bassBoostEnabled && !params.viperBassEnabled) {
                         bassProcessor.applyBassConfig(bassConfig, dp)
                     } else {
-                        dp.enabled = isEnabled && params.dynamicsEnabled
+                        dp.enabled = isEnabled && (params.dynamicsEnabled || params.limiterEnabled)
                         if (dp.enabled) {
                             val limiter =
                                 DynamicsProcessing.Limiter(
                                     true, // inUse
-                                    params.limiterEnabled, // enabled
+                                    true, // enabled
                                     0, // linkGroup
-                                    params.compressorAttack, // attackTime
-                                    params.compressorRelease, // releaseTime
+                                    1f, // attackTime 1ms (fast peak clamp)
+                                    50f, // releaseTime 50ms
                                     10f, // ratio
-                                    params.limiterThreshold, // threshold
-                                    0f, // postGain — no negative attenuation
+                                    params.limiterThreshold.coerceIn(-3f, -0.2f), // threshold
+                                    0f, // postGain — 0.0dB, no digital distortion
                                 )
                             dp.setLimiterAllChannelsTo(limiter)
                         }
