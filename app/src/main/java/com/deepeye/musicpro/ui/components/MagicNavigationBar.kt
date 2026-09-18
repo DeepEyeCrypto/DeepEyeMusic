@@ -105,7 +105,45 @@ fun MagicNavigationBar(
                 )
         )
 
-        
+        // Animated Glowing Active Pill Indicator
+        if (tabCount > 0 && totalWidthPx > 0) {
+            val tabWidthPx = totalWidthPx.toFloat() / tabCount
+            val animatedTabOffsetPx by animateFloatAsState(
+                targetValue = selectedIndex * tabWidthPx,
+                animationSpec = spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow),
+                label = "pillOffset"
+            )
+            val tabWidthDp = with(density) { tabWidthPx.toDp() }
+            val animatedOffsetDp = with(density) { animatedTabOffsetPx.toDp() }
+
+            Box(
+                modifier = Modifier
+                    .offset(x = animatedOffsetDp)
+                    .width(tabWidthDp)
+                    .fillMaxHeight()
+                    .padding(horizontal = 6.dp, vertical = 6.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(
+                        brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                            colors = listOf(
+                                indicatorColor.copy(alpha = 0.25f),
+                                Color(0xFF7B2CBF).copy(alpha = 0.20f)
+                            )
+                        )
+                    )
+                    .border(
+                        width = 1.dp,
+                        brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+                            colors = listOf(
+                                indicatorColor.copy(alpha = 0.60f),
+                                Color(0xFF9D4EDD).copy(alpha = 0.45f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(22.dp)
+                    )
+            )
+        }
+
         // Icons Row
         Row(
             modifier = Modifier.fillMaxSize(),

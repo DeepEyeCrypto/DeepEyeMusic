@@ -640,7 +640,7 @@ fun DeepEyeVideoPlayerOverlay(
             }
         }
 
-        // ── TOP BAR (Glassmorphic Title + Badges + Quick Actions) ──
+        // ── TOP BAR (Glassmorphic Title + Badges) ──
         AnimatedVisibility(
             visible = controlsVisible && !isLocked,
             enter = fadeIn(tween(200)) + slideInVertically(tween(200)) { -it },
@@ -651,49 +651,60 @@ fun DeepEyeVideoPlayerOverlay(
                 Modifier
                     .fillMaxWidth()
                     .background(brush = Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.80f), Color.Black.copy(alpha = 0.35f), Color.Transparent)))
-                    .padding(top = 60.dp, start = 12.dp, end = 12.dp, bottom = 10.dp)
+                    .padding(top = 28.dp, start = 14.dp, end = 14.dp, bottom = 10.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // Back / Dismiss
-                    Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.10f), modifier = Modifier.size(40.dp).clickable { actions.dismiss() }) {
-                        Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Close, "Back", tint = Color.White, modifier = Modifier.size(22.dp)) }
+                    Surface(
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.12f),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+                        modifier = Modifier.size(40.dp).clickable { actions.dismiss() }
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Close, "Back", tint = Color.White, modifier = Modifier.size(22.dp))
+                        }
                     }
 
                     // Title + Artist
                     Column(modifier = Modifier.weight(1f).padding(horizontal = 6.dp)) {
-                        Text(title, style = MaterialTheme.typography.titleSmall, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 16.sp)
+                        Text(
+                            title,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            fontSize = 15.sp
+                        )
                         if (artist.isNotBlank()) {
-                            Text(artist, style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.65f), maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 12.sp)
+                            Text(
+                                artist,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.65f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                fontSize = 12.sp
+                            )
                         }
                     }
 
                     // Badges Row
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        if (currentTimeString.isNotBlank()) {
-                            ProBadge(currentTimeString, Color.White.copy(alpha = 0.15f), Color.White, fontSize = 13.sp)
-                        }
-                        if (is4K) ProBadge("4K", Color(0xFFD42B2B), Color.White, fontSize = 12.sp)
-                        if (isHDR) ProBadge("HDR", Color(0xFF7B2CBF), Color.White, fontSize = 12.sp)
-                        if (is60Fps) ProBadge("60FPS", Color(0xFF00897B), Color.White, fontSize = 12.sp)
-                        if (qualityText.isNotEmpty() && !is4K) ProBadge(qualityText.uppercase(), ElectricViolet.copy(alpha = 0.75f), Color.White, fontSize = 12.sp)
-                    }
-
-                    // Quick Action Icons
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        ProIconBtn(Icons.Default.Analytics, NeonCyan) { resetTimer(); actions.openStats(); onToggleStats() }
-                        ProIconBtn(Icons.Default.PictureInPicture, Color.White, enabled = !isInPipMode) { resetTimer(); actions.openPipOrBackgroundPlay() }
-                        ProIconBtn(Icons.Default.Lock, Color.White) {
-                            isLocked = true; actions.toggleLock(); showLockOsd = true
-                            scope.launch { delay(2000); showLockOsd = false }
+                        if (currentTimeString.isNotBlank()) {
+                            ProBadge(currentTimeString, Color.White.copy(alpha = 0.15f), Color.White, fontSize = 12.sp)
                         }
+                        if (is4K) ProBadge("4K", Color(0xFFD42B2B), Color.White, fontSize = 11.sp)
+                        if (isHDR) ProBadge("HDR", Color(0xFF7B2CBF), Color.White, fontSize = 11.sp)
+                        if (is60Fps) ProBadge("60FPS", Color(0xFF00897B), Color.White, fontSize = 11.sp)
+                        if (qualityText.isNotEmpty() && !is4K) ProBadge(qualityText.uppercase(), ElectricViolet.copy(alpha = 0.75f), Color.White, fontSize = 11.sp)
                     }
                 }
             }
@@ -722,12 +733,33 @@ fun DeepEyeVideoPlayerOverlay(
 
                 Spacer(Modifier.height(6.dp))
 
-                // 2. Smart Grouped Action Chips (Scrollable)
+                // 2. Smart Grouped Action Chips (Scrollable - All controls easily reachable at bottom)
                 Row(
                     modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(5.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // ─── Quick System Group (Moved to bottom) ───
+                    ActionChip(Icons.Default.Lock, "Lock") {
+                        isLocked = true
+                        actions.toggleLock()
+                        showLockOsd = true
+                        scope.launch { delay(2000); showLockOsd = false }
+                    }
+
+                    ActionChip(Icons.Default.PictureInPicture, "PiP", enabled = !isInPipMode) {
+                        resetTimer()
+                        actions.openPipOrBackgroundPlay()
+                    }
+
+                    ActionChip(Icons.Default.Analytics, "Stats", active = showStats, activeTint = NeonCyan) {
+                        resetTimer()
+                        actions.openStats()
+                        onToggleStats()
+                    }
+
+                    ChipDivider()
+
                     // ─── Media Group ───
                     ActionChip(Icons.Default.AspectRatio, "Aspect", active = videoScale != 1.0f, activeTint = ElectricViolet) { cycleZoomMode() }
 

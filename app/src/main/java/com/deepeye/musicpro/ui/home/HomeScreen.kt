@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -32,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -330,7 +332,7 @@ fun HomeScreen(
             // 6. Recommendation Carousels
             recs?.let { result ->
                 // Because You Listened
-                items(result.becauseYouListened) { row ->
+                items(result.becauseYouListened, key = { "byl-${it.title}" }) { row ->
                     ModernRecommendationRow(
                         row = row,
                         cardWidth = cardWidth,
@@ -342,7 +344,7 @@ fun HomeScreen(
                 }
 
                 // Perfect for right now
-                item {
+                item(key = "perfect-for-now") {
                     ModernRecommendationRow(
                         row = result.perfectForNow,
                         cardWidth = cardWidth,
@@ -355,7 +357,7 @@ fun HomeScreen(
                 }
 
                 // Favorite artists
-                items(result.favoriteArtists) { row ->
+                items(result.favoriteArtists, key = { "fav-${it.title}" }) { row ->
                     ModernRecommendationRow(
                         row = row,
                         cardWidth = cardWidth,
@@ -367,7 +369,7 @@ fun HomeScreen(
                 }
 
                 // Trending
-                item {
+                item(key = "trending-row") {
                     ModernRecommendationRow(
                         row = result.trending,
                         cardWidth = cardWidth,
@@ -379,7 +381,7 @@ fun HomeScreen(
                 }
 
                 // Genre dives
-                items(result.genreDive) { row ->
+                items(result.genreDive, key = { "genre-${it.title}" }) { row ->
                     ModernRecommendationRow(
                         row = row,
                         cardWidth = cardWidth,
@@ -391,7 +393,7 @@ fun HomeScreen(
                 }
 
                 // Hidden gems
-                item {
+                item(key = "hidden-gems") {
                     ModernRecommendationRow(
                         row = result.hiddenGems,
                         cardWidth = cardWidth,
@@ -651,11 +653,26 @@ fun ModernVideoCard(
     cardWidth: Dp,
     onClick: () -> Unit = {},
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (isPressed) 0.94f else 1f,
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+            stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+        ),
+        label = "cardPressScale"
+    )
+
     Column(
         modifier = Modifier
             .width(cardWidth)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
             )
