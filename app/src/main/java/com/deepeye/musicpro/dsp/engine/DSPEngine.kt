@@ -202,25 +202,20 @@ constructor(
     }
 
     private fun applyParams(params: DspParams) {
-        if (!isAttached()) {
-            // Expected when no audio is playing — silently skip
-            return
-        }
-        Log.d(TAG, "Applying DSP Params: enabled=${params.enabled}, eq=${params.eqEnabled}, bass=${params.bassBoostEnabled}, viperBass=${params.viperBassEnabled}(gain=${params.viperBassGain}), loudness=${params.loudnessEnabled}(mb=${params.loudnessTargetGainMb}), tube=${params.tubeEnabled}(drive=${params.tubeDrive}), pgc=${params.pgcGain}, limiter=${params.limiterEnabled}(threshold=${params.limiterThreshold})")
+        val isEnabled = params.enabled
 
+        val bassConfig = com.deepeye.musicpro.dsp.bass.BassProcessor.BassConfig(
+            subBassGain = if (params.viperBassEnabled) params.viperBassGain else 0f,
+            subBassCutoff = params.viperBassFreq.toFloat(),
+            midBassGain = if (params.bassBoostEnabled) (params.bassBoostStrength / 1000f) * 12f else 0f,
+            harmonicSaturation = if (params.viperBassMode == com.deepeye.musicpro.dsp.model.ViperBassMode.PURE) 0.5f else 0.2f,
+            limiterEnabled = params.limiterEnabled,
+            limiterThreshold = params.limiterThreshold
+        )
+
+        // ── Custom Audio Processors (ExoPlayer Pipeline) ──
+        // Always configure custom processors immediately regardless of session attachment
         try {
-            val isEnabled = params.enabled
-
-            val bassConfig = com.deepeye.musicpro.dsp.bass.BassProcessor.BassConfig(
-                subBassGain = if (params.viperBassEnabled) params.viperBassGain else 0f,
-                subBassCutoff = params.viperBassFreq.toFloat(),
-                midBassGain = if (params.bassBoostEnabled) (params.bassBoostStrength / 1000f) * 12f else 0f,
-                harmonicSaturation = if (params.viperBassMode == com.deepeye.musicpro.dsp.model.ViperBassMode.PURE) 0.5f else 0.2f,
-                limiterEnabled = params.limiterEnabled,
-                limiterThreshold = params.limiterThreshold
-            )
-
-            // ── Custom Audio Processors (ExoPlayer Pipeline) ──
             viperBassProcessor.setConfig(
                 enabled = isEnabled && params.viperBassEnabled,
                 mode = params.viperBassMode,
@@ -254,6 +249,17 @@ constructor(
             )
             vocalRemoverProcessor.setEnabled(isEnabled && params.karaokeModeEnabled)
             crossfeedProcessor.setEnabled(isEnabled && params.crossfeedEnabled)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error configuring custom AudioProcessors", e)
+        }
+
+        if (!isAttached()) {
+            // Android Framework effects require an active session ID
+            return
+        }
+        Log.d(TAG, "Applying DSP Params to Android Framework Effects: enabled=${params.enabled}, eq=${params.eqEnabled}, bass=${params.bassBoostEnabled}, loudness=${params.loudnessEnabled}")
+
+        try {
 
             // ── Equalizer ──
             equalizer?.let { eq ->
