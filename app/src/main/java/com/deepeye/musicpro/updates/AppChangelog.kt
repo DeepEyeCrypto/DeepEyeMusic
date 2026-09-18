@@ -8,6 +8,21 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30043,
+                versionName = "3.0.1.33",
+                releaseDate = "September 2026",
+                title = "ViPER4Android Audiophile DSP & Futuristic UI Overhaul 🎛️",
+                highlight = true,
+                items =
+                    listOf(
+                        "Anti-Clipping DSP Engine: Implemented hyperbolic soft-knee saturation, automatic dynamic headroom, and decoupled framework effects for zero digital distortion.",
+                        "5 Master ViPER4Android Presets: ViPER Bass & X-HiFi, Audiophile Pure Hi-Res, Cyberpunk Spatial 3D, Warm 6J1 Vacuum Tube, and Club EDM Sub-Woofer.",
+                        "Ergonomic Video Overlay: Moved Lock, PiP, and Stats controls to bottom scrollable action dock with clean notch-safe top bar.",
+                        "Magic Navigation Bar Glow: Added dynamic spring-animated sliding capsule indicator with neon glow border.",
+                        "120 FPS Fluid Performance: Assigned stable keys across all home carousels with tactile micro-press physics.",
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30042,
                 versionName = "3.0.1.32",
                 releaseDate = "September 2026",
