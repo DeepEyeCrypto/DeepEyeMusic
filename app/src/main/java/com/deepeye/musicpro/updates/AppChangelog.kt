@@ -8,6 +8,20 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30042,
+                versionName = "3.0.1.32",
+                releaseDate = "September 2026",
+                title = "YouTube Personalization & Like/Dislike/Sub Sync 🚀",
+                highlight = true,
+                items =
+                    listOf(
+                        "Full YouTube Account Sync: Like, Dislike, and Subscriptions sync directly with your connected YouTube account.",
+                        "Real YouTube Personalization: Subscriptions feed, Liked videos, Watch History, and personalized recommendations.",
+                        "Player Lifecycle & Stability: Fixed dead handler crash in background playback service.",
+                        "Ergonomic Video Overlay: Shifted top controls downward away from status bar for a cleaner view.",
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30038,
                 versionName = "3.0.1.28",
                 releaseDate = "August 2026",
