@@ -720,8 +720,9 @@ fun DeepEyeVideoPlayerOverlay(
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .background(brush = Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.40f), Color.Black.copy(alpha = 0.85f))))
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                    .background(brush = Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f), Color.Black.copy(alpha = 0.95f))))
+                    .navigationBarsPadding()
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp)
             ) {
                 // 1. Timeline / Seekbar
                 DeepEyeTimeRow(
@@ -731,15 +732,17 @@ fun DeepEyeVideoPlayerOverlay(
                     onSeekTo = { target -> resetTimer(); onSeekTo(target); actions.seekFinished(target) }
                 )
 
-                Spacer(Modifier.height(6.dp))
+                Spacer(Modifier.height(8.dp))
 
-                // 2. Smart Grouped Action Chips (Scrollable - All controls easily reachable at bottom)
+                // 2. Smart Grouped Action Chips (Scrollable - High-touch targets, generous padding)
                 Row(
-                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // ─── Quick System Group (Moved to bottom) ───
+                    // ─── Quick System Group ───
                     ActionChip(Icons.Default.Lock, "Lock") {
                         isLocked = true
                         actions.toggleLock()
@@ -1032,34 +1035,41 @@ private fun ActionChip(
     activeTint: Color = NeonCyan,
     onClick: () -> Unit
 ) {
-    val chipBg = if (active) activeTint.copy(alpha = 0.20f) else Color.White.copy(alpha = 0.10f)
-    val chipBorder = if (active) activeTint.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.15f)
+    val chipBg = if (active) activeTint.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.12f)
+    val chipBorder = if (active) activeTint.copy(alpha = 0.70f) else Color.White.copy(alpha = 0.20f)
     val iconTint = if (active) activeTint else Color.White
-    val textColor = if (active) activeTint else Color.White.copy(alpha = 0.9f)
+    val textColor = if (active) activeTint else Color.White.copy(alpha = 0.95f)
 
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         color = chipBg,
-        border = BorderStroke(1.dp, chipBorder),
+        border = BorderStroke(1.2.dp, chipBorder),
         modifier = Modifier
-            .height(40.dp)
+            .height(48.dp)
             .alpha(if (enabled) 1f else 0.35f)
             .clickable(enabled = enabled, interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp)
+            horizontalArrangement = Arrangement.spacedBy(7.dp)
         ) {
-            Icon(icon, contentDescription = label, tint = iconTint, modifier = Modifier.size(18.dp))
-            Text(label, color = textColor, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+            Icon(icon, contentDescription = label, tint = iconTint, modifier = Modifier.size(22.dp))
+            Text(
+                label,
+                color = textColor,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.5.sp,
+                maxLines = 1
+            )
         }
     }
 }
 
 @Composable
 private fun ChipDivider() {
-    Box(Modifier.width(1.dp).height(24.dp).background(Color.White.copy(alpha = 0.18f)))
+    Box(Modifier.width(1.5.dp).height(28.dp).background(Color.White.copy(alpha = 0.25f)))
 }
 
 private fun getOverlayScreenBrightness(context: Context, activity: Activity?): Float {

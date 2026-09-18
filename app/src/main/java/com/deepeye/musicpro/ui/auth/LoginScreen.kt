@@ -238,6 +238,20 @@ fun LoginScreen(
                 isLoading = authState is AuthState.Loading,
                 onClick = { viewModel.signInWithGoogle(context) }
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            TextButton(
+                onClick = onLoginSuccess,
+                modifier = Modifier.padding(top = 4.dp)
+            ) {
+                Text(
+                    text = "Skip & Continue as Guest →",
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }

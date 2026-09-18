@@ -50,6 +50,7 @@ import com.deepeye.musicpro.ui.theme.*
 fun SettingsScreen(
     windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
     viewModel: SettingsViewModel = hiltViewModel(),
+    changelogViewModel: com.deepeye.musicpro.updates.ChangelogViewModel = hiltViewModel(),
     onNavigateToAEOS: () -> Unit = {},
     onYouTubeLoginClick: () -> Unit = {},
     onNavigateToPersonalization: () -> Unit = {},
@@ -163,7 +164,7 @@ fun SettingsScreen(
                             }
                             4 -> {
                                 item { SectionHeader("About") }
-                                item { AboutSettingsCard(viewModel) }
+                                item { AboutSettingsCard(viewModel, changelogViewModel) }
                             }
                             5 -> {
                                 item { SectionHeader("Developer (AEOS)") }
@@ -241,7 +242,7 @@ fun SettingsScreen(
                 item { CloudSyncSettingsCard(viewModel) }
 
                 item { SectionHeader("About") }
-                item { AboutSettingsCard(viewModel) }
+                item { AboutSettingsCard(viewModel, changelogViewModel) }
 
                 item { SectionHeader("Developer (AEOS)") }
                 item { AEOSSettingsCard(onNavigateToAEOS) }
@@ -830,7 +831,10 @@ private fun LibrarySettingsCard(
 }
 
 @Composable
-private fun AboutSettingsCard(viewModel: SettingsViewModel) {
+private fun AboutSettingsCard(
+    viewModel: SettingsViewModel,
+    changelogViewModel: com.deepeye.musicpro.updates.ChangelogViewModel
+) {
     SettingsCard {
         Text("DeepEye Music Pro", style = MaterialTheme.typography.titleSmall)
         Text(
@@ -848,6 +852,26 @@ private fun AboutSettingsCard(viewModel: SettingsViewModel) {
         Text("deepeye.tech", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
 
         Spacer(Modifier.height(16.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        Spacer(Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("What's New / Changelog", style = MaterialTheme.typography.bodyMedium)
+            OutlinedButton(
+                onClick = {
+                    changelogViewModel.showChangelogManually()
+                },
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Text("View")
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Spacer(Modifier.height(8.dp))
 
