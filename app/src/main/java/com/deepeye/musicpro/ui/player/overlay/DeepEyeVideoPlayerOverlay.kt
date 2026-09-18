@@ -679,7 +679,7 @@ fun DeepEyeVideoPlayerOverlay(
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            fontSize = 15.sp
+                            fontSize = 17.sp
                         )
                         if (artist.isNotBlank()) {
                             Text(
@@ -688,7 +688,7 @@ fun DeepEyeVideoPlayerOverlay(
                                 color = Color.White.copy(alpha = 0.65f),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                fontSize = 12.sp
+                                fontSize = 13.5.sp
                             )
                         }
                     }
@@ -699,12 +699,12 @@ fun DeepEyeVideoPlayerOverlay(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (currentTimeString.isNotBlank()) {
-                            ProBadge(currentTimeString, Color.White.copy(alpha = 0.15f), Color.White, fontSize = 12.sp)
+                            ProBadge(currentTimeString, Color.White.copy(alpha = 0.22f), Color.White, fontSize = 17.sp)
                         }
-                        if (is4K) ProBadge("4K", Color(0xFFD42B2B), Color.White, fontSize = 11.sp)
-                        if (isHDR) ProBadge("HDR", Color(0xFF7B2CBF), Color.White, fontSize = 11.sp)
-                        if (is60Fps) ProBadge("60FPS", Color(0xFF00897B), Color.White, fontSize = 11.sp)
-                        if (qualityText.isNotEmpty() && !is4K) ProBadge(qualityText.uppercase(), ElectricViolet.copy(alpha = 0.75f), Color.White, fontSize = 11.sp)
+                        if (is4K) ProBadge("4K", Color(0xFFD42B2B), Color.White, fontSize = 14.5.sp)
+                        if (isHDR) ProBadge("HDR", Color(0xFF7B2CBF), Color.White, fontSize = 14.5.sp)
+                        if (is60Fps) ProBadge("60FPS", Color(0xFF00897B), Color.White, fontSize = 14.5.sp)
+                        if (qualityText.isNotEmpty() && !is4K) ProBadge(qualityText.uppercase(), ElectricViolet.copy(alpha = 0.90f), Color.White, fontSize = 14.5.sp)
                     }
                 }
             }
@@ -739,7 +739,7 @@ fun DeepEyeVideoPlayerOverlay(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // ─── Quick System Group ───
@@ -969,7 +969,7 @@ private fun DeepEyeTimeRow(
                         size = Size(progW, trackHeight)
                     )
                     // 4. Scrubber Thumb
-                    val thumbRadius = if (isScrubbing) 8.dp.toPx() else 5.dp.toPx()
+                    val thumbRadius = if (isScrubbing) 11.dp.toPx() else 7.5.dp.toPx()
                     drawCircle(
                         color = NeonCyan,
                         radius = thumbRadius,
@@ -999,14 +999,26 @@ private fun DeepEyeTimeRow(
 // ─── Pro Reusable Components ───
 
 @Composable
-private fun ProBadge(text: String, bg: Color, textColor: Color, fontSize: androidx.compose.ui.unit.TextUnit = 11.sp) {
-    Box(
-        Modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(bg)
-            .padding(horizontal = 10.dp, vertical = 4.dp)
+private fun ProBadge(text: String, bg: Color, textColor: Color, fontSize: androidx.compose.ui.unit.TextUnit = 15.sp) {
+    Surface(
+        shape = RoundedCornerShape(10.dp),
+        color = bg,
+        border = BorderStroke(1.2.dp, Color.White.copy(alpha = 0.35f)),
+        modifier = Modifier.padding(vertical = 2.dp)
     ) {
-        Text(text, style = MaterialTheme.typography.labelSmall, color = textColor, fontSize = fontSize, fontWeight = FontWeight.Bold)
+        Box(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleSmall,
+                color = textColor,
+                fontSize = fontSize,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.6.sp
+            )
+        }
     }
 }
 
