@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <!-- Matches context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) -->
-    <external-files-path name="downloads" path="Download" />
+    <!-- Comprehensive FileProvider path mappings -->
+    <external-files-path name="external_files" path="." />
+    <external-path name="external_storage" path="." />
+    <cache-path name="internal_cache" path="." />
+    <external-cache-path name="external_cache" path="." />
+    <files-path name="internal_files" path="." />
 </paths>

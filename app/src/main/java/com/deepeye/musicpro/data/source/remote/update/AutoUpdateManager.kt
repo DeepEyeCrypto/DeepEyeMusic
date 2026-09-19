@@ -4,6 +4,7 @@
 package com.deepeye.musicpro.data.source.remote.update
 
 import android.content.Context
+import android.util.Log
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -94,7 +95,7 @@ constructor(
                         .header("User-Agent", "DeepEyeMusicPro-App")
                         .build()
 
-                val response = kotlinx.coroutines.withTimeoutOrNull(4000L) {
+                val response = kotlinx.coroutines.withTimeoutOrNull(15000L) {
                     okHttpClient.newCall(request).execute()
                 }
 
@@ -267,8 +268,18 @@ constructor(
                 Intent(Intent.ACTION_VIEW).apply {
                     setDataAndType(uri, "application/vnd.android.package-archive")
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 }
+            
+            // Explicitly grant URI permission to all potential package installers
+            val resInfoList = context.packageManager.queryIntentActivities(intent, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY)
+            for (resolveInfo in resInfoList) {
+                val pkgName = resolveInfo.activityInfo.packageName
+                context.grantUriPermission(pkgName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            }
+            
             context.startActivity(intent)
         } catch (e: Exception) {
             _updateState.value = UpdateState.Error("Failed to start installation: ${e.message}")
