@@ -8,11 +8,25 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30044,
+                versionName = "3.0.1.34",
+                releaseDate = "September 2026",
+                title = "Ultra-Max Edge-to-Edge Player Controls & Badges Overhaul 🚀",
+                highlight = true,
+                items =
+                    listOf(
+                        "Ultra-Max Video Overlay: Expanded bottom action dock with massive 64dp buttons and 46dp padding, filling landscape screens edge-to-edge.",
+                        "Giant Floating Badges: Redesigned 4K, HDR, 60FPS, and Time badges with 18sp extra-bold typography and frosted neon glowing borders.",
+                        "Direct Seeker Precision: Enlarged scrubbing track height and touch thumb radius with high-contrast timestamp typography.",
+                        "Persistent In-App Changelog: Added manual 'View Changelog' button in Settings > About with offline cached release history."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30043,
                 versionName = "3.0.1.33",
                 releaseDate = "September 2026",
                 title = "ViPER4Android Audiophile DSP & Futuristic UI Overhaul 🎛️",
-                highlight = true,
+                highlight = false,
                 items =
                     listOf(
                         "Anti-Clipping DSP Engine: Implemented hyperbolic soft-knee saturation, automatic dynamic headroom, and decoupled framework effects for zero digital distortion.",
