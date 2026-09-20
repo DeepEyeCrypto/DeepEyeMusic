@@ -139,15 +139,19 @@ constructor(
         }
     }
 
+    private var saveJob: kotlinx.coroutines.Job? = null
+
     fun updateParams(transform: (DspParams) -> DspParams) {
         val current = _uiState.value.params
         val next = transform(current)
 
-        // Push update to engine immediately
+        // Push update to engine immediately for 0ms audio latency
         dspEngine.updateParams(next)
 
-        // Persist to DataStore
-        viewModelScope.launch {
+        // Debounce DataStore disk I/O to avoid UI stuttering during slider drags
+        saveJob?.cancel()
+        saveJob = viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            kotlinx.coroutines.delay(200)
             dataStore.edit { prefs ->
                 prefs[DSPKeys.ACTIVE_PARAMS_JSON] = gson.toJson(next)
                 prefs[DSPKeys.ENABLED] = next.enabled

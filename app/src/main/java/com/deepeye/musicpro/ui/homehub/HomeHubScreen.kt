@@ -156,9 +156,9 @@ fun HomeHubScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp),
             contentPadding = PaddingValues(
                 start = if (isExpanded) 24.dp else 16.dp,
-                top = 16.dp,
+                top = 12.dp,
                 end = if (isExpanded) 24.dp else 16.dp,
-                bottom = 120.dp,
+                bottom = 140.dp,
             ),
         ) {
             item {
@@ -166,7 +166,9 @@ fun HomeHubScreen(
                 HomeGreetingHeader(
                     btcPrice = btcPrice,
                     onNavigateToSettings = onNavigateToSettings,
-                    onNavigateToChat = onNavigateToChat
+                    onNavigateToChat = onNavigateToChat,
+                    onOpenGamification = { showGamificationSheet = true },
+                    onOpenRanking = { showRankingSheet = true }
                 )
             }
 
@@ -406,30 +408,6 @@ fun HomeHubScreen(
                 }
             }
         } // Close LazyColumn here
-
-        // Fluid Menu for Gamification (Upper Right)
-        FluidMenu(
-            items = listOf(
-                FluidMenuItem(
-                    icon = Icons.Default.Star,
-                    tint = androidx.compose.ui.graphics.Color(0xFFFFD700),
-                    onClick = { showGamificationSheet = true }
-                ),
-                FluidMenuItem(
-                    icon = Icons.Default.Person,
-                    tint = androidx.compose.ui.graphics.Color(0xFF00E5FF),
-                    onClick = { showRankingSheet = true }
-                ),
-                FluidMenuItem(
-                    icon = Icons.Default.Settings,
-                    tint = androidx.compose.ui.graphics.Color.White,
-                    onClick = onNavigateToSettings
-                )
-            ),
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 16.dp, end = 16.dp)
-        )
     }
 }
 
@@ -437,42 +415,114 @@ fun HomeHubScreen(
 private fun HomeGreetingHeader(
     btcPrice: String,
     onNavigateToSettings: () -> Unit,
-    onNavigateToChat: () -> Unit = {}
+    onNavigateToChat: () -> Unit = {},
+    onOpenGamification: () -> Unit = {},
+    onOpenRanking: () -> Unit = {},
 ) {
-    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Box(
-            modifier = Modifier
-                .padding(bottom = 8.dp)
-                .wrapContentWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color.Black.copy(alpha = 0.4f)) // Premium dark pill
-                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp))
-                .padding(horizontal = 16.dp, vertical = 6.dp)
-                .clickable { onNavigateToChat() },
-            contentAlignment = Alignment.Center
-        ) {
+    val greeting = remember { getDynamicGreeting() }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Left Branding & Dynamic Greeting
+        Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                androidx.compose.material3.Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.Lock,
-                    contentDescription = "Secure Chat",
-                    tint = Color(0xFF7B3FE4),
-                    modifier = Modifier.size(16.dp)
+                Text(
+                    text = "DEEPEYE",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.5.sp,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
+                    modifier = Modifier
+                        .size(9.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(Color(0xFF00E5FF))
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = buildAnnotatedString {
-                        withStyle(SpanStyle(color = Color(0xFFFFD700))) { // Gold for Bitcoin icon
-                            append("₿ ")
-                        }
-                        withStyle(SpanStyle(color = Color(0xFF00E676))) { // Neon Green for price
-                            append(btcPrice.replace("₿ ", ""))
-                        }
-                    },
-                    style = MaterialTheme.typography.titleMedium, // Much smaller, professional
-                    fontWeight = FontWeight.Bold
+                    text = "PRO",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 1.sp,
+                    color = Color(0xFFFF9100),
+                    modifier = Modifier
+                        .background(Color(0x33FF9100), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
                 )
             }
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = greeting,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White.copy(alpha = 0.7f)
+            )
         }
+
+        // Right Cyberpunk Action Dock
+        Surface(
+            shape = RoundedCornerShape(26.dp),
+            color = Color(0xFF131722).copy(alpha = 0.85f),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x22FFFFFF)),
+            modifier = Modifier.heightIn(min = 48.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // Bitcoin Ticker Chip
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color(0x1AFFFFFF))
+                        .clickable { onNavigateToChat() }
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("₿", color = Color(0xFFFFD700), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.width(4.dp))
+                    Text(btcPrice.replace("₿ ", ""), color = Color(0xFF00E676), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+
+                // Chat Icon
+                IconButton(onClick = onNavigateToChat, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.Lock, contentDescription = "Chat", tint = Color(0xFF7B3FE4), modifier = Modifier.size(20.dp))
+                }
+
+                // Gamification Star
+                IconButton(onClick = onOpenGamification, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.Star, contentDescription = "Gamification", tint = Color(0xFFFFD700), modifier = Modifier.size(20.dp))
+                }
+
+                // Ranking / Leaderboard
+                IconButton(onClick = onOpenRanking, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.Person, contentDescription = "Leaderboard", tint = Color(0xFF00E5FF), modifier = Modifier.size(20.dp))
+                }
+
+                // Settings
+                IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White, modifier = Modifier.size(20.dp))
+                }
+            }
+        }
+    }
+}
+
+private fun getDynamicGreeting(): String {
+    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+    return when (hour) {
+        in 5..11 -> "Good Morning ☀️"
+        in 12..16 -> "Good Afternoon 🌤️"
+        in 17..21 -> "Good Evening 🌆"
+        else -> "Night Owl Session 🌙"
     }
 }
 

@@ -45,6 +45,8 @@ palette                  = { group = "androidx.palette", name = "palette-ktx", v
 splashscreen             = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 
 compose-m3-adaptive          = { group = "androidx.compose.material3.adaptive", name = "adaptive", version.ref = "compose-m3-adaptive" }
+compose-m3-adaptive-layout   = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout", version.ref = "compose-m3-adaptive" }
+compose-m3-adaptive-navigation = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation", version.ref = "compose-m3-adaptive" }
 compose-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite" }
 androidx-window          = { group = "androidx.window", name = "window", version.ref = "androidx-window" }
 compose-material3-window-size = { group = "androidx.compose.material3", name = "material3-window-size-class" }

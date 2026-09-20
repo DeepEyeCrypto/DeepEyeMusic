@@ -48,6 +48,13 @@ import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import kotlinx.coroutines.flow.collectLatest
 
+// ── Glassmorphism Palette ───────────────────────────────────────────────────
+private val GlassContainer = Color(0xFF131722).copy(alpha = 0.85f)
+private val NeonCyanAccent = Color(0xFF00E5FF)
+private val GlassBorder = Color(0x22FFFFFF)
+private val TextWhite = Color.White
+private val TextSecondaryGlass = Color.White.copy(alpha = 0.65f)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
@@ -107,7 +114,9 @@ fun SearchScreen(
                     MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.5).sp,
+                        fontSize = 28.sp,
                     ),
+                    color = TextWhite,
                     modifier = Modifier.padding(bottom = 12.dp),
                 )
 
@@ -164,7 +173,7 @@ fun SearchScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    CircularProgressIndicator(color = NeonCyanAccent)
                 }
             } else if (results.isEmpty()) {
                 SearchEmptyState(query)
@@ -229,10 +238,11 @@ fun SearchBar(
         modifier =
         Modifier
             .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        tonalElevation = 2.dp,
+            .height(64.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = GlassContainer,
+        tonalElevation = 0.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder),
     ) {
         Row(
             modifier =
@@ -244,7 +254,7 @@ fun SearchBar(
             Icon(
                 imageVector = Icons.Default.Search,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = TextSecondaryGlass,
             )
 
             TextField(
@@ -256,10 +266,15 @@ fun SearchBar(
                     .fillMaxHeight(),
                 placeholder = {
                     Text(
-                        "Search local & YouTube Music",
-                        style = MaterialTheme.typography.bodyLarge,
+                        text = "Search local & YouTube Music",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                        color = TextSecondaryGlass,
                     )
                 },
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 16.sp,
+                    color = TextWhite,
+                ),
                 colors =
                 TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
@@ -267,6 +282,9 @@ fun SearchBar(
                     disabledContainerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = NeonCyanAccent,
+                    focusedTextColor = TextWhite,
+                    unfocusedTextColor = TextWhite,
                 ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions =
@@ -281,7 +299,7 @@ fun SearchBar(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Clear",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = TextSecondaryGlass,
                     )
                 }
             }
@@ -303,36 +321,41 @@ fun SearchSuggestionsSection(
             item {
                 Text(
                     text = "Recent Searches",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
                     fontWeight = FontWeight.Bold,
+                    color = TextWhite,
                 )
             }
             items(recentSearches) { recent ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .defaultMinSize(minHeight = 64.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(GlassContainer)
+                        .border(1.dp, GlassBorder, RoundedCornerShape(14.dp))
                         .clickable { onSuggestionClick(recent) }
-                        .padding(vertical = 12.dp, horizontal = 8.dp),
+                        .padding(vertical = 14.dp, horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Default.History,
                         contentDescription = "Recent",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier.size(20.dp)
+                        tint = TextSecondaryGlass,
+                        modifier = Modifier.size(22.dp)
                     )
                     Spacer(Modifier.width(16.dp))
                     Text(
                         text = recent,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                        color = TextWhite
                     )
                     Spacer(Modifier.weight(1f))
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.CallMade,
                         contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.size(18.dp)
+                        tint = TextSecondaryGlass.copy(alpha = 0.5f),
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -342,28 +365,40 @@ fun SearchSuggestionsSection(
             item {
                 Text(
                     text = "Suggestions",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
                     fontWeight = FontWeight.Bold,
+                    color = TextWhite,
                     modifier = Modifier.padding(top = 16.dp),
                 )
             }
             item {
                 @OptIn(ExperimentalLayoutApi::class)
                 FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.padding(top = 8.dp),
                 ) {
                     suggestions.forEach { suggestion ->
                         SuggestionChip(
                             onClick = { onSuggestionClick(suggestion) },
-                            label = { Text(suggestion) },
+                            label = {
+                                Text(
+                                    text = suggestion,
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
+                                    color = TextWhite,
+                                )
+                            },
+                            modifier = Modifier.defaultMinSize(minHeight = 48.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                labelColor = MaterialTheme.colorScheme.onSurface
+                                containerColor = GlassContainer,
+                                labelColor = TextWhite,
                             ),
-                            border = null
+                            border = SuggestionChipDefaults.suggestionChipBorder(
+                                enabled = true,
+                                borderColor = GlassBorder,
+                                borderWidth = 1.dp,
+                            ),
                         )
                     }
                 }
@@ -383,8 +418,12 @@ fun SearchResultRow(
         modifier =
         Modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 64.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(GlassContainer)
+            .border(1.dp, GlassBorder, RoundedCornerShape(18.dp))
             .clickable { onClick() }
-            .padding(vertical = 8.dp),
+            .padding(vertical = 10.dp, horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
@@ -392,12 +431,12 @@ fun SearchResultRow(
             contentDescription = null,
             modifier = Modifier
                 .size(64.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clip(RoundedCornerShape(18.dp))
+                .background(GlassContainer)
                 .border(
                     width = 1.dp,
-                    color = com.deepeye.musicpro.ui.theme.GlassBorderLight,
-                    shape = RoundedCornerShape(16.dp)
+                    color = GlassBorder,
+                    shape = RoundedCornerShape(18.dp)
                 ),
             contentScale = ContentScale.Crop,
         )
@@ -405,43 +444,54 @@ fun SearchResultRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                ),
+                color = TextWhite,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            Spacer(Modifier.height(2.dp))
             Text(
                 text = item.subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp),
+                color = TextSecondaryGlass,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
         if (onAddToQueue != null) {
             IconButton(
                 onClick = onAddToQueue,
-                modifier = Modifier.padding(start = 8.dp),
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .size(48.dp),
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add to queue",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp),
+                    tint = NeonCyanAccent,
+                    modifier = Modifier.size(26.dp),
                 )
             }
         }
         if (item.artist != null) {
             IconButton(
                 onClick = onArtistClick,
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .size(48.dp),
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = "Go to artist",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    tint = TextSecondaryGlass,
                 )
             }
         }
     }
+    Spacer(Modifier.height(10.dp))
 }
 
 @Composable
@@ -455,19 +505,19 @@ fun SearchEmptyState(query: String) {
             imageVector = Icons.Default.Search,
             contentDescription = null,
             modifier = Modifier.size(64.dp),
-            tint = com.deepeye.musicpro.ui.theme.TextSecondary.copy(alpha = 0.5f)
+            tint = TextSecondaryGlass.copy(alpha = 0.5f)
         )
         Spacer(Modifier.height(24.dp))
         Text(
-            "No results for \"$query\"",
-            style = MaterialTheme.typography.titleLarge,
-            color = com.deepeye.musicpro.ui.theme.TextPrimary,
+            text = "No results for \"$query\"",
+            style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
+            color = TextWhite,
             fontWeight = FontWeight.Bold,
         )
         Text(
-            "Try checking for typos or searching for something else.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = com.deepeye.musicpro.ui.theme.TextSecondary,
+            text = "Try checking for typos or searching for something else.",
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
+            color = TextSecondaryGlass,
             modifier = Modifier.padding(top = 8.dp),
         )
     }
@@ -483,13 +533,13 @@ fun LoadingIndicatorRow(modifier: Modifier = Modifier) {
         CircularProgressIndicator(
             modifier = Modifier.size(22.dp),
             strokeWidth = 2.dp,
-            color = MaterialTheme.colorScheme.primary,
+            color = NeonCyanAccent,
         )
         Spacer(Modifier.width(12.dp))
         Text(
             text = "Loading more...",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp),
+            color = TextSecondaryGlass,
         )
     }
 }
@@ -503,8 +553,8 @@ fun EndOfResultsRow(modifier: Modifier = Modifier) {
     ) {
         Text(
             text = "You're all caught up",
-            style = MaterialTheme.typography.bodySmall,
-            color = com.deepeye.musicpro.ui.theme.TextSecondary.copy(alpha = 0.7f),
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp),
+            color = TextSecondaryGlass.copy(alpha = 0.7f),
         )
     }
 }

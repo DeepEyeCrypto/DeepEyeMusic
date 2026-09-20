@@ -15,7 +15,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -67,15 +69,28 @@ fun DownloadsScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("Downloads") },
+                title = { 
+                    Text(
+                        text = "Downloads",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    ) 
+                },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.size(52.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
+                            contentDescription = "Back",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 },
-                colors =
-                TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0A0A14),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White,
                 ),
@@ -84,8 +99,7 @@ fun DownloadsScreen(
     ) { padding ->
         if (activeDownloads.isEmpty() && completedDownloads.isEmpty()) {
             Box(
-                modifier =
-                Modifier
+                modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
                 contentAlignment = Alignment.Center,
@@ -101,14 +115,14 @@ fun DownloadsScreen(
                     Text(
                         text = "No downloads",
                         color = Color.White.copy(alpha = 0.5f),
-                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
                     )
                 }
             }
         } else {
             LazyColumn(
-                modifier =
-                Modifier
+                modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
                 contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 180.dp),
@@ -119,25 +133,28 @@ fun DownloadsScreen(
                         Text(
                             text = "Active Downloads",
                             color = Color.White,
-                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
                     items(activeDownloads.entries.toList(), key = { it.key }) { item ->
                         Card(
-                            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f)),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFF131722).copy(alpha = 0.85f)
+                            ),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Row(
-                                modifier =
-                                Modifier
+                                modifier = Modifier
                                     .fillMaxWidth()
+                                    .defaultMinSize(minHeight = 64.dp)
                                     .padding(16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(24.dp),
-                                    color = Color(0xFF7B3FE4),
+                                    color = Color(0xFF00E5FF),
                                     strokeWidth = 2.dp,
                                 )
                                 Spacer(modifier = Modifier.width(16.dp))
@@ -145,17 +162,25 @@ fun DownloadsScreen(
                                     Text(
                                         text = item.value.title,
                                         color = Color.White,
-                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontSize = 15.sp,
                                         maxLines = 1,
                                     )
                                     Text(
                                         text = "Downloading...",
                                         color = Color.White.copy(alpha = 0.6f),
-                                        style = MaterialTheme.typography.bodySmall,
+                                        fontSize = 13.sp,
                                     )
                                 }
-                                IconButton(onClick = { viewModel.cancelDownload(item.key) }) {
-                                    Icon(Icons.Default.Close, "Cancel", tint = Color.White.copy(alpha = 0.6f))
+                                IconButton(
+                                    onClick = { viewModel.cancelDownload(item.key) },
+                                    modifier = Modifier.size(52.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close, 
+                                        contentDescription = "Cancel", 
+                                        tint = Color.White.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(24.dp)
+                                    )
                                 }
                             }
                         }
@@ -167,7 +192,8 @@ fun DownloadsScreen(
                         Text(
                             text = "Completed",
                             color = Color.White,
-                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(
                                 top = if (activeDownloads.isNotEmpty()) 16.dp else 0.dp,
                                 bottom = 8.dp
@@ -188,34 +214,36 @@ fun DownloadsScreen(
                                 )
                                 onNavigateToNowPlaying()
                             },
-                            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.05f)),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFF131722).copy(alpha = 0.85f)
+                            ),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Row(
-                                modifier =
-                                Modifier
+                                modifier = Modifier
                                     .fillMaxWidth()
+                                    .defaultMinSize(minHeight = 64.dp)
                                     .padding(16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.DownloadDone,
                                     contentDescription = null,
-                                    tint = Color(0xFF00D2FF),
+                                    tint = Color(0xFF00E5FF),
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.width(16.dp))
-                                Column {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = item.title,
                                         color = Color.White,
-                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontSize = 15.sp,
                                         maxLines = 1,
                                     )
                                     Text(
                                         text = item.subtitle,
                                         color = Color.White.copy(alpha = 0.6f),
-                                        style = MaterialTheme.typography.bodySmall,
+                                        fontSize = 13.sp,
                                     )
                                 }
                             }

@@ -20,8 +20,8 @@ android {
         applicationId = "com.deepeye.musicpro"
         minSdk = 24
         targetSdk = 35
-        versionCode = 30045
-        versionName = "3.0.1.35"
+        versionCode = 30046
+        versionName = "3.0.1.36"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -153,6 +153,8 @@ dependencies {
 
     // Adaptive Layouts
     implementation(libs.compose.m3.adaptive)
+    implementation(libs.compose.m3.adaptive.layout)
+    implementation(libs.compose.m3.adaptive.navigation)
     implementation(libs.compose.adaptive.navigation.suite)
     implementation(libs.androidx.window)
     implementation(libs.compose.material3.window.size)

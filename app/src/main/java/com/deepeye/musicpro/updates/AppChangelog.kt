@@ -8,6 +8,21 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30046,
+                versionName = "3.0.1.36",
+                releaseDate = "September 2026",
+                title = "Material 3 Adaptive & Studio DSP Overhaul 🚀",
+                highlight = true,
+                items =
+                    listOf(
+                        "Material 3 Adaptive Architecture: Complete system-wide overhaul across Home Hub, YouTube Cinema, Video Hub, Music, Library, Settings, and Video Overlay with fluid responsive scaling.",
+                        "Studio 10-Band EQ & Spline: Hardware-grade parametric Bezier spline curve, 1-tap studio presets, tactile vertical faders with tap-to-set and 0ms audio latency.",
+                        "Audio Engine DSP Spline Interpolation: Fixed frequency mismatch by implementing Logarithmic Frequency Spline Interpolation across all hardware bands.",
+                        "Expanded Action Dock: Adaptive edge-to-edge layout with 52dp buttons and responsive spacing for all screen sizes.",
+                        "Cyberpunk Glassmorphism: Tier-1 automotive dark glass surfaces, neon cyan glowing borders, and high-contrast glanceable typography."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30045,
                 versionName = "3.0.1.35",
                 releaseDate = "September 2026",

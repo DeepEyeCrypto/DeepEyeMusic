@@ -6,6 +6,7 @@ package com.deepeye.musicpro.ui.dsp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -34,6 +35,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.deepeye.musicpro.dsp.engine.DSPViewModel
@@ -62,10 +65,21 @@ fun DSPScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("V4A DSP Engine", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold) },
+                title = { Text("V4A DSP Engine", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurface)
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .size(56.dp)
+                            .background(Color(0x1AFFFFFF), androidx.compose.foundation.shape.CircleShape)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color(0xFF00E5FF),
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
                 },
                 actions = {
@@ -75,21 +89,23 @@ fun DSPScreen(
                     ) {
                         Text(
                             text = if (isEnabled) "ACTIVE" else "DISABLED",
-                            color = if (isEnabled) Color(0xFF00E5FF) else androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.75f),
-                            style = MaterialTheme.typography.labelMedium,
+                            color = if (isEnabled) Color(0xFF00E5FF) else Color.White.copy(0.6f),
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(end = 8.dp),
+                            modifier = Modifier.padding(end = 12.dp),
                         )
                         Switch(
                             checked = isEnabled,
                             onCheckedChange = { viewModel.toggleMasterEnabled() },
-                            modifier = Modifier.testTag("dsp_toggle"),
+                            modifier = Modifier
+                                .testTag("dsp_toggle")
+                                .scale(1.35f),
                             colors =
                             SwitchDefaults.colors(
-                                checkedThumbColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                                checkedTrackColor = Color(0xFF00E5FF),
-                                uncheckedThumbColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                                uncheckedTrackColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                checkedThumbColor = Color(0xFF00E5FF),
+                                checkedTrackColor = Color(0x4400E5FF),
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = Color(0x1AFFFFFF),
                             ),
                         )
                     }
@@ -235,52 +251,61 @@ fun PresetsCard(
     onSaveForTrackClick: () -> Unit,
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.04f)),
-        border = BorderStroke(1.dp, androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.08f)),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF131722).copy(alpha = 0.85f)),
+        border = BorderStroke(1.dp, Color(0x22FFFFFF)),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(
-                Modifier.fillMaxWidth(),
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Presets", style = MaterialTheme.typography.titleMedium, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface)
+                Text("Presets", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Row {
-                    IconButton(onClick = onSaveForTrackClick) {
-                        Icon(Icons.Default.Star, contentDescription = "Link to Track", tint = Color(0xFFFFD700))
+                    IconButton(onClick = onSaveForTrackClick, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.Star, contentDescription = "Link to Track", tint = Color(0xFFFFD700), modifier = Modifier.size(22.dp))
                     }
-                    IconButton(onClick = onSaveClick) {
-                        Icon(Icons.Default.Add, contentDescription = "Save Custom Preset", tint = Color(0xFF00E5FF))
+                    IconButton(onClick = onSaveClick, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.Add, contentDescription = "Save Custom Preset", tint = Color(0xFF00E5FF), modifier = Modifier.size(24.dp))
                     }
                 }
             }
-            Spacer(Modifier.height(8.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Spacer(Modifier.height(10.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 presets.forEach { (id, name) ->
                     val isSelected = id == selectedPresetId
                     Row(
                         Modifier
                             .fillMaxWidth()
+                            .heightIn(min = 52.dp)
                             .clickable { onPresetSelect(id) }
                             .background(
-                                color = if (isSelected) Color(0xFF00E5FF).copy(0.12f) else Color.Transparent,
-                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSelected) Color(0x3300E5FF) else Color(0x0AFFFFFF),
+                                shape = RoundedCornerShape(12.dp),
                             )
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                            .border(
+                                width = if (isSelected) 1.5.dp else 1.dp,
+                                color = if (isSelected) Color(0xFF00E5FF) else Color(0x14FFFFFF),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = name,
-                            color = if (isSelected) Color(0xFF00E5FF) else androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.8f),
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) Color(0xFF00E5FF) else Color.White,
+                            fontSize = 15.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         )
                         // Allow deletion of custom user presets (id > 7, built-ins are 1-7)
                         if (id > 7) {
-                            IconButton(onClick = { onPresetDelete(id) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red.copy(0.6f))
+                            IconButton(onClick = { onPresetDelete(id) }, modifier = Modifier.size(36.dp)) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFFF5252))
                             }
                         }
                     }
@@ -449,59 +474,66 @@ fun CollapsibleCard(
     val showContent = expanded && isEnabled && isMasterEnabled
 
     Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.04f)),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF131722).copy(alpha = 0.85f)),
         border = BorderStroke(
-            1.dp,
-            if (isEnabled && isMasterEnabled) Color(0xFF00E5FF).copy(0.3f) else androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.08f)
+            if (isEnabled && isMasterEnabled) 1.5.dp else 1.dp,
+            if (isEnabled && isMasterEnabled) Color(0xFF00E5FF).copy(0.4f) else Color(0x22FFFFFF)
         ),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(14.dp)) {
+        Column(Modifier.padding(16.dp)) {
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .heightIn(min = 64.dp)
                     .clickable { expanded = !expanded },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f).padding(end = 12.dp)
+                ) {
                     Switch(
                         checked = isEnabled,
                         onCheckedChange = onToggle,
                         enabled = isMasterEnabled,
+                        modifier = Modifier
+                            .scale(1.35f)
+                            .padding(end = 16.dp),
                         colors =
                         SwitchDefaults.colors(
-                            checkedThumbColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                            checkedTrackColor = Color(0xFF00E5FF),
-                            uncheckedThumbColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
-                            uncheckedTrackColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                            disabledUncheckedThumbColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                            disabledUncheckedTrackColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-                            disabledCheckedThumbColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            disabledCheckedTrackColor = Color(0xFF00E5FF).copy(alpha = 0.4f),
+                            checkedThumbColor = Color(0xFF00E5FF),
+                            checkedTrackColor = Color(0x4400E5FF),
+                            uncheckedThumbColor = Color.White,
+                            uncheckedTrackColor = Color(0x1AFFFFFF),
+                            disabledUncheckedThumbColor = Color.White.copy(alpha = 0.4f),
+                            disabledUncheckedTrackColor = Color(0x1AFFFFFF),
+                            disabledCheckedThumbColor = Color(0xFF00E5FF).copy(alpha = 0.4f),
+                            disabledCheckedTrackColor = Color(0x2200E5FF),
                         ),
-                        modifier = Modifier.padding(end = 12.dp),
                     )
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                        fontSize = 17.sp,
+                        color = if (isEnabled && isMasterEnabled) Color.White else Color.White.copy(0.5f),
                         fontWeight = FontWeight.Bold,
                     )
                 }
                 Icon(
                     imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.6f),
+                    tint = if (isEnabled && isMasterEnabled) Color(0xFF00E5FF) else Color.White.copy(0.5f),
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
-            // Note: using simple if block instead of AnimatedVisibility to avoid
-            // "Placement happened before lookahead" crash inside LazyVerticalGrid items.
             if (showContent) {
                 Column {
-                    Spacer(Modifier.height(14.dp))
+                    Spacer(Modifier.height(16.dp))
+                    HorizontalDivider(color = Color(0x1AFFFFFF), thickness = 1.dp)
+                    Spacer(Modifier.height(16.dp))
                     content()
                 }
             }
@@ -519,11 +551,16 @@ fun DspSliderRow(
     onValueChange: (Float) -> Unit,
     valueFormatter: (Float) -> String = { "%.1f".format(it) },
 ) {
-    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(label, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.7f), style = MaterialTheme.typography.bodyMedium)
-            Text(valueFormatter(value), color = Color(0xFF00E5FF), style = MaterialTheme.typography.bodyMedium)
+    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(label, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+            Text(valueFormatter(value), color = Color(0xFF00E5FF), fontSize = 15.sp, fontWeight = FontWeight.Bold)
         }
+        Spacer(Modifier.height(4.dp))
         Slider(
             value = value,
             onValueChange = onValueChange,
@@ -532,7 +569,7 @@ fun DspSliderRow(
             SliderDefaults.colors(
                 thumbColor = Color(0xFF00E5FF),
                 activeTrackColor = Color(0xFF00E5FF),
-                inactiveTrackColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.12f),
+                inactiveTrackColor = Color(0x33FFFFFF),
             ),
         )
     }
@@ -556,8 +593,8 @@ fun DspKnobControl(
             valueRange = valueRange,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        Text(label, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.7f), style = MaterialTheme.typography.labelSmall)
-        Text(valueFormatter(value), color = Color(0xFF00E5FF), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+        Text(label, color = Color.White.copy(0.7f), fontSize = 13.sp)
+        Text(valueFormatter(value), color = Color(0xFF00E5FF), fontSize = 15.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -571,31 +608,33 @@ fun PresetChip(
 ) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         color =
         if (isSelected) {
-            Color(0xFF00E5FF).copy(alpha = 0.2f)
+            Color(0x3300E5FF)
         } else {
-            androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+            Color(0x0EFFFFFF)
         },
         border =
         BorderStroke(
-            1.dp,
+            if (isSelected) 1.5.dp else 1.dp,
             if (isSelected) {
                 Color(0xFF00E5FF)
             } else {
-                androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.1f)
+                Color(0x14FFFFFF)
             },
         ),
+        modifier = Modifier.heightIn(min = 48.dp)
     ) {
         Box(
-            Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelMedium,
-                color = if (isSelected) Color(0xFF00E5FF) else androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                fontSize = 14.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = if (isSelected) Color(0xFF00E5FF) else Color.White,
             )
         }
     }
@@ -637,53 +676,62 @@ fun EqualizerCard(
     val showContent = expanded && isEnabled && isMasterEnabled
 
     Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.04f)),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF131722).copy(alpha = 0.85f)),
         border = BorderStroke(
-            1.dp,
-            if (isEnabled && isMasterEnabled) Color(0xFF00E5FF).copy(0.3f) else androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.08f)
+            if (isEnabled && isMasterEnabled) 1.5.dp else 1.dp,
+            if (isEnabled && isMasterEnabled) Color(0xFF00E5FF).copy(0.4f) else Color(0x22FFFFFF)
         ),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(14.dp)) {
+        Column(Modifier.padding(16.dp)) {
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .heightIn(min = 64.dp)
                     .clickable { expanded = !expanded },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f).padding(end = 12.dp)
+                ) {
                     Switch(
                         checked = isEnabled,
                         onCheckedChange = onToggle,
                         enabled = isMasterEnabled,
+                        modifier = Modifier
+                            .scale(1.35f)
+                            .padding(end = 16.dp),
                         colors =
                         SwitchDefaults.colors(
-                            checkedThumbColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                            checkedTrackColor = Color(0xFF00E5FF),
+                            checkedThumbColor = Color(0xFF00E5FF),
+                            checkedTrackColor = Color(0x4400E5FF),
+                            uncheckedThumbColor = Color.White,
+                            uncheckedTrackColor = Color(0x1AFFFFFF),
                         ),
-                        modifier = Modifier.padding(end = 12.dp),
                     )
                     Text(
                         text = "10-Band Equalizer",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = if (isEnabled && isMasterEnabled) androidx.compose.material3.MaterialTheme.colorScheme.onSurface else androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.5f),
+                        fontSize = 17.sp,
+                        color = if (isEnabled && isMasterEnabled) Color.White else Color.White.copy(0.5f),
                         fontWeight = FontWeight.Bold,
                     )
                 }
                 Icon(
                     imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.6f),
+                    tint = if (isEnabled && isMasterEnabled) Color(0xFF00E5FF) else Color.White.copy(0.5f),
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
-            // Note: using simple if block instead of AnimatedVisibility to avoid
-            // "Placement happened before lookahead" crash inside LazyVerticalGrid items.
             if (showContent) {
                 Column {
-                    Spacer(Modifier.height(14.dp))
+                    Spacer(Modifier.height(16.dp))
+                    HorizontalDivider(color = Color(0x1AFFFFFF), thickness = 1.dp)
+                    Spacer(Modifier.height(16.dp))
                     com.deepeye.musicpro.ui.dsp.components.EqualizerCurveVisualizer(
                         eqBands = params.eqBands,
                         isEnabled = isEnabled && isMasterEnabled,

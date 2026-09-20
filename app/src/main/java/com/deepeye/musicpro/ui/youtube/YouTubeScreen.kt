@@ -33,6 +33,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -67,8 +68,8 @@ fun YouTubeScreen(
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     val darkBackground = androidx.compose.material3.MaterialTheme.colorScheme.background
-    val surfaceColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
-    val neonCyan = Color(0xFF00D2FF)
+    val surfaceColor = Color(0xFF131722).copy(alpha = 0.85f)
+    val neonCyan = Color(0xFF00E5FF)
     val neonPurple = Color(0xFF7C4DFF)
 
     val currentItem = playerState.currentItem
@@ -145,37 +146,37 @@ fun YouTubeScreen(
                                 Text(
                                     "Video ID: ${item.id}",
                                     color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 9.sp,
+                                    fontSize = 11.sp,
                                     fontFamily = FontFamily.Monospace
                                 )
                                 Text(
                                     "Resolution: 1920x1080 @60fps",
                                     color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 9.sp,
+                                    fontSize = 11.sp,
                                     fontFamily = FontFamily.Monospace,
                                 )
                                 Text(
                                     "Decoder: MediaCodec hardware VP9",
                                     color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 9.sp,
+                                    fontSize = 11.sp,
                                     fontFamily = FontFamily.Monospace,
                                 )
                                 Text(
                                     "Connection Speed: 48.3 Mbps",
                                     color = Color.Green,
-                                    fontSize = 9.sp,
+                                    fontSize = 11.sp,
                                     fontFamily = FontFamily.Monospace
                                 )
                                 Text(
                                     "Buffer Health: 28.2s (Steady)",
                                     color = Color.Green,
-                                    fontSize = 9.sp,
+                                    fontSize = 11.sp,
                                     fontFamily = FontFamily.Monospace,
                                 )
                                 Text(
                                     "Active Shield: SponsorBlock Server connected",
                                     color = neonCyan,
-                                    fontSize = 9.sp,
+                                    fontSize = 11.sp,
                                     fontFamily = FontFamily.Monospace,
                                 )
                             }
@@ -198,7 +199,7 @@ fun YouTubeScreen(
                         modifier =
                         Modifier
                             .fillMaxWidth()
-                            .background(androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f), RoundedCornerShape(14.dp)),
+                            .background(Color(0xFF131722).copy(alpha = 0.85f), RoundedCornerShape(14.dp)),
                         placeholder = { Text("Search YouTube videos...", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)) },
                         trailingIcon = {
                             IconButton(onClick = {
@@ -238,7 +239,7 @@ fun YouTubeScreen(
                                     .premiumScrollHaptics(suggestionsState)
                                     .clip(RoundedCornerShape(16.dp))
                                     .background(surfaceColor)
-                                    .border(1.dp, androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+                                    .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
                                     .padding(8.dp),
                             ) {
                                 items(uiState.searchSuggestions) { suggestion ->
@@ -267,7 +268,7 @@ fun YouTubeScreen(
                                             style = MaterialTheme.typography.bodyLarge,
                                         )
                                     }
-                                    HorizontalDivider(color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                                    HorizontalDivider(color = Color(0x1AFFFFFF))
                                 }
                             }
                         } else {
@@ -317,8 +318,8 @@ fun YouTubeScreen(
                                             )
                                         } else {
                                             listOf(
-                                                androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f),
-                                                androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f)
+                                                Color(0x0EFFFFFF),
+                                                Color(0x0EFFFFFF)
                                             )
                                         },
                                     ),
@@ -331,7 +332,7 @@ fun YouTubeScreen(
                                             0xFFFF3D00,
                                         ).copy(alpha = 0.3f)
                                     } else {
-                                        androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                                        Color(0x22FFFFFF)
                                     },
                                     shape = RoundedCornerShape(14.dp),
                                 )
@@ -383,6 +384,7 @@ fun YouTubeScreen(
                                 }
 
                                 Switch(
+                                    modifier = Modifier.scale(1.35f),
                                     checked = uiState.shieldsEnabled,
                                     onCheckedChange = { viewModel.toggleShieldsEnabled() },
                                     colors =
@@ -407,8 +409,8 @@ fun YouTubeScreen(
                                 Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(14.dp))
-                                    .background(androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f))
-                                    .border(1.dp, androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
+                                    .background(Color(0xFF131722).copy(alpha = 0.85f))
+                                    .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(14.dp))
                                     .padding(14.dp),
                                 verticalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
@@ -433,7 +435,7 @@ fun YouTubeScreen(
                                                         0xFFFF3D00,
                                                     ).copy(alpha = 0.15f)
                                                 } else {
-                                                    androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f)
+                                                    Color(0x0EFFFFFF)
                                                 },
                                             )
                                             .border(
@@ -443,7 +445,7 @@ fun YouTubeScreen(
                                                         0xFFFF3D00
                                                     )
                                                 } else {
-                                                    androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                                                    Color(0x22FFFFFF)
                                                 },
                                                 shape = RoundedCornerShape(10.dp),
                                             )
@@ -454,7 +456,7 @@ fun YouTubeScreen(
                                         Text(
                                             "Standard",
                                             color = if (isStandard) androidx.compose.material3.MaterialTheme.colorScheme.onSurface else androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                            fontSize = 12.sp,
+                                            fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
                                         )
                                     }
@@ -470,7 +472,7 @@ fun YouTubeScreen(
                                                         0xFFFF3D00,
                                                     ).copy(alpha = 0.15f)
                                                 } else {
-                                                    androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f)
+                                                    Color(0x0EFFFFFF)
                                                 },
                                             )
                                             .border(
@@ -480,7 +482,7 @@ fun YouTubeScreen(
                                                         0xFFFF3D00
                                                     )
                                                 } else {
-                                                    androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                                                    Color(0x22FFFFFF)
                                                 },
                                                 shape = RoundedCornerShape(10.dp),
                                             )
@@ -491,7 +493,7 @@ fun YouTubeScreen(
                                         Text(
                                             "Aggressive",
                                             color = if (isAggressive) androidx.compose.material3.MaterialTheme.colorScheme.onSurface else androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                            fontSize = 12.sp,
+                                            fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
                                         )
                                     }
@@ -516,8 +518,8 @@ fun YouTubeScreen(
                                 Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(14.dp))
-                                    .background(androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f))
-                                    .border(1.dp, androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
+                                    .background(Color(0xFF131722).copy(alpha = 0.85f))
+                                    .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(14.dp))
                                     .padding(14.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
@@ -550,7 +552,7 @@ fun YouTubeScreen(
                                     }
                                 }
 
-                                HorizontalDivider(color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                                HorizontalDivider(color = Color(0x1AFFFFFF))
 
                                 val categories =
                                     listOf(
@@ -631,8 +633,8 @@ fun YouTubeScreen(
                                 Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(14.dp))
-                                    .background(androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f))
-                                    .border(1.dp, androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
+                                    .background(Color(0xFF131722).copy(alpha = 0.85f))
+                                    .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(14.dp))
                                     .padding(14.dp),
                                 verticalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
@@ -643,7 +645,7 @@ fun YouTubeScreen(
                                     fontSize = 13.sp
                                 )
 
-                                HorizontalDivider(color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                                HorizontalDivider(color = Color(0x1AFFFFFF))
 
                                 Row(
                                     modifier =
@@ -659,15 +661,16 @@ fun YouTubeScreen(
                                             "Hide YouTube Shorts Rail",
                                             fontWeight = FontWeight.Bold,
                                             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                                            fontSize = 12.sp,
+                                            fontSize = 14.sp,
                                         )
                                         Text(
                                             "Dynamically strip Shorts videos from Trending & Search feeds",
                                             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                            fontSize = 9.sp,
+                                            fontSize = 11.sp,
                                         )
                                     }
                                     Switch(
+                                        modifier = Modifier.scale(1.35f),
                                         checked = uiState.hideShorts,
                                         onCheckedChange = { viewModel.toggleHideShorts() },
                                         colors =
@@ -691,15 +694,16 @@ fun YouTubeScreen(
                                             "Block Third-Party Ads & Trackers",
                                             fontWeight = FontWeight.Bold,
                                             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                                            fontSize = 12.sp,
+                                            fontSize = 14.sp,
                                         )
                                         Text(
                                             "Drop connection requests to known tracking servers instantly",
                                             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                            fontSize = 9.sp,
+                                            fontSize = 11.sp,
                                         )
                                     }
                                     Switch(
+                                        modifier = Modifier.scale(1.35f),
                                         checked = true,
                                         onCheckedChange = {},
                                         enabled = false,
@@ -736,280 +740,144 @@ fun YouTubeScreen(
         }
     }
 
-    if (isLandscape) {
-        // ==========================================
-        // 1. CINEMATIC LANDSCAPE SIDEBAR MODE
-        // ==========================================
-
-        // In PiP mode: show ONLY the video player, nothing else
-        if (isInPipMode && playerState.isVideo) {
-            Box(
-                modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(androidx.compose.material3.MaterialTheme.colorScheme.surface),
-            ) {
-                HeaderPlayerArea()
-            }
-            return
-        }
-
-        Row(
+    if (isInPipMode && playerState.isVideo) {
+        Box(
             modifier =
             Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
-                .background(Color.Transparent),
+                .background(Color(0xFF090B10)),
         ) {
-            Column(
-                modifier =
-                Modifier
-                    .width(100.dp)
-                    .fillMaxHeight()
-                    .background(Color.Transparent)
-                    .padding(vertical = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                // Logo
+            HeaderPlayerArea()
+        }
+        return
+    }
+
+    Column(
+        modifier =
+        Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .background(Color.Transparent),
+    ) {
+        // Futuristic Cyberpunk Top Bar
+        Row(
+            modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier =
                     Modifier
-                        .size(48.dp)
+                        .size(44.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Brush.linearGradient(listOf(neonPurple, neonCyan))),
+                        .background(Brush.linearGradient(listOf(Color(0xFFFF0033), neonCyan))),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Default.PlayCircle,
                         contentDescription = null,
-                        tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(28.dp),
+                        tint = Color.White,
+                        modifier = Modifier.size(26.dp),
                     )
                 }
-
-                Spacer(Modifier.height(8.dp))
-
-                val tabs = if (uiState.hasAuth) {
-                    listOf(
-                        SidebarTabItem("Home", Icons.Default.Home),
-                        SidebarTabItem("Subscriptions", Icons.Default.Subscriptions),
-                        SidebarTabItem("Liked", Icons.Default.Favorite),
-                        SidebarTabItem("History", Icons.Default.History),
-                        SidebarTabItem("Search", Icons.Default.Search),
-                        SidebarTabItem("Music", Icons.Default.PlayCircle),
-                        SidebarTabItem("Gaming", Icons.Default.Star),
-                        SidebarTabItem("News", Icons.Default.Info),
-                        SidebarTabItem("SponsorBlock", Icons.Default.Settings),
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "YOUTUBE CINEMA",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.2.sp,
+                        color = Color.White,
                     )
-                } else {
-                    listOf(
-                        SidebarTabItem("Home", Icons.Default.Home),
-                        SidebarTabItem("Search", Icons.Default.Search),
-                        SidebarTabItem("Music", Icons.Default.PlayCircle),
-                        SidebarTabItem("Gaming", Icons.Default.Star),
-                        SidebarTabItem("News", Icons.Default.Info),
-                        SidebarTabItem("SponsorBlock", Icons.Default.Settings),
+                    Text(
+                        text = "Lossless 4K HDR Audio-Visual Stream",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White.copy(alpha = 0.6f),
                     )
-                }
-
-                tabs.forEach { tab ->
-                    val isSelected = uiState.selectedCategory == tab.title
-                    Column(
-                        modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable { viewModel.selectCategory(tab.title) }
-                            .padding(vertical = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Icon(
-                            imageVector = tab.icon,
-                            contentDescription = tab.title,
-                            tint = if (isSelected) neonCyan else androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            modifier = Modifier.size(22.dp),
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = tab.title,
-                            fontSize = 9.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) neonCyan else androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        )
-                    }
                 }
             }
 
-            Box(
-                modifier =
-                Modifier
-                    .fillMaxHeight()
-                    .width(1.dp)
-                    .background(androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
-            )
-
-            Column(
-                modifier =
-                Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
+            // Active Shield Indicator
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = if (uiState.shieldsEnabled) Color(0x2200E676) else Color(0x1AFFFFFF),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    if (uiState.shieldsEnabled) Color(0xFF00E676) else Color(0x22FFFFFF)
+                ),
+                modifier = Modifier.heightIn(min = 40.dp)
             ) {
-                // HeaderPlayerArea() // Removed as per user request
-                Box(
-                    modifier =
-                    Modifier
-                        .weight(1f)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    TabContentRouterView()
+                    Text(
+                        if (uiState.shieldsEnabled) "🛡️ SHIELD ON" else "🛡️ RAW",
+                        color = if (uiState.shieldsEnabled) Color(0xFF00E676) else Color.White.copy(0.6f),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
-    } else {
-        // ==========================================
-        // 2. ADAPTIVE PORTRAIT MOBILE MODE (STUNNING!)
-        // ==========================================
 
-        // In PiP mode: show ONLY the video player, nothing else
-        if (isInPipMode && playerState.isVideo) {
-            Box(
-                modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(androidx.compose.material3.MaterialTheme.colorScheme.surface),
-            ) {
-                HeaderPlayerArea()
-            }
-            return
+        // Horizontal Category Ribbon
+        val tabs = if (uiState.hasAuth) {
+            listOf("Home", "Subscriptions", "Liked", "History", "Watch Later", "Music", "Movies", "Gaming", "News", "Search", "SponsorBlock")
+        } else {
+            listOf("Home", "Search", "Music", "Movies", "Gaming", "News", "SponsorBlock")
         }
-
-        Column(
+        LazyRow(
             modifier =
             Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .background(Color.Transparent),
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // Header Bar
-            Row(
-                modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier =
-                        Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Brush.linearGradient(listOf(neonPurple, neonCyan))),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PlayCircle,
-                            contentDescription = null,
-                            tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        text = "DeepEyeMusicPro",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-
-                // Active Shield indicator
-                Box(
-                    modifier =
-                    Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.Green.copy(alpha = 0.12f))
-                        .border(0.5.dp, Color.Green.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    contentAlignment = Alignment.Center,
+            items(tabs) { tab ->
+                val isSelected = uiState.selectedCategory == tab
+                Surface(
+                    onClick = { viewModel.selectCategory(tab) },
+                    shape = RoundedCornerShape(20.dp),
+                    color = if (isSelected) Color(0x3300E5FF) else Color(0xFF131722).copy(alpha = 0.85f),
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = if (isSelected) 1.5.dp else 1.dp,
+                        color = if (isSelected) Color(0xFF00E5FF) else Color(0x22FFFFFF)
+                    ),
+                    modifier = Modifier.heightIn(min = 48.dp)
                 ) {
-                    Text(
-                        text = "SHIELD ON",
-                        color = Color.Green,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
-
-            // Top Horizontal category ribbon
-            val tabs = if (uiState.hasAuth) {
-                listOf("Home", "Subscriptions", "Liked", "History", "Watch Later", "Music", "Movies", "Gaming", "News", "Search", "SponsorBlock")
-            } else {
-                listOf("Home", "Search", "Music", "Movies", "Gaming", "News", "SponsorBlock")
-            }
-            LazyRow(
-                modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(tabs) { tab ->
-                    val isSelected = uiState.selectedCategory == tab
                     Box(
-                        modifier =
-                        Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(
-                                if (isSelected) {
-                                    neonCyan.copy(alpha = 0.15f)
-                                } else {
-                                    androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f)
-                                },
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = if (isSelected) neonCyan else androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                                shape = RoundedCornerShape(20.dp),
-                            )
-                            .clickable { viewModel.selectCategory(tab) }
-                            .padding(horizontal = 14.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = tab,
-                            color = if (isSelected) neonCyan else androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            fontSize = 12.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) Color(0xFF00E5FF) else Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         )
                     }
                 }
             }
+        }
 
-            HorizontalDivider(
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                modifier = Modifier.padding(top = 10.dp),
-            )
+        Spacer(Modifier.height(8.dp))
 
-            // Content
-            Column(
-                modifier =
-                Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-            ) {
-                // HeaderPlayerArea() // Removed as per user request
-                Box(
-                    modifier =
-                    Modifier
-                        .weight(1f)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                ) {
-                    TabContentRouterView()
-                }
-            }
+        // Content
+        Box(
+            modifier =
+            Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+        ) {
+            TabContentRouterView()
         }
     }
 }
@@ -1151,7 +1019,7 @@ fun VideoGridContent(
                         ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
-                                color = Color(0xFF00D2FF),
+                                color = Color(0xFF00E5FF),
                                 strokeWidth = 2.dp,
                             )
                         }
@@ -1169,7 +1037,7 @@ fun SmartTubeVideoCard(
     modifier: Modifier = Modifier,
     progressFraction: Float? = null,
 ) {
-    val neonCyan = Color(0xFF00D2FF)
+    val neonCyan = Color(0xFF00E5FF)
     val neonPurple = Color(0xFF7C4DFF)
 
     val isHdr = remember(video.id) { (video.id.hashCode() % 3) == 0 }
@@ -1207,7 +1075,7 @@ fun SmartTubeVideoCard(
             }
             .clip(RoundedCornerShape(16.dp))
             .background(
-                color = MaterialTheme.colorScheme.surfaceVariant,
+                color = Color(0xFF131722).copy(alpha = 0.85f),
             )
             .border(
                 width = if (isHovered || isPressed) 1.5.dp else 1.dp,
@@ -1428,7 +1296,7 @@ fun SmartTubeVideoCard(
                         color = neonCyan.copy(alpha = 0.9f),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 9.sp,
+                            fontSize = 11.sp,
                         ),
                         maxLines = 1,
                     )

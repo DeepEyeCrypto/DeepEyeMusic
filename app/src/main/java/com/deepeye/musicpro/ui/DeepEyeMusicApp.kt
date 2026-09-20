@@ -35,6 +35,9 @@ import androidx.compose.material.icons.outlined.Subscriptions
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationRailItemDefaults
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -313,6 +316,30 @@ fun DeepEyeMusicApp(
                     }
                 }
             } else {
+            val adaptiveItemColors = androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults.itemColors(
+                navigationBarItemColors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
+                    selectedTextColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
+                    indicatorColor = androidx.compose.ui.graphics.Color(0x3300E5FF),
+                    unselectedIconColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
+                    unselectedTextColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
+                ),
+                navigationRailItemColors = NavigationRailItemDefaults.colors(
+                    selectedIconColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
+                    selectedTextColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
+                    indicatorColor = androidx.compose.ui.graphics.Color(0x3300E5FF),
+                    unselectedIconColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
+                    unselectedTextColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
+                ),
+                navigationDrawerItemColors = NavigationDrawerItemDefaults.colors(
+                    selectedIconColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
+                    selectedTextColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
+                    selectedContainerColor = androidx.compose.ui.graphics.Color(0x3300E5FF),
+                    unselectedIconColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
+                    unselectedTextColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
+                )
+            )
+
             @OptIn(
                 androidx.compose.material3.adaptive.navigationsuite.ExperimentalMaterial3AdaptiveNavigationSuiteApi::class
             )
@@ -321,7 +348,7 @@ fun DeepEyeMusicApp(
                 containerColor = androidx.compose.ui.graphics.Color.Transparent,
                 navigationSuiteColors = androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults.colors(
                     navigationBarContainerColor = androidx.compose.ui.graphics.Color.Transparent,
-                    navigationRailContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                    navigationRailContainerColor = androidx.compose.ui.graphics.Color(0xFF0C0F17).copy(alpha = 0.85f),
                     navigationDrawerContainerColor = androidx.compose.ui.graphics.Color.Transparent
                 ),
                 navigationSuiteItems = {
@@ -338,8 +365,14 @@ fun DeepEyeMusicApp(
                                     contentDescription = item.label,
                                 )
                             },
-                            label = { Text(item.label) },
+                            label = { 
+                                Text(
+                                    text = item.label,
+                                    fontWeight = if (selected) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal
+                                ) 
+                            },
                             selected = selected,
+                            colors = adaptiveItemColors,
                             onClick = {
                                 if (!selected) {
                                     navController.navigate(item.route) {

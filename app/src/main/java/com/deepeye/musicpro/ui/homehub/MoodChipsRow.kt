@@ -7,9 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -24,8 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.deepeye.musicpro.domain.model.home.MoodMix
 
 /**
- * Mood Chips Row — horizontal scrollable mood/activity chips.
- * Each chip has a gradient accent color matching the mood and triggers a mood-based feed.
+ * Mood Chips Row — Futuristic Glassmorphic Activity & Mood Carousel
  */
 @Composable
 fun MoodChipsRow(
@@ -33,33 +29,36 @@ fun MoodChipsRow(
     onMoodClick: (MoodMix) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (moods.isEmpty()) {
-        android.util.Log.d("MoodChips", "Moods list is empty!")
-        return
-    }
-
-    android.util.Log.d("MoodChips", "Rendering MoodChipsRow with ${moods.size} moods")
+    if (moods.isEmpty()) return
 
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Text(
-            text = "Moods & Activities",
-            modifier = Modifier.padding(horizontal = 16.dp),
-            style = MaterialTheme.typography.titleMedium.copy(
-                brush = Brush.linearGradient(
-                    colors = listOf(Color(0xFF00D2FF), Color(0xFF7C4DFF))
-                )
-            ),
-            fontWeight = FontWeight.ExtraBold,
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color(0xFF00E5FF))
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = "Moods & Activities",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
 
         @OptIn(ExperimentalLayoutApi::class)
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
+            modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth(),
         ) {
             moods.forEach { mood ->
                 MoodChip(mood = mood, onClick = { onMoodClick(mood) })
@@ -76,28 +75,31 @@ private fun MoodChip(
 ) {
     val accentColor = Color(mood.accentColor.toInt())
 
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(accentColor.copy(alpha = 0.2f))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center,
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(24.dp),
+        color = Color(0xFF131722).copy(alpha = 0.85f),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            accentColor.copy(alpha = 0.5f)
+        ),
+        modifier = modifier.heightIn(min = 48.dp)
     ) {
         Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(
                 text = mood.emoji,
-                fontSize = 18.sp,
+                fontSize = 20.sp,
             )
             Text(
                 text = mood.label,
-                style = MaterialTheme.typography.labelLarge,
+                fontSize = 14.sp,
                 color = Color.White,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.5.sp
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.3.sp
             )
         }
     }

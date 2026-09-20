@@ -34,6 +34,7 @@ import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -594,48 +595,91 @@ fun DeepEyeVideoPlayerOverlay(
         // LAYER 3: PRO CONTROLS OVERLAY — Glassmorphic Top/Center/Bottom OSD
         // ══════════════════════════════════════════════════════════════════════
 
-        // ── CENTER TRANSPORT CLUSTER (Play/Pause + Prev/Next) ──
+        // ── CENTER PLAYBACK CONTROLS (Futuristic Glass Floating Capsule) ──
         AnimatedVisibility(
             visible = controlsVisible && !isLocked,
             enter = fadeIn(tween(180)) + scaleIn(tween(220), initialScale = 0.85f),
             exit = fadeOut(tween(180)) + scaleOut(tween(220), targetScale = 0.85f),
             modifier = Modifier.align(Alignment.Center)
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(20.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Surface(
+                shape = RoundedCornerShape(36.dp),
+                color = Color(0xFF090B10).copy(alpha = 0.80f),
+                border = BorderStroke(1.2.dp, Color(0x28FFFFFF)),
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
             ) {
-                // Skip Previous
-                Surface(shape = CircleShape, color = Color.Black.copy(alpha = 0.5f), modifier = Modifier.size(52.dp).clickable { resetTimer(); actions.previous() }) {
-                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.SkipPrevious, "Previous", tint = Color.White, modifier = Modifier.size(28.dp)) }
-                }
-                // Rewind 10s
-                Surface(shape = CircleShape, color = Color.Black.copy(alpha = 0.5f), modifier = Modifier.size(52.dp).clickable { resetTimer(); actions.rewind10() }) {
-                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Replay10, "-10s", tint = Color.White, modifier = Modifier.size(28.dp)) }
-                }
-                // Main Play/Pause — large accent ring
-                Surface(
-                    shape = CircleShape,
-                    color = Color.Black.copy(alpha = 0.6f),
-                    border = BorderStroke(2.5.dp, Brush.linearGradient(listOf(NeonCyan, ElectricViolet))),
-                    modifier = Modifier.size(72.dp).clickable { resetTimer(); actions.playPause() }
+                Row(
+                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(36.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = if (isPlaying) "Pause" else "Play",
-                            tint = Color.White,
-                            modifier = Modifier.size(40.dp)
-                        )
+                    // Skip Previous
+                    IconButton(
+                        onClick = { resetTimer(); actions.previous() },
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x1AFFFFFF))
+                            .border(1.dp, Color(0x25FFFFFF), CircleShape)
+                    ) {
+                        Icon(Icons.Default.SkipPrevious, "Previous", tint = Color.White, modifier = Modifier.size(32.dp))
                     }
-                }
-                // Forward 10s
-                Surface(shape = CircleShape, color = Color.Black.copy(alpha = 0.5f), modifier = Modifier.size(52.dp).clickable { resetTimer(); actions.forward10() }) {
-                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.Forward10, "+10s", tint = Color.White, modifier = Modifier.size(28.dp)) }
-                }
-                // Skip Next
-                Surface(shape = CircleShape, color = Color.Black.copy(alpha = 0.5f), modifier = Modifier.size(52.dp).clickable { resetTimer(); actions.next() }) {
-                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.SkipNext, "Next", tint = Color.White, modifier = Modifier.size(28.dp)) }
+
+                    // Rewind 10s
+                    IconButton(
+                        onClick = { resetTimer(); actions.rewind10() },
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x1AFFFFFF))
+                            .border(1.dp, Color(0x25FFFFFF), CircleShape)
+                    ) {
+                        Icon(Icons.Default.Replay10, "-10s", tint = Color.White, modifier = Modifier.size(32.dp))
+                    }
+
+                    // Main Play/Pause — Glowing Neon Cyan Action Button
+                    Surface(
+                        shape = CircleShape,
+                        color = NeonCyan,
+                        border = BorderStroke(2.5.dp, Color.White.copy(alpha = 0.85f)),
+                        modifier = Modifier
+                            .size(84.dp)
+                            .clip(CircleShape)
+                            .clickable { resetTimer(); actions.playPause() }
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = if (isPlaying) "Pause" else "Play",
+                                tint = Color(0xFF090B10),
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+                    }
+
+                    // Forward 10s
+                    IconButton(
+                        onClick = { resetTimer(); actions.forward10() },
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x1AFFFFFF))
+                            .border(1.dp, Color(0x25FFFFFF), CircleShape)
+                    ) {
+                        Icon(Icons.Default.Forward10, "+10s", tint = Color.White, modifier = Modifier.size(32.dp))
+                    }
+
+                    // Skip Next
+                    IconButton(
+                        onClick = { resetTimer(); actions.next() },
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x1AFFFFFF))
+                            .border(1.dp, Color(0x25FFFFFF), CircleShape)
+                    ) {
+                        Icon(Icons.Default.SkipNext, "Next", tint = Color.White, modifier = Modifier.size(32.dp))
+                    }
                 }
             }
         }
@@ -650,61 +694,60 @@ fun DeepEyeVideoPlayerOverlay(
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .background(brush = Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.80f), Color.Black.copy(alpha = 0.35f), Color.Transparent)))
-                    .padding(top = 28.dp, start = 14.dp, end = 14.dp, bottom = 10.dp)
+                    .background(brush = Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.88f), Color.Black.copy(alpha = 0.35f), Color.Transparent)))
+                    .padding(top = 18.dp, start = 24.dp, end = 24.dp, bottom = 10.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Back / Dismiss
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.12f),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
-                        modifier = Modifier.size(40.dp).clickable { actions.dismiss() }
+                    IconButton(
+                        onClick = { actions.dismiss() },
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF131722).copy(alpha = 0.85f))
+                            .border(1.dp, Color(0x25FFFFFF), CircleShape)
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Close, "Back", tint = Color.White, modifier = Modifier.size(22.dp))
-                        }
+                        Icon(Icons.Default.Close, "Back", tint = NeonCyan, modifier = Modifier.size(26.dp))
                     }
 
                     // Title + Artist
                     Column(modifier = Modifier.weight(1f).padding(horizontal = 6.dp)) {
                         Text(
                             title,
-                            style = MaterialTheme.typography.titleSmall,
                             color = Color.White,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Black,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            fontSize = 17.sp
+                            fontSize = 19.sp
                         )
                         if (artist.isNotBlank()) {
                             Text(
                                 artist,
-                                style = MaterialTheme.typography.labelSmall,
                                 color = Color.White.copy(alpha = 0.65f),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                fontSize = 13.5.sp
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }
 
                     // Badges Row
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (currentTimeString.isNotBlank()) {
-                            ProBadge(currentTimeString, Color.White.copy(alpha = 0.22f), Color.White, fontSize = 17.sp)
+                            ProBadge(currentTimeString, Color(0x33FFFFFF), Color.White, fontSize = 13.sp)
                         }
-                        if (is4K) ProBadge("4K", Color(0xFFD42B2B), Color.White, fontSize = 14.5.sp)
-                        if (isHDR) ProBadge("HDR", Color(0xFF7B2CBF), Color.White, fontSize = 14.5.sp)
-                        if (is60Fps) ProBadge("60FPS", Color(0xFF00897B), Color.White, fontSize = 14.5.sp)
-                        if (qualityText.isNotEmpty() && !is4K) ProBadge(qualityText.uppercase(), ElectricViolet.copy(alpha = 0.90f), Color.White, fontSize = 14.5.sp)
+                        if (is4K) ProBadge("4K UHD", Color(0xFFFF3D00), Color.White, fontSize = 12.sp)
+                        if (isHDR) ProBadge("HDR", Color(0xFF00E676), Color(0xFF090B10), fontSize = 12.sp)
+                        if (is60Fps) ProBadge("60 FPS", Color(0xFF00B0FF), Color.White, fontSize = 12.sp)
+                        if (qualityText.isNotEmpty() && !is4K) ProBadge(qualityText.uppercase(), Color(0x3300E5FF), NeonCyan, fontSize = 12.sp)
                     }
                 }
             }
@@ -720,9 +763,9 @@ fun DeepEyeVideoPlayerOverlay(
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .background(brush = Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f), Color.Black.copy(alpha = 0.95f))))
+                    .background(brush = Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f), Color.Black.copy(alpha = 0.95f))))
                     .navigationBarsPadding()
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp)
+                    .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 14.dp)
             ) {
                 // 1. Timeline / Seekbar
                 DeepEyeTimeRow(
@@ -732,73 +775,81 @@ fun DeepEyeVideoPlayerOverlay(
                     onSeekTo = { target -> resetTimer(); onSeekTo(target); actions.seekFinished(target) }
                 )
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(12.dp))
 
-                // 2. Smart Grouped Action Chips (Scrollable - High-touch targets, generous padding)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(18.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // 2. Smart Grouped Action Dock (Frosted Glass Container with Adaptive Spacing)
+                Surface(
+                    shape = RoundedCornerShape(24.dp),
+                    color = Color(0xFF090B10).copy(alpha = 0.88f),
+                    border = BorderStroke(1.dp, Color(0x28FFFFFF)),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    // ─── Quick System Group ───
-                    ActionChip(Icons.Default.Lock, "Lock") {
-                        isLocked = true
-                        actions.toggleLock()
-                        showLockOsd = true
-                        scope.launch { delay(2000); showLockOsd = false }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp, vertical = 10.dp)
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // ─── Quick System Group ───
+                        ActionChip(Icons.Default.Lock, "Lock") {
+                            isLocked = true
+                            actions.toggleLock()
+                            showLockOsd = true
+                            scope.launch { delay(2000); showLockOsd = false }
+                        }
+
+                        ActionChip(Icons.Default.PictureInPicture, "PiP", enabled = !isInPipMode) {
+                            resetTimer()
+                            actions.openPipOrBackgroundPlay()
+                        }
+
+                        ActionChip(Icons.Default.Analytics, "Stats", active = showStats, activeTint = NeonCyan) {
+                            resetTimer()
+                            actions.openStats()
+                            onToggleStats()
+                        }
+
+                        ChipDivider()
+
+                        // ─── Media Group ───
+                        ActionChip(Icons.Default.AspectRatio, "Aspect", active = videoScale != 1.0f, activeTint = ElectricViolet) { cycleZoomMode() }
+
+                        ActionChip(Icons.Default.Speed, "${playbackSpeed}x", active = playbackSpeed != 1.0f, activeTint = NeonCyan) {
+                            resetTimer()
+                            val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
+                            val currentIdx = speeds.indexOf(playbackSpeed).takeIf { it >= 0 } ?: 2
+                            val nextSpeed = speeds[(currentIdx + 1) % speeds.size]
+                            onSetSpeed?.invoke(nextSpeed)
+                            actions.openSpeed()
+                        }
+
+                        ActionChip(Icons.Default.HighQuality, "Quality", enabled = hasQuality) { resetTimer(); actions.openQuality() }
+                        ActionChip(Icons.Default.Equalizer, "Audio") { resetTimer(); actions.openAudioTrack() }
+
+                        ChipDivider()
+
+                        // ─── Interaction Group ───
+                        val repeatIcon = when (playerState.repeatMode) {
+                            RepeatMode.ONE -> Icons.Default.RepeatOne
+                            RepeatMode.ALL -> Icons.Default.Repeat
+                            RepeatMode.NONE -> Icons.Default.Repeat
+                        }
+                        ActionChip(repeatIcon, "Repeat", active = playerState.repeatMode != RepeatMode.NONE, activeTint = NeonCyan) { resetTimer(); actions.toggleRepeat() }
+
+                        ActionChip(Icons.Default.ThumbUp, "Like", active = playerState.isLiked, activeTint = NeonCyan) { resetTimer(); actions.toggleLike() }
+                        ActionChip(Icons.Default.ThumbDown, "Dislike", active = playerState.isDisliked, activeTint = Color(0xFFFF5252)) { resetTimer(); actions.toggleDislike() }
+                        ActionChip(Icons.Default.ClosedCaption, "CC", enabled = hasCaptions || hasVideo, active = playerState.isCaptionEnabled, activeTint = NeonCyan) { resetTimer(); actions.toggleCaptions() }
+
+                        ChipDivider()
+
+                        // ─── Utility Group ───
+                        ActionChip(Icons.AutoMirrored.Filled.PlaylistAdd, "Add") { resetTimer(); actions.addToPlaylist() }
+                        ActionChip(Icons.AutoMirrored.Filled.QueueMusic, "Queue") { resetTimer(); actions.openQueue() }
+                        ActionChip(Icons.Default.Info, "Info") { resetTimer(); actions.openInfo() }
+                        ActionChip(Icons.Default.FullscreenExit, "Exit") { actions.dismiss() }
                     }
-
-                    ActionChip(Icons.Default.PictureInPicture, "PiP", enabled = !isInPipMode) {
-                        resetTimer()
-                        actions.openPipOrBackgroundPlay()
-                    }
-
-                    ActionChip(Icons.Default.Analytics, "Stats", active = showStats, activeTint = NeonCyan) {
-                        resetTimer()
-                        actions.openStats()
-                        onToggleStats()
-                    }
-
-                    ChipDivider()
-
-                    // ─── Media Group ───
-                    ActionChip(Icons.Default.AspectRatio, "Aspect", active = videoScale != 1.0f, activeTint = ElectricViolet) { cycleZoomMode() }
-
-                    ActionChip(Icons.Default.Speed, "${playbackSpeed}x", active = playbackSpeed != 1.0f, activeTint = NeonCyan) {
-                        resetTimer()
-                        val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
-                        val currentIdx = speeds.indexOf(playbackSpeed).takeIf { it >= 0 } ?: 2
-                        val nextSpeed = speeds[(currentIdx + 1) % speeds.size]
-                        onSetSpeed?.invoke(nextSpeed)
-                        actions.openSpeed()
-                    }
-
-                    ActionChip(Icons.Default.HighQuality, "Quality", enabled = hasQuality) { resetTimer(); actions.openQuality() }
-                    ActionChip(Icons.Default.Equalizer, "Audio") { resetTimer(); actions.openAudioTrack() }
-
-                    ChipDivider()
-
-                    // ─── Interaction Group ───
-                    val repeatIcon = when (playerState.repeatMode) {
-                        RepeatMode.ONE -> Icons.Default.RepeatOne
-                        RepeatMode.ALL -> Icons.Default.Repeat
-                        RepeatMode.NONE -> Icons.Default.Repeat
-                    }
-                    ActionChip(repeatIcon, "Repeat", active = playerState.repeatMode != RepeatMode.NONE, activeTint = NeonCyan) { resetTimer(); actions.toggleRepeat() }
-
-                    ActionChip(Icons.Default.ThumbUp, "Like", active = playerState.isLiked, activeTint = NeonCyan) { resetTimer(); actions.toggleLike() }
-                    ActionChip(Icons.Default.ThumbDown, "Dislike", active = playerState.isDisliked, activeTint = Color(0xFFFF5252)) { resetTimer(); actions.toggleDislike() }
-                    ActionChip(Icons.Default.ClosedCaption, "CC", enabled = hasCaptions || hasVideo, active = playerState.isCaptionEnabled, activeTint = NeonCyan) { resetTimer(); actions.toggleCaptions() }
-
-                    ChipDivider()
-
-                    // ─── Utility Group ───
-                    ActionChip(Icons.AutoMirrored.Filled.PlaylistAdd, "Add") { resetTimer(); actions.addToPlaylist() }
-                    ActionChip(Icons.AutoMirrored.Filled.QueueMusic, "Queue") { resetTimer(); actions.openQueue() }
-                    ActionChip(Icons.Default.Info, "Info") { resetTimer(); actions.openInfo() }
-                    ActionChip(Icons.Default.FullscreenExit, "Exit") { actions.dismiss() }
                 }
             }
         }
@@ -999,24 +1050,23 @@ private fun DeepEyeTimeRow(
 // ─── Pro Reusable Components ───
 
 @Composable
-private fun ProBadge(text: String, bg: Color, textColor: Color, fontSize: androidx.compose.ui.unit.TextUnit = 18.sp) {
+private fun ProBadge(text: String, bg: Color, textColor: Color, fontSize: androidx.compose.ui.unit.TextUnit = 12.sp) {
     Surface(
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(10.dp),
         color = bg,
-        border = BorderStroke(2.dp, Color.White.copy(alpha = 0.50f)),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
         modifier = Modifier.padding(vertical = 2.dp)
     ) {
         Box(
-            modifier = Modifier.padding(horizontal = 26.dp, vertical = 11.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = text,
-                style = MaterialTheme.typography.titleLarge,
                 color = textColor,
                 fontSize = fontSize,
                 fontWeight = FontWeight.Black,
-                letterSpacing = 0.8.sp
+                letterSpacing = 0.6.sp
             )
         }
     }
@@ -1028,12 +1078,12 @@ private fun ProIconBtn(icon: ImageVector, tint: Color, enabled: Boolean = true, 
         shape = CircleShape,
         color = Color.White.copy(alpha = 0.08f),
         modifier = Modifier
-            .size(40.dp)
+            .size(44.dp)
             .alpha(if (enabled) 1f else 0.35f)
             .clickable(enabled = enabled, interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(22.dp))
+            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
         }
     }
 }
@@ -1047,32 +1097,31 @@ private fun ActionChip(
     activeTint: Color = NeonCyan,
     onClick: () -> Unit
 ) {
-    val chipBg = if (active) activeTint.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.12f)
-    val chipBorder = if (active) activeTint.copy(alpha = 0.70f) else Color.White.copy(alpha = 0.20f)
+    val chipBg = if (active) activeTint.copy(alpha = 0.22f) else Color(0x14FFFFFF)
+    val chipBorder = if (active) activeTint.copy(alpha = 0.85f) else Color(0x22FFFFFF)
     val iconTint = if (active) activeTint else Color.White
-    val textColor = if (active) activeTint else Color.White.copy(alpha = 0.95f)
+    val textColor = if (active) activeTint else Color.White
 
     Surface(
         shape = RoundedCornerShape(14.dp),
         color = chipBg,
         border = BorderStroke(1.2.dp, chipBorder),
         modifier = Modifier
-            .height(48.dp)
+            .heightIn(min = 48.dp)
             .alpha(if (enabled) 1f else 0.35f)
             .clickable(enabled = enabled, interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(icon, contentDescription = label, tint = iconTint, modifier = Modifier.size(22.dp))
+            Icon(icon, contentDescription = label, tint = iconTint, modifier = Modifier.size(20.dp))
             Text(
                 label,
                 color = textColor,
-                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                fontSize = 13.5.sp,
+                fontSize = 13.sp,
                 maxLines = 1
             )
         }
@@ -1081,7 +1130,7 @@ private fun ActionChip(
 
 @Composable
 private fun ChipDivider() {
-    Box(Modifier.width(1.5.dp).height(28.dp).background(Color.White.copy(alpha = 0.25f)))
+    Box(Modifier.width(1.5.dp).height(24.dp).background(Color.White.copy(alpha = 0.20f)))
 }
 
 private fun getOverlayScreenBrightness(context: Context, activity: Activity?): Float {

@@ -3,9 +3,7 @@
 
 package com.deepeye.musicpro.ui.homehub
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -15,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -24,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.crossfade
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
-import androidx.compose.runtime.getValue
 import kotlin.math.absoluteValue
 import com.deepeye.musicpro.ui.components.bouncyClickable
 
@@ -32,39 +28,31 @@ import com.deepeye.musicpro.ui.components.bouncyClickable
 fun VideoCard(
     item: HomeVideoItem,
     onClick: (HomeVideoItem) -> Unit,
-    modifier: Modifier = Modifier.width(240.dp),
+    modifier: Modifier = Modifier.width(300.dp),
 ) {
     Card(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(20.dp))
             .bouncyClickable(
                 downScale = 0.95f,
-                onClick = {
-                    android.util.Log.e("VideoCard", "CLICK DETECTED for: ${item.id}")
-                    onClick(item)
-                }
+                onClick = { onClick(item) }
             ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f)
+            containerColor = Color(0xFF131722).copy(alpha = 0.85f)
         ),
         border = androidx.compose.foundation.BorderStroke(
             width = 1.dp,
-            brush = Brush.linearGradient(
-                colors = listOf(
-                    Color.White.copy(alpha = 0.1f),
-                    Color.White.copy(alpha = 0.02f)
-                )
-            )
+            color = Color(0x22FFFFFF)
         )
     ) {
         Column {
-            // 16:9 Thumbnail Poster with blur and shadow overlays
+            // 16:9 Thumbnail Poster
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
             ) {
                 AsyncImage(
                     model = coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
@@ -76,7 +64,7 @@ fun VideoCard(
                     contentScale = ContentScale.Crop,
                 )
 
-                // Glass overlay
+                // Bottom vignette gradient
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -84,7 +72,7 @@ fun VideoCard(
                             Brush.verticalGradient(
                                 colors = listOf(
                                     Color.Transparent,
-                                    Color.Black.copy(alpha = 0.5f)
+                                    Color.Black.copy(alpha = 0.75f)
                                 )
                             )
                         )
@@ -103,17 +91,17 @@ fun VideoCard(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .padding(8.dp)
+                        .padding(10.dp)
                         .background(
-                            if (quality == "LIVE") Color.Red else Color.Black.copy(alpha = 0.75f),
-                            RoundedCornerShape(6.dp)
+                            if (quality == "LIVE") Color(0xFFFF0033) else Color.Black.copy(alpha = 0.85f),
+                            RoundedCornerShape(8.dp)
                         )
-                        .padding(horizontal = 6.dp, vertical = 3.dp)
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = quality,
-                        color = Color.White,
-                        fontSize = 8.sp,
+                        color = if (quality == "4K") Color(0xFFFF3D00) else if (quality == "HDR") Color(0xFF00E676) else Color(0xFF00E5FF),
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -123,14 +111,14 @@ fun VideoCard(
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .padding(8.dp)
-                            .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 6.dp, vertical = 3.dp)
+                            .padding(10.dp)
+                            .background(Color.Black.copy(alpha = 0.85f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
                     ) {
                         Text(
                             text = item.duration.formatDuration(),
                             color = Color.White,
-                            fontSize = 8.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                         )
@@ -138,18 +126,17 @@ fun VideoCard(
                 }
             }
 
-            // Metadata with premium typography and layouts
+            // Metadata with premium typography
             Column(
-                modifier = Modifier.padding(12.dp),
+                modifier = Modifier.padding(14.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
                     text = item.title,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 18.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    lineHeight = 20.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -161,26 +148,21 @@ fun VideoCard(
                 ) {
                     Text(
                         text = item.channelName,
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White.copy(alpha = 0.65f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
                     if (item.viewCount > 0) {
-                        Spacer(Modifier.width(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), RoundedCornerShape(4.dp))
-                                .padding(horizontal = 5.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = item.viewCount.formatCount(),
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                                fontSize = 8.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = item.viewCount.formatCount(),
+                            color = Color(0xFF00E5FF),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }

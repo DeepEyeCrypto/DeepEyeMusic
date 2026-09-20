@@ -266,10 +266,27 @@ constructor(
                 eq.enabled = isEnabled && params.eqEnabled
                 if (eq.enabled) {
                     val numBands = eq.numberOfBands.toInt()
-                    for (i in 0 until minOf(numBands, params.eqBands.size)) {
-                        // Convert float dB (-12..+12) to milliBel
-                        val millibels = (params.eqBands[i] * 100).toInt().toShort()
-                        eq.setBandLevel(i.toShort(), millibels)
+                    val levelRange = try { eq.bandLevelRange } catch (_: Exception) { shortArrayOf(-1500, 1500) }
+                    val minLevel = levelRange.getOrElse(0) { -1500 }
+                    val maxLevel = levelRange.getOrElse(1) { 1500 }
+                    val uiFreqs = floatArrayOf(31f, 62f, 125f, 250f, 500f, 1000f, 2000f, 4000f, 8000f, 16000f)
+
+                    for (b in 0 until numBands) {
+                        val centerFreqHz = try {
+                            (eq.getCenterFreq(b.toShort()) / 1000f).coerceAtLeast(20f)
+                        } catch (_: Exception) {
+                            uiFreqs.getOrElse(b) { 1000f }
+                        }
+
+                        // Logarithmic frequency interpolation across 10 EQ bands
+                        val targetGainDb = interpolateGainForFreq(centerFreqHz, uiFreqs, params.eqBands)
+                        val targetMilliBels = (targetGainDb * 100f).toInt().coerceIn(minLevel.toInt(), maxLevel.toInt()).toShort()
+
+                        try {
+                            eq.setBandLevel(b.toShort(), targetMilliBels)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to set band level for band $b: ${e.message}")
+                        }
                     }
                 }
             }
@@ -341,5 +358,26 @@ constructor(
             Log.e(TAG, "Error applying DSP params", e)
             _engineState.value = EngineState.ERROR
         }
+    }
+
+    private fun interpolateGainForFreq(freqHz: Float, uiFreqs: FloatArray, gains: FloatArray): Float {
+        if (gains.isEmpty()) return 0f
+        if (freqHz <= uiFreqs.first()) return gains.first()
+        if (freqHz >= uiFreqs.last()) return gains.last()
+
+        for (i in 0 until uiFreqs.size - 1) {
+            val f0 = uiFreqs[i]
+            val f1 = uiFreqs[i + 1]
+            if (freqHz in f0..f1) {
+                val logF0 = Math.log10(f0.toDouble()).toFloat()
+                val logF1 = Math.log10(f1.toDouble()).toFloat()
+                val logF = Math.log10(freqHz.toDouble()).toFloat()
+                val ratio = if (logF1 != logF0) (logF - logF0) / (logF1 - logF0) else 0f
+                val g0 = gains.getOrElse(i) { 0f }
+                val g1 = gains.getOrElse(i + 1) { 0f }
+                return g0 + ratio * (g1 - g0)
+            }
+        }
+        return gains.first()
     }
 }
