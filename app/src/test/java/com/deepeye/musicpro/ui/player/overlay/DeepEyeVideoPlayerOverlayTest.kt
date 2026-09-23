@@ -4,7 +4,6 @@
 package com.deepeye.musicpro.ui.player.overlay
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.AndroidComposeUiRuleActivity
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -12,9 +11,14 @@ import androidx.compose.ui.test.performClick
 import com.deepeye.musicpro.domain.model.PlayerState
 import com.deepeye.musicpro.domain.model.RepeatMode
 import com.deepeye.musicpro.player.format.QualityPreset
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
+import org.robolectric.RobolectricTestRunner
+
+@RunWith(RobolectricTestRunner::class)
 class DeepEyeVideoPlayerOverlayTest {
 
     @get:Rule
@@ -86,8 +90,8 @@ class DeepEyeVideoPlayerOverlayTest {
     @Test
     fun qualityButton_visible_whenFormatsAvailable() {
         val stateWithQuality = playerState.copy(
-            availableVideoFormats = listOf(),
-            availableAudioFormats = listOf()
+            availableVideoFormats = persistentListOf(),
+            availableAudioFormats = persistentListOf()
         )
         var clicked = false
         val testActions = VideoPlayerOverlayActions.fromLambdas(openQuality = { clicked = true })
@@ -123,7 +127,6 @@ class DeepEyeVideoPlayerOverlayTest {
         composeTestRule.onNodeWithContentDescription("Captions")
             .assertIsDisplayed()
     }
-}
 
     @Test
     fun overlay_shows_4K_badge_whenFormatIs2160p() {
@@ -208,7 +211,7 @@ class DeepEyeVideoPlayerOverlayTest {
         val stateVideo = PlayerState(
             isPlaying = true, position = 120000L, duration = 300000L,
             isVideo = true, isLoading = false,
-            availableVideoFormats = listOf(
+            availableVideoFormats = persistentListOf(
                 com.deepeye.musicpro.player.format.DeepEyeFormat(
                     id = "v_4k", groupIndex = 0, trackIndex = 0, type = com.deepeye.musicpro.player.format.FormatType.VIDEO,
                     mimeType = "video/mp4", codecName = "H264", rawCodecs = "avc1",
@@ -228,3 +231,4 @@ class DeepEyeVideoPlayerOverlayTest {
         composeTestRule.onNodeWithContentDescription("HQ")
             .assertIsDisplayed()
     }
+}

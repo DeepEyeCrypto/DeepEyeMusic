@@ -33,6 +33,11 @@ class DSPEngineTest {
     private lateinit var vocalRemoverProcessor: VocalRemoverProcessor
     private lateinit var crossfeedProcessor: CrossfeedProcessor
     private lateinit var tubeSimulatorProcessor: TubeSimulatorProcessor
+    private lateinit var viperBassProcessor: com.deepeye.musicpro.dsp.processor.ViperBassAudioProcessor
+    private lateinit var viperClarityProcessor: com.deepeye.musicpro.dsp.processor.ViperClarityProcessor
+    private lateinit var fieldSurroundProcessor: com.deepeye.musicpro.dsp.processor.FieldSurroundProcessor
+    private lateinit var playbackGainProcessor: com.deepeye.musicpro.dsp.processor.PlaybackGainProcessor
+    private lateinit var masterLimiterProcessor: com.deepeye.musicpro.dsp.processor.MasterLimiterProcessor
     
     private val testDispatcher = UnconfinedTestDispatcher()
 
@@ -43,12 +48,22 @@ class DSPEngineTest {
         vocalRemoverProcessor = mock()
         crossfeedProcessor = mock()
         tubeSimulatorProcessor = mock()
+        viperBassProcessor = mock()
+        viperClarityProcessor = mock()
+        fieldSurroundProcessor = mock()
+        playbackGainProcessor = mock()
+        masterLimiterProcessor = mock()
         
         engine = DSPEngine(
             bassProcessor,
             vocalRemoverProcessor,
             crossfeedProcessor,
-            tubeSimulatorProcessor
+            tubeSimulatorProcessor,
+            viperBassProcessor,
+            viperClarityProcessor,
+            fieldSurroundProcessor,
+            playbackGainProcessor,
+            masterLimiterProcessor
         )
     }
 
