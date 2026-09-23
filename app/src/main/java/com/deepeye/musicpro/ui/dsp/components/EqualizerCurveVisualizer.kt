@@ -7,6 +7,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import com.deepeye.musicpro.ui.modifiers.consumeVerticalDrags
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -344,23 +345,20 @@ fun EqualizerCurveVisualizer(
                             .clip(RoundedCornerShape(14.dp))
                             .background(Color(0xFF090B10))
                             .border(1.dp, glassBorder, RoundedCornerShape(14.dp))
-                            .pointerInput(isEnabled, i) {
-                                if (!isEnabled) return@pointerInput
-                                detectVerticalDragGestures(
-                                    onDragStart = { offset ->
-                                        val trackHeight = size.height.toFloat()
-                                        val fraction = (1f - (offset.y / trackHeight)).coerceIn(0f, 1f)
-                                        val targetGain = (fraction * 24f - 12f).coerceIn(-12f, 12f)
-                                        onBandGainChanged(i, targetGain)
-                                    },
-                                    onVerticalDrag = { change, dragAmount ->
-                                        change.consume()
-                                        val deltaGain = -dragAmount * (24f / size.height.toFloat())
-                                        val newGain = (eqBands[i] + deltaGain).coerceIn(-12f, 12f)
-                                        onBandGainChanged(i, newGain)
-                                    }
-                                )
-                            },
+                            .consumeVerticalDrags(
+                                enabled = isEnabled,
+                                onDragStart = { offset ->
+                                    val trackHeight = 120f
+                                    val fraction = (1f - (offset.y / trackHeight)).coerceIn(0f, 1f)
+                                    val targetGain = (fraction * 24f - 12f).coerceIn(-12f, 12f)
+                                    onBandGainChanged(i, targetGain)
+                                },
+                                onVerticalDrag = { change, dragAmount ->
+                                    val deltaGain = -dragAmount * (24f / 120f)
+                                    val newGain = (eqBands[i] + deltaGain).coerceIn(-12f, 12f)
+                                    onBandGainChanged(i, newGain)
+                                }
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         // Center 0dB line

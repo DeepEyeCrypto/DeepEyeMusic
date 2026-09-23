@@ -93,6 +93,9 @@ fun NowPlayingScreen(
     val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
     val isDownloading = playerState.currentItem?.id != null && activeDownloads.values.any { it.id == playerState.currentItem?.id }
     val sheetState by sheetViewModel.state.collectAsStateWithLifecycle()
+    // Pass StateFlows directly to visualizer — reads happen inside Canvas draw phase
+    val visualizerFrequencyBands = viewModel.frequencyBands
+    val visualizerFftSpectrum = viewModel.fftSpectrum
     val fftData by viewModel.fftData.collectAsStateWithLifecycle()
     val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
     val extractedColors by viewModel.extractedColors.collectAsStateWithLifecycle()
@@ -127,6 +130,16 @@ fun NowPlayingScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        if (androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.RECORD_AUDIO
+            ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            recordAudioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+        }
+    }
+
     // Close inner sheets when parent collapses (prevents stuck states on re-expansion)
     LaunchedEffect(sheetState.anchor) {
         if (sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.COLLAPSED) {
@@ -141,7 +154,8 @@ fun NowPlayingScreen(
     val isInPipMode = LocalPipMode.current
     val fullscreenMode = LocalFullscreenMode.current
     val isFullscreen = fullscreenMode.isFullscreen
-    val isVideoMode = playerState.currentItem is MediaItem.Remote && playerState.isVideo
+    // Guard: remote audio tracks must never enter the video/webview branch.
+    val isVideoMode = playerState.currentItem is MediaItem.Remote && playerState.isVideo == true
 
     // Pager for artwork (swipe to skip)
     val pagerState = rememberPagerState(initialPage = 1, pageCount = { 3 })
@@ -161,6 +175,28 @@ fun NowPlayingScreen(
             if (!fullscreenMode.isFullscreen) {
                 fullscreenMode.enter(forceLandscape = true)
             }
+        }
+    }
+
+    // Audio fullscreen immersive mode (same as video — landscape with visualizer)
+    var isAudioFullscreen by remember { mutableStateOf(false) }
+    LaunchedEffect(isAudioFullscreen) {
+        if (isAudioFullscreen && !isVideoMode) {
+            if (!fullscreenMode.isFullscreen) {
+                fullscreenMode.enter(forceLandscape = true)
+            }
+        } else if (!isAudioFullscreen && !isVideoMode && fullscreenMode.isFullscreen) {
+            fullscreenMode.exit()
+        }
+    }
+
+    LaunchedEffect(playerState.isPlaying) {
+        if (playerState.isPlaying && !playerState.isVideo) {
+            // Directly enter audio fullscreen on playback start
+            if (!fullscreenMode.isFullscreen) {
+                fullscreenMode.enter(forceLandscape = true)
+            }
+            isAudioFullscreen = true
         }
     }
 
@@ -225,51 +261,29 @@ fun NowPlayingScreen(
                                 ambientColor = finalAccentColor
                             )
                             .clip(RoundedCornerShape(32.dp))
-                            .background(finalAccentColor.copy(alpha = 0.1f))
                             .border(0.5.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(32.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        AsyncImage(
-                            model = innerItem.artworkUri,
-                            contentDescription = "Album Art",
-                            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(32.dp)),
-                            contentScale = ContentScale.Crop
+                        // ── Vvavy-style 3D tumbling triangle visualizer (no album art fallback) ──
+                        com.deepeye.musicpro.ui.player.visualizer.VvavyTriangleVisualizer(
+                            fftSpectrum = viewModel.fftSpectrum,
+                            frequencyBands = viewModel.frequencyBands,
+                            accentColor = finalAccentColor,
+                            modifier = Modifier.fillMaxSize().padding(8.dp)
                         )
-                        if (showVisualizer) {
-                            NowPlayingVisualizerOverlay(
-                                fftData = fftData,
-                                dominantColor = finalAccentColor,
-                                isPlaying = playerState.isPlaying,
-                                modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter)
-                            )
-                        }
                     }
                 }
             }
         }
     }
 
-        // Refined Clear Glass Mesh Background
-        Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
-                // Top-left glow
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .offset(x = (-50).dp, y = (-50).dp)
-                        .size(450.dp)
-                        .blur(160.dp)
-                        .background(finalAccentColor.copy(alpha = 0.35f), CircleShape)
-                )
-                // Bottom-right glow
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .offset(x = 50.dp, y = 50.dp)
-                        .size(450.dp)
-                        .blur(160.dp)
-                        .background(dominantColor.copy(alpha = 0.3f), CircleShape)
-                )
-                
+        // Hardware-Accelerated Ambilight Ambient Blur Layer
+        com.deepeye.musicpro.ui.player.components.AmbilightBackground(
+            primaryColor = finalAccentColor,
+            secondaryColor = dominantColor,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
                 if (isVideoMode) {
                     VideoNowPlayingLayout(
                         playerState = playerState,
@@ -291,6 +305,27 @@ fun NowPlayingScreen(
                             hqSheetInitialTab = tab
                             showHqPlaybackSheet = true
                         }
+                    )
+                } else if (isAudioFullscreen && fullscreenMode.isFullscreen) {
+                    // ── FULLSCREEN AUDIO VISUALIZER MODE (same as video player layout) ──
+                    AudioFullscreenVisualizerLayout(
+                        playerState = playerState,
+                        fftData = fftData,
+                        finalAccentColor = finalAccentColor,
+                        finalBgColor = finalBgColor,
+                        viewModel = viewModel,
+                        onExitFullscreen = { isAudioFullscreen = false },
+                        onOpenDsp = { showDspSheet = true },
+                        onOpenQueue = { showQueueSheet = true },
+                        onOpenSpeedDialog = { showSpeedDialog = true },
+                        onOpenAudioBoostDialog = { showAudioBoostDialog = true },
+                        onOpenSleepTimerDialog = { showSleepTimerDialog = true },
+                        onEnableOledMode = { isOledScreenOffMode = true },
+                        onOpenHqPlaybackSheet = { tab ->
+                            hqSheetInitialTab = tab
+                            showHqPlaybackSheet = true
+                        },
+                        onLockChanged = { isLocked -> sheetViewModel.setGestureLocked(isLocked); fullscreenMode.isGestureLocked = isLocked }
                     )
                 } else {
                     AudioNowPlayingLayout(
@@ -316,6 +351,7 @@ fun NowPlayingScreen(
                                 showVisualizer = false
                             }
                         },
+                        onEnterFullscreen = { isAudioFullscreen = true },
                         onOpenDsp = { showDspSheet = true },
                         onOpenQueue = { showQueueSheet = true },
                         onNavigateToSettings = onNavigateToSettings,
@@ -333,6 +369,7 @@ fun NowPlayingScreen(
                     )
                 }
             }
+        }
 
     if (showDspSheet) {
         val dspViewModel: com.deepeye.musicpro.dsp.engine.DSPViewModel = hiltViewModel()
@@ -472,6 +509,7 @@ fun AudioNowPlayingLayout(
     viewModel: PlayerViewModel,
     onOpenInfo: () -> Unit,
     onToggleVisualizer: () -> Unit,
+    onEnterFullscreen: () -> Unit = {},
     onOpenDsp: () -> Unit,
     onOpenQueue: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -639,20 +677,13 @@ fun AudioNowPlayingLayout(
                                     tint = finalAccentColor.copy(alpha = 0.5f),
                                     modifier = Modifier.size(72.dp)
                                 )
-                                AsyncImage(
-                                    model = innerItem.artworkUri,
-                                    contentDescription = "Album Art",
-                                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(28.dp)),
-                                    contentScale = ContentScale.Crop
+                                // 3D Vvavy Triangle Visualizer (replacing album art)
+                                com.deepeye.musicpro.ui.player.visualizer.VvavyTriangleVisualizer(
+                                    fftSpectrum = viewModel.fftSpectrum,
+                                    frequencyBands = viewModel.frequencyBands,
+                                    accentColor = finalAccentColor,
+                                    modifier = Modifier.fillMaxSize().padding(8.dp)
                                 )
-                                if (showVisualizer) {
-                                    NowPlayingVisualizerOverlay(
-                                        fftData = fftData,
-                                        dominantColor = finalAccentColor,
-                                        isPlaying = playerState.isPlaying,
-                                        modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter)
-                                    )
-                                }
                             }
                         }
                     }
@@ -886,6 +917,15 @@ fun AudioNowPlayingLayout(
                         onClick = onToggleVisualizer
                     )
                     QuickToolButton(
+                        icon = Icons.Default.Fullscreen,
+                        label = "Fullscreen",
+                        isActive = false,
+                        accentColor = finalAccentColor,
+                        headerColor = headerColor,
+                        modifier = Modifier.weight(1f),
+                        onClick = onEnterFullscreen
+                    )
+                    QuickToolButton(
                         icon = Icons.Default.Download,
                         label = if (isDownloading) "Saving" else "Save",
                         isActive = isDownloading,
@@ -1063,7 +1103,7 @@ fun VideoNowPlayingLayout(
         val videoBoxModifier = if (isFullscreen) {
             Modifier
                 .fillMaxSize()
-                .background(Color.Black)
+                .background(Color(0xFF07090E))
         } else {
             Modifier
                 .fillMaxWidth()
@@ -1089,19 +1129,26 @@ fun VideoNowPlayingLayout(
                     var videoOffsetX by remember { mutableFloatStateOf(0f) }
                     var videoOffsetY by remember { mutableFloatStateOf(0f) }
 
-                    // Native Video Surface with scale & pan
-                    val stablePlayer = remember(viewModel.player) { com.deepeye.musicpro.ui.components.StablePlayerHolder(viewModel.player) }
-                    com.deepeye.musicpro.ui.components.VideoPlayerView(
-                        playerHolder = stablePlayer,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .graphicsLayer {
-                                scaleX = videoScale
-                                scaleY = videoScale
-                                translationX = if (videoScale <= 1.02f) 0f else videoOffsetX
-                                translationY = if (videoScale <= 1.02f) 0f else videoOffsetY
-                            }
-                    )
+                    // Palette API Ambilight Ambient Blur Layer
+                    com.deepeye.musicpro.ui.player.components.AmbilightBackground(
+                        primaryColor = finalAccentColor,
+                        secondaryColor = finalAccentColor.copy(alpha = 0.7f),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        // Native Video Surface with scale & pan
+                        val stablePlayer = remember(viewModel.player) { com.deepeye.musicpro.ui.components.StablePlayerHolder(viewModel.player) }
+                        com.deepeye.musicpro.ui.components.VideoPlayerView(
+                            playerHolder = stablePlayer,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer {
+                                    scaleX = videoScale
+                                    scaleY = videoScale
+                                    translationX = if (videoScale <= 1.02f) 0f else videoOffsetX
+                                    translationY = if (videoScale <= 1.02f) 0f else videoOffsetY
+                                }
+                        )
+                    }
 
                     // DeepEye Video Player Overlay — Full Kodi, SmartTube & VLC TV/Landscape OSD
                     val overlayActions = remember(viewModel, fullscreenMode) {
@@ -1664,7 +1711,7 @@ fun VideoNowPlayingLayout(
 // -------------------------------------------------------------
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun QueueSheetContent(
+internal fun QueueSheetContent(
     queue: List<MediaItem>,
     currentIndex: Int,
     onItemClick: (Int) -> Unit,
@@ -2515,4 +2562,144 @@ fun SmartTubeVideoControlsPanel(
                 )
             }
         }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// FULLSCREEN AUDIO VISUALIZER LAYOUT
+// Same button layout as DeepEyeVideoPlayerOverlay, but with
+// 3D Reactive Triangle Visualizer replacing the video surface.
+// ══════════════════════════════════════════════════════════════════
+@Composable
+fun AudioFullscreenVisualizerLayout(
+    playerState: PlayerState,
+    fftData: FloatArray,
+    finalAccentColor: Color,
+    finalBgColor: Color,
+    viewModel: PlayerViewModel,
+    onExitFullscreen: () -> Unit,
+    onOpenDsp: () -> Unit,
+    onOpenQueue: () -> Unit,
+    onOpenSpeedDialog: () -> Unit,
+    onOpenAudioBoostDialog: () -> Unit,
+    onOpenSleepTimerDialog: () -> Unit,
+    onEnableOledMode: () -> Unit,
+    onOpenHqPlaybackSheet: (com.deepeye.musicpro.ui.player.quality.HqSheetTab) -> Unit = {},
+    onLockChanged: (Boolean) -> Unit = {}
+) {
+    val context = LocalContext.current
+    val fullscreenMode = LocalFullscreenMode.current
+    val diagnostics by viewModel.diagnostics.collectAsStateWithLifecycle()
+    val showStatsForNerds by viewModel.showStatsForNerds.collectAsStateWithLifecycle()
+    var showFullscreenQueue by remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF07090E))) {
+        // 1. Ambilight Background
+        com.deepeye.musicpro.ui.player.components.AmbilightBackground(
+            primaryColor = finalAccentColor,
+            secondaryColor = finalAccentColor.copy(alpha = 0.7f),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // 2. 3D Vvavy Triangle Visualizer (replaces Video Surface)
+            com.deepeye.musicpro.ui.player.visualizer.VvavyTriangleVisualizer(
+                fftSpectrum = viewModel.fftSpectrum,
+                frequencyBands = viewModel.frequencyBands,
+                accentColor = finalAccentColor,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        // 3. DeepEyeVideoPlayerOverlay — exact same controls as video player
+        val overlayActions = remember(viewModel, fullscreenMode) {
+            VideoPlayerOverlayActions.fromLambdas(
+                playPause = { viewModel.togglePlayPause() },
+                previous = { viewModel.previous() },
+                next = { viewModel.next() },
+                toggleRepeat = { viewModel.toggleRepeat() },
+                openSpeed = onOpenSpeedDialog,
+                openPipOrBackgroundPlay = {
+                    (context as? android.app.Activity)?.let {
+                        (it as? com.deepeye.musicpro.MainActivity)?.enterPipMode()
+                    }
+                },
+                skipSegment = { },
+                openQueue = { showFullscreenQueue = !showFullscreenQueue },
+                openSearch = { },
+                seekStarted = { },
+                seekChanged = { target -> viewModel.seekTo(target) },
+                seekFinished = { target -> viewModel.seekTo(target) },
+                openQuality = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO) },
+                openAudioTrack = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO) },
+                toggleLike = { viewModel.likeTrack(!playerState.isLiked) },
+                toggleDislike = { viewModel.dislikeTrack() },
+                toggleCaptions = { },
+                addToPlaylist = { },
+                openChannel = { },
+                openInfo = { },
+                openStats = { viewModel.toggleStatsForNerds() },
+                dismiss = { onExitFullscreen() },
+                rewind10 = {
+                    val currentPos = playerState.position
+                    val newPos = (currentPos - 10000L).coerceAtLeast(0L)
+                    viewModel.seekTo(newPos)
+                },
+                forward10 = {
+                    val currentPos = playerState.position
+                    val duration = playerState.duration
+                    val newPos = if (duration > 0) (currentPos + 10000L).coerceAtMost(duration) else currentPos + 10000L
+                    viewModel.seekTo(newPos)
+                },
+                toggleMute = {
+                    val curVol = viewModel.player.volume
+                    viewModel.player.volume = if (curVol > 0f) 0f else 1f
+                },
+                toggleLock = {
+                    fullscreenMode.isGestureLocked = !fullscreenMode.isGestureLocked
+                    onLockChanged(fullscreenMode.isGestureLocked)
+                }
+            )
+        }
+
+        DeepEyeVideoPlayerOverlay(
+            playerState = playerState,
+            actions = overlayActions,
+            modifier = Modifier.fillMaxSize(),
+            videoScale = 1f,
+            onScaleChange = { },
+            videoOffsetX = 0f,
+            videoOffsetY = 0f,
+            onOffsetChange = { _, _ -> },
+            diagnostics = diagnostics,
+            showStats = showStatsForNerds,
+            onToggleStats = { viewModel.toggleStatsForNerds() },
+            onSeekTo = { target -> viewModel.seekTo(target) },
+            onSetSpeed = { speed -> viewModel.setPlaybackSpeed(speed) }
+        )
+
+        // 4. Fullscreen Queue Panel
+        androidx.compose.animation.AnimatedVisibility(
+            visible = showFullscreenQueue,
+            enter = androidx.compose.animation.slideInHorizontally(initialOffsetX = { it }),
+            exit = androidx.compose.animation.slideOutHorizontally(targetOffsetX = { it }),
+            modifier = Modifier.align(Alignment.CenterEnd)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.4f)
+                    .background(Color.Black.copy(alpha = 0.85f))
+                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
+            ) {
+                androidx.compose.runtime.CompositionLocalProvider(LocalContentColor provides Color.White) {
+                    QueueSheetContent(
+                        queue = playerState.queue,
+                        currentIndex = playerState.currentIndex,
+                        onItemClick = { index -> viewModel.seekToMediaItem(index) },
+                        onItemMove = { from, to -> viewModel.moveMediaItem(from, to) },
+                        onItemRemove = { index -> viewModel.removeMediaItem(index) },
+                        accentColor = finalAccentColor
+                    )
+                }
+            }
+        }
+    }
 }

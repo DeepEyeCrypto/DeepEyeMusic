@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import com.deepeye.musicpro.ui.modifiers.consumeHorizontalDrags
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -38,26 +39,25 @@ fun SwipeSkipSurface(
         modifier =
         modifier
             .fillMaxSize()
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures(
-                    onHorizontalDrag = { _, amount ->
-                        dragX += amount
-                        isDragging = true
-                    },
-                    onDragEnd = {
-                        isDragging = false
-                        when {
-                            dragX < -180f -> onSwipeLeft() // Swiped left -> Next
-                            dragX > 180f -> onSwipeRight() // Swiped right -> Previous
-                        }
-                        dragX = 0f
-                    },
-                    onDragCancel = {
-                        isDragging = false
-                        dragX = 0f
-                    },
-                )
-            }
+            .consumeHorizontalDrags(
+                enabled = true,
+                onHorizontalDrag = { _, amount ->
+                    dragX += amount
+                    isDragging = true
+                },
+                onDragEnd = {
+                    isDragging = false
+                    when {
+                        dragX < -180f -> onSwipeLeft() // Swiped left -> Next
+                        dragX > 180f -> onSwipeRight() // Swiped right -> Previous
+                    }
+                    dragX = 0f
+                },
+                onDragCancel = {
+                    isDragging = false
+                    dragX = 0f
+                }
+            )
             .clickable { onTap() },
     ) {
         content()

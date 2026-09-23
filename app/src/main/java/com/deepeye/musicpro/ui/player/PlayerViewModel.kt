@@ -99,25 +99,21 @@ constructor(
         _showStatsForNerds.value = !_showStatsForNerds.value
     }
 
+    fun togglePlayPause() {
+        if (System.currentTimeMillis() - lastActionTime > debounceDelay) {
+            lastActionTime = System.currentTimeMillis()
+            playerController.togglePlayPause()
+        }
+    }
+
     fun enableBackgroundPlayback() {
         _isBackgroundPlaybackEnabled.value = true
         playerController.enableBackgroundPlayback(true)
     }
 
-    val fftData =
-        visualizerEngine.fftData.map { bytes ->
-            if (bytes.isEmpty()) {
-                FloatArray(0)
-            } else {
-                val magnitudes = FloatArray(bytes.size / 2)
-                for (i in magnitudes.indices) {
-                    val r = bytes[i * 2].toInt()
-                    val im = bytes[i * 2 + 1].toInt()
-                    magnitudes[i] = (Math.sqrt((r * r + im * im).toDouble()) / 128f).toFloat().coerceIn(0f, 1f)
-                }
-                magnitudes
-            }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FloatArray(0))
+    val frequencyBands: StateFlow<FloatArray> = visualizerEngine.frequencyBands
+    val fftSpectrum: StateFlow<FloatArray> = visualizerEngine.fftSpectrum
+    val fftData: StateFlow<FloatArray> = visualizerEngine.frequencyBands
 
     init {
         // Observe artwork changes for color extraction
@@ -175,13 +171,6 @@ constructor(
 
     private var lastActionTime = 0L
     private val debounceDelay = 350L // Prevents race conditions on fast clicks
-
-    fun togglePlayPause() {
-        if (System.currentTimeMillis() - lastActionTime > debounceDelay) {
-            lastActionTime = System.currentTimeMillis()
-            playerController.togglePlayPause()
-        }
-    }
 
     fun next() {
         if (System.currentTimeMillis() - lastActionTime > debounceDelay) {

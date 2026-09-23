@@ -64,6 +64,63 @@ constructor(
         handleSessionChange(audioSessionId)
     }
 
+    override fun onIsPlayingChanged(
+        eventTime: EventTime,
+        isPlaying: Boolean
+    ) {
+        // Drive the visualizer zero-data watchdog from the real playback state
+        // so pauses/silence are never mistaken for a dead capture session.
+        visualizerEngine.setPlaybackActive(isPlaying)
+        if (isPlaying && currentSessionId != 0) {
+            Log.d(TAG, "onIsPlayingChanged: isPlaying=true, ensuring VisualizerEngine is active on session $currentSessionId")
+            // Defer attach by 300ms — the AudioTrack needs time to fully
+            // initialize after ExoPlayer reports isPlaying=true. Without this
+            // delay, Visualizer(sessionId) fails with error -3 on MediaTek SoCs.
+            scope.launch {
+                kotlinx.coroutines.delay(300)
+                if (!visualizerEngine.isHealthy()) {
+                    Log.d(TAG, "Deferred VisualizerEngine.start($currentSessionId)")
+                    visualizerEngine.start(currentSessionId)
+                }
+            }
+        }
+    }
+
+    override fun onPlaybackStateChanged(
+        eventTime: EventTime,
+        state: Int
+    ) {
+        if (state == androidx.media3.common.Player.STATE_READY && currentSessionId != 0) {
+            Log.d(TAG, "onPlaybackStateChanged(STATE_READY): ensuring VisualizerEngine is active on session $currentSessionId")
+            scope.launch {
+                kotlinx.coroutines.delay(500)
+                if (!visualizerEngine.isHealthy()) {
+                    visualizerEngine.start(currentSessionId)
+                }
+            }
+        }
+    }
+
+    /**
+     * Called when ExoPlayer initializes the AudioTrack — this is the FIRST
+     * moment the Android native Visualizer can successfully attach. Earlier
+     * attempts fail with error -3 (no AudioTrack exists yet).
+     */
+    override fun onAudioTrackInitialized(
+        eventTime: EventTime,
+        audioTrackConfig: androidx.media3.exoplayer.audio.AudioSink.AudioTrackConfig
+    ) {
+        Log.i(TAG, "onAudioTrackInitialized: session=$currentSessionId sampleRate=${audioTrackConfig.sampleRate}")
+        if (currentSessionId != 0) {
+            // Small delay ensures the native AudioTrack is fully bound
+            scope.launch {
+                kotlinx.coroutines.delay(200)
+                Log.d(TAG, "Post-AudioTrackInit VisualizerEngine.start($currentSessionId)")
+                visualizerEngine.start(currentSessionId)
+            }
+        }
+    }
+
     fun handleSessionChange(newSessionId: Int, force: Boolean = false) {
         if (newSessionId == 0) return
         

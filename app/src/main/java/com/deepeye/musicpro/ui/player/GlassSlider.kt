@@ -18,9 +18,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.deepeye.musicpro.ui.motion.rememberPremiumHaptics
+import com.deepeye.musicpro.ui.modifiers.consumeHorizontalDrags
 import kotlin.math.abs
 
 /**
@@ -52,6 +54,7 @@ fun GlassSlider(
 
     var isDragging by remember { mutableStateOf(false) }
     var accumulatedDrag by remember { mutableStateOf(0f) }
+    var sliderWidthPx by remember { mutableFloatStateOf(1f) }
     val haptics = rememberPremiumHaptics()
 
     val trackHeightDpAnimated by animateFloatAsState(
@@ -87,6 +90,7 @@ fun GlassSlider(
             .fillMaxWidth()
             .height(32.dp)
             .testTag(testTag)
+            .onSizeChanged { sliderWidthPx = it.width.toFloat().coerceAtLeast(1f) }
             .pointerInput(valueRange) {
                 detectTapGestures { offset ->
                     haptics.heavyClick()
@@ -95,31 +99,29 @@ fun GlassSlider(
                     onValueChange(newValue)
                 }
             }
-            .pointerInput(valueRange) {
-                detectHorizontalDragGestures(
-                    onDragStart = { 
-                        isDragging = true
+            .consumeHorizontalDrags(
+                enabled = true,
+                onDragStart = { 
+                    isDragging = true
+                    accumulatedDrag = 0f
+                    haptics.click()
+                },
+                onDragEnd = { 
+                    isDragging = false
+                    haptics.heavyClick()
+                },
+                onDragCancel = { isDragging = false },
+                onHorizontalDrag = { change, dragAmount ->
+                    accumulatedDrag += abs(dragAmount)
+                    if (accumulatedDrag > 12f) {
+                        haptics.slideTick()
                         accumulatedDrag = 0f
-                        haptics.click()
-                    },
-                    onDragEnd = { 
-                        isDragging = false
-                        haptics.heavyClick()
-                    },
-                    onDragCancel = { isDragging = false },
-                    onHorizontalDrag = { change, dragAmount ->
-                        change.consume()
-                        accumulatedDrag += abs(dragAmount)
-                        if (accumulatedDrag > 12f) { // Optimized: Tick every ~12px of movement
-                            haptics.slideTick()
-                            accumulatedDrag = 0f
-                        }
-                        val fraction = (change.position.x / size.width).coerceIn(0f, 1f)
-                        val newValue = valueRange.start + fraction * (valueRange.endInclusive - valueRange.start)
-                        onValueChange(newValue)
-                    },
-                )
-            },
+                    }
+                    val fraction = (change.position.x / sliderWidthPx).coerceIn(0f, 1f)
+                    val newValue = valueRange.start + fraction * (valueRange.endInclusive - valueRange.start)
+                    onValueChange(newValue)
+                }
+            ),
         contentAlignment = Alignment.CenterStart,
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {

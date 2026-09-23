@@ -177,12 +177,12 @@ dependencies {
     ksp(libs.room.compiler)
 
     // Media3 / ExoPlayer
-    implementation("androidx.media3:media3-exoplayer:1.3.0")
-    implementation("androidx.media3:media3-exoplayer-dash:1.3.0")
-    implementation("androidx.media3:media3-exoplayer-hls:1.3.0")
-    implementation("androidx.media3:media3-datasource-okhttp:1.3.0")
-    implementation("androidx.media3:media3-session:1.3.0")
-    implementation("androidx.media3:media3-ui:1.3.0")
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.exoplayer.dash)
+    implementation(libs.media3.exoplayer.hls)
+    implementation(libs.media3.datasource.okhttp)
+    implementation(libs.media3.session)
+    implementation(libs.media3.ui)
     implementation("androidx.media:media:1.7.0")
 
     // Coroutines & Collections

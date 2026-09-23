@@ -142,10 +142,18 @@ constructor(
                             )
                     } else {
                         _updateState.value = UpdateState.UpToDate
+                        delay(4000)
+                        if (_updateState.value is UpdateState.UpToDate) {
+                            _updateState.value = UpdateState.Idle
+                        }
                     }
                 }
             } catch (e: Exception) {
                 _updateState.value = UpdateState.Error(e.message ?: "Unknown error checking for updates")
+                delay(4000)
+                if (_updateState.value is UpdateState.Error) {
+                    _updateState.value = UpdateState.Idle
+                }
             }
         }
     }

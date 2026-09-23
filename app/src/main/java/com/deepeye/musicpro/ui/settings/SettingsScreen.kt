@@ -598,15 +598,35 @@ private fun SettingsDetailPane(
                         ) {
                             Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
                                 Text("DeepEye Music Pro", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                                Text("Version v3.0.1.35 • Build 30045", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
+                                Text("Version v${com.deepeye.musicpro.BuildConfig.VERSION_NAME} • Build ${com.deepeye.musicpro.BuildConfig.VERSION_CODE}", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
                             }
+                            
+                            val isChecking = uiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.Checking
+                            val isUpToDate = uiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.UpToDate
+                            
                             Button(
                                 onClick = { viewModel.checkForUpdate() },
-                                colors = ButtonDefaults.buttonColors(containerColor = neonCyan),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isUpToDate) Color(0xFF00E676) else neonCyan,
+                                    disabledContainerColor = neonCyan.copy(alpha = 0.5f)
+                                ),
                                 shape = RoundedCornerShape(14.dp),
+                                enabled = !isChecking,
                                 modifier = Modifier.heightIn(min = 48.dp)
                             ) {
-                                Text("Check Updates", color = Color(0xFF090B10), fontWeight = FontWeight.Black, fontSize = 14.sp)
+                                if (isChecking) {
+                                    CircularProgressIndicator(
+                                        color = Color(0xFF090B10),
+                                        strokeWidth = 2.dp,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Checking...", color = Color(0xFF090B10), fontWeight = FontWeight.Black, fontSize = 14.sp)
+                                } else if (isUpToDate) {
+                                    Text("Latest Version ✓", color = Color(0xFF090B10), fontWeight = FontWeight.Black, fontSize = 14.sp)
+                                } else {
+                                    Text("Check Updates", color = Color(0xFF090B10), fontWeight = FontWeight.Black, fontSize = 14.sp)
+                                }
                             }
                         }
                     }

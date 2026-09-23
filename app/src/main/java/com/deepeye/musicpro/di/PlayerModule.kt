@@ -56,7 +56,7 @@ object PlayerModule {
                 enableAudioTrackPlaybackParams: Boolean
             ): androidx.media3.exoplayer.audio.AudioSink? {
                 return androidx.media3.exoplayer.audio.DefaultAudioSink.Builder(context)
-                    .setEnableFloatOutput(enableFloatOutput)
+                    .setEnableFloatOutput(false) // Guarantee 16-bit PCM for native Visualizer capture
                     .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
                     .setAudioProcessors(
                         arrayOf(
@@ -85,6 +85,21 @@ object PlayerModule {
                 .setTunnelingEnabled(false) // Tunneling breaks AudioProcessors and causes video failure on many devices
                 .setForceHighestSupportedBitrate(false) // Adapt smoothly to network conditions and decoder limits
                 .setAllowVideoNonSeamlessAdaptiveness(true)
+                // Audio Offload routes the stream to the hardware DSP path where
+                // audiofx effects (Visualizer FFT capture) are NOT supported.
+                // Force the PCM route so the ReactiveTriangleVisualizer always
+                // receives live data. NOTE: must stay LAST in the chain — this
+                // method is declared on the base TrackSelectionParameters.Builder
+                // and returns the base type, which would break the
+                // DefaultTrackSelector-specific fluent calls above.
+                .setAudioOffloadPreferences(
+                    androidx.media3.common.TrackSelectionParameters.AudioOffloadPreferences.Builder()
+                        .setAudioOffloadMode(
+                            androidx.media3.common.TrackSelectionParameters.AudioOffloadPreferences.AUDIO_OFFLOAD_MODE_DISABLED
+                        )
+                        .build()
+                )
+                .build()
         )
 
         // Custom load control for music streaming (ultra-low latency startup & responsive playback)

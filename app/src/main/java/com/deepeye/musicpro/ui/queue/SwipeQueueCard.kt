@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import com.deepeye.musicpro.ui.modifiers.consumeHorizontalDrags
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -50,31 +51,32 @@ fun SwipeQueueCard(
                         else -> Color.Transparent
                     },
                 )
-                .pointerInput(Unit) {
-                    detectHorizontalDragGestures(
-                        onHorizontalDrag = { change, dragAmount ->
-                            change.consume()
-                            offsetX += dragAmount
-                        },
-                        onDragEnd = {
-                            when {
-                                offsetX < -220f -> {
-                                    isDismissed = true
-                                    onRemove()
-                                }
-                                offsetX > 220f -> {
-                                    onPlayNext()
-                                    offsetX = 0f
-                                }
-                                offsetX > 120f -> {
-                                    onPin()
-                                    offsetX = 0f
-                                }
-                                else -> offsetX = 0f
+                .consumeHorizontalDrags(
+                    enabled = true,
+                    onHorizontalDrag = { _, dragAmount ->
+                        offsetX += dragAmount
+                    },
+                    onDragEnd = {
+                        when {
+                            offsetX < -220f -> {
+                                isDismissed = true
+                                onRemove()
                             }
-                        },
-                    )
-                },
+                            offsetX > 220f -> {
+                                onPlayNext()
+                                offsetX = 0f
+                            }
+                            offsetX > 120f -> {
+                                onPin()
+                                offsetX = 0f
+                            }
+                            else -> offsetX = 0f
+                        }
+                    },
+                    onDragCancel = {
+                        offsetX = 0f
+                    }
+                ),
         ) {
             // Background Action Hints
             if (offsetX < 0) {

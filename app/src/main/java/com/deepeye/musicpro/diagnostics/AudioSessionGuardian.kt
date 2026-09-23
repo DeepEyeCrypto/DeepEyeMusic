@@ -14,7 +14,8 @@ import javax.inject.Singleton
 @Singleton
 class AudioSessionGuardian @Inject constructor(
     private val dspEngine: DSPEngine,
-    private val audioSessionManager: AudioSessionManager
+    private val audioSessionManager: AudioSessionManager,
+    private val visualizerEngine: com.deepeye.musicpro.player.visualizer.VisualizerEngine
 ) {
     companion object {
         private const val TAG = "AudioSessionGuardian"
@@ -66,6 +67,13 @@ class AudioSessionGuardian @Inject constructor(
                     Log.w(TAG, "⚠️ DSP session mismatch! ExoPlayer: $sessionId, DSP Engine: $dspSessionId. Triggering reattach.")
                     // Reattach DSP engine to the current session ID
                     audioSessionManager.handleSessionChange(sessionId)
+                } else if (!visualizerEngine.isHealthy()) {
+                    Log.w(TAG, "⚠️ Visualizer unhealthy on session $sessionId while playing. Triggering visualizer re-attach.")
+                    // Self-healing loop: recreate the Visualizer on the live
+                    // session so FFT capture can never stay dead while playing
+                    // (covers attach failures like Visualizer error -3 that
+                    // happened before the AudioTrack registered in AudioFlinger).
+                    visualizerEngine.start(sessionId)
                 } else {
                     Log.d(TAG, "✅ Audio session verified: $sessionId is attached to DSP.")
                 }

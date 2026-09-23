@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.CircularProgressIndicator
+import com.deepeye.musicpro.ui.modifiers.preventParentScrollOnDrag
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -147,10 +148,25 @@ fun DeepEyeVideoPlayerOverlay(
     val durationMs = playerState.duration
     val currentPosition = playerState.position
     val bufferedPosition = playerState.bufferedDurationMs
-    val isLoading = playerState.isLoading
+    // Legacy audio isLoading flag is NOT used here — video has its own buffering logic.
+    // isLoading is only shown for non-video (audio) playback where ExoPlayer may be preparing.
+    val isLoading = playerState.isLoading && !playerState.isVideo
     val selectedFormat = playerState.selectedVideoFormat
     val hasVideo = playerState.isVideo
     val playbackSpeed = playerState.playbackSpeed
+
+    // Determine if video is genuinely buffering (not playing + meaningful duration + position not advancing + no recent user interaction)
+    val isVideoBuffering: Boolean = if (!hasVideo) {
+        false
+    } else if (durationMs <= 0L) {
+        true
+    } else if (isPlaying) {
+        false
+    } else if (System.currentTimeMillis() - lastInteractionTime < 2500L) {
+        false
+    } else {
+        currentPosition > 0L && currentPosition < durationMs - 2000L
+    }
 
     val qualityText = selectedFormat?.formattedVideoResolution
         ?: if (hasVideo) QualityPreset.AUTO.displayName.split("(").first().trim()
@@ -595,7 +611,7 @@ fun DeepEyeVideoPlayerOverlay(
         // LAYER 3: PRO CONTROLS OVERLAY — Glassmorphic Top/Center/Bottom OSD
         // ══════════════════════════════════════════════════════════════════════
 
-        // ── CENTER PLAYBACK CONTROLS (Futuristic Glass Floating Capsule) ──
+        // ── CENTER PLAYBACK CONTROLS (Clear Liquid Glass Floating Capsule) ──
         AnimatedVisibility(
             visible = controlsVisible && !isLocked,
             enter = fadeIn(tween(180)) + scaleIn(tween(220), initialScale = 0.85f),
@@ -604,8 +620,13 @@ fun DeepEyeVideoPlayerOverlay(
         ) {
             Surface(
                 shape = RoundedCornerShape(36.dp),
-                color = Color(0xFF090B10).copy(alpha = 0.80f),
-                border = BorderStroke(1.2.dp, Color(0x28FFFFFF)),
+                color = Color(0x18FFFFFF),
+                border = BorderStroke(
+                    1.2.dp,
+                    Brush.linearGradient(
+                        listOf(Color(0x38FFFFFF), Color(0x2500E5FF), Color(0x38FFFFFF))
+                    )
+                ),
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
             ) {
                 Row(
@@ -619,8 +640,8 @@ fun DeepEyeVideoPlayerOverlay(
                         modifier = Modifier
                             .size(60.dp)
                             .clip(CircleShape)
-                            .background(Color(0x1AFFFFFF))
-                            .border(1.dp, Color(0x25FFFFFF), CircleShape)
+                            .background(Color(0x22FFFFFF))
+                            .border(1.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
                         Icon(Icons.Default.SkipPrevious, "Previous", tint = Color.White, modifier = Modifier.size(32.dp))
                     }
@@ -631,8 +652,8 @@ fun DeepEyeVideoPlayerOverlay(
                         modifier = Modifier
                             .size(60.dp)
                             .clip(CircleShape)
-                            .background(Color(0x1AFFFFFF))
-                            .border(1.dp, Color(0x25FFFFFF), CircleShape)
+                            .background(Color(0x22FFFFFF))
+                            .border(1.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
                         Icon(Icons.Default.Replay10, "-10s", tint = Color.White, modifier = Modifier.size(32.dp))
                     }
@@ -663,8 +684,8 @@ fun DeepEyeVideoPlayerOverlay(
                         modifier = Modifier
                             .size(60.dp)
                             .clip(CircleShape)
-                            .background(Color(0x1AFFFFFF))
-                            .border(1.dp, Color(0x25FFFFFF), CircleShape)
+                            .background(Color(0x22FFFFFF))
+                            .border(1.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
                         Icon(Icons.Default.Forward10, "+10s", tint = Color.White, modifier = Modifier.size(32.dp))
                     }
@@ -675,8 +696,8 @@ fun DeepEyeVideoPlayerOverlay(
                         modifier = Modifier
                             .size(60.dp)
                             .clip(CircleShape)
-                            .background(Color(0x1AFFFFFF))
-                            .border(1.dp, Color(0x25FFFFFF), CircleShape)
+                            .background(Color(0x22FFFFFF))
+                            .border(1.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
                         Icon(Icons.Default.SkipNext, "Next", tint = Color.White, modifier = Modifier.size(32.dp))
                     }
@@ -684,7 +705,7 @@ fun DeepEyeVideoPlayerOverlay(
             }
         }
 
-        // ── TOP BAR (Glassmorphic Title + Badges) ──
+        // ── TOP BAR (Clear Liquid Glass Title + Badges) ──
         AnimatedVisibility(
             visible = controlsVisible && !isLocked,
             enter = fadeIn(tween(200)) + slideInVertically(tween(200)) { -it },
@@ -694,7 +715,7 @@ fun DeepEyeVideoPlayerOverlay(
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .background(brush = Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.88f), Color.Black.copy(alpha = 0.35f), Color.Transparent)))
+                    .background(Color.Transparent)
                     .padding(top = 18.dp, start = 24.dp, end = 24.dp, bottom = 10.dp)
             ) {
                 Row(
@@ -708,8 +729,8 @@ fun DeepEyeVideoPlayerOverlay(
                         modifier = Modifier
                             .size(50.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF131722).copy(alpha = 0.85f))
-                            .border(1.dp, Color(0x25FFFFFF), CircleShape)
+                            .background(Color(0x18FFFFFF))
+                            .border(1.2.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
                         Icon(Icons.Default.Close, "Back", tint = NeonCyan, modifier = Modifier.size(26.dp))
                     }
@@ -763,9 +784,9 @@ fun DeepEyeVideoPlayerOverlay(
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .background(brush = Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f), Color.Black.copy(alpha = 0.95f))))
+                    .background(Color.Transparent)
                     .navigationBarsPadding()
-                    .padding(start = 24.dp, end = 24.dp, top = 6.dp, bottom = 14.dp)
+                    .padding(start = 24.dp, end = 24.dp, top = 2.dp, bottom = 6.dp)
             ) {
                 // 1. Timeline / Seekbar
                 DeepEyeTimeRow(
@@ -775,80 +796,88 @@ fun DeepEyeVideoPlayerOverlay(
                     onSeekTo = { target -> resetTimer(); onSeekTo(target); actions.seekFinished(target) }
                 )
 
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
 
-                // 2. Smart Grouped Action Dock (Frosted Glass Container with Adaptive Spacing)
+                // 2. Smart Grouped Action Dock (Clear Liquid Glass Container with Specular Sheen)
                 Surface(
-                    shape = RoundedCornerShape(24.dp),
-                    color = Color(0xFF090B10).copy(alpha = 0.88f),
-                    border = BorderStroke(1.dp, Color(0x28FFFFFF)),
+                    shape = RoundedCornerShape(22.dp),
+                    color = Color(0x18FFFFFF),
+                    border = BorderStroke(
+                        1.2.dp,
+                        Brush.linearGradient(
+                            listOf(Color(0x38FFFFFF), Color(0x2000E5FF), Color(0x38FFFFFF))
+                        )
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 18.dp, vertical = 10.dp)
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // ─── Quick System Group ───
-                        ActionChip(Icons.Default.Lock, "Lock") {
-                            isLocked = true
-                            actions.toggleLock()
-                            showLockOsd = true
-                            scope.launch { delay(2000); showLockOsd = false }
+                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                        val isWide = maxWidth >= 760.dp
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = if (isWide) 16.dp else 12.dp, vertical = 10.dp)
+                                .then(if (!isWide) Modifier.horizontalScroll(rememberScrollState()) else Modifier),
+                            horizontalArrangement = if (isWide) Arrangement.SpaceEvenly else Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // ─── Quick System Group ───
+                            ActionChip(Icons.Default.Lock, "Lock") {
+                                isLocked = true
+                                actions.toggleLock()
+                                showLockOsd = true
+                                scope.launch { delay(2000); showLockOsd = false }
+                            }
+
+                            ActionChip(Icons.Default.PictureInPicture, "PiP", enabled = !isInPipMode) {
+                                resetTimer()
+                                actions.openPipOrBackgroundPlay()
+                            }
+
+                            ActionChip(Icons.Default.Analytics, "Stats", active = showStats, activeTint = NeonCyan) {
+                                resetTimer()
+                                actions.openStats()
+                                onToggleStats()
+                            }
+
+                            ChipDivider()
+
+                            // ─── Media Group ───
+                            ActionChip(Icons.Default.AspectRatio, "Aspect", active = videoScale != 1.0f, activeTint = ElectricViolet) { cycleZoomMode() }
+
+                            ActionChip(Icons.Default.Speed, "${playbackSpeed}x", active = playbackSpeed != 1.0f, activeTint = NeonCyan) {
+                                resetTimer()
+                                val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
+                                val currentIdx = speeds.indexOf(playbackSpeed).takeIf { it >= 0 } ?: 2
+                                val nextSpeed = speeds[(currentIdx + 1) % speeds.size]
+                                onSetSpeed?.invoke(nextSpeed)
+                                actions.openSpeed()
+                            }
+
+                            ActionChip(Icons.Default.HighQuality, "Quality", enabled = hasQuality) { resetTimer(); actions.openQuality() }
+                            ActionChip(Icons.Default.Equalizer, "Audio") { resetTimer(); actions.openAudioTrack() }
+
+                            ChipDivider()
+
+                            // ─── Interaction Group ───
+                            val repeatIcon = when (playerState.repeatMode) {
+                                RepeatMode.ONE -> Icons.Default.RepeatOne
+                                RepeatMode.ALL -> Icons.Default.Repeat
+                                RepeatMode.NONE -> Icons.Default.Repeat
+                            }
+                            ActionChip(repeatIcon, "Repeat", active = playerState.repeatMode != RepeatMode.NONE, activeTint = NeonCyan) { resetTimer(); actions.toggleRepeat() }
+
+                            ActionChip(Icons.Default.ThumbUp, "Like", active = playerState.isLiked, activeTint = NeonCyan) { resetTimer(); actions.toggleLike() }
+                            ActionChip(Icons.Default.ThumbDown, "Dislike", active = playerState.isDisliked, activeTint = Color(0xFFFF5252)) { resetTimer(); actions.toggleDislike() }
+                            ActionChip(Icons.Default.ClosedCaption, "CC", enabled = hasCaptions || hasVideo, active = playerState.isCaptionEnabled, activeTint = NeonCyan) { resetTimer(); actions.toggleCaptions() }
+
+                            ChipDivider()
+
+                            // ─── Utility Group ───
+                            ActionChip(Icons.AutoMirrored.Filled.PlaylistAdd, "Add") { resetTimer(); actions.addToPlaylist() }
+                            ActionChip(Icons.AutoMirrored.Filled.QueueMusic, "Queue") { resetTimer(); actions.openQueue() }
+                            ActionChip(Icons.Default.Info, "Info") { resetTimer(); actions.openInfo() }
+                            ActionChip(Icons.Default.FullscreenExit, "Exit") { actions.dismiss() }
                         }
-
-                        ActionChip(Icons.Default.PictureInPicture, "PiP", enabled = !isInPipMode) {
-                            resetTimer()
-                            actions.openPipOrBackgroundPlay()
-                        }
-
-                        ActionChip(Icons.Default.Analytics, "Stats", active = showStats, activeTint = NeonCyan) {
-                            resetTimer()
-                            actions.openStats()
-                            onToggleStats()
-                        }
-
-                        ChipDivider()
-
-                        // ─── Media Group ───
-                        ActionChip(Icons.Default.AspectRatio, "Aspect", active = videoScale != 1.0f, activeTint = ElectricViolet) { cycleZoomMode() }
-
-                        ActionChip(Icons.Default.Speed, "${playbackSpeed}x", active = playbackSpeed != 1.0f, activeTint = NeonCyan) {
-                            resetTimer()
-                            val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
-                            val currentIdx = speeds.indexOf(playbackSpeed).takeIf { it >= 0 } ?: 2
-                            val nextSpeed = speeds[(currentIdx + 1) % speeds.size]
-                            onSetSpeed?.invoke(nextSpeed)
-                            actions.openSpeed()
-                        }
-
-                        ActionChip(Icons.Default.HighQuality, "Quality", enabled = hasQuality) { resetTimer(); actions.openQuality() }
-                        ActionChip(Icons.Default.Equalizer, "Audio") { resetTimer(); actions.openAudioTrack() }
-
-                        ChipDivider()
-
-                        // ─── Interaction Group ───
-                        val repeatIcon = when (playerState.repeatMode) {
-                            RepeatMode.ONE -> Icons.Default.RepeatOne
-                            RepeatMode.ALL -> Icons.Default.Repeat
-                            RepeatMode.NONE -> Icons.Default.Repeat
-                        }
-                        ActionChip(repeatIcon, "Repeat", active = playerState.repeatMode != RepeatMode.NONE, activeTint = NeonCyan) { resetTimer(); actions.toggleRepeat() }
-
-                        ActionChip(Icons.Default.ThumbUp, "Like", active = playerState.isLiked, activeTint = NeonCyan) { resetTimer(); actions.toggleLike() }
-                        ActionChip(Icons.Default.ThumbDown, "Dislike", active = playerState.isDisliked, activeTint = Color(0xFFFF5252)) { resetTimer(); actions.toggleDislike() }
-                        ActionChip(Icons.Default.ClosedCaption, "CC", enabled = hasCaptions || hasVideo, active = playerState.isCaptionEnabled, activeTint = NeonCyan) { resetTimer(); actions.toggleCaptions() }
-
-                        ChipDivider()
-
-                        // ─── Utility Group ───
-                        ActionChip(Icons.AutoMirrored.Filled.PlaylistAdd, "Add") { resetTimer(); actions.addToPlaylist() }
-                        ActionChip(Icons.AutoMirrored.Filled.QueueMusic, "Queue") { resetTimer(); actions.openQueue() }
-                        ActionChip(Icons.Default.Info, "Info") { resetTimer(); actions.openInfo() }
-                        ActionChip(Icons.Default.FullscreenExit, "Exit") { actions.dismiss() }
                     }
                 }
             }
@@ -899,7 +928,10 @@ fun DeepEyeVideoPlayerOverlay(
         }
 
         // ── LOADING SPINNER ──
-        if (isLoading) {
+        // For video: show spinner only on genuine buffering (not on user-initiated pause).
+        // For audio: use legacy isLoading flag (ExoPlayer prepare state).
+        val showLoadingSpinner = if (hasVideo) isVideoBuffering else isLoading
+        if (showLoadingSpinner) {
             Box(
                 Modifier
                     .align(Alignment.Center)
@@ -961,16 +993,17 @@ private fun DeepEyeTimeRow(
                 Modifier
                     .weight(1f)
                     .height(28.dp)
+                    .preventParentScrollOnDrag(enabled = durationMs > 0)
                     .pointerInput(durationMs) {
                         awaitEachGesture {
-                            val down = awaitFirstDown(requireUnconsumed = false)
+                            val down = awaitFirstDown(requireUnconsumed = false, pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial)
                             if (durationMs > 0) {
                                 isScrubbing = true
                                 val fraction = (down.position.x / size.width.toFloat()).coerceIn(0f, 1f)
                                 scrubFraction = fraction
 
                                 while (true) {
-                                    val event = awaitPointerEvent()
+                                    val event = awaitPointerEvent(pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial)
                                     val change = event.changes.firstOrNull { it.id == down.id }
                                     if (change == null || !change.pressed) {
                                         val target = (scrubFraction * durationMs).toLong()
@@ -1097,15 +1130,15 @@ private fun ActionChip(
     activeTint: Color = NeonCyan,
     onClick: () -> Unit
 ) {
-    val chipBg = if (active) activeTint.copy(alpha = 0.22f) else Color(0x14FFFFFF)
-    val chipBorder = if (active) activeTint.copy(alpha = 0.85f) else Color(0x22FFFFFF)
+    val chipBg = if (active) activeTint.copy(alpha = 0.28f) else Color(0x18FFFFFF)
+    val chipBorder = if (active) activeTint.copy(alpha = 0.85f) else Color(0x28FFFFFF)
     val iconTint = if (active) activeTint else Color.White
     val textColor = if (active) activeTint else Color.White
 
     Surface(
         shape = RoundedCornerShape(14.dp),
         color = chipBg,
-        border = BorderStroke(1.2.dp, chipBorder),
+        border = BorderStroke(1.dp, chipBorder),
         modifier = Modifier
             .heightIn(min = 48.dp)
             .alpha(if (enabled) 1f else 0.35f)
