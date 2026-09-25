@@ -156,11 +156,15 @@ class SmartTubePlaybackFormatRepositoryTest {
         assertNull(snapshot.title)
         assertTrue(snapshot.videoFormats.isEmpty())
         assertTrue(snapshot.audioFormats.isEmpty())
-        assertEquals(SelectionMode.AUTOMATIC, snapshot.selectionMode)
+        // The default preset is BALANCED ("Smooth 720p/1080p"), not AUTO, so the
+        // session starts in SMARTTUBE_PRESET mode. AUTOMATIC is reserved for an
+        // explicit VideoQualityPreset.AUTO selection.
+        assertEquals(VideoQualityPreset.BALANCED, snapshot.videoQualityPreset)
+        assertEquals(SelectionMode.SMARTTUBE_PRESET, snapshot.selectionMode)
     }
 
     @Test
-    fun `setFormats populates video and audio formats and selects best automatic formats`() = runTest {
+    fun `setFormats populates video and audio formats and selects best format within the default preset`() = runTest {
         val videoList = listOf(video720pVp9, video1080pAvc, video4kAv1)
         val audioList = listOf(audioAac128, audioOpus160)
 
@@ -176,8 +180,37 @@ class SmartTubePlaybackFormatRepositoryTest {
         assertEquals(2, snapshot.audioFormats.size)
         assertFalse(snapshot.isLoading)
         assertNull(snapshot.lastError)
-        assertEquals("v4k_av1", snapshot.currentVideoFormatId)
+        // BALANCED caps video at 1080p, so the 4K stream is intentionally not
+        // selected until the preset is raised. Selection follows the preset, not
+        // raw resolution.
+        assertEquals("v1080_avc", snapshot.currentVideoFormatId)
+        // Audio is uncapped, so the highest-bitrate track wins.
         assertEquals("a160_opus", snapshot.currentAudioFormatId)
+    }
+
+    @Test
+    fun `raising the preset to best compatible selects the 4K stream`() = runTest {
+        val videoList = listOf(video720pVp9, video1080pAvc, video4kAv1)
+
+        repository.setFormats("media_123", videoList, listOf(audioAac128))
+        repository.setVideoQualityPreset(VideoQualityPreset.BEST_COMPATIBLE)
+
+        val snapshot = repository.snapshot.value
+        assertEquals("v4k_av1", snapshot.currentVideoFormatId)
+        assertEquals(SelectionMode.SMARTTUBE_PRESET, snapshot.selectionMode)
+    }
+
+    @Test
+    fun `selecting the AUTO preset switches the session to AUTOMATIC mode`() = runTest {
+        val videoList = listOf(video720pVp9, video1080pAvc, video4kAv1)
+
+        repository.setFormats("media_123", videoList, listOf(audioAac128))
+        repository.setVideoQualityPreset(VideoQualityPreset.AUTO)
+
+        val snapshot = repository.snapshot.value
+        assertEquals(SelectionMode.AUTOMATIC, snapshot.selectionMode)
+        // AUTO imposes no height cap.
+        assertEquals("v4k_av1", snapshot.currentVideoFormatId)
     }
 
     @Test

@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -82,6 +83,11 @@ import kotlin.math.hypot
  * Layer 2: Gesture HUD & Ripple Badges (Floating non-blocking visual feedback)
  * Layer 3: Controls Overlay (Top info bar, Center play/pause, Bottom multimedia bar) — fully isolated from gesture capture
  */
+/** Stable test handles for the video overlay, which has no permanent labelled controls. */
+object DeepEyeVideoPlayerOverlayTags {
+    const val ROOT = "deepeye_video_overlay_root"
+}
+
 @Composable
 fun DeepEyeVideoPlayerOverlay(
     playerState: PlayerState,
@@ -204,7 +210,13 @@ fun DeepEyeVideoPlayerOverlay(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    // Stable handle for UI tests: the overlay is a gesture surface with no
+    // permanent labelled affordances, so the root is what tests assert against.
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(DeepEyeVideoPlayerOverlayTags.ROOT)
+    ) {
 
         val currentScale by rememberUpdatedState(videoScale)
         val currentOffsetX by rememberUpdatedState(videoOffsetX)
