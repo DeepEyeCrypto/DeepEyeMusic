@@ -20,8 +20,8 @@ android {
         applicationId = "com.deepeye.musicpro"
         minSdk = 24
         targetSdk = 35
-        versionCode = 30046
-        versionName = "3.0.1.36"
+        versionCode = 30047
+        versionName = "3.0.1.37"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -234,7 +234,10 @@ dependencies {
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    testImplementation("org.robolectric:robolectric:4.12")
+    // Robolectric must support targetSdk (35). 4.12 caps at maxSdkVersion=34 and fails
+    // every @RunWith(RobolectricTestRunner::class) test with
+    // "Package targetSdkVersion=35 > maxSdkVersion=34".
+    testImplementation(libs.robolectric)
     testImplementation("org.json:json:20231013")
     
     // Instrumented tests
