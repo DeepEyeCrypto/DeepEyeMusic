@@ -31,7 +31,8 @@ constructor(
     private val recommendationEngine: com.deepeye.musicpro.domain.recommendation.RecommendationEngine,
     private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
     private val authClient: com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient,
-    private val youtubeRemoteDataSource: com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
+    private val youtubeRemoteDataSource: com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource,
+    private val visualizerPreferences: com.deepeye.musicpro.data.prefs.VisualizerPreferences
 ) : ViewModel() {
     val playerState: StateFlow<PlayerState> = playerController.playerState
     val autoplayState: StateFlow<com.deepeye.musicpro.domain.autoplay.AutoplayState> = playerController.autoplayState
@@ -115,7 +116,77 @@ constructor(
     val fftSpectrum: StateFlow<FloatArray> = visualizerEngine.fftSpectrum
     val fftData: StateFlow<FloatArray> = visualizerEngine.frequencyBands
 
+    // ── Visualizer scene selection & render tuning ─────────────────────────
+    // Backed by DataStore so the chosen scene survives process death.
+    private val _visualizerPrefs =
+        MutableStateFlow(com.deepeye.musicpro.data.prefs.VisualizerPrefs())
+    val visualizerPrefs: StateFlow<com.deepeye.musicpro.data.prefs.VisualizerPrefs> =
+        _visualizerPrefs.asStateFlow()
+
+    fun selectVisualizerScene(id: com.deepeye.musicpro.ui.player.visualizer.VisualizerSceneId) {
+        // Optimistic local update so the frame reflects the tap immediately;
+        // the DataStore emission reconciles afterwards.
+        _visualizerPrefs.value = _visualizerPrefs.value.copy(sceneId = id)
+        viewModelScope.launch {
+            runCatching { visualizerPreferences.setScene(id) }
+                .onFailure {
+                    android.util.Log.e(
+                        "PlayerViewModel",
+                        "[PlayerViewModel] visualizer_scene_persist_failed sceneId=${id.name} " +
+                            "reason=\"${it.message}\""
+                    )
+                }
+        }
+    }
+
+    fun setVisualizerIntensity(value: Float) {
+        val clamped = value.coerceIn(
+            com.deepeye.musicpro.data.prefs.VisualizerPreferences.MIN_INTENSITY,
+            com.deepeye.musicpro.data.prefs.VisualizerPreferences.MAX_INTENSITY
+        )
+        _visualizerPrefs.value = _visualizerPrefs.value.copy(intensity = clamped)
+        viewModelScope.launch {
+            runCatching { visualizerPreferences.setIntensity(clamped) }
+                .onFailure {
+                    android.util.Log.e(
+                        "PlayerViewModel",
+                        "[PlayerViewModel] visualizer_intensity_persist_failed value=$clamped " +
+                            "reason=\"${it.message}\""
+                    )
+                }
+        }
+    }
+
+    fun setVisualizerReducedMotion(enabled: Boolean) {
+        _visualizerPrefs.value = _visualizerPrefs.value.copy(reducedMotion = enabled)
+        viewModelScope.launch {
+            runCatching { visualizerPreferences.setReducedMotion(enabled) }
+                .onFailure {
+                    android.util.Log.e(
+                        "PlayerViewModel",
+                        "[PlayerViewModel] visualizer_reduced_motion_persist_failed enabled=$enabled " +
+                            "reason=\"${it.message}\""
+                    )
+                }
+        }
+    }
+
     init {
+        // Load persisted visualizer preferences. Failures are logged and the
+        // in-memory defaults stand, so a broken prefs file cannot block playback.
+        viewModelScope.launch {
+            runCatching {
+                visualizerPreferences.prefs.collect { prefs ->
+                    _visualizerPrefs.value = prefs
+                }
+            }.onFailure {
+                android.util.Log.e(
+                    "PlayerViewModel",
+                    "[PlayerViewModel] visualizer_prefs_load_failed reason=\"${it.message}\""
+                )
+            }
+        }
+
         // Observe artwork changes for color extraction
         viewModelScope.launch {
             playerController.playerState

@@ -48,7 +48,7 @@ val VvavyCyan    = Color(0xFF00E5FF)
 val VvavyMagenta = Color(0xFFFF1493)
 private val VvavyBlue    = Color(0xFF1A5FFF)
 private val VvavyWhite   = Color(0xFFFFFFFF)
-private val VvavyBg      = Color(0xFF090B10)
+val VvavyBg      = Color(0xFF090B10)
 
 // ── Triangle subdivision node ─────────────────────────────────────────────────
 // Represents one triangle in the quadtree. We use data classes with a flat
@@ -213,20 +213,27 @@ fun VvavyTriangleVisualizer(
     fftSpectrum: StateFlow<FloatArray>,
     frequencyBands: StateFlow<FloatArray>,
     accentColor: Color = VvavyCyan,
+    intensity: Float = 1f,
+    reducedMotion: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    // Time-phase drivers — three independent clocks for 3D tumbling
+    val interpolator = remember { AudioFrameInterpolator() }
+
+    // Time-phase drivers — three independent clocks for 3D tumbling.
+    // Under reduced motion the clocks run slower and the tumble is damped, so
+    // the scene stays legible without strobing.
+    val speedScale = if (reducedMotion) 2.2f else 1f
     val infiniteTransition = rememberInfiniteTransition(label = "VvavyTri")
     val timeSec by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 2f * PI.toFloat(),
-        animationSpec = infiniteRepeatable(tween(28000, easing = LinearEasing)),
+        animationSpec = infiniteRepeatable(tween((28000 * speedScale).toInt(), easing = LinearEasing)),
         label = "TimeSec"
     )
     val tumbleY by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 2f * PI.toFloat(),
-        animationSpec = infiniteRepeatable(tween(22000, easing = LinearEasing)),
+        animationSpec = infiniteRepeatable(tween((22000 * speedScale).toInt(), easing = LinearEasing)),
         label = "TumbleY"
     )
     val tumbleX by infiniteTransition.animateFloat(
@@ -241,9 +248,19 @@ fun VvavyTriangleVisualizer(
     val prevBass = remember { FloatArray(1) { 0f } }
 
     Canvas(modifier = modifier.fillMaxSize()) {
+        // Interpolate on the UI thread: the engine delivers FFT at ~19 Hz while
+        // this draws at 48–60 fps, so raw values step visibly between frames.
+        interpolator.update(
+            rawBands = frequencyBands.value,
+            rawSpectrum = fftSpectrum.value,
+            intensity = intensity,
+            reducedMotion = reducedMotion,
+            nowNanos = System.nanoTime()
+        )
+
         // ── Zero-recomposition state reads – inside Canvas draw lambda ─────
-        val bands    = frequencyBands.value
-        val spectrum = fftSpectrum.value
+        val bands    = interpolator.bands
+        val spectrum = interpolator.spectrum
 
         val bass     = if (bands.size > 0) bands[0].coerceIn(0f, 2f) else 0f
         val lowMid   = if (bands.size > 1) bands[1].coerceIn(0f, 1.5f) else 0f

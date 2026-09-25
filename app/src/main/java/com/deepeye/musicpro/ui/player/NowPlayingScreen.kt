@@ -108,6 +108,8 @@ fun NowPlayingScreen(
     var showQueueSheet by remember { mutableStateOf(false) }
     var showInfoSheet by remember { mutableStateOf(false) }
     var showVisualizer by remember { mutableStateOf(false) }
+    var showVisualizerLibrary by remember { mutableStateOf(false) }
+    val visualizerPrefs by viewModel.visualizerPrefs.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     var showSpeedDialog by remember { mutableStateOf(false) }
@@ -264,13 +266,32 @@ fun NowPlayingScreen(
                             .border(0.5.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(32.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        // ── Vvavy-style 3D tumbling triangle visualizer (no album art fallback) ──
-                        com.deepeye.musicpro.ui.player.visualizer.VvavyTriangleVisualizer(
+                        // ── Audio-reactive visualizer (scene is user-selectable) ──
+                        com.deepeye.musicpro.ui.player.visualizer.VisualizerHost(
+                            sceneId = visualizerPrefs.sceneId,
                             fftSpectrum = viewModel.fftSpectrum,
                             frequencyBands = viewModel.frequencyBands,
                             accentColor = finalAccentColor,
+                            intensity = visualizerPrefs.intensity,
+                            reducedMotion = visualizerPrefs.reducedMotion,
                             modifier = Modifier.fillMaxSize().padding(8.dp)
                         )
+
+                        // Entry point to scene selection + render tuning.
+                        IconButton(
+                            onClick = { showVisualizerLibrary = true },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(6.dp)
+                                .size(30.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Tune,
+                                contentDescription = "Visualizer options",
+                                tint = Color.White.copy(alpha = 0.75f),
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -400,6 +421,32 @@ fun NowPlayingScreen(
                     Text("Open Equalizer")
                 }
                 Spacer(modifier = Modifier.height(48.dp))
+            }
+        }
+    }
+
+    if (showVisualizerLibrary) {
+        ModalBottomSheet(
+            onDismissRequest = { showVisualizerLibrary = false },
+            containerColor = Color(0xFF090B10)
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+                com.deepeye.musicpro.ui.player.visualizer.VisualizerLibraryScreen(
+                    currentSceneId = visualizerPrefs.sceneId,
+                    onSceneSelected = { id ->
+                        viewModel.selectVisualizerScene(id)
+                        showVisualizerLibrary = false
+                    },
+                    onDismiss = { showVisualizerLibrary = false }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                com.deepeye.musicpro.ui.player.visualizer.VisualizerSettingsSheet(
+                    reducedMotion = visualizerPrefs.reducedMotion,
+                    onReducedMotionChanged = viewModel::setVisualizerReducedMotion,
+                    visualizerIntensity = visualizerPrefs.intensity,
+                    onIntensityChanged = viewModel::setVisualizerIntensity,
+                    onDismiss = { showVisualizerLibrary = false }
+                )
             }
         }
     }

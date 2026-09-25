@@ -18,6 +18,23 @@ data class VisualizerSceneMetadata(
     val tags: Set<String>
 )
 
+/**
+ * Category rail shown in the visualizer library. Every [VisualizerSceneMetadata.tags]
+ * entry must be drawn from this set, otherwise scenes silently disappear from a
+ * filtered view.
+ */
+val VisualizerCategories = listOf(
+    "All", "Geometric", "Spectrum", "Ambient", "Particle", "3D", "Classic", "Intense", "Waveform"
+)
+
+/**
+ * Single source of truth for the scene catalog.
+ *
+ * Invariant: this list contains exactly one entry per [VisualizerSceneId] member, and
+ * every entry has a matching renderer in `VisualizerHost`. Both are enforced by
+ * `VisualizerHostTest`; adding an enum member without wiring a renderer here is a
+ * compile-time-visible omission, not a silent runtime fallback.
+ */
 val AvailableVisualizerScenes = listOf(
     VisualizerSceneMetadata(
         id = VisualizerSceneId.TRIANGLE_REACTIVE,
@@ -35,6 +52,37 @@ val AvailableVisualizerScenes = listOf(
         supportsFft = true,
         supportsAmplitude = false,
         supportsReducedMotion = true,
-        tags = setOf("Classic", "Spectrum")
+        tags = setOf("Spectrum", "Classic")
+    ),
+    VisualizerSceneMetadata(
+        id = VisualizerSceneId.WAVEFORM,
+        title = "Waveform Ribbon",
+        description = "Scrolling oscilloscope trace of the live signal.",
+        supportsFft = true,
+        supportsAmplitude = true,
+        supportsReducedMotion = true,
+        tags = setOf("Spectrum", "Classic", "Waveform")
+    ),
+    VisualizerSceneMetadata(
+        id = VisualizerSceneId.RADIAL_PULSE,
+        title = "Radial Pulse",
+        description = "Concentric rings driven by bass and treble energy.",
+        supportsFft = true,
+        supportsAmplitude = true,
+        supportsReducedMotion = true,
+        tags = setOf("Geometric", "Ambient")
+    ),
+    VisualizerSceneMetadata(
+        id = VisualizerSceneId.PARTICLE_FIELD,
+        title = "Particle Field",
+        description = "Orbiting particle swarm reacting to spectral flux.",
+        supportsFft = true,
+        supportsAmplitude = true,
+        supportsReducedMotion = true,
+        tags = setOf("Particle", "Ambient")
     )
 )
+
+/** Human-readable title for a scene, falling back to the enum name if unmapped. */
+val VisualizerSceneId.title: String
+    get() = AvailableVisualizerScenes.firstOrNull { it.id == this }?.title ?: name

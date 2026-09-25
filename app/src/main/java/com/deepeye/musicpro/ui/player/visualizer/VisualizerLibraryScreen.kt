@@ -66,7 +66,7 @@ fun VisualizerLibraryScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Scene library rail
-            val categories = listOf("All", "Geometric", "Spectrum", "Ambient")
+            val categories = VisualizerCategories
             var selectedCategory by remember { mutableStateOf("All") }
 
             Row(
