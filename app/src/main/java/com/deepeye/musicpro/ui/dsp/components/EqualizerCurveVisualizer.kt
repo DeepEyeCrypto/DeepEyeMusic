@@ -6,8 +6,9 @@ package com.deepeye.musicpro.ui.dsp.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import com.deepeye.musicpro.ui.modifiers.consumeVerticalDrags
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import com.deepeye.musicpro.ui.modifiers.rememberParentScrollLockConnection
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -20,16 +21,25 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 val EQ_FREQUENCIES = listOf("31", "62", "125", "250", "500", "1k", "2k", "4k", "8k", "16k")
@@ -50,6 +60,91 @@ private val neonCyan = Color(0xFF00E5FF)
 private val neonPurple = Color(0xFF7B1FA2)
 private val darkSurface = Color(0xFF131722).copy(alpha = 0.85f)
 private val glassBorder = Color(0x22FFFFFF)
+
+// ── Fader bank geometry / touch engineering constants ──
+/** Hard cap on rendered bands; the touch surface is always divided into this many slots. */
+internal const val EQ_MAX_BANDS = 10
+internal const val EQ_MAX_DB = 12f
+internal const val EQ_MIN_DB = -12f
+
+/**
+ * Pure pointer → value mapping for the 10-band fader bank.
+ *
+ * Extracted from the Composable so the gesture arithmetic is unit-testable without
+ * a running Compose hierarchy. All coordinates are in the touch surface's local
+ * pixel space; the surface is a contiguous, gap-free strip, so every X maps to
+ * exactly one band.
+ */
+internal object EqTouchMath {
+
+    /**
+     * Resolves the band index for a horizontal touch position.
+     *
+     * @param touchX X offset inside the fader surface, in pixels.
+     * @param surfaceWidth Usable width of the fader surface, in pixels.
+     * @param bandCount Number of bands rendered.
+     * @return The locked band index, or `null` when the geometry is degenerate
+     *   (zero width, zero bands, or NaN input) and the gesture must be ignored.
+     */
+    fun bandIndexForTouchX(touchX: Float, surfaceWidth: Float, bandCount: Int): Int? {
+        if (bandCount <= 0 || surfaceWidth <= 0f) return null
+        if (touchX.isNaN() || surfaceWidth.isNaN()) return null
+        val slotWidth = surfaceWidth / bandCount
+        if (slotWidth <= 0f) return null
+        return (touchX / slotWidth).toInt().coerceIn(0, bandCount - 1)
+    }
+
+    /**
+     * Maps an absolute vertical touch position to a band gain in dB.
+     *
+     * Uses the absolute Y (not a per-frame delta) so the fader tracks the finger
+     * 1:1 and cannot accumulate rounding error or drift from persisted state.
+     *
+     * @param touchY Y offset inside the fader surface, in pixels.
+     * @param trackTop Top edge of the visible track, in surface-local pixels.
+     * @param trackHeight Height of the visible track, in pixels.
+     * @return Gain in the range [EQ_MIN_DB, EQ_MAX_DB]; `null` when the track has
+     *   not been laid out yet (zero height) and the gesture must be ignored.
+     */
+    fun gainForTouchY(touchY: Float, trackTop: Float, trackHeight: Float): Float? {
+        if (trackHeight <= 0f) return null
+        if (touchY.isNaN() || trackTop.isNaN() || trackHeight.isNaN()) return null
+        val fraction = ((touchY - trackTop) / trackHeight).coerceIn(0f, 1f)
+        return (EQ_MAX_DB - fraction * (EQ_MAX_DB - EQ_MIN_DB))
+            .coerceIn(EQ_MIN_DB, EQ_MAX_DB)
+    }
+
+    /**
+     * True when a touch starting at [touchY] should be owned by the fader bank
+     * rather than passed through to the parent scroll container.
+     */
+    fun isWithinTouchZone(
+        touchY: Float,
+        trackTop: Float,
+        trackHeight: Float,
+        overshootPx: Float,
+    ): Boolean {
+        if (trackHeight <= 0f) return false
+        return touchY >= trackTop - overshootPx &&
+            touchY <= trackTop + trackHeight + overshootPx
+    }
+}
+
+/** Visible height of a single fader track. */
+private val EQ_TRACK_HEIGHT = 120.dp
+
+/** Idle width of a single fader track. */
+private val EQ_TRACK_WIDTH = 28.dp
+
+/** Hardware-console knob cap size. */
+private val EQ_THUMB_SIZE = 24.dp
+
+/**
+ * Extra vertical reach of a band's touch zone beyond the visible track, on both sides.
+ * Enlarges the effective target from [EQ_TRACK_HEIGHT] to
+ * `EQ_TRACK_HEIGHT + 2 * EQ_TOUCH_OVERSHOOT` without changing the visual layout.
+ */
+private val EQ_TOUCH_OVERSHOOT = 16.dp
 
 /**
  * Pro Hardware Studio 10-Band Equalizer with Bezier Spline Curve, Quick Studio Presets, and Tactile High-Fidelity Faders.
@@ -299,123 +394,290 @@ fun EqualizerCurveVisualizer(
             }
         }
 
-        // 10-Band Tactile Studio Faders
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            for (i in 0 until eqBands.size.coerceAtMost(10)) {
-                val freqLabel = EQ_FREQUENCIES.getOrElse(i) { "${i}k" }
-                val currentGain = eqBands[i]
+        // ── 10-Band Tactile Studio Fader Bank ─────────────────────────────────────
+        // Unified custom touch surface (fat-finger fix). Design invariants:
+        //  * The ten x-slots are CONTIGUOUS across the full surface width, so there
+        //    are zero dead gaps and zero overlapping targets: any touch, however
+        //    imprecise, deterministically resolves to exactly one band.
+        //  * The hit index is resolved once on ACTION_DOWN and LOCKED for the whole
+        //    gesture, so horizontal finger drift can never hand control to a
+        //    neighbouring band mid-swipe.
+        //  * The pointer stream is consumed on PointerEventPass.Initial, which runs
+        //    BEFORE the parent LazyVerticalGrid / verticalScroll observe the event;
+        //    a nested-scroll pre-scroll lock additionally blocks parent scroll/fling.
+        //  * Gain is derived from the ABSOLUTE touch Y inside the track rect, so the
+        //    fader tracks the finger 1:1 and can never drift out of sync with state.
+        val bandCount = eqBands.size.coerceAtMost(EQ_MAX_BANDS)
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    // dB readout badge
-                    val isBoost = currentGain > 0.4f
-                    val isCut = currentGain < -0.4f
-                    val formattedGain = if (currentGain >= 0.4f) {
-                        "+${currentGain.roundToInt()}"
-                    } else if (currentGain <= -0.4f) {
-                        "${currentGain.roundToInt()}"
-                    } else {
-                        "0"
-                    }
+        var activeBand by remember { mutableStateOf<Int?>(null) }
+        var trackTopPx by remember { mutableFloatStateOf(0f) }
+        var trackHeightPx by remember { mutableFloatStateOf(0f) }
+        var surfaceCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+        val currentOnBandGainChanged by rememberUpdatedState(onBandGainChanged)
+        val touchOvershootPx = with(LocalDensity.current) { EQ_TOUCH_OVERSHOOT.toPx() }
 
-                    Text(
-                        text = formattedGain,
-                        fontSize = 11.sp,
-                        color = when {
-                            !isEnabled -> Color.Gray
-                            isBoost -> neonCyan
-                            isCut -> Color(0xFFFF9100)
-                            else -> Color.White.copy(0.7f)
-                        },
-                        fontWeight = FontWeight.Black
-                    )
+        fun gainFromTouchY(touchY: Float): Float =
+            EqTouchMath.gainForTouchY(touchY, trackTopPx, trackHeightPx) ?: 0f
 
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Tactile Vertical Fader Track (Automotive width 28.dp x height 120.dp)
-                    Box(
-                        modifier = Modifier
-                            .width(28.dp)
-                            .height(120.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(Color(0xFF090B10))
-                            .border(1.dp, glassBorder, RoundedCornerShape(14.dp))
-                            .consumeVerticalDrags(
-                                enabled = isEnabled,
-                                onDragStart = { offset ->
-                                    val trackHeight = 120f
-                                    val fraction = (1f - (offset.y / trackHeight)).coerceIn(0f, 1f)
-                                    val targetGain = (fraction * 24f - 12f).coerceIn(-12f, 12f)
-                                    onBandGainChanged(i, targetGain)
-                                },
-                                onVerticalDrag = { change, dragAmount ->
-                                    val deltaGain = -dragAmount * (24f / 120f)
-                                    val newGain = (eqBands[i] + deltaGain).coerceIn(-12f, 12f)
-                                    onBandGainChanged(i, newGain)
-                                }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Center 0dB line
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(1.5.dp)
-                                .background(Color.White.copy(alpha = 0.25f))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .nestedScroll(rememberParentScrollLockConnection(isLocked = activeBand != null))
+                .onGloballyPositioned { surfaceCoords = it }
+                .pointerInput(isEnabled, bandCount) {
+                    if (!isEnabled || bandCount <= 0) return@pointerInput
+                    awaitEachGesture {
+                        val down = awaitFirstDown(
+                            requireUnconsumed = false,
+                            pass = PointerEventPass.Initial,
                         )
+                        if (trackHeightPx <= 0f) return@awaitEachGesture
 
-                        // Fader active gain indicator
-                        val normGain = (currentGain / 12f).coerceIn(-1f, 1f)
-                        val faderHeight = 120f
-                        val midTrackY = faderHeight / 2f
-                        val thumbOffsetY = (midTrackY - normGain * (midTrackY - 14f) - 12f).coerceIn(4f, faderHeight - 24f)
-
-                        // Hardware Console Fader Knob Cap
-                        Box(
-                            modifier = Modifier
-                                .offset(y = (thumbOffsetY - midTrackY + 12f).dp)
-                                .width(24.dp)
-                                .height(24.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(
-                                    if (isEnabled) {
-                                        Brush.verticalGradient(listOf(Color(0xFF263238), Color(0xFF102027)))
-                                    } else {
-                                        Brush.verticalGradient(listOf(Color(0xFF1E1E1E), Color(0xFF121212)))
-                                    }
-                                )
-                                .border(
-                                    1.dp,
-                                    if (isEnabled) neonCyan.copy(alpha = 0.8f) else Color.White.copy(0.2f),
-                                    RoundedCornerShape(8.dp)
-                                ),
-                            contentAlignment = Alignment.Center
+                        // A touch that begins in the readout / frequency-label gutter
+                        // is left unconsumed so the surrounding page still scrolls.
+                        if (!EqTouchMath.isWithinTouchZone(
+                                down.position.y,
+                                trackTopPx,
+                                trackHeightPx,
+                                touchOvershootPx,
+                            )
                         ) {
-                            // Center Glowing Indicator Line
-                            Box(
-                                modifier = Modifier
-                                    .width(14.dp)
-                                    .height(2.5.dp)
-                                    .clip(RoundedCornerShape(1.dp))
-                                    .background(if (isEnabled) neonCyan else Color.Gray)
+                            return@awaitEachGesture
+                        }
+
+                        // ── GESTURE LOCK: resolve the band once, then own it ────────
+                        val lockedIndex = EqTouchMath.bandIndexForTouchX(
+                            down.position.x,
+                            size.width.toFloat(),
+                            bandCount,
+                        ) ?: return@awaitEachGesture
+                        val pointerId = down.id
+
+                        activeBand = lockedIndex
+                        // Starve the parent scrollable from the very first event.
+                        down.consume()
+                        currentOnBandGainChanged(lockedIndex, gainFromTouchY(down.position.y))
+
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            val change = event.changes.firstOrNull { it.id == pointerId } ?: break
+                            if (!change.pressed) break
+                            change.consume()
+                            currentOnBandGainChanged(
+                                lockedIndex,
+                                gainFromTouchY(change.position.y),
                             )
                         }
+                        if (activeBand == lockedIndex) activeBand = null
                     }
+                }
+        ) {
+            Column(Modifier.fillMaxWidth()) {
+                // dB readout row — one cell per band, width-matched to its slot
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    for (i in 0 until bandCount) {
+                        val currentGain = eqBands[i]
+                        val isBoost = currentGain > 0.4f
+                        val isCut = currentGain < -0.4f
+                        val formattedGain = if (currentGain >= 0.4f) {
+                            "+${currentGain.roundToInt()}"
+                        } else if (currentGain <= -0.4f) {
+                            "${currentGain.roundToInt()}"
+                        } else {
+                            "0"
+                        }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = formattedGain,
+                            fontSize = 11.sp,
+                            color = when {
+                                !isEnabled -> Color.Gray
+                                i == activeBand -> neonCyan
+                                isBoost -> neonCyan
+                                isCut -> Color(0xFFFF9100)
+                                else -> Color.White.copy(0.7f)
+                            },
+                            fontWeight = FontWeight.Black,
+                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
 
-                    // Frequency Label
-                    Text(
-                        text = freqLabel,
-                        fontSize = 11.sp,
-                        color = Color.White.copy(alpha = 0.85f),
-                        fontWeight = FontWeight.Bold
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Fader bank Canvas. Also reports its rect to the gesture handler
+                // above so the Y → dB mapping stays exact after any relayout.
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(EQ_TRACK_HEIGHT)
+                        .onGloballyPositioned { canvasCoords ->
+                            val root = surfaceCoords
+                            if (root != null && root.isAttached && canvasCoords.isAttached) {
+                                val bounds = root.localBoundingBoxOf(
+                                    sourceCoordinates = canvasCoords,
+                                    clipBounds = false,
+                                )
+                                if (abs(bounds.top - trackTopPx) > 0.5f ||
+                                    abs(bounds.height - trackHeightPx) > 0.5f
+                                ) {
+                                    trackTopPx = bounds.top
+                                    trackHeightPx = bounds.height
+                                }
+                            }
+                        }
+                ) {
+                    if (bandCount <= 0) return@Canvas
+
+                    val slotWidth = size.width / bandCount
+                    val midY = size.height / 2f
+                    val thumbRadius = EQ_THUMB_SIZE.toPx() / 2f
+                    val travel = (midY - thumbRadius).coerceAtLeast(1f)
+                    val baseWidth = EQ_TRACK_WIDTH.toPx()
+                    val activeWidth = (EQ_TRACK_WIDTH + 6.dp).toPx()
+                    val thumbCorner = minOf(8.dp.toPx(), thumbRadius)
+
+                    // 0 dB centre guide across the whole bank
+                    drawLine(
+                        color = Color.White.copy(alpha = 0.25f),
+                        start = Offset(0f, midY),
+                        end = Offset(size.width, midY),
+                        strokeWidth = 1.5f
                     )
+
+                    for (i in 0 until bandCount) {
+                        val isActive = i == activeBand
+                        val centerX = slotWidth * (i + 0.5f)
+                        val gain = eqBands[i].coerceIn(EQ_MIN_DB, EQ_MAX_DB)
+                        val normGain = (gain / EQ_MAX_DB).coerceIn(-1f, 1f)
+                        val thumbY = midY - normGain * travel
+                        val trackWidth = if (isActive) activeWidth else baseWidth
+                        val trackLeft = centerX - trackWidth / 2f
+                        val trackRadius = trackWidth / 2f
+
+                        // Track slot
+                        drawRoundRect(
+                            color = Color(0xFF090B10),
+                            topLeft = Offset(trackLeft, 0f),
+                            size = Size(trackWidth, size.height),
+                            cornerRadius = CornerRadius(trackRadius),
+                        )
+
+                        // ── Locked band: the slot lights up from within ────────────
+                        if (isActive) {
+                            drawRoundRect(
+                                brush = Brush.verticalGradient(
+                                    listOf(
+                                        neonCyan.copy(alpha = 0.38f),
+                                        neonCyan.copy(alpha = 0.12f),
+                                        neonCyan.copy(alpha = 0.38f),
+                                    )
+                                ),
+                                topLeft = Offset(trackLeft, 0f),
+                                size = Size(trackWidth, size.height),
+                                cornerRadius = CornerRadius(trackRadius),
+                            )
+
+                            // Active-gain beam from the 0 dB line out to the knob
+                            val beamTop = minOf(midY, thumbY)
+                            val beamHeight = abs(thumbY - midY)
+                            if (beamHeight > 0.5f) {
+                                drawRoundRect(
+                                    color = neonCyan.copy(alpha = 0.45f),
+                                    topLeft = Offset(
+                                        trackLeft + trackWidth * 0.32f,
+                                        beamTop,
+                                    ),
+                                    size = Size(trackWidth * 0.36f, beamHeight),
+                                    cornerRadius = CornerRadius(trackWidth * 0.18f),
+                                )
+                            }
+                        }
+
+                        // Track border — brightens to signal the locked band
+                        drawRoundRect(
+                            color = if (isActive) {
+                                neonCyan.copy(alpha = 0.95f)
+                            } else {
+                                glassBorder
+                            },
+                            topLeft = Offset(trackLeft, 0f),
+                            size = Size(trackWidth, size.height),
+                            cornerRadius = CornerRadius(trackRadius),
+                            style = Stroke(width = if (isActive) 2.dp.toPx() else 1.dp.toPx()),
+                        )
+
+                        // Glow halo behind the knob of the locked band
+                        if (isActive) {
+                            drawCircle(
+                                color = neonCyan.copy(alpha = 0.30f),
+                                radius = thumbRadius * 1.75f,
+                                center = Offset(centerX, thumbY),
+                            )
+                        }
+
+                        // Hardware console fader knob cap
+                        drawRoundRect(
+                            brush = Brush.verticalGradient(
+                                if (isEnabled) {
+                                    listOf(Color(0xFF263238), Color(0xFF102027))
+                                } else {
+                                    listOf(Color(0xFF1E1E1E), Color(0xFF121212))
+                                }
+                            ),
+                            topLeft = Offset(centerX - thumbRadius, thumbY - thumbRadius),
+                            size = Size(thumbRadius * 2f, thumbRadius * 2f),
+                            cornerRadius = CornerRadius(thumbCorner),
+                        )
+                        drawRoundRect(
+                            color = if (isEnabled) {
+                                neonCyan.copy(alpha = if (isActive) 1f else 0.8f)
+                            } else {
+                                Color.White.copy(0.2f)
+                            },
+                            topLeft = Offset(centerX - thumbRadius, thumbY - thumbRadius),
+                            size = Size(thumbRadius * 2f, thumbRadius * 2f),
+                            cornerRadius = CornerRadius(thumbCorner),
+                            style = Stroke(
+                                width = if (isActive) 1.5f.dp.toPx() else 1.dp.toPx()
+                            ),
+                        )
+
+                        // Knob centre glowing indicator line
+                        drawRoundRect(
+                            color = if (isEnabled) neonCyan else Color.Gray,
+                            topLeft = Offset(centerX - 7.dp.toPx(), thumbY - 1.25.dp.toPx()),
+                            size = Size(14.dp.toPx(), 2.5.dp.toPx()),
+                            cornerRadius = CornerRadius(1.25.dp.toPx()),
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Frequency label row — width-matched to the slots above
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    for (i in 0 until bandCount) {
+                        Text(
+                            text = EQ_FREQUENCIES.getOrElse(i) { "${i}k" },
+                            fontSize = 11.sp,
+                            color = if (i == activeBand) {
+                                neonCyan
+                            } else {
+                                Color.White.copy(alpha = 0.85f)
+                            },
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 }
             }
         }
