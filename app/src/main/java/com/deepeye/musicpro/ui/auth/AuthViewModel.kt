@@ -12,6 +12,7 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.AuthResult
@@ -19,15 +20,22 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.security.MessageDigest
 import java.util.UUID
 import javax.inject.Inject
+import com.deepeye.musicpro.account.AccountSessionManager
+import com.deepeye.musicpro.data.prefs.SettingsDataStore
 import com.deepeye.musicpro.domain.ranking.RankingRepository
+import com.deepeye.musicpro.workers.BackgroundWorkNames
 
 sealed class AuthState {
     object Idle : AuthState()
@@ -40,7 +48,10 @@ sealed class AuthState {
 class AuthViewModel @Inject constructor(
     private val rankingRepository: RankingRepository,
     private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
-    private val cloudRestoreManager: com.deepeye.musicpro.domain.sync.CloudRestoreManager
+    private val cloudRestoreManager: com.deepeye.musicpro.domain.sync.CloudRestoreManager,
+    private val settingsDataStore: SettingsDataStore,
+    private val accountSessionManager: AccountSessionManager,
+    @ApplicationContext private val appContext: Context,
 ) : ViewModel() {
 
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -50,6 +61,15 @@ class AuthViewModel @Inject constructor(
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
+
+    /**
+     * Emits exactly once per completed sign-out, after all local state has been
+     * torn down. The navigation layer observes this to purge the back stack and
+     * route to the login screen — keeping the decision out of the ViewModel and
+     * out of the Settings screen, so neither needs a NavController.
+     */
+    private val _signOutCompleted = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val signOutCompleted: SharedFlow<Unit> = _signOutCompleted.asSharedFlow()
 
     init {
         // Listen to auth state changes directly
@@ -187,11 +207,89 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Signs the user out and tears down every piece of session state this app
+     * persists, in an order chosen so that no step can leave a half-signed-out
+     * user able to make authenticated calls:
+     *
+     *  1. Revoke the Firebase session first. If anything below throws, the user
+     *     is already unable to obtain new tokens.
+     *  2. Cancel the account-scoped periodic work, so a worker cannot repopulate
+     *     the caches we are about to invalidate.
+     *  3. Wipe the YouTube access/refresh tokens from DataStore. This is the
+     *     credential [com.deepeye.musicpro.account.SettingsAccountDataSourceImpl]
+     *     derives account connectivity from, so clearing it flips the account
+     *     session to LoggedOut and triggers cache invalidation.
+     *  4. Await that account-scoped teardown explicitly rather than relying on
+     *     the flow, then reset the one-shot auth state.
+     *
+     * Every step logs its outcome; none are silently swallowed, because a failed
+     * wipe is a security problem the user needs to be able to report. The
+     * ViewModel is cleared either way so the UI always transitions.
+     */
     fun signOut() {
-        auth.signOut()
+        viewModelScope.launch {
+            var failure: String? = null
+
+            try {
+                auth.signOut()
+                Log.i(TAG, "event=sign_out stage=firebase_revoked result=success")
+            } catch (e: Exception) {
+                failure = "firebase_signout"
+                Log.e(TAG, "event=sign_out stage=firebase_revoked result=failure", e)
+            }
+
+            // Account-scoped periodic work must stop before caches are dropped,
+            // otherwise a running worker can rewrite them underneath us.
+            try {
+                WorkManager.getInstance(appContext).apply {
+                    cancelUniqueWork(BackgroundWorkNames.REC_REFRESH)
+                    cancelUniqueWork(BackgroundWorkNames.QUEUE_PREFETCH)
+                    cancelUniqueWork(BackgroundWorkNames.CHANNEL_SYNC)
+                }
+                Log.i(TAG, "event=sign_out stage=workers_cancelled result=success cancelled=3")
+            } catch (e: Exception) {
+                failure = failure ?: "workers_cancel"
+                Log.e(TAG, "event=sign_out stage=workers_cancelled result=failure", e)
+            }
+
+            try {
+                settingsDataStore.setYouTubeTokens("", null)
+                Log.i(TAG, "event=sign_out stage=tokens_wiped result=success")
+            } catch (e: Exception) {
+                failure = failure ?: "token_wipe"
+                Log.e(TAG, "event=sign_out stage=tokens_wiped result=failure", e)
+            }
+
+            try {
+                accountSessionManager.clearAccountScopedStateOnSignOut()
+                Log.i(TAG, "event=sign_out stage=account_cache_cleared result=success")
+            } catch (e: Exception) {
+                failure = failure ?: "account_cache_clear"
+                Log.e(TAG, "event=sign_out stage=account_cache_cleared result=failure", e)
+            }
+
+            _authState.value = AuthState.Idle
+            _currentUser.value = null
+
+            if (failure != null) {
+                Log.e(TAG, "event=sign_out stage=complete result=partial failedStep=$failure")
+            } else {
+                Log.i(TAG, "event=sign_out stage=complete result=success")
+            }
+
+            // Emitted even on partial failure: the user must be returned to the
+            // login screen regardless, and remaining residue is not actionable
+            // from the signed-out state.
+            _signOutCompleted.emit(Unit)
+        }
     }
     
     fun resetState() {
         _authState.value = AuthState.Idle
+    }
+
+    companion object {
+        private const val TAG = "AuthViewModel"
     }
 }

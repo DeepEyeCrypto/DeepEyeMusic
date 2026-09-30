@@ -24,11 +24,12 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -38,7 +39,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusDirection
@@ -55,8 +55,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.deepeye.musicpro.R
+import com.deepeye.musicpro.ui.theme.sdp
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun LoginScreen(
@@ -90,29 +91,107 @@ fun LoginScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF05050A)),
-        contentAlignment = Alignment.Center
     ) {
-        // Ambient Premium Background
+        // Ambient Premium Background.
+        //
+        // These are radial gradients rather than blurred Boxes. A 120dp blur on a
+        // 300dp Box is clipped to that Box's own bounds, so it renders as a
+        // visibly hard-edged rectangle instead of a halo — the seams were
+        // measurable in the a11y tree as a [342,0][894,360] node. A radial
+        // gradient reaches zero alpha at its own edge, so it fades out with no
+        // seam and needs no offscreen render pass.
         Box(
             modifier = Modifier
-                .offset(x = (-100).dp, y = (-150).dp)
-                .size(300.dp)
-                .blur(120.dp)
-                .background(Color(0xFF7C4DFF).copy(alpha = 0.2f), CircleShape)
+                .offset(x = (-150).dp, y = (-120).dp)
+                .size(520.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF7C4DFF).copy(alpha = 0.22f),
+                            Color(0xFF7C4DFF).copy(alpha = 0.0f),
+                        ),
+                    ),
+                ),
         )
         Box(
             modifier = Modifier
-                .offset(x = 100.dp, y = 200.dp)
-                .size(300.dp)
-                .blur(120.dp)
-                .background(Color(0xFF00D2FF).copy(alpha = 0.2f), CircleShape)
+                .offset(x = 150.dp, y = 170.dp)
+                .size(520.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF00D2FF).copy(alpha = 0.22f),
+                            Color(0xFF00D2FF).copy(alpha = 0.0f),
+                        ),
+                    ),
+                ),
         )
+
+        // The form is taller than a landscape phone viewport (the stack of
+        // fields, CTA, divider and two sign-in buttons needs ~600dp), so it is
+        // scrollable and vertically centred. Without this the trailing "Sign Up"
+        // link and the guest button were laid out past the bottom edge and
+        // could not be reached at all — verified via the a11y tree, where the
+        // last node sat at [616,683][989,720], flush against the 720px floor.
+        LoginFormBody(
+            email = email,
+            onEmailChange = { email = it },
+            password = password,
+            onPasswordChange = { password = it },
+            isSignUpMode = isSignUpMode,
+            onToggleMode = { isSignUpMode = !isSignUpMode },
+            primaryAction = if (isSignUpMode) "Create Account" else "Sign In",
+            onPrimaryAction = {
+                if (isSignUpMode) viewModel.signUpWithEmail(email, password)
+                else viewModel.signInWithEmail(email, password)
+            },
+            onYouTubeLoginClick = onYouTubeLoginClick,
+            onGoogleLogin = { viewModel.signInWithGoogle(context) },
+            onSkipAsGuest = onLoginSuccess,
+            isLoading = authState is AuthState.Loading,
+        )
+    }
+}
+
+/**
+ * The sign-in form's contents, independent of auth state and view model.
+ *
+ * Split out so the layout contract — that the form scrolls and that no control
+ * is laid out past the bottom edge on a short viewport — can be verified
+ * directly by [LoginScreenLayoutTest] without standing up Hilt.
+ */
+@Composable
+fun LoginFormBody(
+    email: String,
+    onEmailChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    isSignUpMode: Boolean,
+    onToggleMode: () -> Unit,
+    primaryAction: String,
+    onPrimaryAction: () -> Unit,
+    onYouTubeLoginClick: () -> Unit,
+    onGoogleLogin: () -> Unit,
+    onSkipAsGuest: () -> Unit,
+    isLoading: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    // `email`/`password` are hoisted: the fields are driven straight from the
+    // caller's state so that `onPrimaryAction` always submits what the user
+    // typed. Local mirrors used to be kept here instead, which meant typing
+    // updated only this composable and the parent still submitted its initial
+    // empty values.
+    BoxWithConstraints(modifier = modifier) {
+        val compact = maxHeight < 480.dp
+        val gutter = (if (compact) 24 else 32).sdp
 
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = gutter, vertical = (if (compact) 16 else 24).sdp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
             // App Logo / Title
             Text(
@@ -130,53 +209,52 @@ fun LoginScreen(
                 color = Color(0xFF00D2FF)
             )
 
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height((if (compact) 20 else 64).sdp))
 
             // Email & Password Fields
             PremiumTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = onEmailChange,
                 hint = "Email Address",
                 icon = Icons.Default.Email,
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height((if (compact) 12 else 16).sdp))
 
             PremiumTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = onPasswordChange,
                 hint = "Password",
                 icon = Icons.Default.Lock,
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done,
                 isPassword = true,
-                onImeAction = {
-                    if (isSignUpMode) viewModel.signUpWithEmail(email, password)
-                    else viewModel.signInWithEmail(email, password)
-                }
+                onImeAction = onPrimaryAction
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height((if (compact) 16 else 32).sdp))
 
             // Main Action Button
             PremiumActionButton(
-                text = if (isSignUpMode) "Create Account" else "Sign In",
-                isLoading = authState is AuthState.Loading,
-                onClick = {
-                    if (isSignUpMode) viewModel.signUpWithEmail(email, password)
-                    else viewModel.signInWithEmail(email, password)
-                }
+                text = primaryAction,
+                isLoading = isLoading,
+                onClick = onPrimaryAction
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Vertical rhythm scales with the viewport, and the `compact` branch
+            // halves it further. The two levers multiply rather than either/or:
+            // `compact` already exists because landscape is the short axis, while
+            // `.sdp` handles the width. Keeping them independent means a narrow
+            // but not compact viewport still gets proportional spacing.
+            Spacer(modifier = Modifier.height((if (compact) 12 else 24).sdp))
 
             // Toggle Mode Text
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .clickable { isSignUpMode = !isSignUpMode }
+                    .clickable { onToggleMode() }
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -200,7 +278,7 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height((if (compact) 16 else 32).sdp))
 
             // Divider
             Row(
@@ -213,15 +291,15 @@ fun LoginScreen(
                     color = Color.White.copy(alpha = 0.3f),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.sdp)
                 )
                 HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.1f))
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height((if (compact) 16 else 32).sdp))
 
             // Google Sign In Button
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height((if (compact) 12 else 16).sdp))
 
             Button(
                 onClick = onYouTubeLoginClick,
@@ -235,14 +313,14 @@ fun LoginScreen(
             }
 
             GoogleSignInButton(
-                isLoading = authState is AuthState.Loading,
-                onClick = { viewModel.signInWithGoogle(context) }
+                isLoading = isLoading,
+                onClick = onGoogleLogin
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height((if (compact) 8 else 12).sdp))
 
             TextButton(
-                onClick = onLoginSuccess,
+                onClick = onSkipAsGuest,
                 modifier = Modifier.padding(top = 4.dp)
             ) {
                 Text(
@@ -252,8 +330,8 @@ fun LoginScreen(
                     fontWeight = FontWeight.Medium
                 )
             }
+            }
         }
-    }
 }
 
 @Composable
@@ -289,7 +367,7 @@ fun PremiumTextField(
             .clip(RoundedCornerShape(16.dp))
             .background(bgColor)
             .border(1.dp, borderColor, RoundedCornerShape(16.dp))
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.sdp),
         contentAlignment = Alignment.CenterStart
     ) {
         Row(

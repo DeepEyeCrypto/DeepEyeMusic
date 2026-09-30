@@ -51,6 +51,8 @@ import com.deepeye.musicpro.domain.model.Song
 import com.deepeye.musicpro.domain.model.library.LibraryItem
 import com.deepeye.musicpro.ui.components.bouncyClickable
 import com.deepeye.musicpro.ui.motion.premiumScrollHaptics
+import com.deepeye.musicpro.ui.theme.CardGeometry
+import com.deepeye.musicpro.ui.theme.sdp
 
 private val neonCyan = Color(0xFF00E5FF)
 private val darkSurface = Color(0xFF131722).copy(alpha = 0.85f)
@@ -84,7 +86,7 @@ fun LibraryScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+                .padding(horizontal = 20.sdp, vertical = 12.sdp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -124,7 +126,7 @@ fun LibraryScreen(
             // Offline Mode Toggle Pill & Downloads Action
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.sdp)
             ) {
                 Surface(
                     onClick = { viewModel.toggleOfflineMode() },
@@ -137,9 +139,9 @@ fun LibraryScreen(
                     modifier = Modifier.heightIn(min = 44.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(horizontal = 14.sdp, vertical = 8.sdp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.sdp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.OfflinePin,
@@ -178,8 +180,8 @@ fun LibraryScreen(
         val quickCardsState = rememberLazyListState()
         LazyRow(
             state = quickCardsState,
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(horizontal = 20.sdp, vertical = 6.sdp),
+            horizontalArrangement = Arrangement.spacedBy(14.sdp),
             modifier = Modifier.fillMaxWidth().premiumScrollHaptics(quickCardsState),
         ) {
             item {
@@ -238,14 +240,14 @@ fun LibraryScreen(
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(12.sdp))
 
         // ── Horizontal Media Tabs Ribbon ──
         LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                .padding(horizontal = 20.sdp, vertical = 6.sdp),
+            horizontalArrangement = Arrangement.spacedBy(10.sdp)
         ) {
             itemsIndexed(tabs) { index, title ->
                 val isSelected = uiState.selectedTab == index
@@ -260,7 +262,7 @@ fun LibraryScreen(
                     modifier = Modifier.heightIn(min = 48.dp)
                 ) {
                     Box(
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                        modifier = Modifier.padding(horizontal = 20.sdp, vertical = 10.sdp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -274,7 +276,7 @@ fun LibraryScreen(
             }
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(8.sdp))
 
         // ── Content Area ──
         Box(
@@ -289,7 +291,7 @@ fun LibraryScreen(
                     playerViewModel.setQueue(mediaItems, if (index >= 0) index else 0)
                     onNavigateToNowPlaying()
                 }
-                1 -> AlbumsTab(uiState.albums, onNavigateToAlbum, windowSizeClass)
+                1 -> AlbumsTab(uiState.albums, onNavigateToAlbum)
                 2 -> ArtistsTab(uiState.artists, onNavigateToArtist)
                 3 -> GenresTab()
             }
@@ -297,10 +299,27 @@ fun LibraryScreen(
     }
 }
 
+/**
+ * Formats a collection size for the quick-access tiles: "0 items", "1 item", "12 items".
+ * Internal rather than private so the pluralisation is unit-testable.
+ */
+internal fun itemCountLabel(count: Int): String =
+    if (count == 1) "1 item" else "$count items"
+
 // ── Quick Access Tile ──
 
+/**
+ * One quick-access tile. Internal rather than private so its font-scale
+ * behaviour is testable — see LibraryQuickCardFontScaleTest (androidTest).
+ *
+ * Must stay `internal`: a Robolectric (src/test) version of that test was tried
+ * first and proved worthless — Robolectric measures "Downloads" as a constant
+ * 10px that ignores fontScale entirely, so no card width ever wraps and the
+ * assertion passes even against the original buggy `.width(160.dp)`. Only the
+ * instrumented runtime measures text for real.
+ */
 @Composable
-private fun LibraryQuickCard(
+internal fun LibraryQuickCard(
     icon: ImageVector,
     label: String,
     count: Int,
@@ -309,20 +328,23 @@ private fun LibraryQuickCard(
 ) {
     Card(
         modifier = Modifier
-            .width(160.dp)
+            // Adaptive floor from the SSOT. Was a bare `160.dp` literal, which
+            // meant the floor here could not be retuned alongside the grids in
+            // this same file without editing both.
+            .widthIn(min = CardGeometry.Music.minWidth, max = 260.dp)
             .height(84.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(CardGeometry.Music.shape)
             .bouncyClickable(downScale = 0.95f, onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
+        shape = CardGeometry.Music.shape,
         colors = CardDefaults.cardColors(containerColor = darkSurface),
         border = androidx.compose.foundation.BorderStroke(1.dp, glassBorder)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .fillMaxHeight()
+                .padding(horizontal = 16.sdp, vertical = 14.sdp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(14.sdp)
         ) {
             Box(
                 modifier = Modifier
@@ -345,13 +367,17 @@ private fun LibraryQuickCard(
                     text = label,
                     fontSize = 15.sp,
                     color = Color.White,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "$count items",
+                    text = itemCountLabel(count),
                     fontSize = 12.sp,
                     color = Color.White.copy(alpha = 0.6f),
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -375,7 +401,7 @@ private fun EmptyLibraryState(message: String) {
             tint = neonCyan.copy(alpha = 0.4f),
             modifier = Modifier.size(64.dp)
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(16.sdp))
         Text(
             text = message,
             fontSize = 17.sp,
@@ -400,8 +426,8 @@ private fun SongsTab(
     LazyColumn(
         state = songsState,
         modifier = Modifier.premiumScrollHaptics(songsState),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        contentPadding = PaddingValues(horizontal = 20.sdp, vertical = 12.sdp),
+        verticalArrangement = Arrangement.spacedBy(10.sdp)
     ) {
         items(songs, key = { it.id }) { song ->
             Surface(
@@ -465,54 +491,54 @@ private fun SongsTab(
 private fun AlbumsTab(
     albums: List<Album>,
     onAlbumClick: (Long) -> Unit,
-    windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
 ) {
     if (albums.isEmpty()) {
         EmptyLibraryState("No local albums found.")
         return
     }
-    val columns =
-        when (windowSizeClass.widthSizeClass) {
-            androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Compact -> 2
-            androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Medium -> 3
-            else -> 4
-        }
     val gridState = rememberLazyGridState()
     LazyVerticalGrid(
         state = gridState,
         modifier = Modifier.premiumScrollHaptics(gridState),
-        columns = GridCells.Fixed(columns),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        // Adaptive, not Fixed(columns). The old `GridCells.Fixed(columns)` derived
+        // 2/3/4 from WindowWidthSizeClass, which left a partly-filled final row
+        // and a fixed column count that could not exploit extra landscape width.
+        // Adaptive fits as many 1:1 album tiles as naturally fit.
+        columns = GridCells.Adaptive(CardGeometry.Music.minWidth),
+        contentPadding = PaddingValues(
+            horizontal = CardGeometry.ScreenGutter,
+            vertical = 12.dp
+        ),
+        horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
+        verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
     ) {
         items(albums, key = { it.id }) { album ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
+                    .clip(CardGeometry.Music.shape)
                     .bouncyClickable(downScale = 0.95f, onClick = { onAlbumClick(album.id) }),
-                shape = RoundedCornerShape(20.dp),
+                shape = CardGeometry.Music.shape,
                 colors = CardDefaults.cardColors(containerColor = darkSurface),
                 border = androidx.compose.foundation.BorderStroke(1.dp, glassBorder)
             ) {
-                Column(modifier = Modifier.padding(12.dp)) {
+                Column(modifier = Modifier.padding(CardGeometry.Music.contentPadding)) {
                     AsyncImage(
                         model = album.artUri,
                         contentDescription = album.title,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(1f)
-                            .clip(RoundedCornerShape(16.dp)),
+                            .aspectRatio(CardGeometry.Music.aspectRatio)
+                            .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f)),
                         contentScale = ContentScale.Crop,
                     )
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(8.sdp))
                     Text(
                         text = album.title,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
-                        maxLines = 1,
+                        maxLines = CardGeometry.Music.titleMaxLines,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
@@ -543,18 +569,21 @@ private fun ArtistsTab(
     LazyVerticalGrid(
         state = gridState,
         modifier = Modifier.premiumScrollHaptics(gridState),
-        columns = GridCells.Adaptive(minSize = 160.dp),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        columns = GridCells.Adaptive(CardGeometry.Music.minWidth),
+        contentPadding = PaddingValues(
+            horizontal = CardGeometry.ScreenGutter,
+            vertical = 12.dp
+        ),
+        horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
+        verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
     ) {
         items(artists, key = { it.id }) { artist ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
+                    .clip(CardGeometry.Music.shape)
                     .bouncyClickable(downScale = 0.95f, onClick = { onArtistClick(artist.id) }),
-                shape = RoundedCornerShape(20.dp),
+                shape = CardGeometry.Music.shape,
                 colors = CardDefaults.cardColors(containerColor = darkSurface),
                 border = androidx.compose.foundation.BorderStroke(1.dp, glassBorder)
             ) {
@@ -577,7 +606,7 @@ private fun ArtistsTab(
                             fontWeight = FontWeight.Black
                         )
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(12.sdp))
                     Text(
                         text = artist.name,
                         fontSize = 16.sp,

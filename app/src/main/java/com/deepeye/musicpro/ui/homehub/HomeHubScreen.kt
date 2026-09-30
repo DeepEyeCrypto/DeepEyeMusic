@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -41,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 import com.deepeye.musicpro.ui.components.DynamicLabel
+import com.deepeye.musicpro.ui.components.HeroEmptyState
 import com.deepeye.musicpro.ui.components.SecondaryLabel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,11 +53,14 @@ import coil3.request.crossfade
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.ui.components.ShimmerBox
+import com.deepeye.musicpro.ui.components.rememberSparseAwareRailLayout
+import com.deepeye.musicpro.ui.theme.CardGeometry
 import com.deepeye.musicpro.ui.youtube.SmartTubeVideoCard
 import com.deepeye.musicpro.ui.components.premium.PremiumHeroCard
 import com.deepeye.musicpro.ui.components.premium.SplitMediaHero
 import com.deepeye.musicpro.ui.components.premium.DotMatrixClock
 import com.deepeye.musicpro.ui.theme.GlassBorder
+import com.deepeye.musicpro.ui.theme.sdp
 import com.deepeye.musicpro.ui.components.glassCard
 import com.deepeye.musicpro.ui.components.hoverable
 import com.deepeye.musicpro.ui.gamification.Top3LeaderboardCard
@@ -83,6 +89,52 @@ fun HomeHubScreen(
     val top3Users by viewModel.top3Users.collectAsStateWithLifecycle()
 
     val isExpanded = windowSizeClass.widthSizeClass == androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
+
+    // ── Data-scarcity handling ────────────────────────────────────────────────
+    // Two distinct situations need different treatments, and conflating them is
+    // what produces a screen full of empty boxes:
+    //
+    //  1. The feed resolved to nothing at all → render ONE prominent hero state
+    //     that owns the viewport.
+    //  2. The feed has some content but individual rails are empty → fill those
+    //     gaps with a compact placeholder, but only for the rails the user is
+    //     guaranteed to expect.
+    //
+    // A placeholder is NOT rendered for every empty section. HomeHub declares
+    // nine conditional rails, so a fully-sparse feed emitting one per rail
+    // would stack nine 160dp dashed boxes — 1440dp of scrolling placeholders,
+    // which is a worse-looking void than the one it replaces.
+    //
+    // `recs != null` is deliberately NOT used as the "has content" test: the
+    // engine publishes a non-null RecommendationResult even when every row in
+    // it is empty (a new account with no history scores nothing). Counting
+    // that as content would suppress the hero state on precisely the screen
+    // that needs it, leaving the user with a header and an empty column.
+    val hasRecommendationContent = recs?.let { result ->
+        result.becauseYouListened.any { it.items.isNotEmpty() } ||
+            result.favoriteArtists.any { it.items.isNotEmpty() } ||
+            result.genreDive.any { it.items.isNotEmpty() } ||
+            result.perfectForNow.items.isNotEmpty() ||
+            result.trending.items.isNotEmpty() ||
+            result.hiddenGems.items.isNotEmpty()
+    } == true
+
+    val hasFeedContent = feedState.continueListening.isNotEmpty() ||
+        feedState.moodMixes.isNotEmpty() ||
+        feedState.trending.isNotEmpty() ||
+        feedState.shorts.isNotEmpty() ||
+        feedState.supermix.isNotEmpty() ||
+        feedState.discoverMix.isNotEmpty() ||
+        feedState.becauseYouLikedMix.isNotEmpty() ||
+        feedState.newReleases.isNotEmpty() ||
+        feedState.quickPicks.isNotEmpty() ||
+        feedState.localResume.isNotEmpty() ||
+        hasRecommendationContent
+
+    // Suppressed while loading: showing "no content" during a fetch is a lie that
+    // flashes before real data arrives. The recommendation pass is still in
+    // flight while the feed itself has settled, so it suppresses the hero too.
+    val showFeedEmptyState = !hasFeedContent && !feedState.isLoading && !isRecsLoading
 
     var showGamificationSheet by remember { mutableStateOf(false) }
     var showRankingSheet by remember { mutableStateOf(false) }
@@ -146,6 +198,42 @@ fun HomeHubScreen(
             )
         }
 
+        // ── Root-level branch: hero vs. feed ───────────────────────────────────
+        // Evaluated *before* the feed container is composed so an empty feed
+        // never lays out a LazyColumn at all. Composing it and then hiding it
+        // would still pay for ten rail measurements, ten `item {}` subtrees and
+        // the divider/spacer work between them, for a screen that displays none
+        // of it. Branching here also guarantees the two are mutually exclusive —
+        // there is no window in which a half-drawn feed and the hero coexist.
+        if (showFeedEmptyState) {
+            HeroEmptyState(
+                title = if (feedState.hasAuth) "Nothing to Play Yet" else "Your Feed Is Empty",
+                subtitle = if (feedState.hasAuth) {
+                    "We couldn't find anything new for you. Try again, or explore something different."
+                } else {
+                    "Play a few tracks or connect your account and we'll build your feed around what you love."
+                },
+                actionText = "Discover Music",
+                onAction = { viewModel.loadFeed() },
+                icon = if (feedState.hasAuth) Icons.Rounded.Refresh else Icons.Rounded.Search,
+                // Deliberately NOT padded clear of the dock by 140dp the way the
+                // LazyColumn below is. That 140dp is scroll runway for a
+                // scrolling list, but the host (DeepEyeMusicApp) has already
+                // inset this whole screen above the dock. Applying it here too
+                // double-counted the inset: on a 360dp-tall landscape phone it
+                // left the hero ~110dp of height, which is less than the hero
+                // needs, so the copy and CTA were pushed off-screen. Measured
+                // via the accessibility bounds: the host granted 536px and the
+                // hero's own padding cut it to 219px.
+                contentPadding = PaddingValues(
+                    start = 32.sdp,
+                    top = 32.sdp,
+                    end = 32.sdp,
+                    bottom = 24.sdp,
+                ),
+                modifier = if (isExpanded) Modifier.widthIn(max = 1200.dp) else Modifier,
+            )
+        } else {
         LazyColumn(
             modifier =
             Modifier
@@ -153,11 +241,16 @@ fun HomeHubScreen(
                 .then(
                     if (isExpanded) Modifier.widthIn(max = 1200.dp) else Modifier,
                 ),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+            verticalArrangement = Arrangement.spacedBy(24.sdp),
             contentPadding = PaddingValues(
-                start = if (isExpanded) 24.dp else 16.dp,
-                top = 12.dp,
-                end = if (isExpanded) 24.dp else 16.dp,
+                start = if (isExpanded) 24.sdp else 16.sdp,
+                top = 12.sdp,
+                end = if (isExpanded) 24.sdp else 16.sdp,
+                // 140.dp is deliberately NOT `.sdp`: it clears the bottom dock
+                // plus the mini-player sheet above it, both of which are sized
+                // against fixed 48dp touch targets. Scaling this clearance
+                // while the dock stays fixed would let the two drift apart and
+                // bury the last row of the list.
                 bottom = 140.dp,
             ),
         ) {
@@ -188,7 +281,7 @@ fun HomeHubScreen(
             item {
                 HorizontalDivider(
                     color = Color.White.copy(0.05f),
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = 16.sdp, vertical = 8.sdp),
                 )
             }
 
@@ -336,7 +429,7 @@ fun HomeHubScreen(
             item {
                 HorizontalDivider(
                     color = Color.White.copy(0.05f),
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = 16.sdp, vertical = 8.sdp),
                 )
             }
 
@@ -408,6 +501,7 @@ fun HomeHubScreen(
                 }
             }
         } // Close LazyColumn here
+        } // Close root-level hero/feed branch
     }
 }
 
@@ -474,9 +568,9 @@ private fun HomeGreetingHeader(
             modifier = Modifier.heightIn(min = 48.dp)
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                modifier = Modifier.padding(horizontal = 8.sdp, vertical = 4.sdp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.sdp)
             ) {
                 // Bitcoin Ticker Chip
                 Row(
@@ -484,7 +578,7 @@ private fun HomeGreetingHeader(
                         .clip(RoundedCornerShape(20.dp))
                         .background(Color(0x1AFFFFFF))
                         .clickable { onNavigateToChat() }
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                        .padding(horizontal = 10.sdp, vertical = 6.sdp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("₿", color = Color(0xFFFFD700), fontSize = 13.sp, fontWeight = FontWeight.Bold)
@@ -532,24 +626,25 @@ private fun HomeVideoRail(
     items: List<HomeVideoItem>,
     onClick: (HomeVideoItem) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.sdp)) {
         Text(
             title,
-            modifier = Modifier.padding(horizontal = 16.dp),
-            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = CardGeometry.ScreenGutter),
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
         )
+        val railLayout = rememberSparseAwareRailLayout(itemCount = items.size)
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = railLayout.arrangement,
+            contentPadding = railLayout.contentPadding,
         ) {
             items(items.size, key = { index -> "$index-${items[index].id}" }) { index ->
                 val video = items[index]
                 SmartTubeVideoCard(
                     video = video,
                     onClick = { onClick(video) },
-                    modifier = Modifier.width(300.dp),
+                    modifier = Modifier.width(CardGeometry.Video.minWidth),
                 )
             }
         }
@@ -561,24 +656,25 @@ private fun ShortsRail(
     items: List<HomeVideoItem>,
     onClick: (HomeVideoItem) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.sdp)) {
         Text(
             "📱 Shorts",
-            modifier = Modifier.padding(horizontal = 16.dp),
-            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = CardGeometry.ScreenGutter),
+            style = MaterialTheme.typography.titleSmall,
             color = Color(0xFFE0E0E0),
             fontWeight = FontWeight.Bold,
         )
+        val railLayout = rememberSparseAwareRailLayout(itemCount = items.size)
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = railLayout.arrangement,
+            contentPadding = railLayout.contentPadding,
         ) {
             items(items.size, key = { index -> "$index-${items[index].id}" }) { index ->
                 val short = items[index]
                 SmartTubeVideoCard(
                     video = short,
                     onClick = { onClick(short) },
-                    modifier = Modifier.width(200.dp), // Narrower for shorts
+                    modifier = Modifier.width(CardGeometry.Video.minWidth),
                 )
             }
         }
@@ -591,39 +687,43 @@ private fun HomeMusicRail(
     items: List<HomeMusicItem>,
     onClick: (HomeMusicItem) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.sdp)) {
         Text(
             title,
-            modifier = Modifier.padding(horizontal = 16.dp),
-            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = CardGeometry.ScreenGutter),
+            style = MaterialTheme.typography.titleSmall,
             color = Color(0xFFE0E0E0),
             fontWeight = FontWeight.Bold,
         )
+        // Sparse-aware: a rail holding fewer than SparseRailThreshold items
+        // centres itself instead of hugging the leading edge, so a short feed
+        // reads as composed rather than as a load that failed halfway.
+        val railLayout = rememberSparseAwareRailLayout(itemCount = items.size)
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(horizontal = 24.dp),
+            horizontalArrangement = railLayout.arrangement,
+            contentPadding = railLayout.contentPadding,
         ) {
             items(items, key = { it.id }) { music ->
                 Box(
                     modifier =
                     Modifier
-                        .width(160.dp)
-                        .clip(RoundedCornerShape(16.dp))
+                        .width(CardGeometry.ContinueListening.maxWidth)
+                        .clip(CardGeometry.ContinueListening.shape)
                         .background(Color.White.copy(alpha = 0.05f)) // Smoother glass effect
-                        .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
+                        .border(1.dp, GlassBorder, CardGeometry.ContinueListening.shape)
                         .bouncyClickable(
                             downScale = 0.95f,
                             onClick = { onClick(music) }
                         )
-                        .padding(8.dp),
+                        .padding(CardGeometry.ContinueListening.contentPadding),
                 ) {
                     Column {
                         Box(
                             modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .aspectRatio(1f)
-                                .clip(RoundedCornerShape(12.dp)),
+                                .aspectRatio(CardGeometry.Music.aspectRatio)
+                                .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f)),
                         ) {
                             AsyncImage(
                                 model = coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
@@ -661,7 +761,7 @@ private fun HomeMusicRail(
 
 @Composable
 private fun HomeRailShimmer(title: String) {
-    Column(Modifier.padding(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.padding(vertical = 12.sdp), verticalArrangement = Arrangement.spacedBy(8.sdp)) {
         Text(title, modifier = Modifier.padding(horizontal = 20.dp), color = Color.White)
         Row(Modifier.padding(horizontal = 20.dp)) {
             repeat(3) {
@@ -688,7 +788,7 @@ private fun OfflineFallbackCard(onRetry: () -> Unit) {
         Column(
             modifier = Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.sdp),
         ) {
             Icon(
                 Icons.Rounded.WifiOff,

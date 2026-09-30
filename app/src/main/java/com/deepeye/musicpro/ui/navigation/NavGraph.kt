@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -120,6 +121,7 @@ fun NavGraph(
         }
 
     val transitionEasing = androidx.compose.animation.core.CubicBezierEasing(0.16f, 1f, 0.3f, 1f)
+
     val tweenSpec = androidx.compose.animation.core.tween<androidx.compose.ui.unit.IntOffset>(
         durationMillis = 420,
         easing = transitionEasing
@@ -128,6 +130,27 @@ fun NavGraph(
         durationMillis = 420,
         easing = transitionEasing
     )
+
+    // Sign-out routing.
+    //
+    // Fires only after [AuthViewModel.signOut] has finished tearing down the
+    // session, so the login screen never renders against a still-valid user.
+    //
+    // `popUpTo(0) { inclusive = true }` empties the back stack rather than just
+    // popping Settings. That is what stops the hardware Back button from
+    // returning the user to Home, Library or any other signed-in screen: with
+    // no prior entry, Back exits the activity instead of re-entering the app
+    // as a logged-in user. `launchSingleTop` guards against a duplicate Login
+    // entry if the graph is re-entered.
+    LaunchedEffect(navController, authViewModel) {
+        authViewModel.signOutCompleted.collect {
+            android.util.Log.i("NavGraph", "event=sign_out_nav stage=purge_backstack result=success")
+            navController.navigate(Routes.Login.route) {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -308,7 +331,9 @@ fun NavGraph(
                 onYouTubeLoginClick = { navController.navigate(Routes.YouTubeLogin.route) },
                 onNavigateToPersonalization = { navController.navigate(Routes.PersonalizationSettings.route) },
                 onLaunchTvMode = { navController.navigate(Routes.TvDashboard.route) },
-
+                onSignOut = { authViewModel.signOut() },
+                isSignedIn = currentUser != null,
+                signedInEmail = currentUser?.email,
             )
         }
 

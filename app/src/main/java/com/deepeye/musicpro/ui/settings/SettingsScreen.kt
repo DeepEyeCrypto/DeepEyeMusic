@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -53,7 +54,8 @@ enum class SettingCategory(val title: String, val subtitle: String, val icon: Im
     APPEARANCE("Appearance", "Theme, Dynamic Glow & Contrast", Icons.Default.Palette),
     AUDIO_ENGINE("Audio Engine (DSP)", "Lossless DSP, AEOS & Visualizer", Icons.Default.GraphicEq),
     LIBRARY("Storage & Library", "Rescan, Cache & Cloud Sync", Icons.Default.Folder),
-    UPDATES("Updates & Version", "OTA Engine & Release Status", Icons.Default.SystemUpdate)
+    UPDATES("Updates & Version", "OTA Engine & Release Status", Icons.Default.SystemUpdate),
+    ACCOUNT("Account", "Session & Sign Out", Icons.Default.AccountCircle)
 }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
@@ -65,6 +67,9 @@ fun SettingsScreen(
     onYouTubeLoginClick: () -> Unit = {},
     onNavigateToPersonalization: () -> Unit = {},
     onLaunchTvMode: () -> Unit = {},
+    onSignOut: () -> Unit = {},
+    isSignedIn: Boolean = false,
+    signedInEmail: String? = null,
     viewModel: SettingsViewModel = hiltViewModel(),
     changelogViewModel: com.deepeye.musicpro.updates.ChangelogViewModel = hiltViewModel()
 ) {
@@ -72,6 +77,53 @@ fun SettingsScreen(
     val settings = uiState.settings
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+
+    // Sign-out is irreversible and destroys the user's session, so it is gated
+    // behind an explicit confirmation rather than firing on a single tap.
+    var showSignOutConfirm by remember { mutableStateOf(false) }
+
+    if (showSignOutConfirm) {
+        AlertDialog(
+            onDismissRequest = { showSignOutConfirm = false },
+            containerColor = Color(0xFF131722),
+            icon = {
+                Icon(
+                    Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            },
+            title = {
+                Text("Sign Out", color = Color.White, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text(
+                    "You'll be returned to the login screen and signed out on this device. " +
+                        "Your downloaded music stays on this device, but you'll need to sign in again to sync.",
+                    color = Color.White.copy(alpha = 0.8f),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSignOutConfirm = false
+                        onSignOut()
+                    },
+                ) {
+                    Text(
+                        "Sign Out",
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSignOutConfirm = false }) {
+                    Text("Cancel", color = Color.White.copy(alpha = 0.8f))
+                }
+            },
+        )
+    }
 
     // Adaptive Master-Detail Navigator
     val navigator = rememberListDetailPaneScaffoldNavigator<SettingCategory>()
@@ -309,7 +361,10 @@ fun SettingsScreen(
                                 uiState = uiState,
                                 viewModel = viewModel,
                                 context = context,
-                                onNavigateToAEOS = onNavigateToAEOS
+                                onNavigateToAEOS = onNavigateToAEOS,
+                                isSignedIn = isSignedIn,
+                                signedInEmail = signedInEmail,
+                                onRequestSignOut = { showSignOutConfirm = true },
                             )
                         }
                     }
@@ -384,7 +439,10 @@ private fun SettingsDetailPane(
     uiState: SettingsUiState,
     viewModel: SettingsViewModel,
     context: Context,
-    onNavigateToAEOS: () -> Unit
+    onNavigateToAEOS: () -> Unit,
+    isSignedIn: Boolean,
+    signedInEmail: String?,
+    onRequestSignOut: () -> Unit,
 ) {
     val settings = uiState.settings
 
@@ -421,8 +479,14 @@ private fun SettingsDetailPane(
 
         HorizontalDivider(color = glassBorder, thickness = 1.dp)
 
+        // `weight(1f)` — not `fillMaxSize()`. As a direct Column child,
+        // fillMaxSize() resolves against the Column's *incoming* max height, so
+        // this list was laid out taller than the space below the header and its
+        // trailing rows were pushed out of the pane where they could neither be
+        // seen nor scrolled to. weight() gives it only the remaining height, so
+        // it scrolls within the pane.
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
@@ -626,6 +690,90 @@ private fun SettingsDetailPane(
                                     Text("Latest Version ✓", color = Color(0xFF090B10), fontWeight = FontWeight.Black, fontSize = 14.sp)
                                 } else {
                                     Text("Check Updates", color = Color(0xFF090B10), fontWeight = FontWeight.Black, fontSize = 14.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+                SettingCategory.ACCOUNT -> {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            // Who is currently signed in
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 68.dp)
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(darkSurface)
+                                    .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
+                                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.AccountCircle,
+                                    contentDescription = null,
+                                    tint = neonCyan,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                                Spacer(Modifier.width(14.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "Signed In",
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        fontSize = 13.sp
+                                    )
+                                    Text(
+                                        signedInEmail ?: "Guest session",
+                                        color = Color.White,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            // Destructive action, visually isolated from every
+                            // other row so it cannot be hit by muscle memory.
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 68.dp)
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(MaterialTheme.colorScheme.error.copy(alpha = 0.10f))
+                                    .border(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                                        RoundedCornerShape(18.dp)
+                                    )
+                                    .clickable(enabled = isSignedIn) { onRequestSignOut() }
+                                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.Logout,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                                Spacer(Modifier.width(14.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "Sign Out",
+                                        color = MaterialTheme.colorScheme.error,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        "End this session on this device",
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        fontSize = 13.sp
+                                    )
+                                }
+                                if (!isSignedIn) {
+                                    Text(
+                                        "Inactive",
+                                        color = Color.White.copy(alpha = 0.4f),
+                                        fontSize = 13.sp
+                                    )
                                 }
                             }
                         }
