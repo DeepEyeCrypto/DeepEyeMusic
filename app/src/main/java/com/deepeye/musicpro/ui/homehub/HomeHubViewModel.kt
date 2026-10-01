@@ -160,16 +160,6 @@ constructor(
 
     val isAIGenerating = aiRadioEngine.isGenerating
 
-    fun onMoodClick(mood: com.deepeye.musicpro.domain.model.home.MoodMix) {
-        viewModelScope.launch {
-            try {
-                aiRadioEngine.playMoodMix(mood)
-            } catch (e: Exception) {
-                Log.e("HomeHubVM", "Mood search failed: ${e.message}")
-            }
-        }
-    }
-
     fun onAIPromptSubmitted(prompt: String) {
         viewModelScope.launch {
             try {

@@ -54,6 +54,7 @@ import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.ui.components.ShimmerBox
 import com.deepeye.musicpro.ui.components.rememberSparseAwareRailLayout
+import com.deepeye.musicpro.ui.theme.AppSpacing
 import com.deepeye.musicpro.ui.theme.CardGeometry
 import com.deepeye.musicpro.ui.youtube.SmartTubeVideoCard
 import com.deepeye.musicpro.ui.components.premium.PremiumHeroCard
@@ -120,7 +121,6 @@ fun HomeHubScreen(
     } == true
 
     val hasFeedContent = feedState.continueListening.isNotEmpty() ||
-        feedState.moodMixes.isNotEmpty() ||
         feedState.trending.isNotEmpty() ||
         feedState.shorts.isNotEmpty() ||
         feedState.supermix.isNotEmpty() ||
@@ -241,7 +241,16 @@ fun HomeHubScreen(
                 .then(
                     if (isExpanded) Modifier.widthIn(max = 1200.dp) else Modifier,
                 ),
-            verticalArrangement = Arrangement.spacedBy(24.sdp),
+            // Section rhythm comes from the SSOT token rather than a literal.
+            //
+            // `AppSpacing.SectionGap` was specified but does not exist; `xxl` is
+            // the token that already carries the 24dp section rhythm across the
+            // app, so it is used here instead of a duplicated magic number.
+            //
+            // This is a plain `.dp`, not `.sdp`: Spacing.kt is explicit that the
+            // global root zoom is the single scaling axis, and routing the gap
+            // through `.sdp` as well would fight it.
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.xxl),
             contentPadding = PaddingValues(
                 start = if (isExpanded) 24.sdp else 16.sdp,
                 top = 12.sdp,
@@ -283,20 +292,6 @@ fun HomeHubScreen(
                     color = Color.White.copy(0.05f),
                     modifier = Modifier.padding(horizontal = 16.sdp, vertical = 8.sdp),
                 )
-            }
-
-            // 5. Mood Chips (Phase 7)
-            if (feedState.moodMixes.isNotEmpty()) {
-                item {
-                    val context = androidx.compose.ui.platform.LocalContext.current
-                    MoodChipsRow(
-                        moods = feedState.moodMixes,
-                        onMoodClick = { mood -> 
-                            android.widget.Toast.makeText(context, "Generating playlist for ${mood.label}...", android.widget.Toast.LENGTH_SHORT).show()
-                            viewModel.onMoodClick(mood) 
-                        },
-                    )
-                }
             }
 
             // 5b. YouTube / Trending Rails
