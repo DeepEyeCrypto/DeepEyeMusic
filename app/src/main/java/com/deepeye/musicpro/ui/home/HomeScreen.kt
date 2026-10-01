@@ -47,9 +47,13 @@ import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.recommendation.RecommendationRow
 import com.deepeye.musicpro.domain.recommendation.VideoItem
 import com.deepeye.musicpro.ui.components.GlassCard
-import com.deepeye.musicpro.ui.components.ShimmerBox
+import com.deepeye.musicpro.ui.components.SectionHeaderSkeleton
+import com.deepeye.musicpro.ui.components.VideoCardSkeleton
 import com.deepeye.musicpro.ui.motion.premiumScrollHaptics
 import com.deepeye.musicpro.ui.theme.*
+import com.deepeye.musicpro.ui.util.adaptiveColumnCount
+import com.deepeye.musicpro.ui.util.evenCarouselCardWidth
+import com.deepeye.musicpro.ui.util.minTouchTarget
 import java.util.Calendar
 
 private val MoodFilters = listOf(
@@ -73,7 +77,7 @@ fun HomeTopBar(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+            .padding(horizontal = CardGeometry.ScreenGutter, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -81,11 +85,16 @@ fun HomeTopBar(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "DEEPEYE",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = 24.sp,
+                    // titleMedium, not a hardcoded 24.sp: the wordmark is brand
+                    // chrome sitting above a scrolling list, and 24.sp on a
+                    // landscape phone consumed vertical space the carousels
+                    // needed more.
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 1.5.sp,
-                    color = Color.White
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Box(
@@ -98,31 +107,33 @@ fun HomeTopBar(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "PRO",
-                    fontSize = 11.sp,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 1.sp,
                     color = GlowOrange,
                     modifier = Modifier
-                        .background(GlowOrange.copy(alpha = 0.2f), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                        .background(GlowOrange.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 4.dp, vertical = 1.dp)
                 )
             }
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = greeting,
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium,
-                color = Color.White.copy(alpha = 0.7f)
+                color = Color.White.copy(alpha = 0.7f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(52.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .background(Color(0xFF131722).copy(alpha = 0.85f))
                     .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
@@ -133,13 +144,13 @@ fun HomeTopBar(
                     imageVector = Icons.Default.Search,
                     contentDescription = "Search",
                     tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
             Box(
                 modifier = Modifier
-                    .size(52.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .background(Color(0xFF131722).copy(alpha = 0.85f))
                     .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
@@ -150,7 +161,7 @@ fun HomeTopBar(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Settings",
                     tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
@@ -172,24 +183,34 @@ fun HomeScreen(
 
     var selectedMoodIndex by remember { mutableIntStateOf(0) }
 
-    val cardWidth = remember(windowSizeClass) {
-        if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) 168.dp else 220.dp
-    }
+    // Carousel cards now size themselves from the actual viewport instead of a
+    // hardcoded 168/220.dp. See evenCarouselCardWidth: a fixed width left a
+    // third of the landscape row empty, which is the dead space being removed.
+    // maxWidth is read through BoxWithConstraints below, so nothing is guessed.
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val cardWidth = evenCarouselCardWidth(
+            availableWidth = maxWidth,
+            minItemWidth = CardGeometry.Compact.minWidth,
+        )
+        val quickColumns = adaptiveColumnCount(
+            availableWidth = maxWidth,
+            minItemWidth = 200.dp,
+        )
 
-    Scaffold(
-        topBar = {
-            HomeTopBar(
-                onSearchClick = { /* Search Navigation */ },
-                onSettingsClick = { /* Settings Navigation */ }
-            )
-        },
-        containerColor = Color.Transparent
-    ) { paddingValues ->
+        Scaffold(
+            topBar = {
+                HomeTopBar(
+                    onSearchClick = { /* Search Navigation */ },
+                    onSettingsClick = { /* Settings Navigation */ }
+                )
+            },
+            containerColor = Color.Transparent
+        ) { paddingValues ->
         LazyColumn(
             state = listState,
             contentPadding = PaddingValues(
                 top = paddingValues.calculateTopPadding(),
-                bottom = 180.dp // mini-player and nav-bar safe inset
+                bottom = 90.dp // mini-player and nav-bar safe inset
             ),
             modifier = Modifier
                 .fillMaxSize()
@@ -198,8 +219,11 @@ fun HomeScreen(
             // 1. Mood / Vibe Filter Carousel
             item {
                 LazyRow(
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    contentPadding = PaddingValues(
+                        horizontal = CardGeometry.ScreenGutter,
+                        vertical = 4.dp
+                    ),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     itemsIndexed(MoodFilters) { index, mood ->
                         val isSelected = selectedMoodIndex == index
@@ -213,41 +237,44 @@ fun HomeScreen(
 
                         Box(
                             modifier = Modifier
-                                .heightIn(min = 48.dp)
-                                .clip(RoundedCornerShape(24.dp))
+                                .heightIn(min = 36.dp)
+                                .clip(RoundedCornerShape(18.dp))
                                 .background(bgBrush)
-                                .border(if (isSelected) 1.5.dp else 1.dp, borderColor, RoundedCornerShape(24.dp))
+                                .border(if (isSelected) 1.5.dp else 1.dp, borderColor, RoundedCornerShape(18.dp))
                                 .clickable { selectedMoodIndex = index }
-                                .padding(horizontal = 18.dp, vertical = 10.dp),
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = mood,
-                                fontSize = 15.sp,
+                                style = MaterialTheme.typography.labelLarge,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = textColor
+                                color = textColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // 2. Quick-Play 2-Column Grid (Spotify / Apple Music style top 6 tracks)
-            recs?.perfectForNow?.items?.take(6)?.takeIf { it.isNotEmpty() }?.let { quickItems ->
+            // 2. Quick-Play dense grid. The column count follows the viewport so
+            // this fills the width on a landscape phone, instead of stretching two
+            // comically wide rows across 891dp.
+            recs?.perfectForNow?.items?.take(8)?.takeIf { it.isNotEmpty() }?.let { quickItems ->
                 item {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 6.dp)
+                            .padding(horizontal = CardGeometry.ScreenGutter)
                     ) {
-                        val rows = quickItems.chunked(2)
-                        rows.forEach { rowItems ->
+                        quickItems.chunked(quickColumns).forEach { rowItems ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    .padding(vertical = 3.dp),
+                                horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing)
                             ) {
                                 rowItems.forEach { video ->
                                     QuickGridItem(
@@ -258,13 +285,15 @@ fun HomeScreen(
                                         }
                                     )
                                 }
-                                if (rowItems.size == 1) {
+                                // Pad a short final row so its cards keep the same
+                                // width as every other row instead of stretching.
+                                repeat(quickColumns - rowItems.size) {
                                     Spacer(modifier = Modifier.weight(1f))
                                 }
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(Modifier.height(10.dp))
                 }
             }
 
@@ -277,7 +306,7 @@ fun HomeScreen(
                         }
                     }
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
             // 4. Pull-to-refresh / background sync progress line
@@ -300,7 +329,7 @@ fun HomeScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(32.dp),
+                            .padding(12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -416,6 +445,7 @@ fun HomeScreen(
                 }
             }
         }
+        }
     }
 }
 
@@ -427,16 +457,16 @@ private fun QuickGridItem(
 ) {
     Box(
         modifier = modifier
-            .heightIn(min = 64.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .heightIn(min = 52.dp)
+            .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFF131722).copy(alpha = 0.85f))
-            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(14.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 64.dp),
+                .heightIn(min = 52.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
@@ -444,20 +474,20 @@ private fun QuickGridItem(
                 contentDescription = video.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp))
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp))
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = video.title,
-                fontSize = 15.sp,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 10.dp)
+                    .padding(end = 8.dp)
             )
         }
     }
@@ -470,9 +500,9 @@ private fun FeaturedHeroBanner(
     GlassCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = CardGeometry.ScreenGutter),
         tintColor = ElectricViolet.copy(alpha = 0.2f),
-        cornerRadius = 22.dp,
+        cornerRadius = 12.dp,
         refractionHeight = 0.35f
     ) {
         Box(
@@ -485,7 +515,7 @@ private fun FeaturedHeroBanner(
                         radius = 600f
                     )
                 )
-                .padding(20.dp)
+                .padding(12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -498,42 +528,49 @@ private fun FeaturedHeroBanner(
                             imageVector = Icons.Default.GraphicEq,
                             contentDescription = null,
                             tint = NeonCyan,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(14.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "SPATIAL STUDIO AUDIO",
-                            fontSize = 12.sp,
+                            // Eyebrow label, not body copy — sits below the
+                            // UiScale.MinReadableFontSize floor as a decorative
+                            // tracking-wide label by design.
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Black,
                             letterSpacing = 1.2.sp,
-                            color = NeonCyan
+                            color = NeonCyan,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Today's Discovery Mix",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
+                        text = "Today's Discovery Mix",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
                         text = "Curated high-bitrate lossless audio for your drive",
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.7f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
+                        .size(44.dp)
                         .clip(CircleShape)
                         .background(NeonCyan)
-                        .shadow(10.dp, CircleShape, spotColor = NeonCyan)
+                        .shadow(8.dp, CircleShape, spotColor = NeonCyan)
                         .clickable(onClick = onPlayMix),
                     contentAlignment = Alignment.Center
                 ) {
@@ -541,7 +578,7 @@ private fun FeaturedHeroBanner(
                         imageVector = Icons.Filled.PlayArrow,
                         contentDescription = "Play Mix",
                         tint = Color.Black,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
@@ -556,14 +593,19 @@ fun RecommendationRowUI(
     isHighlighted: Boolean = false,
     onVideoClick: (VideoItem) -> Unit,
 ) {
-    val cardWidth = if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) 168.dp else 220.dp
-    ModernRecommendationRow(
-        row = row,
-        cardWidth = cardWidth,
-        accentColor = if (isHighlighted) GlowOrange else NeonCyan,
-        isHighlighted = isHighlighted,
-        onVideoClick = onVideoClick
-    )
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val cardWidth = evenCarouselCardWidth(
+            availableWidth = maxWidth,
+            minItemWidth = CardGeometry.Compact.minWidth,
+        )
+        ModernRecommendationRow(
+            row = row,
+            cardWidth = cardWidth,
+            accentColor = if (isHighlighted) GlowOrange else NeonCyan,
+            isHighlighted = isHighlighted,
+            onVideoClick = onVideoClick
+        )
+    }
 }
 
 @Composable
@@ -579,36 +621,44 @@ fun ModernRecommendationRow(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 14.dp)
+            .padding(vertical = 8.dp)
     ) {
         // Row Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = CardGeometry.ScreenGutter),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(8.dp)
+                        .size(6.dp)
                         .clip(CircleShape)
                         .background(accentColor)
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Column {
                     Text(
                         text = row.title,
-                        fontSize = 20.sp,
+                        // titleSmall, not a 20.sp headline: a row header in a
+                        // stacked carousel list is chrome, not a headline, and 20.sp
+                        // for eight consecutive rows is what made the screen read
+                        // as oversized.
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     if (row.subtitle.isNotBlank()) {
                         Text(
                             text = row.subtitle,
-                            fontSize = 13.sp,
-                            color = Color.White.copy(alpha = 0.6f)
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.6f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -617,6 +667,7 @@ fun ModernRecommendationRow(
             Box(
                 modifier = Modifier
                     .size(40.dp)
+                    .minTouchTarget()
                     .clip(CircleShape)
                     .background(Color(0xFF131722).copy(alpha = 0.85f))
                     .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
@@ -632,15 +683,15 @@ fun ModernRecommendationRow(
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // Horizontal Carousel
         val rowState = rememberLazyListState()
         LazyRow(
             state = rowState,
             modifier = Modifier.premiumScrollHaptics(rowState),
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(horizontal = CardGeometry.ScreenGutter),
+            horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
         ) {
             itemsIndexed(row.items, key = { index, video -> "$index-${video.videoId}" }) { _, video ->
                 ModernVideoCard(
@@ -687,10 +738,13 @@ fun ModernVideoCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1f)
-                .clip(RoundedCornerShape(20.dp))
+                // Geometry from CardGeometry (SSOT). 16:9 rather than 1:1: these
+                // are YouTube video frames, and a square crop both crops the
+                // subject and costs ~44% more vertical space per card.
+                .aspectRatio(CardGeometry.Video.aspectRatio)
+                .clip(CardGeometry.Video.shape)
                 .background(Color(0xFF131722).copy(alpha = 0.85f))
-                .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
+                .border(1.dp, Color.White.copy(alpha = 0.15f), CardGeometry.Video.shape)
         ) {
             AsyncImage(
                 model = "https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg",
@@ -716,13 +770,16 @@ fun ModernVideoCard(
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(10.dp)
-                        .background(Color.Black.copy(alpha = 0.85f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                        .padding(6.dp)
+                        .background(Color.Black.copy(alpha = 0.85f), RoundedCornerShape(5.dp))
+                        .padding(horizontal = 5.dp, vertical = 2.dp)
                 ) {
                     Text(
                         text = video.duration,
-                        fontSize = 11.sp,
+                        // Thumbnail metadata overlay: 10-11sp by the documented
+                        // UiScale.MinReadableFontSize carve-out for scrim-backed
+                        // labels, which must not blow out the pill at this width.
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
@@ -730,12 +787,12 @@ fun ModernVideoCard(
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         // Title (2 lines max)
         Text(
             text = video.title,
-            fontSize = 15.sp,
+            style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
             color = Color.White,
             maxLines = 2,
@@ -744,10 +801,10 @@ fun ModernVideoCard(
 
         // Artist (1 line)
         if (video.artist.isNotBlank()) {
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = video.artist,
-                fontSize = 13.sp,
+                style = MaterialTheme.typography.bodySmall,
                 color = Color.White.copy(alpha = 0.65f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -757,38 +814,31 @@ fun ModernVideoCard(
 }
 
 @Composable
-fun ShimmerRecommendationRow(cardWidth: Dp = 148.dp) {
+fun ShimmerRecommendationRow(cardWidth: Dp = CardGeometry.Video.minWidth) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp)
+            .padding(vertical = 8.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = CardGeometry.ScreenGutter),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column {
-                ShimmerBox(Modifier.width(140.dp).height(18.dp).clip(RoundedCornerShape(6.dp)))
-                Spacer(Modifier.height(4.dp))
-                ShimmerBox(Modifier.width(90.dp).height(12.dp).clip(RoundedCornerShape(4.dp)))
-            }
+            SectionHeaderSkeleton()
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(10.dp))
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(horizontal = CardGeometry.ScreenGutter),
+            horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
         ) {
             items(4) {
-                Column(Modifier.width(cardWidth)) {
-                    ShimmerBox(Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(18.dp)))
-                    Spacer(Modifier.height(8.dp))
-                    ShimmerBox(Modifier.fillMaxWidth(0.85f).height(14.dp).clip(RoundedCornerShape(4.dp)))
-                    Spacer(Modifier.height(4.dp))
-                    ShimmerBox(Modifier.width(80.dp).height(12.dp).clip(RoundedCornerShape(4.dp)))
-                }
+                // VideoCardSkeleton reads CardGeometry.Video, which is the same
+                // source ModernVideoCard uses — identical box by construction,
+                // and the cardWidth passed in is the one the loaded rail computes.
+                VideoCardSkeleton(width = cardWidth)
             }
         }
     }

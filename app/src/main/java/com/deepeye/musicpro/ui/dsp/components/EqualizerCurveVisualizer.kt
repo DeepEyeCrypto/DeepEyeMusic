@@ -68,6 +68,15 @@ internal const val EQ_MAX_DB = 12f
 internal const val EQ_MIN_DB = -12f
 
 /**
+ * Half-width of the "magnetic" flat spot around unity gain, in dB.
+ *
+ * Any raw gain within `[-EQ_MAGNETIC_DETENT_DB, +EQ_MAGNETIC_DETENT_DB]` collapses to
+ * exactly `0f`, so a fader released near unity parks dead-centre instead of resting at a
+ * fractional value that renders as a stray `-1` / `+1` and cannot be dialled back out.
+ */
+internal const val EQ_MAGNETIC_DETENT_DB = 1.0f
+
+/**
  * Pure pointer → value mapping for the 10-band fader bank.
  *
  * Extracted from the Composable so the gesture arithmetic is unit-testable without
@@ -128,6 +137,37 @@ internal object EqTouchMath {
         return touchY >= trackTop - overshootPx &&
             touchY <= trackTop + trackHeight + overshootPx
     }
+
+    /**
+     * Horizontal centre of the slot owned by [index] within a gap-free strip.
+     *
+     * Single source of truth for band geometry: the fader bank draws its tracks, the
+     * curve visualiser draws its frequency guides, and the curve draws its spline
+     * nodes all through this one function, so a grid line cannot drift off the centre
+     * of the band it is labelling.
+     *
+     * @return The centre X in pixels, or `null` when the geometry is degenerate.
+     */
+    fun slotCenterX(index: Int, surfaceWidth: Float, bandCount: Int): Float? {
+        if (bandCount <= 0 || surfaceWidth <= 0f) return null
+        if (surfaceWidth.isNaN()) return null
+        val slotWidth = surfaceWidth / bandCount
+        if (slotWidth <= 0f) return null
+        return (slotWidth * index) + (slotWidth / 2f)
+    }
+
+    /**
+     * Applies the magnetic detent: collapses any gain within
+     * `[-EQ_MAGNETIC_DETENT_DB, +EQ_MAGNETIC_DETENT_DB]` to exactly `0f`.
+     *
+     * Kept separate from [gainForTouchY] on purpose — that function is the raw linear
+     * Y→dB map and must stay strictly monotonic for its own tests; the detent is a
+     * downstream stage that only the live gesture path composes on top of it.
+     *
+     * @return `0f` inside the detent, otherwise [gain] unchanged.
+     */
+    fun applyMagneticDetent(gain: Float): Float =
+        if (abs(gain) <= EQ_MAGNETIC_DETENT_DB) 0f else gain
 }
 
 /** Visible height of a single fader track. */
@@ -307,8 +347,14 @@ fun EqualizerCurveVisualizer(
             )
 
             // Frequency Vertical Guides
+            // Slot centres come from EqTouchMath so these guides land exactly on the
+            // centre of the fader slot they label (gap-free strip, width / bandCount).
+            val slotCenters = List(numBands) { i ->
+                EqTouchMath.slotCenterX(i, width, numBands) ?: return@Canvas
+            }
+
             for (i in 0 until numBands) {
-                val x = (i.toFloat() / (numBands - 1)) * (width - 60f) + 30f
+                val x = slotCenters[i]
                 drawLine(
                     color = Color.White.copy(alpha = 0.04f),
                     start = Offset(x, 0f),
@@ -320,7 +366,7 @@ fun EqualizerCurveVisualizer(
             // Calculate Bezier control points
             val points = mutableListOf<Offset>()
             for (i in 0 until numBands) {
-                val x = (i.toFloat() / (numBands - 1)) * (width - 60f) + 30f
+                val x = slotCenters[i]
                 val gain = eqBands[i].coerceIn(-12f, 12f)
                 val normalizedY = midY - (gain / 12f) * (height * 0.42f)
                 points.add(Offset(x, normalizedY))
@@ -416,8 +462,13 @@ fun EqualizerCurveVisualizer(
         val currentOnBandGainChanged by rememberUpdatedState(onBandGainChanged)
         val touchOvershootPx = with(LocalDensity.current) { EQ_TOUCH_OVERSHOOT.toPx() }
 
+        // Single funnel for every gain write: raw linear Y→dB map, then the magnetic
+        // detent. Both the ACTION_DOWN handler and every drag frame route through here,
+        // so a band can never be left at a fractional gain the detent should have caught.
         fun gainFromTouchY(touchY: Float): Float =
-            EqTouchMath.gainForTouchY(touchY, trackTopPx, trackHeightPx) ?: 0f
+            EqTouchMath.applyMagneticDetent(
+                EqTouchMath.gainForTouchY(touchY, trackTopPx, trackHeightPx) ?: 0f
+            )
 
         Box(
             modifier = Modifier
@@ -533,7 +584,6 @@ fun EqualizerCurveVisualizer(
                 ) {
                     if (bandCount <= 0) return@Canvas
 
-                    val slotWidth = size.width / bandCount
                     val midY = size.height / 2f
                     val thumbRadius = EQ_THUMB_SIZE.toPx() / 2f
                     val travel = (midY - thumbRadius).coerceAtLeast(1f)
@@ -551,7 +601,10 @@ fun EqualizerCurveVisualizer(
 
                     for (i in 0 until bandCount) {
                         val isActive = i == activeBand
-                        val centerX = slotWidth * (i + 0.5f)
+                        // Same slot-centre function as the curve visualiser's grid
+                        // guides above, so track, guide and spline node cannot diverge.
+                        val centerX =
+                            EqTouchMath.slotCenterX(i, size.width, bandCount) ?: continue
                         val gain = eqBands[i].coerceIn(EQ_MIN_DB, EQ_MAX_DB)
                         val normGain = (gain / EQ_MAX_DB).coerceIn(-1f, 1f)
                         val thumbY = midY - normGain * travel

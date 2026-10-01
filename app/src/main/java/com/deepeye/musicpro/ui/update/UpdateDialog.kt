@@ -29,6 +29,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.deepeye.musicpro.data.source.remote.update.UpdateState
 import kotlin.math.roundToInt
+import com.deepeye.musicpro.ui.theme.ProvideAppZoom
 
 private val BrandTeal = Color(0xFF00F2FE)
 private val BrandPurple = Color(0xFF4FACFE)
@@ -56,6 +57,10 @@ fun UpdateDialog(
             usePlatformDefaultWidth = false
         )
     ) {
+        // A Dialog is its own window with its own density, so it does NOT
+        // inherit the root zoom. Without this it renders at system scale
+        // while the screen behind it is zoomed. See ProvideAppZoom.
+        ProvideAppZoom {
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.88f)
@@ -310,5 +315,6 @@ fun UpdateDialog(
                 }
             }
         }
+        } // ProvideAppZoom
     }
 }

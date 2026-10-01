@@ -18,26 +18,26 @@ class HomeHubScreenTest {
     // val rule = ActivityScenarioRule(MainActivity::class.java)
 
     @Test
-    fun `homeScreen should display streak card`() {
+    fun `homeScreen_should_display_streak_card`() {
         // Mock UI Test
         // onView(withText("Streak")).check(matches(isDisplayed()))
         // onView(withText("🔥 0 day streak")).check(matches(isDisplayed()))
     }
     
     @Test
-    fun `homeScreen should display points banner`() {
+    fun `homeScreen_should_display_points_banner`() {
         // onView(withText("Reward Points")).check(matches(isDisplayed()))
         // onView(withText("0 pts")).check(matches(isDisplayed()))
     }
     
     @Test
-    fun `homeScreen should display ranking tab`() {
+    fun `homeScreen_should_display_ranking_tab`() {
         // onView(withText("Ranking")).check(matches(isDisplayed()))
         // onView(withContentDescription("Trophy")).check(matches(isDisplayed()))
     }
     
     @Test
-    fun `homeScreen should display Top 3 leaderboard card`() {
+    fun `homeScreen_should_display_top3_leaderboard_card`() {
         // onView(withText("Top Players")).check(matches(isDisplayed()))
         // onView(withText("🥇")).check(matches(isDisplayed()))
         // onView(withText("View Full Leaderboard")).check(matches(isDisplayed()))

@@ -9,6 +9,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.border
+import androidx.compose.animation.core.tween
+import com.deepeye.musicpro.tv.ui.components.TvFocusCyan
+import com.deepeye.musicpro.tv.ui.components.TvFocusScale
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -122,19 +128,48 @@ private fun MediaCard(
     onFocused: (MediaItem) -> Unit,
     onClick: (MediaItem) -> Unit
 ) {
+    // isFocused used to be declared but never written, so the 1.1x scale-up this
+    // card was supposed to perform on D-pad focus never actually ran. androidx.tv
+    // Card owns the focus handling (its own onClick carries focus semantics), so
+    // we observe focus rather than adding a second competing focusable().
     var isFocused by remember { mutableStateOf(false) }
-    val scale = animateFloatAsState(
-        targetValue = if (isFocused) 1.1f else 1.0f,
+    val scale by animateFloatAsState(
+        targetValue = if (isFocused) TvFocusScale else 1f,
         animationSpec = spring(stiffness = Spring.StiffnessMedium),
-        label = "scale"
+        label = "cardFocusScale"
     )
-    
+    val focusBorder by animateFloatAsState(
+        targetValue = if (isFocused) 1f else 0f,
+        animationSpec = tween(durationMillis = 120),
+        label = "cardFocusBorder"
+    )
+
     Card(
         onClick = { onClick(item) },
         modifier = Modifier
             .width(240.dp)
             .height(135.dp)
-            .scale(scale.value),
+            .onFocusChanged { state ->
+                val gained = state.isFocused
+                if (gained != isFocused) {
+                    isFocused = gained
+                    if (gained) onFocused(item)
+                }
+            }
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                if (isFocused) {
+                    shadowElevation = 16f
+                    ambientShadowColor = TvFocusCyan
+                    spotShadowColor = TvFocusCyan
+                }
+            }
+            .border(
+                width = if (isFocused) 2.dp else 0.dp,
+                color = TvFocusCyan.copy(alpha = focusBorder),
+                shape = RoundedCornerShape(8.dp)
+            ),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant

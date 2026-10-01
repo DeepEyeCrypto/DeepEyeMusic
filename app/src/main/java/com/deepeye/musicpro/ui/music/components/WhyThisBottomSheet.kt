@@ -116,7 +116,7 @@ fun WhyThisBottomSheet(
                             .background(ElectricViolet.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
-                        Text(text = sourceLabel, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = NeonCyan, letterSpacing = 0.4.sp)
+                        Text(text = sourceLabel, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = NeonCyan, letterSpacing = 0.4.sp)
                     }
                 }
             }

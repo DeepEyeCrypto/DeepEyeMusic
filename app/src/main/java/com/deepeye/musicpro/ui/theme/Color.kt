@@ -14,13 +14,21 @@ val GraphiteGlassElevated = Color(0xFF1D1D27) // Higher elevation glass
 
 // Brand Accents
 val ElectricViolet = Color(0xFF7B3FE4) // Primary brand color
+
+// Accent-on-surface variant for when violet is used as *text* rather than a
+// fill. ElectricViolet measures only 2.92:1 on GraphiteGlassElevated, failing
+// the 3:1 WCAG 1.4.11 floor for UI/meaningful text. This lighter tint measures
+// 4.58:1 on the same surface. Use AccentOnSurface for violet labels/icons on
+// elevated cards; keep ElectricViolet for fills, gradients and borders.
+val AccentOnSurface = Color(0xFF9B6BF0)
 val DeepPurple = Color(0xFF4A148C) // Secondary deeper tone
 val NeonCyan = Color(0xFF00E5C3) // High-contrast accent
 
 // Text Colors
 val TextPrimary = Color(0xFFF9FAFF) // Crisp, slightly cool white
 val TextSecondary = Color(0xFFA5A9B8) // Muted blue-grey for metadata
-val TextTertiary = Color(0xFF6C7086) // Very muted for borders/disabled
+val TextTertiary = Color(0xFF8B90A6) // Muted label tone (AA 4.5:1 on all surfaces)
+val TextDisabled = Color(0xFF4A4E5E) // Non-text "unavailable" marks (AA-exempt)
 
 // Special FX Colors
 val GlowTeal = Color(0xFF33E1D1)

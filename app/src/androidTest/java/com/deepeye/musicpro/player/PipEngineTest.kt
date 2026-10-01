@@ -9,13 +9,13 @@ import org.junit.Assert.assertTrue
 class PipEngineTest {
 
     @Test
-    fun `PIP mode should show video`() {
+    fun `PIP_mode_should_show_video`() {
         // Mocking PIP enter
         assertTrue(true)
     }
     
     @Test
-    fun `PIP mode should continue audio when backgrounded`() {
+    fun `PIP_mode_should_continue_audio_when_backgrounded`() {
         // Mock background playback continuation
         assertTrue(true)
     }

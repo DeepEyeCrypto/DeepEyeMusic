@@ -32,11 +32,23 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.ui.components.bouncyClickable
+import com.deepeye.musicpro.ui.theme.CardGeometry
 import kotlinx.coroutines.launch
 
 private val neonCyan = Color(0xFF00E5FF)
 private val darkSurface = Color(0xFF131722).copy(alpha = 0.85f)
 private val glassBorder = Color(0x22FFFFFF)
+
+/**
+ * Width of one Video Hub card.
+ *
+ * Sized from the viewport (see evenCarouselCardWidth at the call site) so the
+ * rail fills its row; this is only the fallback for previews and narrow windows.
+ * It is intentionally derived from the SSOT floor rather than re-declared, so a
+ * change to CardGeometry.Video.minWidth cannot leave this card below the width
+ * the adaptive layout was built for.
+ */
+private val VideoHubMovieCardWidth = CardGeometry.Video.minWidth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -425,20 +437,26 @@ private fun VideoHubMovieCard(
 ) {
     Card(
         modifier = Modifier
-            .width(260.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .width(VideoHubMovieCardWidth)
+            .clip(CardGeometry.Video.shape)
             .bouncyClickable(downScale = 0.95f, onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
+        shape = CardGeometry.Video.shape,
         colors = CardDefaults.cardColors(containerColor = darkSurface),
         border = androidx.compose.foundation.BorderStroke(1.dp, glassBorder)
     ) {
         Column {
-            // 16:9 Thumbnail Poster
+            // 16:9 Thumbnail Poster — ratio and radius from CardGeometry (SSOT),
+            // so VideoCardSkeleton reserves exactly this box.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                    .aspectRatio(CardGeometry.Video.aspectRatio)
+                    .clip(
+                        RoundedCornerShape(
+                            topStart = CardGeometry.Video.cornerRadius,
+                            topEnd = CardGeometry.Video.cornerRadius,
+                        )
+                    )
             ) {
                 AsyncImage(
                     model = movie.thumbnailUrl,
@@ -481,7 +499,7 @@ private fun VideoHubMovieCard(
 
             // Title & Channel
             Column(
-                modifier = Modifier.padding(14.dp),
+                modifier = Modifier.padding(CardGeometry.Video.contentPadding),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
@@ -489,7 +507,7 @@ private fun VideoHubMovieCard(
                     color = Color.White,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 2,
+                    maxLines = CardGeometry.Video.titleMaxLines,
                     lineHeight = 18.sp,
                     overflow = TextOverflow.Ellipsis
                 )

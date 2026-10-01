@@ -65,8 +65,12 @@ import com.deepeye.musicpro.player.format.PlaybackDiagnostics
 import com.deepeye.musicpro.player.format.QualityPreset
 import com.deepeye.musicpro.ui.LocalFullscreenMode
 import com.deepeye.musicpro.ui.LocalPipMode
+import com.deepeye.musicpro.ui.theme.ContentBounds
 import com.deepeye.musicpro.ui.theme.ElectricViolet
 import com.deepeye.musicpro.ui.theme.NeonCyan
+import com.deepeye.musicpro.ui.theme.TouchTargets
+import com.deepeye.musicpro.ui.theme.sdp
+import com.deepeye.musicpro.ui.util.minTouchTarget
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -87,6 +91,29 @@ import kotlin.math.hypot
 object DeepEyeVideoPlayerOverlayTags {
     const val ROOT = "deepeye_video_overlay_root"
 }
+
+// ── Player control sizing ─────────────────────────────────────────────────────
+//
+// The transport cluster was five 60dp buttons (plus an 84dp primary) inside a
+// Row with 36dp gaps and 28dp of horizontal padding. That is a ~700dp-wide
+// capsule of glass sitting on top of the video, and on a short landscape viewport
+// it covered much of the frame it was meant to annotate.
+//
+// These are **touch targets, so they are plain dp — never `.sdp`**. The
+// ViewportScaler factor is 0.67 on a landscape phone, which would put a
+// `48.sdp` target at 32dp and break the 48dp accessibility floor that
+// `TouchTargets.Min` exists to enforce. Clamping the *cluster* down to the floor
+// removes the excess without ever crossing it. Only the glyphs inside the
+// targets scale.
+//
+// See `UiScale` and `Spacing` for the full reasoning about why touch targets are
+// exempt from viewport scaling.
+private val TransportSecondarySize = TouchTargets.Min        // 48dp, was 60dp
+private val TransportPrimarySize = TouchTargets.Large         // 56dp, was 84dp
+private val TransportSecondaryIconSize = 22.sdp              // was 32.dp
+private val TransportPrimaryIconSize = 28.sdp                // was 48.dp
+private val TransportGap = 14.sdp                            // was 36.dp
+private val TransportPadding = 18.sdp                        // was 28.dp
 
 @Composable
 fun DeepEyeVideoPlayerOverlay(
@@ -605,6 +632,7 @@ fun DeepEyeVideoPlayerOverlay(
                     border = BorderStroke(1.2.dp, NeonCyan),
                     modifier = Modifier
                         .size(44.dp)
+                        .minTouchTarget()
                         .clickable {
                             isLocked = false
                             actions.toggleLock()
@@ -642,32 +670,32 @@ fun DeepEyeVideoPlayerOverlay(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(36.dp),
+                    modifier = Modifier.padding(horizontal = TransportPadding, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(TransportGap),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Skip Previous
                     IconButton(
                         onClick = { resetTimer(); actions.previous() },
                         modifier = Modifier
-                            .size(60.dp)
+                            .size(TransportSecondarySize)
                             .clip(CircleShape)
                             .background(Color(0x22FFFFFF))
                             .border(1.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
-                        Icon(Icons.Default.SkipPrevious, "Previous", tint = Color.White, modifier = Modifier.size(32.dp))
+                        Icon(Icons.Default.SkipPrevious, "Previous", tint = Color.White, modifier = Modifier.size(TransportSecondaryIconSize))
                     }
 
                     // Rewind 10s
                     IconButton(
                         onClick = { resetTimer(); actions.rewind10() },
                         modifier = Modifier
-                            .size(60.dp)
+                            .size(TransportSecondarySize)
                             .clip(CircleShape)
                             .background(Color(0x22FFFFFF))
                             .border(1.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
-                        Icon(Icons.Default.Replay10, "-10s", tint = Color.White, modifier = Modifier.size(32.dp))
+                        Icon(Icons.Default.Replay10, "-10s", tint = Color.White, modifier = Modifier.size(TransportSecondaryIconSize))
                     }
 
                     // Main Play/Pause — Glowing Neon Cyan Action Button
@@ -676,7 +704,7 @@ fun DeepEyeVideoPlayerOverlay(
                         color = NeonCyan,
                         border = BorderStroke(2.5.dp, Color.White.copy(alpha = 0.85f)),
                         modifier = Modifier
-                            .size(84.dp)
+                            .size(TransportPrimarySize)
                             .clip(CircleShape)
                             .clickable { resetTimer(); actions.playPause() }
                     ) {
@@ -685,7 +713,7 @@ fun DeepEyeVideoPlayerOverlay(
                                 imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                                 contentDescription = if (isPlaying) "Pause" else "Play",
                                 tint = Color(0xFF090B10),
-                                modifier = Modifier.size(48.dp)
+                                modifier = Modifier.size(TransportPrimaryIconSize)
                             )
                         }
                     }
@@ -694,24 +722,24 @@ fun DeepEyeVideoPlayerOverlay(
                     IconButton(
                         onClick = { resetTimer(); actions.forward10() },
                         modifier = Modifier
-                            .size(60.dp)
+                            .size(TransportSecondarySize)
                             .clip(CircleShape)
                             .background(Color(0x22FFFFFF))
                             .border(1.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
-                        Icon(Icons.Default.Forward10, "+10s", tint = Color.White, modifier = Modifier.size(32.dp))
+                        Icon(Icons.Default.Forward10, "+10s", tint = Color.White, modifier = Modifier.size(TransportSecondaryIconSize))
                     }
 
                     // Skip Next
                     IconButton(
                         onClick = { resetTimer(); actions.next() },
                         modifier = Modifier
-                            .size(60.dp)
+                            .size(TransportSecondarySize)
                             .clip(CircleShape)
                             .background(Color(0x22FFFFFF))
                             .border(1.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
-                        Icon(Icons.Default.SkipNext, "Next", tint = Color.White, modifier = Modifier.size(32.dp))
+                        Icon(Icons.Default.SkipNext, "Next", tint = Color.White, modifier = Modifier.size(TransportSecondaryIconSize))
                     }
                 }
             }
@@ -811,6 +839,12 @@ fun DeepEyeVideoPlayerOverlay(
                 Spacer(Modifier.height(8.dp))
 
                 // 2. Smart Grouped Action Dock (Clear Liquid Glass Container with Specular Sheen)
+                // Bounded and centred. Seventeen chips laid out with
+                // `SpaceEvenly` across a full ~890dp landscape viewport put
+                // ~50dp of empty glass between every pair of 20dp glyphs. Capping
+                // the dock at ContentBounds.navigationDock packs them together and
+                // leaves the video visible on both sides, which is what a
+                // translucent control bar is for.
                 Surface(
                     shape = RoundedCornerShape(22.dp),
                     color = Color(0x18FFFFFF),
@@ -820,7 +854,11 @@ fun DeepEyeVideoPlayerOverlay(
                             listOf(Color(0x38FFFFFF), Color(0x2000E5FF), Color(0x38FFFFFF))
                         )
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        // widthIn *before* fillMaxWidth — see boundedContent.
+                        .widthIn(max = ContentBounds.navigationDock)
+                        .align(Alignment.CenterHorizontally)
+                        .fillMaxWidth()
                 ) {
                     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
                         val isWide = maxWidth >= 760.dp
@@ -968,8 +1006,8 @@ private fun StatsRow(label: String, value: String) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.6f), fontSize = 9.sp)
-        Text(text = value, style = MaterialTheme.typography.labelSmall, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 9.sp)
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp)
+        Text(text = value, style = MaterialTheme.typography.labelSmall, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 11.sp)
     }
 }
 
@@ -1124,6 +1162,7 @@ private fun ProIconBtn(icon: ImageVector, tint: Color, enabled: Boolean = true, 
         color = Color.White.copy(alpha = 0.08f),
         modifier = Modifier
             .size(44.dp)
+            .minTouchTarget()
             .alpha(if (enabled) 1f else 0.35f)
             .clickable(enabled = enabled, interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
     ) {

@@ -200,7 +200,7 @@ fun DownloadsScreen(
                             )
                         )
                     }
-                    items(completedDownloads) { item ->
+                    items(completedDownloads, key = { it.id }) { item ->
                         Card(
                             onClick = {
                                 playerViewModel.playMedia(

@@ -25,6 +25,10 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import com.deepeye.musicpro.ui.motion.rememberPremiumHaptics
+import com.deepeye.musicpro.ui.theme.ContentBounds
+import com.deepeye.musicpro.ui.theme.TouchTargets
+import com.deepeye.musicpro.ui.theme.sdp
+import com.deepeye.musicpro.ui.util.semanticsRoleTab
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
@@ -74,14 +78,43 @@ fun MagicNavigationBar(
 
     val tabCount = items.size
 
+    // Chrome scales with the viewport; the dock *height* deliberately does not.
+    //
+    // Height is a touch-target guarantee (TouchTargets.Min, the Android
+    // accessibility floor), not a design dimension, so it stays pinned at 48dp
+    // no matter how wide the viewport is. Scaling it would put every tab below
+    // the platform minimum on a narrow pane. The radius is derived from the
+    // fixed height rather than scaled independently, so the capsule stays
+    // visually correct at any factor.
+    val dockHeight = TouchTargets.Min
+    val dockRadius = dockHeight / 2
+    val dockInset = 12.sdp
+    val pillRadius = 20.sdp
+
     GlassContainer(
         tintColor = backgroundColor,
         hazeState = hazeState,
-        cornerRadius = 28.dp, // Perfect capsule (half of 56dp height)
+        // Capsule: half of the 48dp dock height.
+        cornerRadius = dockRadius,
         modifier = modifier
+            // Bounded dock. Previously this was an unconditional
+            // `fillMaxWidth()` on top of `weight(1f)` tabs, so on an ~890dp
+            // landscape viewport each of the seven tabs became ~127dp wide to
+            // hold a 20dp glyph: a stadium of empty glass with a scatter of
+            // icons inside it. Capping the capsule keeps it tight around its
+            // contents and lets the background art show at the sides, which is
+            // the composition the dock was designed for.
+            //
+            // The caller's `Box` uses `contentAlignment = BottomCenter`, so the
+            // `widthIn` here is all that is needed to centre it.
+            //
+            // `widthIn` must come *before* `fillMaxWidth()` — the reverse order
+            // clamps width to the parent first and the cap has nothing left to
+            // restrict.
+            .widthIn(max = ContentBounds.navigationDock)
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-            .height(56.dp)
+            .padding(start = dockInset, end = dockInset, bottom = 12.sdp)
+            .height(dockHeight)
             .onGloballyPositioned { coords ->
                 totalWidthPx = coords.size.width
             }
@@ -101,7 +134,7 @@ fun MagicNavigationBar(
                             Color.White.copy(alpha = 0.0f)
                         )
                     ),
-                    shape = RoundedCornerShape(28.dp)
+                    shape = RoundedCornerShape(dockRadius)
                 )
         )
 
@@ -121,8 +154,8 @@ fun MagicNavigationBar(
                     .offset(x = animatedOffsetDp)
                     .width(tabWidthDp)
                     .fillMaxHeight()
-                    .padding(horizontal = 6.dp, vertical = 6.dp)
-                    .clip(RoundedCornerShape(22.dp))
+                    .padding(horizontal = 5.dp, vertical = 4.dp)
+                    .clip(RoundedCornerShape(pillRadius))
                     .background(
                         brush = androidx.compose.ui.graphics.Brush.linearGradient(
                             colors = listOf(
@@ -139,7 +172,7 @@ fun MagicNavigationBar(
                                 Color(0xFF9D4EDD).copy(alpha = 0.45f)
                             )
                         ),
-                        shape = RoundedCornerShape(22.dp)
+                        shape = RoundedCornerShape(pillRadius)
                     )
             )
         }
@@ -168,6 +201,7 @@ fun MagicNavigationBar(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
+                        .semanticsRoleTab(selected = isSelected)
                         .clickable(
                             interactionSource = interactionSource,
                             indication = null, // Remove default ripple for premium feel
@@ -193,7 +227,7 @@ fun MagicNavigationBar(
                         contentDescription = item.label,
                         tint = tint.copy(alpha = animatedAlpha),
                         modifier = Modifier
-                            .size(if (isSelected) 24.dp else 22.dp)
+                            .size(if (isSelected) 20.sdp else 19.sdp)
                             .graphicsLayer {
                                 scaleX = scale
                                 scaleY = scale

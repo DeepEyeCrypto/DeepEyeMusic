@@ -145,7 +145,7 @@ fun VideoRailCard(
                     Text(
                         item.duration,
                         color = Color.White,
-                        fontSize = 9.sp,
+                        fontSize = 11.sp,
                     )
                 }
                 // Trending badge
@@ -163,7 +163,7 @@ fun VideoRailCard(
                         Text(
                             "🔥 TRENDING",
                             color = Color.White,
-                            fontSize = 8.sp,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 0.5.sp,
                         )

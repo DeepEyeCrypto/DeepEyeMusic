@@ -8,12 +8,12 @@ import org.junit.runner.RunWith
 class DSPPresetSelectorTest {
 
     @Test
-    fun `DSPScreen should display preset cards`() {
+    fun `DSPScreen_should_display_preset_cards`() {
         // onView(withText("Premium Bass")).check(matches(isDisplayed()))
     }
     
     @Test
-    fun `DSPScreen should select preset on tap`() {
+    fun `DSPScreen_should_select_preset_on_tap`() {
         // onView(withText("Premium Bass")).perform(click())
     }
 }

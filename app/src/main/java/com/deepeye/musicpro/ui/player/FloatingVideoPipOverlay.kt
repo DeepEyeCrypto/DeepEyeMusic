@@ -46,6 +46,7 @@ import com.deepeye.musicpro.domain.model.PlayerState
 import com.deepeye.musicpro.ui.components.StablePlayerHolder
 import com.deepeye.musicpro.ui.components.VideoPlayerView
 import com.deepeye.musicpro.ui.theme.NeonCyan
+import com.deepeye.musicpro.ui.util.minTouchTarget
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
@@ -280,6 +281,7 @@ fun FloatingVideoPipOverlay(
                             border = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.8f)),
                             modifier = Modifier
                                 .size(34.dp)
+                                .minTouchTarget()
                                 .clickable { onExpandFullscreen() }
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -298,6 +300,7 @@ fun FloatingVideoPipOverlay(
                             border = BorderStroke(1.dp, Color.White.copy(alpha = 0.4f)),
                             modifier = Modifier
                                 .size(34.dp)
+                                .minTouchTarget()
                                 .clickable { onClose() }
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -318,6 +321,7 @@ fun FloatingVideoPipOverlay(
                         border = BorderStroke(1.2.dp, NeonCyan),
                         modifier = Modifier
                             .size(36.dp)
+                            .minTouchTarget()
                             .align(Alignment.Center)
                             .clickable { onPlayPause() }
                     ) {
@@ -347,7 +351,7 @@ fun FloatingVideoPipOverlay(
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 8.5.sp,
+                            fontSize = 10.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)

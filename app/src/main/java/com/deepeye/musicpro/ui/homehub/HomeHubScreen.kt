@@ -532,14 +532,14 @@ private fun HomeGreetingHeader(
                     letterSpacing = 1.5.sp,
                     color = Color.White
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(8.sdp))
                 Box(
                     modifier = Modifier
                         .size(9.dp)
                         .clip(androidx.compose.foundation.shape.CircleShape)
                         .background(Color(0xFF00E5FF))
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(8.sdp))
                 Text(
                     text = "PRO",
                     fontSize = 11.sp,
@@ -551,7 +551,7 @@ private fun HomeGreetingHeader(
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(2.sdp))
             Text(
                 text = greeting,
                 fontSize = 14.sp,
@@ -582,7 +582,7 @@ private fun HomeGreetingHeader(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("₿", color = Color(0xFFFFD700), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.width(4.dp))
+                    Spacer(Modifier.width(4.sdp))
                     Text(btcPrice.replace("₿ ", ""), color = Color(0xFF00E676), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
 
@@ -735,7 +735,7 @@ private fun HomeMusicRail(
                                 contentScale = ContentScale.Crop,
                             )
                         }
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(10.sdp))
                         Text(
                             text = music.title,
                             style = MaterialTheme.typography.bodySmall,
@@ -744,7 +744,7 @@ private fun HomeMusicRail(
                             maxLines = 1,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         )
-                        Spacer(Modifier.height(2.dp))
+                        Spacer(Modifier.height(2.sdp))
                         Text(
                             text = music.artist,
                             style = MaterialTheme.typography.labelSmall,
@@ -762,11 +762,11 @@ private fun HomeMusicRail(
 @Composable
 private fun HomeRailShimmer(title: String) {
     Column(Modifier.padding(vertical = 12.sdp), verticalArrangement = Arrangement.spacedBy(8.sdp)) {
-        Text(title, modifier = Modifier.padding(horizontal = 20.dp), color = Color.White)
-        Row(Modifier.padding(horizontal = 20.dp)) {
+        Text(title, modifier = Modifier.padding(horizontal = 20.sdp), color = Color.White)
+        Row(Modifier.padding(horizontal = 20.sdp)) {
             repeat(3) {
                 ShimmerBox(Modifier.size(140.dp))
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(12.sdp))
             }
         }
     }

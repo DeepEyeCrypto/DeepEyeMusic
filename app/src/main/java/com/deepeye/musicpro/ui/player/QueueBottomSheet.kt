@@ -38,6 +38,7 @@ import com.deepeye.musicpro.ui.components.GlassBottomSheet
 import com.deepeye.musicpro.ui.components.MiniVisualizerBar
 import com.deepeye.musicpro.ui.motion.premiumScrollHaptics
 import com.deepeye.musicpro.ui.theme.NeonCyan
+import com.deepeye.musicpro.ui.util.stableLazyKeys
 
 /**
  * Up Next & Playback Queue Bottom Sheet with Reorder, Remove, and Live State tracking.
@@ -56,6 +57,11 @@ fun QueueBottomSheet(
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
+
+    // Stable per-track keys so reordering/queue edits don't rebind a row's
+    // remembered state to the wrong track, and duplicate entries in a queue
+    // (the same song queued twice) don't trip LazyColumn's duplicate-key check.
+    val stableQueueKeys = remember(queue) { stableLazyKeys(queue) { it.id } }
 
     // Auto-scroll to currently playing track
     LaunchedEffect(currentIndex) {
@@ -169,7 +175,7 @@ fun QueueBottomSheet(
                 ) {
                     itemsIndexed(
                         items = queue,
-                        key = { index, item -> "${item.id}_$index" }
+                        key = { index, _ -> stableQueueKeys[index] }
                     ) { index, item ->
                         val isCurrent = index == currentIndex
 

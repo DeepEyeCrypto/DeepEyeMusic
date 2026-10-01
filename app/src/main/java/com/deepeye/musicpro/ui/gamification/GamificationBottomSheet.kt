@@ -28,6 +28,7 @@ import com.deepeye.musicpro.domain.gamification.RewardPoints
 import com.deepeye.musicpro.domain.gamification.UserAchievement
 import com.deepeye.musicpro.ui.components.glassCard
 import com.deepeye.musicpro.ui.components.hoverable
+import com.deepeye.musicpro.ui.theme.ContentBounds
 
 @Composable
 fun GamificationBottomSheet(
@@ -107,7 +108,10 @@ fun GamificationBottomSheet(
         Spacer(modifier = Modifier.height(16.dp))
         
         LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
+            // Adaptive, not Fixed(3). A fixed triplet stretches to ~270dp per
+            // badge on a landscape viewport — a 90dp seal floating in a quarter
+            // of the screen. Adaptive packs the badges at their natural size.
+            columns = GridCells.Adaptive(ContentBounds.tileMinSize),
             modifier = Modifier.fillMaxWidth().height(300.dp) // Fixed height to avoid nested scroll issues
         ) {
             items(unlockedBadges) { badge ->

@@ -45,6 +45,7 @@ import com.deepeye.musicpro.data.prefs.AppSettings
 import com.deepeye.musicpro.data.prefs.ThemeMode
 import com.deepeye.musicpro.data.source.remote.update.UpdateState
 import com.deepeye.musicpro.ui.theme.AppAlertDialog
+import com.deepeye.musicpro.ui.theme.boundedContent
 
 private val neonCyan = Color(0xFF00E5FF)
 private val darkSurface = Color(0xFF131722).copy(alpha = 0.85f)
@@ -454,7 +455,14 @@ private fun SettingsDetailPane(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         // Detail Header
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        // The header and divider carry the same `boundedContent` treatment as
+        // the list below, so the category title stays flush with the rows it
+        // titles. Bounding only the list would leave a heading hard against the
+        // left edge with its own content floating in the middle.
+        Row(
+            modifier = Modifier.boundedContent(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -478,16 +486,28 @@ private fun SettingsDetailPane(
             )
         }
 
-        HorizontalDivider(color = glassBorder, thickness = 1.dp)
+        HorizontalDivider(
+            modifier = Modifier.boundedContent(),
+            color = glassBorder,
+            thickness = 1.dp
+        )
 
-        // `weight(1f)` — not `fillMaxSize()`. As a direct Column child,
-        // fillMaxSize() resolves against the Column's *incoming* max height, so
-        // this list was laid out taller than the space below the header and its
-        // trailing rows were pushed out of the pane where they could neither be
-        // seen nor scrolled to. weight() gives it only the remaining height, so
-        // it scrolls within the pane.
         LazyColumn(
-            modifier = Modifier.weight(1f),
+            // `boundedContent` caps this at a 600dp reading column and centres
+            // it. Without the cap every row below stretched to the full ~800dp
+            // landscape viewport, putting a switch at each extreme and a lake of
+            // empty glass in between — the "khali" symptom.
+            //
+            // `weight(1f)` — not `fillMaxSize()`. As a direct Column child,
+            // fillMaxSize() resolves against the Column's *incoming* max height,
+            // so this list was laid out taller than the space below the header
+            // and its trailing rows were pushed out of the pane where they could
+            // neither be seen nor scrolled to. weight() gives it only the
+            // remaining height, so it scrolls within the pane.
+            modifier = Modifier
+                .weight(1f)
+                .align(Alignment.CenterHorizontally)
+                .boundedContent(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {

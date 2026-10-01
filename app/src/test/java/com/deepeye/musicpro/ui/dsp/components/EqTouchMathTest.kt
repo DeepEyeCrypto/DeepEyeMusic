@@ -205,4 +205,106 @@ class EqTouchMathTest {
     fun `unlaid out track never claims ownership of a touch`() {
         assertFalse(EqTouchMath.isWithinTouchZone(100f, 100f, 0f, 48f))
     }
+
+    // ── magnetic detent (snap to unity) ────────────────────────────────────────
+
+    @Test
+    fun `gains inside the detent collapse to exact zero`() {
+        // The 1dB round-trip defect: a drag released just off unity used to rest at
+        // a fractional gain that read out as a stray -1 / +1.
+        listOf(0f, 0.4f, -0.4f, 0.999f, -0.999f, 1.0f, -1.0f).forEach { gain ->
+            assertEquals(
+                "gain $gain must snap to exact zero",
+                0f,
+                EqTouchMath.applyMagneticDetent(gain),
+                0.0001f,
+            )
+        }
+    }
+
+    @Test
+    fun `gains outside the detent are left untouched`() {
+        listOf(1.0001f, -1.0001f, 4f, -7.5f, EQ_MAX_DB, EQ_MIN_DB).forEach { gain ->
+            assertEquals(
+                "gain $gain is outside the detent and must pass through",
+                gain,
+                EqTouchMath.applyMagneticDetent(gain),
+                0.0001f,
+            )
+        }
+    }
+
+    @Test
+    fun `detent is symmetric about zero`() {
+        var g = 0f
+        while (g <= EQ_MAX_DB) {
+            assertEquals(
+                EqTouchMath.applyMagneticDetent(g),
+                -EqTouchMath.applyMagneticDetent(-g),
+                0.0001f,
+            )
+            g += 0.05f
+        }
+    }
+
+    @Test
+    fun `detent never pushes a gain outside the dB range`() {
+        var g = EQ_MIN_DB
+        while (g <= EQ_MAX_DB) {
+            val snapped = EqTouchMath.applyMagneticDetent(g)
+            assertTrue("snapped $snapped out of range at $g", snapped >= EQ_MIN_DB)
+            assertTrue("snapped $snapped out of range at $g", snapped <= EQ_MAX_DB)
+            g += 0.05f
+        }
+    }
+
+    // ── slot centre geometry (curve grid ⇄ fader alignment) ─────────────────────
+
+    @Test
+    fun `slot centre is the midpoint of its contiguous slot`() {
+        val width = 1000f
+        val slotWidth = width / 10f
+        for (i in 0 until 10) {
+            assertEquals(
+                "grid line for band $i must hit the centre of its slot",
+                slotWidth * i + slotWidth / 2f,
+                EqTouchMath.slotCenterX(i, width, 10)!!,
+                0.001f,
+            )
+        }
+    }
+
+    @Test
+    fun `each slot centre resolves back to its own band on touch`() {
+        // This is the alignment guarantee: whatever X the grid draws at, a touch
+        // there must land on the same band, otherwise the label and the fader lie.
+        val width = 1000f
+        for (i in 0 until 10) {
+            val centerX = EqTouchMath.slotCenterX(i, width, 10)!!
+            assertEquals(
+                "grid line at $centerX must be touchable as band $i",
+                i,
+                EqTouchMath.bandIndexForTouchX(centerX, width, 10),
+            )
+        }
+    }
+
+    @Test
+    fun `slot centres are strictly increasing and inside the surface`() {
+        val width = 987f
+        var previous = Float.NEGATIVE_INFINITY
+        for (i in 0 until 10) {
+            val centerX = EqTouchMath.slotCenterX(i, width, 10)!!
+            assertTrue("centres must increase at $i", centerX > previous)
+            assertTrue("centre $centerX escaped the surface", centerX in 0f..width)
+            previous = centerX
+        }
+    }
+
+    @Test
+    fun `slot centre rejects degenerate geometry`() {
+        assertNull(EqTouchMath.slotCenterX(0, 0f, 10))
+        assertNull(EqTouchMath.slotCenterX(0, 1000f, 0))
+        assertNull(EqTouchMath.slotCenterX(0, Float.NaN, 10))
+    }
 }

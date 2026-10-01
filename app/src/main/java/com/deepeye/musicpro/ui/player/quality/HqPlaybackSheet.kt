@@ -543,7 +543,7 @@ private fun StatsForNerdsTab(
                                 text = "LIVE TELEMETRY",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 9.sp,
+                                    fontSize = 11.sp,
                                     fontFamily = FontFamily.Monospace
                                 ),
                                 color = Color(0xFF00E676)
@@ -662,7 +662,7 @@ private fun FormatSelectionCard(
                                 text = "HW ACCEL",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 9.sp,
+                                    fontSize = 11.sp,
                                     fontFamily = FontFamily.Monospace
                                 ),
                                 color = Color(0xFF00E676)
@@ -681,7 +681,7 @@ private fun FormatSelectionCard(
                                 text = "HDR",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 9.sp,
+                                    fontSize = 11.sp,
                                     fontFamily = FontFamily.Monospace
                                 ),
                                 color = Color(0xFFFFB300)

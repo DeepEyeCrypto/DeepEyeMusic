@@ -31,6 +31,7 @@ compose-m3-adaptive = "1.1.0"
 liquidglass        = "1.0.2"
 androidx-browser   = "1.8.0"
 security-crypto    = "1.1.0-alpha06"
+car-app            = "1.2.0"
 
 
 [libraries]
@@ -39,6 +40,8 @@ haze-compose             = { group = "dev.chrisbanes.haze", name = "haze", versi
 # Mobile optimization: Chrome Custom Tabs + secure token storage
 androidx-browser         = { group = "androidx.browser", name = "browser", version.ref = "androidx-browser" }
 security-crypto          = { group = "androidx.security", name = "security-crypto", version.ref = "security-crypto" }
+# Android Auto driver-safe templated UI. Artifact is "app" under the androidx.car.app group.
+androidx-car-app           = { group = "androidx.car.app", name = "app", version.ref = "car-app" }
 # Palette
 palette                  = { group = "androidx.palette", name = "palette-ktx", version.ref = "palette" }
 # SplashScreen

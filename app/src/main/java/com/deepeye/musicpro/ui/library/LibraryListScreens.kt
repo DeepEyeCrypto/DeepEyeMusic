@@ -62,7 +62,7 @@ fun LikedSongsScreen(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentPadding = PaddingValues(bottom = 180.dp)
             ) {
-                items(likedTracks) { track ->
+                items(likedTracks, key = { it.id }) { track ->
                     LibraryListItem(
                         item = track,
                         onClick = {

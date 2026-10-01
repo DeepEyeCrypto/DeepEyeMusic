@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.deepeye.musicpro.ui.theme.ProvideAppZoom
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -304,6 +305,10 @@ fun NewChatDialog(
     var userId by remember { mutableStateOf("") }
 
     Dialog(onDismissRequest = onDismiss) {
+        // A Dialog is its own window with its own density, so it does NOT
+        // inherit the root zoom. Without this it renders at system scale
+        // while the screen behind it is zoomed. See ProvideAppZoom.
+        ProvideAppZoom {
         Card(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E))
@@ -330,6 +335,7 @@ fun NewChatDialog(
                 }
             }
         }
+        }
     }
 }
 
@@ -342,6 +348,10 @@ fun SetChatIdDialog(
     var newId by remember { mutableStateOf(currentId.removePrefix("@")) }
 
     Dialog(onDismissRequest = onDismiss) {
+        // A Dialog is its own window with its own density, so it does NOT
+        // inherit the root zoom. Without this it renders at system scale
+        // while the screen behind it is zoomed. See ProvideAppZoom.
+        ProvideAppZoom {
         Card(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E))
@@ -370,6 +380,7 @@ fun SetChatIdDialog(
                 }
             }
         }
+        }
     }
 }
 
@@ -382,6 +393,10 @@ fun TorSettingsDialog(
     onDismiss: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
+        // A Dialog is its own window with its own density, so it does NOT
+        // inherit the root zoom. Without this it renders at system scale
+        // while the screen behind it is zoomed. See ProvideAppZoom.
+        ProvideAppZoom {
         Card(
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B2E)),
@@ -491,6 +506,7 @@ fun TorSettingsDialog(
                 }
             }
         }
+        }
     }
 }
 
@@ -503,6 +519,10 @@ fun MeshSettingsDialog(
     onDismiss: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
+        // A Dialog is its own window with its own density, so it does NOT
+        // inherit the root zoom. Without this it renders at system scale
+        // while the screen behind it is zoomed. See ProvideAppZoom.
+        ProvideAppZoom {
         Card(
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
@@ -595,6 +615,7 @@ fun MeshSettingsDialog(
                     }
                 }
             }
+        }
         }
     }
 }

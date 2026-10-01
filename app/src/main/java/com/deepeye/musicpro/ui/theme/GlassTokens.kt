@@ -14,6 +14,11 @@ object GlassTokens {
     const val TintMedium = 0.25f
     const val TintDark = 0.40f
 
+    // Opacity of the solid translucent fill used on low-tier hardware in place
+    // of real-time blur. Opaque enough to preserve text contrast over any
+    // backdrop while staying cheap to composite.
+    const val LowTierFallbackAlpha = 0.8f
+
     // Border
     const val BorderAlpha = 0.25f
     const val BorderWidth = 1f // dp

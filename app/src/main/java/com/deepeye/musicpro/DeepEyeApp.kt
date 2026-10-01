@@ -81,7 +81,7 @@ class DeepEyeApp : Application(), Configuration.Provider, SingletonImageLoader.F
                 .build()
 
         workManager.enqueueUniquePeriodicWork(
-            "rec_refresh",
+            com.deepeye.musicpro.workers.BackgroundWorkNames.REC_REFRESH,
             androidx.work.ExistingPeriodicWorkPolicy.KEEP,
             recRefresh,
         )
@@ -99,7 +99,7 @@ class DeepEyeApp : Application(), Configuration.Provider, SingletonImageLoader.F
                 .build()
 
         workManager.enqueueUniquePeriodicWork(
-            "queue_prefetch",
+            com.deepeye.musicpro.workers.BackgroundWorkNames.QUEUE_PREFETCH,
             androidx.work.ExistingPeriodicWorkPolicy.KEEP,
             queuePrefetch,
         )
@@ -117,7 +117,7 @@ class DeepEyeApp : Application(), Configuration.Provider, SingletonImageLoader.F
                 .build()
 
         workManager.enqueueUniquePeriodicWork(
-            "channel_sync",
+            com.deepeye.musicpro.workers.BackgroundWorkNames.CHANNEL_SYNC,
             androidx.work.ExistingPeriodicWorkPolicy.KEEP,
             channelSync,
         )

@@ -16,10 +16,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.musicpro.ui.theme.AppAlertDialog
+import com.deepeye.musicpro.ui.theme.CardGeometry
 
 @Composable
 fun PlaylistScreen(
@@ -46,19 +48,42 @@ fun PlaylistScreen(
             }
         } else {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 180.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                // Adaptive, not Fixed(2). A hardcoded 2 columns forced exactly two
+                // huge cards on a landscape phone; Adaptive fits as many tiles as
+                // the width allows and keeps a partial final row tidy.
+                columns = GridCells.Adaptive(CardGeometry.Compact.minWidth),
+                contentPadding = PaddingValues(
+                    start = CardGeometry.ScreenGutter,
+                    top = CardGeometry.ScreenGutter,
+                    end = CardGeometry.ScreenGutter,
+                    bottom = 90.dp
+                ),
+                horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
+                verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
             ) {
                 items(playlists, key = { it.id }) { playlist ->
-                    Card(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable { onNavigateToPlaylist(playlist.id) }) {
-                        Column(Modifier.padding(16.dp)) {
-                            Text(playlist.name, style = MaterialTheme.typography.titleSmall)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(CardGeometry.Compact.shape)
+                            .clickable { onNavigateToPlaylist(playlist.id) },
+                        shape = CardGeometry.Compact.shape,
+                    ) {
+                        Column(
+                            Modifier.padding(CardGeometry.Compact.contentPadding * 2)
+                        ) {
+                            Text(
+                                playlist.name,
+                                style = MaterialTheme.typography.titleSmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
                             Text(
                                 "${playlist.songCount} songs",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }

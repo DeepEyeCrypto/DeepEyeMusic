@@ -69,7 +69,7 @@ private fun OverlayPreviewControls(
             }
             if (isHDR) {
                 Box(modifier = Modifier.background(HDR_PURPLE, RoundedCornerShape(4.dp)).padding(horizontal = 4.dp, vertical = 2.dp)) {
-                    Text(text = "HDR", style = MaterialTheme.typography.labelSmall, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    Text(text = "HDR", style = MaterialTheme.typography.labelSmall, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
             if (qualityText.isNotEmpty() && !is4K) {

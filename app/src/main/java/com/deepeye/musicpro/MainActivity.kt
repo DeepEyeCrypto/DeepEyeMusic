@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
@@ -32,6 +33,7 @@ import com.deepeye.musicpro.ui.DeepEyeMusicApp
 import com.deepeye.musicpro.ui.FullscreenMode
 import com.deepeye.musicpro.ui.theme.DeepEyeMusicTheme
 import com.deepeye.musicpro.ui.theme.ThemeViewModel
+import com.deepeye.musicpro.ui.theme.UiScale
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -210,15 +212,34 @@ class MainActivity : FragmentActivity() {
             val useDynamicColor = appSettings.dynamicColor
 
             val currentDensity = androidx.compose.ui.platform.LocalDensity.current
-            // Force a slimmer UI by clamping max density and applying a reduction scale (0.85x)
-            val targetDensity = (currentDensity.density * 0.85f).coerceAtMost(2.5f)
-            val clampedDensity = androidx.compose.ui.unit.Density(
-                density = targetDensity,
-                fontScale = currentDensity.fontScale.coerceAtMost(1.0f) // Prevent massive fonts
-            )
+            // Density is NOT modified here.
+            //
+            // This used to apply `density * 0.85f` ("force a slimmer UI") and
+            // later to re-provide Density with the landscape multiplier. Both are
+            // removed: `DeepEyeMusicTheme` now owns the app's single global zoom,
+            // and a second provider here would give the tree two different
+            // densities — the root at 1.0 and the content at the zoom — which is
+            // the same class of bug as Material and our components disagreeing.
+            //
+            // What remains is the `fontScale` ceiling, applied to the *system*
+            // value before the theme's zoom multiplies it. An uncapped 2.0x
+            // accessibility font clips fixed-height rows rather than growing
+            // them, so it is bounded at UiScale.MaxFontScale. The old cap was
+            // 1.0f, which discarded the user's setting entirely.
+            val cappedFontScale = remember(currentDensity) {
+                currentDensity.fontScale.coerceAtMost(UiScale.MaxFontScale)
+            }
+
+            val cappedDensity = remember(currentDensity, cappedFontScale) {
+                androidx.compose.ui.unit.Density(
+                    // Untouched: the global zoom is applied in DeepEyeMusicTheme.
+                    density = currentDensity.density,
+                    fontScale = cappedFontScale
+                )
+            }
 
             androidx.compose.runtime.CompositionLocalProvider(
-                androidx.compose.ui.platform.LocalDensity provides clampedDensity
+                androidx.compose.ui.platform.LocalDensity provides cappedDensity
             ) {
                 DeepEyeMusicTheme(
                     darkTheme = isDarkTheme,

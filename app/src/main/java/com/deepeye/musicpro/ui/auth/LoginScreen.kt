@@ -56,6 +56,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.musicpro.R
+import com.deepeye.musicpro.ui.theme.TouchTargets
 import com.deepeye.musicpro.ui.theme.sdp
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -305,7 +306,7 @@ fun LoginFormBody(
                 onClick = onYouTubeLoginClick,
                 modifier = Modifier
                     .fillMaxWidth(0.85f)
-                    .height(56.dp),
+                    .height(56.sdp.coerceAtLeast(TouchTargets.Min)),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f)),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -363,7 +364,7 @@ fun PremiumTextField(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(56.sdp.coerceAtLeast(TouchTargets.Min))
             .clip(RoundedCornerShape(16.dp))
             .background(bgColor)
             .border(1.dp, borderColor, RoundedCornerShape(16.dp))
@@ -445,7 +446,7 @@ fun PremiumActionButton(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(56.sdp.coerceAtLeast(TouchTargets.Min))
             .scale(scale)
             .clip(RoundedCornerShape(16.dp))
             .background(
@@ -492,7 +493,7 @@ fun GoogleSignInButton(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(56.sdp.coerceAtLeast(TouchTargets.Min))
             .scale(scale)
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)

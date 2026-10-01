@@ -73,9 +73,10 @@ import com.deepeye.musicpro.ui.LocalPipMode
 import com.deepeye.musicpro.ui.components.GlassButton
 import com.deepeye.musicpro.ui.components.GlassPill
 import com.deepeye.musicpro.ui.components.glassCard
+import com.deepeye.musicpro.ui.theme.AppAlertDialog
 import com.deepeye.musicpro.ui.player.overlay.DeepEyeVideoPlayerOverlay
 import com.deepeye.musicpro.ui.player.overlay.VideoPlayerOverlayActions
-import com.deepeye.musicpro.ui.theme.AppAlertDialog
+import com.deepeye.musicpro.ui.util.stableLazyKeys
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -777,7 +778,7 @@ fun AudioNowPlayingLayout(
                                 .background(headerColor.copy(alpha = 0.12f), RoundedCornerShape(4.dp))
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
-                            Text(bitrate, color = headerColor.copy(alpha = 0.7f), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                            Text(bitrate, color = headerColor.copy(alpha = 0.7f), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -1667,7 +1668,7 @@ fun VideoNowPlayingLayout(
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(modifier = Modifier.size(24.dp).clip(CircleShape).background(Color(0xFF7C4DFF)), contentAlignment = Alignment.Center) {
-                                Text("A", color = MaterialTheme.colorScheme.onSurface, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                Text("A", color = MaterialTheme.colorScheme.onSurface, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                             Text("Abhishek • 2h ago", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                         }
@@ -1786,12 +1787,16 @@ internal fun QueueSheetContent(
             }
             
             val queueState = rememberLazyListState()
+            // Stable per-track keys: index-as-key would rebind the dragged row's
+            // elevation/highlight to whichever track slides into that slot, and a
+            // bare id would throw on a queue containing the same track twice.
+            val queueKeys = remember(queue) { stableLazyKeys(queue) { it.id } }
             androidx.compose.foundation.lazy.LazyColumn(
                 state = queueState,
                 modifier = Modifier.fillMaxSize().premiumScrollHaptics(queueState),
                 contentPadding = PaddingValues(bottom = 32.dp)
             ) {
-            items(queue.size, key = { it }) { index ->
+            items(queue.size, key = { queueKeys[it] }) { index ->
                 val item = queue[index]
                 val isPlaying = index == currentIndex
                 val isDragging = index == draggingItemIndex
@@ -2133,7 +2138,7 @@ fun SmartTubePlaybackControlCard(
             Column {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -2383,7 +2388,7 @@ fun SmartTubeStatsForNerdsOverlay(
                             Text(
                                 "HW ACCEL",
                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
-                                fontSize = 8.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Black,
                                 color = Color(0xFF00E676)
                             )
@@ -2489,7 +2494,7 @@ fun SmartTubeVideoControlsPanel(
                             style = MaterialTheme.typography.labelSmall.copy(
                                 color = Color(0xFF00E676),
                                 fontWeight = FontWeight.Black,
-                                fontSize = 9.sp
+                                fontSize = 11.sp
                             )
                         )
                     }

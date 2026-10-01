@@ -159,6 +159,9 @@ dependencies {
     implementation(libs.androidx.window)
     implementation(libs.compose.material3.window.size)
 
+    // Android Auto (Car App Service + templated, driver-safe UI)
+    implementation(libs.androidx.car.app)
+
     // Hilt DI
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

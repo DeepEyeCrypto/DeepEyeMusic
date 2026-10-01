@@ -28,7 +28,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -36,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.deepeye.musicpro.ui.theme.ContentBounds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -530,17 +530,15 @@ fun ArtistSelectionStep(
                 )
             }
         } else {
-            val configuration = LocalConfiguration.current
-            val gridCells =
-                when {
-                    configuration.screenWidthDp >= 800 -> 5
-                    configuration.screenWidthDp >= 600 -> 4
-                    configuration.screenWidthDp >= 400 -> 3
-                    else -> 2
-                }
-
             LazyVerticalGrid(
-                columns = GridCells.Fixed(gridCells),
+                // Adaptive replaces a hand-rolled `screenWidthDp` breakpoint
+                // ladder. The ladder picked a column *count* from the raw
+                // viewport, ignoring the ViewportScaler factor entirely — so it
+                // disagreed with every other grid in the app, which reads its
+                // floor through CardGeometry/ContentBounds. Adaptive derives the
+                // count from the actual available width instead, which is the
+                // only way to be correct in a split-screen pane.
+                columns = GridCells.Adaptive(ContentBounds.tileMinSize),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxSize(),

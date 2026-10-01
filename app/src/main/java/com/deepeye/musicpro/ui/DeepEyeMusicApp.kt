@@ -55,6 +55,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.deepeye.musicpro.ui.navigation.NavGraph
 import com.deepeye.musicpro.ui.navigation.Routes
+import com.deepeye.musicpro.ui.theme.ProvideViewportScale
+import com.deepeye.musicpro.ui.theme.UiScale
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -197,26 +199,23 @@ fun DeepEyeMusicApp(
         }
     }
 
-    val currentDensity = androidx.compose.ui.platform.LocalDensity.current
-    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
-    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-    val scaledDensity = remember(currentDensity, isLandscape) {
-        if (isLandscape) {
-            androidx.compose.ui.unit.Density(
-                density = currentDensity.density * 0.58f,
-                fontScale = currentDensity.fontScale * 0.65f
-            )
-        } else {
-            currentDensity
-        }
-    }
-
-    CompositionLocalProvider(
-        LocalPipMode provides isInPipMode,
-        LocalFullscreenMode provides fullscreenMode,
-        LocalSharedWebView provides sharedWebView,
-        androidx.compose.ui.platform.LocalDensity provides scaledDensity,
-    ) {
+    // The global zoom lives in DeepEyeMusicTheme, which wraps this composable.
+    //
+    // This used to re-provide LocalDensity with `density * 0.92` in landscape.
+    // It is removed because it is now a *third* scaling axis: the theme already
+    // provides a fully zoomed Density above this point, so multiplying again
+    // here would land the content at 0.75 x 0.92 = 0.69 while MainActivity's
+    // outer provider left the tree root at 1.0 — three different densities in
+    // one hierarchy, which is the exact disjointness this pass removes.
+    //
+    // Viewport-aware scaling must still be provided here, above the nav host,
+    // because every `.sdp` / `.ssp` read resolves through ViewportScaler.
+    ProvideViewportScale {
+        CompositionLocalProvider(
+            LocalPipMode provides isInPipMode,
+            LocalFullscreenMode provides fullscreenMode,
+            LocalSharedWebView provides sharedWebView,
+        ) {
         val navController = rememberNavController()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
@@ -576,5 +575,6 @@ fun DeepEyeMusicApp(
             }
         }
         } // end of Spatial Background Box
-    } // end CompositionLocalProvider
+        } // end CompositionLocalProvider
+    } // end ProvideViewportScale
 }

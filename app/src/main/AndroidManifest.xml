@@ -136,6 +136,20 @@
             </intent-filter>
         </activity>
 
+        <!-- Android Auto: templated, driver-safe surface. The host binds only via the
+             CarAppService interface and renders our templates, never custom views. -->
+        <service
+            android:name=".auto.DeepEyeCarAppService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.car.app.CarAppService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.car.app.minCarApiLevel"
+                android:value="1" />
+        </service>
+
         <service
             android:name=".player.service.MusicPlayerService"
             android:exported="true"

@@ -23,6 +23,13 @@ sealed class TVScreen(val route: String, val label: String, val icon: ImageVecto
     object Search : TVScreen("search", "Search", Icons.Default.Search)
     object Library : TVScreen("library", "Library", Icons.Default.VideoLibrary)
     object Settings : TVScreen("settings", "Settings", Icons.Default.Settings)
+
+    /**
+     * Detail view for the focused item. Not a drawer destination — it is pushed
+     * by the home screen and popped back with the remote's BACK key, so it carries
+     * no icon and is deliberately absent from the drawer item list below.
+     */
+    object Details : TVScreen("details", "", Icons.Default.Info)
 }
 
 @Composable

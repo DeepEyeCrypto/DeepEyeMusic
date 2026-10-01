@@ -41,10 +41,12 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.deepeye.musicpro.dsp.engine.DSPViewModel
 import com.deepeye.musicpro.dsp.model.*
+import com.deepeye.musicpro.ui.theme.ContentBounds
 import com.deepeye.musicpro.ui.dsp.components.DspDebugCard
 import com.deepeye.musicpro.ui.dsp.components.GainBudgetCard
 import com.deepeye.musicpro.ui.dsp.components.StudioKnob
 import com.deepeye.musicpro.ui.dsp.components.StudioVisualizer
+import com.deepeye.musicpro.ui.theme.ProvideAppZoom
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -356,6 +358,10 @@ fun SavePresetDialog(
 ) {
     var text by remember { mutableStateOf("") }
     Dialog(onDismissRequest = onDismiss) {
+        // A Dialog is its own window with its own density, so it does NOT
+        // inherit the root zoom. Without this it renders at system scale
+        // while the screen behind it is zoomed. See ProvideAppZoom.
+        ProvideAppZoom {
         Card(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant),
@@ -387,6 +393,7 @@ fun SavePresetDialog(
                 }
             }
         }
+        }
     }
 }
 
@@ -399,7 +406,12 @@ fun ModulesGrid(
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        // Adaptive, not Fixed(2). The old fixed pair resolved to two ~400dp
+        // cards on an 802dp landscape viewport, so every module card stretched
+        // to nearly half the screen to display one switch and one slider.
+        // Adaptive packs three compact cards across instead, which is the
+        // density the DSP console was designed for.
+        columns = GridCells.Adaptive(ContentBounds.dspModuleMinSize),
         modifier = modifier.fillMaxHeight(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),

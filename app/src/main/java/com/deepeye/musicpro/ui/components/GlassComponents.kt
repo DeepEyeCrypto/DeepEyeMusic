@@ -154,8 +154,30 @@ fun GlassContainer(
     val context = LocalContext.current
     val resolvedShape = shape ?: RoundedCornerShape(cornerRadius)
     val reduceTransparency = remember(context) { isReduceTransparencyEnabled(context) }
+    val lowTierDevice = remember(context) {
+        com.deepeye.musicpro.util.DeviceCompat.isLowTierDevice(context)
+    }
 
     when {
+        // Low-tier hardware -> solid translucent fill. Real blur is fill-rate
+        // bound and costs a full-screen offscreen pass per frame, which drops
+        // frames on cheap TV boxes / low-RAM phones and competes with the DSP
+        // render thread for memory bandwidth. Matches visually, costs nothing.
+        lowTierDevice -> {
+            Box(
+                modifier = modifier
+                    .background(
+                        if (reduceTransparency) {
+                            androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
+                        } else {
+                            Color.Black.copy(alpha = GlassTokens.LowTierFallbackAlpha)
+                        },
+                        resolvedShape
+                    )
+                    .border(1.dp, Color.White.copy(GlassTokens.BorderAlpha), resolvedShape),
+                content = content
+            )
+        }
         // Reduce Transparency -> Opaque Fallback
         reduceTransparency -> {
             Box(

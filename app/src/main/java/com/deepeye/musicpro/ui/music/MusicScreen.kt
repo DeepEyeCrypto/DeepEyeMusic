@@ -50,6 +50,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -62,9 +63,11 @@ import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedState
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedItemType
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedSection
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedSectionType
-import com.deepeye.musicpro.ui.components.ShimmerBox
+import com.deepeye.musicpro.ui.components.MusicCardSkeleton
+import com.deepeye.musicpro.ui.components.SectionHeaderSkeleton
 import com.deepeye.musicpro.ui.motion.premiumScrollHaptics
 import com.deepeye.musicpro.ui.theme.*
+import com.deepeye.musicpro.ui.util.evenCarouselCardWidth
 
 // ─── Premium Color Tokens ────────────────────────────────────────────────────
 private val CardSurface = Color(0xFF12121A)
@@ -115,7 +118,7 @@ fun MusicScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                            .padding(horizontal = CardGeometry.ScreenGutter, vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -127,14 +130,20 @@ fun MusicScreen(
                                 Icons.Rounded.GraphicEq,
                                 contentDescription = null,
                                 tint = NeonCyan,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                             Text(
                                 "Music",
+                                // titleLarge, not a hardcoded 26.sp: this is a
+                                // screen header over a scrolling list of carousels,
+                                // and the extra 6sp pushed the first section below
+                                // the fold on a landscape phone.
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Black,
-                                fontSize = 26.sp,
                                 letterSpacing = (-0.5).sp,
-                                color = TextPrimary
+                                color = TextPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
@@ -155,7 +164,17 @@ fun MusicScreen(
                     Spacer(Modifier.height(8.dp))
 
                     if (selectedTab == 1 && uiState.localSongs.isNotEmpty()) {
-                        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                        // Both action buttons are `weight(1f)` inside this Row, so
+                        // an uncapped Row gave each of them ~400dp of tap target
+                        // to render a two-word label. The cap keeps them at a
+                        // sane button width and centres the pair under the
+                        // bounded track list they act on.
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .boundedContent()
+                                .padding(horizontal = 16.dp)
+                        ) {
                             Button(
                                 onClick = { viewModel.playAllLocalSongs(shuffle = true) },
                                 modifier = Modifier.weight(1f),
@@ -233,6 +252,10 @@ private fun MusicAccountBanner(onConnect: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            // Bounded with the rest of the tab's content. `boundedContent`
+            // must precede `clip`, because clip draws against the node's own
+            // measured size and the cap is what gives that size a ceiling.
+            .boundedContent()
             .padding(horizontal = 16.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(RoundedCornerShape(14.dp))
@@ -491,9 +514,18 @@ private fun PersonalizedSectionRow(
 ) {
     // Loading state for this section (only when no items cached yet)
     if (section.isLoading && section.items.isEmpty()) {
-        Column(Modifier.fillMaxWidth()) {
-            SectionHeaderShimmer()
-            SectionRowSkeleton()
+        // Wrapped so the skeleton rail can be sized by exactly the same
+        // evenCarouselCardWidth call the loaded rail below uses. Sizing it
+        // differently here is what made the section jump sideways on load.
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val skeletonCardWidth = evenCarouselCardWidth(
+                availableWidth = maxWidth,
+                minItemWidth = CardGeometry.Music.minWidth,
+            )
+            Column(Modifier.fillMaxWidth()) {
+                SectionHeaderShimmer()
+                SectionRowSkeleton(cardWidth = skeletonCardWidth)
+            }
         }
         return
     }
@@ -539,19 +571,30 @@ private fun PersonalizedSectionRow(
             initialOffsetY = { it / 4 }
         )
     ) {
+        // Spotify-style dense rail. A fixed 150.dp card left a wide gap at the end
+        // of every row on a landscape phone; this fills the row instead. Square
+        // 1:1 cover art survives a narrower column than a 16:9 video poster, hence
+        // CardGeometry.Music.minWidth (120.dp) over VideoCardMinWidth.
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val musicCardWidth = evenCarouselCardWidth(
+            availableWidth = maxWidth,
+            minItemWidth = CardGeometry.Music.minWidth,
+        )
         Column(Modifier.fillMaxWidth()) {
             // Section header: title + truthful source label
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = CardGeometry.ScreenGutter, vertical = 6.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
                     Text(
                         text = section.title,
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        // titleSmall: section headers repeat down a long scrolling
+                        // list, so a large style compounds into an oversized feel.
+                        style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = (-0.3).sp
                         ),
@@ -584,7 +627,7 @@ private fun PersonalizedSectionRow(
                                 Spacer(Modifier.width(4.dp))
                                 Text(
                                     text = "• Cached",
-                                    fontSize = 9.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = TextTertiary.copy(alpha = 0.6f),
                                     letterSpacing = 0.4.sp,
@@ -624,8 +667,8 @@ private fun PersonalizedSectionRow(
             val rowState = rememberLazyListState()
             LazyRow(
                 state = rowState,
-                contentPadding = PaddingValues(horizontal = 14.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = CardGeometry.ScreenGutter),
+                horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
                 modifier = Modifier
                     .fillMaxWidth()
                     .premiumScrollHaptics(rowState)
@@ -633,6 +676,7 @@ private fun PersonalizedSectionRow(
                 items(section.items, key = { it.id }) { item ->
                     PersonalizedMusicCard(
                         item = item,
+                        cardWidth = musicCardWidth,
                         onClick = { onPlay(item) },
                         onPlayNext = { onPlayNext(item) },
                         onAddToQueue = { onAddToQueue(item) },
@@ -640,6 +684,7 @@ private fun PersonalizedSectionRow(
                     )
                 }
             }
+        }
         }
     }
 }
@@ -652,6 +697,9 @@ fun PersonalizedMusicCard(
     onPlayNext: () -> Unit,
     onAddToQueue: () -> Unit,
     onWhyThis: () -> Unit = {},
+    // Supplied by the caller from evenCarouselCardWidth so the rail fills its
+    // row. Defaults keep the card usable in previews and future call sites.
+    cardWidth: Dp = CardGeometry.Music.minWidth,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
@@ -668,12 +716,14 @@ fun PersonalizedMusicCard(
 
     Box(
         modifier = Modifier
-            .width(150.dp)
+            .width(cardWidth)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
             }
-            .clip(RoundedCornerShape(20.dp))
+            // Geometry from CardGeometry (SSOT). MusicCardSkeleton reads the same
+            // fields, so the loading box matches the loaded box exactly.
+            .clip(CardGeometry.Music.shape)
             .background(
                 Brush.verticalGradient(
                     listOf(
@@ -691,17 +741,17 @@ fun PersonalizedMusicCard(
                         ElectricViolet.copy(alpha = 0.1f)
                     )
                 ),
-                shape = RoundedCornerShape(20.dp)
+                shape = CardGeometry.Music.shape
             )
             .clickable(interactionSource = interactionSource, indication = null) { onClick() }
     ) {
-        Column(modifier = Modifier.padding(10.dp)) {
+        Column(modifier = Modifier.padding(CardGeometry.Music.contentPadding)) {
             // Artwork
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(14.dp))
+                    .aspectRatio(CardGeometry.Music.aspectRatio)
+                    .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f))
                     .background(Color.White.copy(alpha = 0.03f))
             ) {
                 if (item.artworkUrl != null) {
@@ -738,7 +788,7 @@ fun PersonalizedMusicCard(
                         Text(
                             "PLAYLIST",
                             color = Color.White.copy(alpha = 0.9f),
-                            fontSize = 7.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Black,
                             letterSpacing = 0.5.sp,
                         )
@@ -757,7 +807,7 @@ fun PersonalizedMusicCard(
                         Text(
                             item.sourceBadge,
                             color = NeonCyan,
-                            fontSize = 7.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 0.4.sp,
                         )
@@ -774,7 +824,7 @@ fun PersonalizedMusicCard(
                             .background(Color.Black.copy(alpha = 0.65f), RoundedCornerShape(5.dp))
                             .padding(horizontal = 6.dp, vertical = 2.dp),
                         color = Color.White.copy(alpha = 0.9f),
-                        fontSize = 8.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
                     )
@@ -817,7 +867,7 @@ fun PersonalizedMusicCard(
                     letterSpacing = (-0.3).sp
                 ),
                 color = TextPrimary,
-                maxLines = 1,
+                maxLines = CardGeometry.Music.titleMaxLines,
                 overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.height(3.dp))
@@ -906,13 +956,28 @@ fun PersonalizedMusicCard(
 }
 
 // ─── Discovery State Composables ─────────────────────────────────────────────
+/**
+ * Full-screen loading state for the discovery feed.
+ *
+ * Wrapped in BoxWithConstraints so the rail skeleton can size its cards exactly
+ * as [PersonalizedSectionRow] sizes the real ones — the same
+ * evenCarouselCardWidth call against the same available width. Without this the
+ * placeholder rail is a different width from the loaded rail and the whole
+ * section jumps sideways on load.
+ */
 @Composable
 private fun DiscoveryLoadingSkeleton() {
-    Column(Modifier.fillMaxSize()) {
-        repeat(3) {
-            Column(Modifier.fillMaxWidth()) {
-                SectionHeaderShimmer()
-                SectionRowSkeleton()
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val cardWidth = evenCarouselCardWidth(
+            availableWidth = maxWidth,
+            minItemWidth = CardGeometry.Music.minWidth,
+        )
+        Column(Modifier.fillMaxSize()) {
+            repeat(3) {
+                Column(Modifier.fillMaxWidth()) {
+                    SectionHeaderShimmer()
+                    SectionRowSkeleton(cardWidth = cardWidth)
+                }
             }
         }
     }
@@ -923,39 +988,29 @@ private fun SectionHeaderShimmer() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = CardGeometry.ScreenGutter, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ShimmerBox(
-            Modifier
-                .width(150.dp)
-                .height(18.dp)
-                .clip(RoundedCornerShape(6.dp))
-        )
-        Spacer(Modifier.width(12.dp))
-        ShimmerBox(
-            Modifier
-                .width(90.dp)
-                .height(12.dp)
-                .clip(RoundedCornerShape(6.dp))
-        )
+        SectionHeaderSkeleton()
     }
 }
 
+/**
+ * Loading placeholder for one discovery rail.
+ *
+ * [cardWidth] must be the same value the loaded rail computes via
+ * evenCarouselCardWidth, and the LazyRow config matches
+ * [PersonalizedSectionRow]'s — otherwise the rail reflows when data lands.
+ */
 @Composable
-private fun SectionRowSkeleton() {
+private fun SectionRowSkeleton(cardWidth: Dp) {
     LazyRow(
-        contentPadding = PaddingValues(horizontal = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(horizontal = CardGeometry.ScreenGutter),
+        horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
         userScrollEnabled = false,
     ) {
         items(4) {
-            ShimmerBox(
-                Modifier
-                    .width(150.dp)
-                    .aspectRatio(0.78f)
-                    .clip(RoundedCornerShape(20.dp))
-            )
+            MusicCardSkeleton(width = cardWidth)
         }
     }
 }
@@ -1172,49 +1227,74 @@ private fun LibraryTab(
         }
     } else {
         val listState = rememberLazyListState()
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize().premiumScrollHaptics(listState),
-            contentPadding = PaddingValues(top = paddingValues.calculateTopPadding() + 4.dp, bottom = 180.dp),
-        ) {
-            // Song count header
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "${uiState.localSongs.size} tracks",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextTertiary,
-                        letterSpacing = 1.sp,
-                        fontFamily = FontFamily.Monospace
-                    )
-                    QualityPill("LOSSLESS READY")
+        // Wrapper Box exists only to centre the bounded column below.
+        //
+        // `Modifier.align` is not used here because it is an extension on three
+        // different scopes (Box/Column/Row) with different parameter types; in a
+        // function that is itself a BoxScope receiver it resolves against the
+        // innermost scope and the intended overload is ambiguous. A wrapper Box
+        // states the intent directly and cannot be misread.
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+            LazyColumn(
+                state = listState,
+                // Bounded reading column: the local track list is a single column
+                // of artwork-beside-text rows, and at full landscape width each
+                // row stretched to ~800dp to hold a 40dp cover — the track name
+                // pinned to the far left with 600dp of nothing to its right.
+                // Centring a 600dp column keeps the album art and the elapsed
+                // time visually adjacent.
+                modifier = Modifier
+                    // boundedContent before the vertical fill: `fillMaxSize()`
+                    // would clamp width to the parent first, leaving nothing for
+                    // `widthIn` to bound. In this order the column caps at 600dp
+                    // and `fillMaxHeight()` supplies only the height.
+                    .boundedContent()
+                    .fillMaxHeight()
+                    .premiumScrollHaptics(listState),
+                contentPadding = PaddingValues(
+                    top = paddingValues.calculateTopPadding() + 4.dp,
+                    bottom = 180.dp
+                ),
+            ) {
+                // Song count header
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "${uiState.localSongs.size} tracks",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextTertiary,
+                            letterSpacing = 1.sp,
+                            fontFamily = FontFamily.Monospace
+                        )
+                        QualityPill("LOSSLESS READY")
+                    }
                 }
-            }
 
-            itemsIndexed(uiState.localSongs, key = { _, it -> it.id }) { index, song ->
-                var visible by remember { mutableStateOf(false) }
-                LaunchedEffect(Unit) { visible = true }
+                itemsIndexed(uiState.localSongs, key = { _, it -> it.id }) { index, song ->
+                    var visible by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) { visible = true }
 
-                AnimatedVisibility(
-                    visible = visible,
-                    enter = fadeIn(
-                        animationSpec = tween(300, delayMillis = (index % 10) * 30, easing = EaseOutCubic)
-                    ) + slideInVertically(
-                        animationSpec = tween(300, delayMillis = (index % 10) * 30, easing = EaseOutCubic),
-                        initialOffsetY = { it / 4 }
-                    )
-                ) {
-                    PremiumSongListItem(song, onClick = {
-                        viewModel.playMusicLocal(song)
-                        onNavigateToNowPlaying(song.id.toString())
-                    })
+                    AnimatedVisibility(
+                        visible = visible,
+                        enter = fadeIn(
+                            animationSpec = tween(300, delayMillis = (index % 10) * 30, easing = EaseOutCubic)
+                        ) + slideInVertically(
+                            animationSpec = tween(300, delayMillis = (index % 10) * 30, easing = EaseOutCubic),
+                            initialOffsetY = { it / 4 }
+                        )
+                    ) {
+                        PremiumSongListItem(song, onClick = {
+                            viewModel.playMusicLocal(song)
+                            onNavigateToNowPlaying(song.id.toString())
+                        })
+                    }
                 }
             }
         }
@@ -1243,7 +1323,7 @@ private fun QualityPill(text: String) {
     ) {
         Text(
             text = text,
-            fontSize = 8.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             color = NeonCyan,
             letterSpacing = 1.sp,
@@ -1347,7 +1427,7 @@ fun PremiumSongListItem(
                             )
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
-                        Text("HR", color = Color.Black, fontSize = 7.sp, fontWeight = FontWeight.Black)
+                        Text("HR", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Black)
                     }
                 }
             }
@@ -1389,7 +1469,7 @@ fun PremiumSongListItem(
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = bitrate,
-                    fontSize = 9.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
                     color = TextTertiary,
                     fontFamily = FontFamily.Monospace,
@@ -1432,7 +1512,7 @@ private fun GlowingBadge(text: String, color: Color) {
         Text(
             text,
             color = Color.Black,
-            fontSize = 8.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.Black,
             letterSpacing = 0.5.sp
         )
@@ -1451,7 +1531,7 @@ private fun BadgePill(text: String, color: Color) {
         Text(
             text,
             color = color,
-            fontSize = 8.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.3.sp
         )
@@ -1474,7 +1554,7 @@ private fun GlowBadgePill(text: String, color: Color) {
         Text(
             text,
             color = color,
-            fontSize = 7.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.5.sp
         )

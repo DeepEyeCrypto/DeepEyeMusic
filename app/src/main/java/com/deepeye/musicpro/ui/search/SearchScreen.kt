@@ -326,7 +326,7 @@ fun SearchSuggestionsSection(
                     color = TextWhite,
                 )
             }
-            items(recentSearches) { recent ->
+            items(recentSearches, key = { it }) { recent ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

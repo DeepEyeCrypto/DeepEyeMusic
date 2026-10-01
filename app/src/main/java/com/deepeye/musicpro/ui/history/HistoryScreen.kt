@@ -139,7 +139,7 @@ fun HistoryScreen(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp)
                     ) {
-                        items(videos) { video ->
+                        items(videos, key = { it.videoId }) { video ->
                             VideoHistoryCard(
                                 video = video,
                                 onClick = {
@@ -171,7 +171,7 @@ fun HistoryScreen(
                         modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                     )
                 }
-                items(playbacks) { playback ->
+                items(playbacks, key = { it.id }) { playback ->
                     PlaybackHistoryRow(
                         playback = playback,
                         onClick = {

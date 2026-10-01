@@ -51,8 +51,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.ui.LocalPipMode
-import com.deepeye.musicpro.ui.components.ShimmerBox
+import com.deepeye.musicpro.ui.components.VideoCardSkeleton
 import com.deepeye.musicpro.ui.motion.premiumScrollHaptics
+import com.deepeye.musicpro.ui.theme.CardGeometry
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -546,7 +547,7 @@ fun YouTubeScreen(
                                         Text(
                                             "AUTO-SKIP",
                                             color = Color(0xFF00E676),
-                                            fontSize = 8.sp,
+                                            fontSize = 10.sp,
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
@@ -618,7 +619,7 @@ fun YouTubeScreen(
                                             Text(
                                                 cat.description,
                                                 color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                                fontSize = 9.sp
+                                                fontSize = 11.sp
                                             )
                                         }
                                     }
@@ -917,17 +918,18 @@ fun VideoGridContent(
     when {
         isLoading -> {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                // Grid floor reads the SSOT, so a column can never be narrower
+                // than the card it holds — which would silently change the card's
+                // height and reintroduce the shift this geometry prevents.
+                columns = GridCells.Adaptive(CardGeometry.Video.minWidth),
+                horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
+                verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
             ) {
-                items(6) {
-                    ShimmerBox(
-                        Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(16 / 9f)
-                            .clip(RoundedCornerShape(12.dp)),
-                    )
+                // Same LazyVerticalGrid + Adaptive config as the loaded branch
+                // below, so the loading grid and the loaded grid lay out
+                // identically. Count matches roughly two rows.
+                items(8) {
+                    VideoCardSkeleton()
                 }
             }
         }
@@ -940,10 +942,15 @@ fun VideoGridContent(
             LazyVerticalGrid(
                 state = gridState,
                 modifier = Modifier.premiumScrollHaptics(gridState),
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(start = 12.dp, top = 12.dp, end = 12.dp, bottom = 180.dp)
+                columns = GridCells.Adaptive(CardGeometry.Video.minWidth),
+                horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
+                verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
+                contentPadding = PaddingValues(
+                    start = CardGeometry.ScreenGutter,
+                    top = CardGeometry.ScreenGutter,
+                    end = CardGeometry.ScreenGutter,
+                    bottom = 90.dp
+                )
             ) {
                 if (isHomeCategory) {
                     val featuredVideo = homeFeedState.featuredVideo ?: videos.firstOrNull()
@@ -983,14 +990,16 @@ fun VideoGridContent(
                     item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                         Text(
                             text = "Recommended Videos",
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(vertical = 12.dp)
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(vertical = 6.dp)
                         )
                     }
                     val filteredVideos = videos.filter { it.id != featuredVideo?.id }
-                    items(filteredVideos) { video ->
+                    items(filteredVideos, key = { it.id }) { video ->
                         SmartTubeVideoCard(
                             video = video,
                             onClick = { onVideoClick(video) },
@@ -1073,14 +1082,16 @@ fun SmartTubeVideoCard(
                 scaleX = scale
                 scaleY = scale
             }
-            .clip(RoundedCornerShape(16.dp))
+            // Geometry from CardGeometry (SSOT). The skeleton for this card reads
+            // the same fields, so the loading box and the loaded box are identical.
+            .clip(CardGeometry.Video.shape)
             .background(
                 color = Color(0xFF131722).copy(alpha = 0.85f),
             )
             .border(
                 width = if (isHovered || isPressed) 1.5.dp else 1.dp,
                 brush = borderBrush,
-                shape = RoundedCornerShape(16.dp),
+                shape = CardGeometry.Video.shape,
             )
             .clickable {
                 isPressed = true
@@ -1091,8 +1102,15 @@ fun SmartTubeVideoCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(16 / 9f)
-                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 6.dp, bottomEnd = 6.dp)),
+                .aspectRatio(CardGeometry.Video.aspectRatio)
+                .clip(
+                    RoundedCornerShape(
+                        topStart = CardGeometry.Video.cornerRadius,
+                        topEnd = CardGeometry.Video.cornerRadius,
+                        bottomStart = CardGeometry.Video.cornerRadius / 2,
+                        bottomEnd = CardGeometry.Video.cornerRadius / 2,
+                    )
+                ),
         ) {
             AsyncImage(
                 model = video.thumbnailUrl,
@@ -1131,7 +1149,7 @@ fun SmartTubeVideoCard(
                             .border(0.5.dp, Color(0xFFFF3D00).copy(alpha = 0.6f), RoundedCornerShape(4.dp))
                             .padding(horizontal = 6.dp, vertical = 2.dp),
                     ) {
-                        Text("4K", color = Color(0xFFFF3D00), fontSize = 8.sp, fontWeight = FontWeight.ExtraBold)
+                        Text("4K", color = Color(0xFFFF3D00), fontSize = 10.sp, fontWeight = FontWeight.ExtraBold)
                     }
                 }
                 if (isHdr) {
@@ -1141,7 +1159,7 @@ fun SmartTubeVideoCard(
                             .border(0.5.dp, Color(0xFF00E676).copy(alpha = 0.6f), RoundedCornerShape(4.dp))
                             .padding(horizontal = 6.dp, vertical = 2.dp),
                     ) {
-                        Text("HDR", color = Color(0xFF00E676), fontSize = 8.sp, fontWeight = FontWeight.ExtraBold)
+                        Text("HDR", color = Color(0xFF00E676), fontSize = 10.sp, fontWeight = FontWeight.ExtraBold)
                     }
                 }
                 if (hasAtmos) {
@@ -1151,7 +1169,7 @@ fun SmartTubeVideoCard(
                             .border(0.5.dp, neonCyan.copy(alpha = 0.6f), RoundedCornerShape(4.dp))
                             .padding(horizontal = 6.dp, vertical = 2.dp),
                     ) {
-                        Text("ATMOS", color = neonCyan, fontSize = 8.sp, fontWeight = FontWeight.ExtraBold)
+                        Text("ATMOS", color = neonCyan, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold)
                     }
                 }
             }
@@ -1209,10 +1227,12 @@ fun SmartTubeVideoCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+                .padding(CardGeometry.Video.contentPadding),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            // Title — full width, 3 lines max for complete info
+            // Title — maxLines comes from CardGeometry so the reserved height here
+            // matches what the skeleton draws. 3 lines pushed the channel row below
+            // the fold at the new ~200dp card width.
             Text(
                 text = video.title,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -1221,7 +1241,7 @@ fun SmartTubeVideoCard(
                     lineHeight = 16.sp,
                     letterSpacing = 0.1.sp
                 ),
-                maxLines = 3,
+                maxLines = CardGeometry.Video.titleMaxLines,
                 overflow = TextOverflow.Ellipsis,
             )
 
@@ -1290,7 +1310,7 @@ fun SmartTubeVideoCard(
                     else -> ""
                 }
                 if (metaText.isNotEmpty()) {
-                    Text(" · ", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), fontSize = 9.sp)
+                    Text(" · ", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), fontSize = 11.sp)
                     Text(
                         text = metaText,
                         color = neonCyan.copy(alpha = 0.9f),
