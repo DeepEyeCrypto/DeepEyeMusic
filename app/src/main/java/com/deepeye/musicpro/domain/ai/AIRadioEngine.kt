@@ -6,7 +6,6 @@ package com.deepeye.musicpro.domain.ai
 import android.net.Uri
 import com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
 import com.deepeye.musicpro.domain.model.MediaItem
-import com.deepeye.musicpro.domain.model.home.MoodMix
 import com.deepeye.musicpro.player.controller.PlayerController
 import com.deepeye.musicpro.player.queue.QueueManager
 import kotlinx.coroutines.CoroutineDispatcher
@@ -69,44 +68,6 @@ class AIRadioEngine @Inject constructor(
                             )
                         }
                         
-                        queueManager.setQueue(mediaItems, 0)
-                        playerController.playMedia(mediaItems.first())
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            _isGenerating.value = false
-        }
-    }
-
-    /**
-     * Starts playback based on a Mood Chip click.
-     */
-    suspend fun playMoodMix(moodMix: MoodMix) {
-        _isGenerating.value = true
-        try {
-            withContext(ioDispatcher) {
-                val tasteProfile = try { tasteProfileRepo.getTasteProfile().first() } catch (e: Exception) { null }
-                val preferredLangs = tasteProfile?.preferredLanguages ?: emptySet()
-                val negativeKeywords = com.deepeye.musicpro.domain.util.LanguageUtils.buildNegativeLanguageConstraints(preferredLangs)
-                
-                val query = "${moodMix.label} ${moodMix.query} $negativeKeywords".trim()
-                val tracks = youtubeRemoteDataSource.searchMusic(query).take(15)
-                
-                if (tracks.isNotEmpty()) {
-                    withContext(Dispatchers.Main) {
-                        val mediaItems = tracks.map { track ->
-                            MediaItem.Remote(
-                                id = track.id,
-                                title = track.title,
-                                artist = track.artist,
-                                artworkUri = Uri.parse(track.thumbnailUrl),
-                                duration = track.duration * 1000L,
-                                isVideo = false
-                            )
-                        }
                         queueManager.setQueue(mediaItems, 0)
                         playerController.playMedia(mediaItems.first())
                     }

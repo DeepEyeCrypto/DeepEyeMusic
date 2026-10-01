@@ -14,7 +14,6 @@ data class HomeFeedState(
     val localResume: List<HomeMusicItem> = emptyList(),
     val supermix: List<HomeMusicItem> = emptyList(),
     val discoverMix: List<HomeMusicItem> = emptyList(),
-    val moodMixes: List<MoodMix> = emptyList(),
     val activeDspPreset: String? = null,
     val isLoading: Boolean = false,
     val isOffline: Boolean = false,
@@ -53,25 +52,6 @@ data class HomeMusicItem(
     val streamUrl: String? = null,
     val lastPlayedAt: Long = 0,
 )
-
-data class MoodMix(
-    val mood: MoodCategory,
-    val label: String,
-    val query: String,
-    val emoji: String,
-    val accentColor: Long = 0xFF7B3FE4,
-)
-
-enum class MoodCategory {
-    CHILL,
-    ENERGETIC,
-    ROMANTIC,
-    FOCUS,
-    SAD,
-    PARTY,
-    WORKOUT,
-    SLEEP,
-}
 
 enum class RailType {
     CONTINUE_WATCHING,
