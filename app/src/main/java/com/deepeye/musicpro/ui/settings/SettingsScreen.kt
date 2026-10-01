@@ -44,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.musicpro.data.prefs.AppSettings
 import com.deepeye.musicpro.data.prefs.ThemeMode
 import com.deepeye.musicpro.data.source.remote.update.UpdateState
+import com.deepeye.musicpro.ui.theme.AppAlertDialog
 
 private val neonCyan = Color(0xFF00E5FF)
 private val darkSurface = Color(0xFF131722).copy(alpha = 0.85f)
@@ -83,7 +84,7 @@ fun SettingsScreen(
     var showSignOutConfirm by remember { mutableStateOf(false) }
 
     if (showSignOutConfirm) {
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = { showSignOutConfirm = false },
             containerColor = Color(0xFF131722),
             icon = {

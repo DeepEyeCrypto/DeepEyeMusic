@@ -145,7 +145,7 @@ fun PersonalizationSettingsScreen(
     }
 
     uiState.activeConfirmation?.let { conf ->
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = { viewModel.dismissConfirmation() },
             title = {
                 Text(

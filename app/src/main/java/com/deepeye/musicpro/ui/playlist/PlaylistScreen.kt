@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.deepeye.musicpro.ui.theme.AppAlertDialog
 
 @Composable
 fun PlaylistScreen(
@@ -67,7 +68,7 @@ fun PlaylistScreen(
     }
 
     if (showCreateDialog) {
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = { showCreateDialog = false },
             title = { Text("New Playlist") },
             text = {

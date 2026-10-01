@@ -99,7 +99,7 @@ fun HiddenContentScreen(
                 HiddenContentTab.ARTISTS -> HiddenArtistsList(uiState = uiState, viewModel = viewModel)
             }
 uiState.activeConfirmation?.let { conf ->
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = { viewModel.dismissConfirmation() },
             title = { Text(conf.title, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = TextPrimary) },
             text = { Text(conf.message, style = MaterialTheme.typography.bodyMedium, color = TextSecondary) },

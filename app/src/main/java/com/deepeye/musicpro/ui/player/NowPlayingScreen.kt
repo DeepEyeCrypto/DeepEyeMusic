@@ -75,6 +75,7 @@ import com.deepeye.musicpro.ui.components.GlassPill
 import com.deepeye.musicpro.ui.components.glassCard
 import com.deepeye.musicpro.ui.player.overlay.DeepEyeVideoPlayerOverlay
 import com.deepeye.musicpro.ui.player.overlay.VideoPlayerOverlayActions
+import com.deepeye.musicpro.ui.theme.AppAlertDialog
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -2157,7 +2158,7 @@ fun SmartTubeSpeedDialog(
     accentColor: Color
 ) {
     val presets = listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.5f, 3.0f)
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -2222,7 +2223,7 @@ fun SmartTubeAudioBoostDialog(
         6 to "+6dB (Medium Boost / Loud)",
         12 to "+12dB (Max Boost / Quiet Audio Fix)"
     )
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -2283,7 +2284,7 @@ fun SmartTubeSleepTimerDialog(
     accentColor: Color
 ) {
     val timerOptions = listOf(15, 30, 45, 60, 90)
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {

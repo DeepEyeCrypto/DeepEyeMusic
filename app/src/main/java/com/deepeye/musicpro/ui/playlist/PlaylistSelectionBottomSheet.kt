@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.musicpro.domain.model.Playlist
+import com.deepeye.musicpro.ui.theme.AppAlertDialog
 import com.deepeye.musicpro.ui.theme.TextPrimary
 import com.deepeye.musicpro.ui.theme.TextSecondary
 import com.deepeye.musicpro.ui.theme.ElectricViolet
@@ -110,7 +111,7 @@ fun PlaylistSelectionBottomSheet(
     }
 
     if (showCreateDialog) {
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = { showCreateDialog = false },
             title = { Text("New Playlist", color = TextPrimary) },
             text = {

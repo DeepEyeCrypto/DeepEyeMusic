@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.musicpro.domain.gamification.UserAchievement
+import com.deepeye.musicpro.ui.theme.AppAlertDialog
 
 @Composable
 fun AchievementUnlockedPopup(
@@ -23,7 +24,7 @@ fun AchievementUnlockedPopup(
     onDismiss: () -> Unit,
     onShare: () -> Unit
 ) {
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(

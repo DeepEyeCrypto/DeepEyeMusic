@@ -40,10 +40,42 @@ object UiScale {
     /**
      * Density multiplier for landscape, where the short axis is scarce.
      *
-     * Enough to recover a little vertical breathing room, gentle enough that
-     * the type stays comfortably readable. Was 0.58.
+     * ## What this is now
+     *
+     * This is the app's **single, global zoom factor**. It is applied once, at
+     * the Compose root, by wrapping the tree in
+     * `CompositionLocalProvider(LocalDensity provides …)` inside
+     * `DeepEyeMusicTheme`.
+     *
+     * It must be the *only* place density is changed. It used to be applied in
+     * `DeepEyeMusicApp` while `MainActivity` independently re-provided
+     * `LocalDensity`, so the two compounded to `0.92 x 0.92 = 0.85` on top of a
+     * `.sdp` engine running at 0.67 -- three axes fighting, with Material3
+     * internals landing on a different number from our own components.
+     *
+     * ## Why a global zoom and not per-widget `.sdp`
+     *
+     * Material3 components size themselves with hardcoded internal `.dp`
+     * values: `Button` content padding, `Slider` track and thumb, dialog
+     * insets, `ListItem` gutters. None of them consult a custom `.sdp`
+     * extension, so a `.sdp`-only approach scales our cards to 0.62 while
+     * every Material control stays at 0.92 -- a 1.49x mismatch that reads as
+     * "disjointed". Scaling `Density.density` is the only lever that reaches
+     * *both*, which is what makes the result uniform.
+     *
+     * See `ContentBounds` for why the "empty" half of the report is a separate
+     * problem that density cannot solve.
      */
-    const val LandscapeDensityScale = 0.92f
+    const val LandscapeDensityScale = 0.75f
+
+    /**
+     * Density multiplier for portrait.
+     *
+     * Exactly `1f`. Portrait phone layouts were already correct and correctly
+     * dense, and the zoom is scoped to landscape only. A non-unity portrait
+     * value would re-break the portrait tuning for no benefit.
+     */
+    const val PortraitDensityScale = 1.0f
 
     /**
      * Smallest font size, in sp, that body or label text in the app may use.
@@ -52,6 +84,20 @@ object UiScale {
      * Android's own accessibility guidance treats 12sp as the practical floor
      * for secondary text. 14sp remains the floor for anything that carries
      * meaning; 12sp is for metadata and decoration only.
+     *
+     * ## Why this survived the aggressive viewport retune
+     *
+     * `ViewportScaler` now references a 1200dp canvas, so a landscape phone
+     * resolves to roughly 0.67x. Unclamped, that turns the 12sp floor value into
+     * 8.0sp and every style below ~18sp into unreadable text. This floor is
+     * therefore load-bearing at the new density, not decorative: it is what
+     * stops the compaction pass from reproducing the original "everything looks
+     * tiny" regression that this constant was written to prevent.
+     *
+     * The accepted tradeoff is that the lower half of the scale compresses —
+     * several styles converge on 12sp and lose some of their relative
+     * distinction. Geometry compacts aggressively; type compacts only down to
+     * the legibility limit.
      *
      * This floor applies to the [AppTypography] scale. It is deliberately NOT
      * applied to two categories that must opt out of it, and which are tracked
@@ -75,4 +121,41 @@ object UiScale {
      * a user must read in order to operate the app must respect the floor.
      */
     const val MinReadableFontSize = 12f
+
+    // ─── Global zoom policy ───────────────────────────────────────────────────
+
+    /**
+     * Resolves the zoom factor for a given orientation.
+     *
+     * @param isLandscape whether the current configuration is landscape.
+     * @return the multiplier to apply to `Density.density`.
+     */
+    fun zoomFor(isLandscape: Boolean): Float =
+        if (isLandscape) LandscapeDensityScale else PortraitDensityScale
+
+    /**
+     * Smallest font size that may be **authored**, such that it still renders at
+     * or above [MinReadableFontSize] after the global zoom is applied.
+     *
+     * ## Why this is not simply `MinReadableFontSize`
+     *
+     * The zoom multiplies `Density.fontScale` as well as `density`, because a
+     * "zoom out" that shrinks boxes but not type looks like a rendering bug
+     * rather than a density change — text stops fitting its own containers.
+     *
+     * The consequence is that a 12sp style authored at `fontScale = 1` renders
+     * at `12 x 0.75 = 9sp` in landscape. That is below the floor and unreadable.
+     * So the authored value has to be *divided* by the zoom to land on 12sp
+     * after it is applied: `16sp x 0.75 = 12sp`.
+     *
+     * This is the whole reason the type scale is authored through
+     * `scaledFontSize` rather than as raw `.sp` literals — see `ViewportScaler`.
+     *
+     * The floor is evaluated against the *portrait* zoom deliberately. Zooming
+     * in (a factor above 1, which the app does not currently use) is allowed to
+     * render below the floor, because the user asked for bigger type in that
+     * case; only shrinking needs the compensation.
+     */
+    fun authoredFloorFor(zoom: Float): Float =
+        if (zoom >= 1f) MinReadableFontSize else MinReadableFontSize / zoom
 }
