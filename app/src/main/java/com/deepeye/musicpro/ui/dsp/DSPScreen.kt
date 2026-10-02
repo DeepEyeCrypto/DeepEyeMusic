@@ -416,14 +416,14 @@ fun ModulesGrid(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item { PgcCard(params, isEnabled, onUpdateParams) }
-        item {
+        item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
             EqualizerCard(params, isEnabled, onToggle = { enabled ->
                 onUpdateParams {
                     it.copy(eqEnabled = enabled)
                 }
             }, onUpdateEqBand, onCommitEqBands)
         }
+        item { PgcCard(params, isEnabled, onUpdateParams) }
         item { ViperBassCard(params, isEnabled, onUpdateParams) }
         item { SurroundCard(params, isEnabled, onUpdateParams) }
         item { ReverbCard(params, isEnabled, onUpdateParams) }

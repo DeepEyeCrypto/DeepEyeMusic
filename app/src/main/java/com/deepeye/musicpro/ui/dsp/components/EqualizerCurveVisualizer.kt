@@ -323,7 +323,7 @@ internal object EqGestureLog {
 }
 
 /** Visible height of a single fader track. */
-private val EQ_TRACK_HEIGHT = 120.dp
+private val EQ_TRACK_HEIGHT = 100.dp
 
 /**
  * Hard ceiling on the rendered track height.
@@ -332,7 +332,7 @@ private val EQ_TRACK_HEIGHT = 120.dp
  * app bar, the curve canvas and the frequency labels are placed. The bank must
  * never claim more than this, or it clips the labels at the bottom of the card.
  */
-private val EQ_TRACK_MAX_HEIGHT = 240.dp
+private val EQ_TRACK_MAX_HEIGHT = 200.dp
 
 /**
  * Minimum width of one fader's touch slot.
@@ -432,8 +432,8 @@ fun EqualizerCurveVisualizer(
             .clip(RoundedCornerShape(24.dp))
             .background(darkSurface)
             .border(1.dp, glassBorder, RoundedCornerShape(24.dp))
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // Curve Header & Quick Actions
         Row(
@@ -559,7 +559,7 @@ fun EqualizerCurveVisualizer(
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(130.dp)
+                .height(95.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .clipToBounds()
                 .background(Color(0xFF090B10).copy(alpha = 0.95f))
