@@ -409,12 +409,7 @@ fun ModulesGrid(
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
-        // Adaptive, not Fixed(2). The old fixed pair resolved to two ~400dp
-        // cards on an 802dp landscape viewport, so every module card stretched
-        // to nearly half the screen to display one switch and one slider.
-        // Adaptive packs three compact cards across instead, which is the
-        // density the DSP console was designed for.
-        columns = GridCells.Adaptive(ContentBounds.dspModuleMinSize),
+        columns = GridCells.Fixed(2),
         modifier = modifier.fillMaxHeight(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),

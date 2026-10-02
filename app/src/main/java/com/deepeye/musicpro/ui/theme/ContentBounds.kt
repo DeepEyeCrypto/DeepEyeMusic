@@ -96,10 +96,9 @@ object ContentBounds {
      *
      * These are control surfaces, not thumbnails: each carries a switch, a
      * title and a slider or curve, so it needs more room than a cover-art tile.
-     * 180dp packs three across on an 802dp landscape viewport instead of the two
-     * the old `GridCells.Fixed(2)` allowed.
+     * Fixed(2) or 260dp packs two spacious cards across on landscape viewports.
      */
-    val dspModuleMinSize: Dp get() = 180.dp
+    val dspModuleMinSize: Dp get() = 260.dp
 
     /**
      * Adaptive-grid floor for square content tiles (badges, artist pickers).
