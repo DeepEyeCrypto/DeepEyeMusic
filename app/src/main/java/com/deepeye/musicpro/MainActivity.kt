@@ -390,7 +390,32 @@ class MainActivity : FragmentActivity() {
 
     private fun handleIntent(intent: android.content.Intent?) {
         val action = intent?.action
-        
+
+        // 1. Handle Direct DeepLink from Subscription Notification
+        val extraVideoId = intent?.getStringExtra("EXTRA_VIDEO_ID")
+        if (!extraVideoId.isNullOrBlank()) {
+            val videoTitle = intent.getStringExtra("EXTRA_VIDEO_TITLE") ?: "Subscribed Channel"
+            val channelName = intent.getStringExtra("EXTRA_CHANNEL_NAME") ?: "YouTube"
+            lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val remoteItem = com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                        id = extraVideoId,
+                        title = videoTitle,
+                        artist = channelName,
+                        artworkUri = android.net.Uri.parse("https://img.youtube.com/vi/$extraVideoId/hqdefault.jpg"),
+                        duration = 0L,
+                        isVideo = true
+                    )
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        playerController.playMedia(remoteItem)
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("MainActivity", "Error handling notification deep link", e)
+                }
+            }
+            return
+        }
+
         // Handle YouTube links (either via Share Sheet text OR clicked URL)
         var youtubeUrl: String? = null
         if (action == android.content.Intent.ACTION_SEND && intent.type == "text/plain") {

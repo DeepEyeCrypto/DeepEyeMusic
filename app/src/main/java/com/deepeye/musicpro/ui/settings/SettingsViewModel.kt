@@ -26,6 +26,7 @@ data class SettingsUiState(
     val isRescanningLibrary: Boolean = false,
     val tasteProfile: TasteProfile = TasteProfile(),
     val updateState: UpdateState = UpdateState.Idle,
+    val notificationsEnabled: Boolean = true,
 )
 
 @HiltViewModel
@@ -36,12 +37,17 @@ constructor(
     private val syncLibraryUseCase: SyncLibraryUseCase,
     private val tasteProfileRepository: TasteProfileRepository,
     private val autoUpdateManager: AutoUpdateManager,
-    private val cloudSyncManager: com.deepeye.musicpro.domain.sync.CloudSyncManager
+    private val cloudSyncManager: com.deepeye.musicpro.domain.sync.CloudSyncManager,
+    private val notificationStateRepo: com.deepeye.musicpro.data.repository.notification.NotificationStateRepo
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            val enabled = notificationStateRepo.isNotificationsEnabled()
+            _uiState.value = _uiState.value.copy(notificationsEnabled = enabled)
+        }
         viewModelScope.launch {
             settingsDataStore.settings.collect { settings ->
                 _uiState.value = _uiState.value.copy(settings = settings)
@@ -125,6 +131,19 @@ constructor(
         viewModelScope.launch {
             cloudSyncManager.syncAllData()
         }
+    }
+
+    fun setNotificationsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            notificationStateRepo.setNotificationsEnabled(enabled)
+            _uiState.value = _uiState.value.copy(notificationsEnabled = enabled)
+        }
+    }
+
+    fun triggerSubscriptionCheckNow(context: android.content.Context) {
+        val workRequest = androidx.work.OneTimeWorkRequestBuilder<com.deepeye.musicpro.workers.YouTubeSubscriptionWorker>()
+            .build()
+        androidx.work.WorkManager.getInstance(context).enqueue(workRequest)
     }
 
     fun logoutYouTube() {

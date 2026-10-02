@@ -55,6 +55,7 @@ private val glassBorder = Color(0x22FFFFFF)
 enum class SettingCategory(val title: String, val subtitle: String, val icon: ImageVector) {
     APPEARANCE("Appearance", "Theme, Dynamic Glow & Contrast", Icons.Default.Palette),
     AUDIO_ENGINE("Audio Engine (DSP)", "Lossless DSP, AEOS & Visualizer", Icons.Default.GraphicEq),
+    NOTIFICATIONS("Notifications", "New Uploads & Channel Alerts", Icons.Default.Notifications),
     LIBRARY("Storage & Library", "Rescan, Cache & Cloud Sync", Icons.Default.Folder),
     UPDATES("Updates & Version", "OTA Engine & Release Status", Icons.Default.SystemUpdate),
     ACCOUNT("Account", "Session & Sign Out", Icons.Default.AccountCircle)
@@ -597,6 +598,49 @@ private fun SettingsDetailPane(
                                         fontWeight = FontWeight.Bold
                                     )
                                     Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = neonCyan, modifier = Modifier.size(24.dp))
+                                }
+                            }
+                        }
+                    }
+                }
+                SettingCategory.NOTIFICATIONS -> {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            SettingSwitchRow(
+                                label = "YouTube Upload Alerts",
+                                description = "Receive rich background notifications when subscribed channels upload new tracks",
+                                isChecked = uiState.notificationsEnabled,
+                                onCheckedChange = { enabled ->
+                                    viewModel.setNotificationsEnabled(enabled)
+                                }
+                            )
+
+                            // Manual Check Button
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 68.dp)
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(darkSurface)
+                                    .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
+                                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                                    Text("Check Subscriptions Now", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    Text("Scans subscribed channels for new uploads immediately", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
+                                }
+                                Button(
+                                    onClick = {
+                                        viewModel.triggerSubscriptionCheckNow(context)
+                                        android.widget.Toast.makeText(context, "Scanning subscriptions for new uploads...", android.widget.Toast.LENGTH_SHORT).show()
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = neonCyan),
+                                    shape = RoundedCornerShape(14.dp),
+                                    modifier = Modifier.heightIn(min = 48.dp)
+                                ) {
+                                    Text("Check Now", color = Color(0xFF090B10), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }

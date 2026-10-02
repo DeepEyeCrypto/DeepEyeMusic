@@ -104,22 +104,24 @@ class DeepEyeApp : Application(), Configuration.Provider, SingletonImageLoader.F
             queuePrefetch,
         )
 
-        val channelSync =
-            androidx.work.PeriodicWorkRequestBuilder<com.deepeye.musicpro.workers.ChannelSyncWorker>(
-                2,
+        val ytSubWorker =
+            androidx.work.PeriodicWorkRequestBuilder<com.deepeye.musicpro.workers.YouTubeSubscriptionWorker>(
+                4,
                 java.util.concurrent.TimeUnit.HOURS,
             )
                 .setConstraints(
                     androidx.work.Constraints.Builder()
                         .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+                        .setRequiresBatteryNotLow(true)
                         .build(),
                 )
+                .setBackoffCriteria(androidx.work.BackoffPolicy.EXPONENTIAL, 15, java.util.concurrent.TimeUnit.MINUTES)
                 .build()
 
         workManager.enqueueUniquePeriodicWork(
-            com.deepeye.musicpro.workers.BackgroundWorkNames.CHANNEL_SYNC,
+            com.deepeye.musicpro.workers.BackgroundWorkNames.YT_SUBSCRIPTION_WORKER,
             androidx.work.ExistingPeriodicWorkPolicy.KEEP,
-            channelSync,
+            ytSubWorker,
         )
     }
 
