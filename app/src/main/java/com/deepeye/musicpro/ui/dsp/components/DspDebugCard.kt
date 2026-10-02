@@ -19,8 +19,8 @@ import com.deepeye.musicpro.dsp.model.GainBudget
 import com.deepeye.musicpro.dsp.model.RiskLevel
 
 /**
- * A developer-only debug component that displays internal DSP engine state.
- * Shows session ID, current audio route, gain budget, and active modules.
+ * A developer debug HUD component that displays real-time internal DSP engine telemetry.
+ * Shows active master preset, session ID, audio route, gain headroom budget, and active modules.
  */
 @Composable
 fun DspDebugCard(
@@ -28,6 +28,7 @@ fun DspDebugCard(
     gainBudget: GainBudget,
     activeModules: List<String>,
     currentRoute: AudioRoute,
+    activePresetName: String = "",
     modifier: Modifier = Modifier,
 ) {
     if (!BuildConfig.DEBUG) return
@@ -37,7 +38,7 @@ fun DspDebugCard(
         shape = RoundedCornerShape(12.dp),
         colors =
         CardDefaults.cardColors(
-            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
         ),
         border = BorderStroke(1.dp, Color(0xFFFF5900).copy(alpha = 0.5f)),
     ) {
@@ -45,13 +46,26 @@ fun DspDebugCard(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Text(
-                "⚙️ DSP DEBUG",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFFFF5900),
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    "⚙️ DSP DEBUG HUD",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFFFF5900),
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp,
+                )
+                if (activePresetName.isNotBlank()) {
+                    Text(
+                        "🎛️ $activePresetName",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF00E5FF),
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
 
             HorizontalDivider(color = Color(0xFFFF5900).copy(alpha = 0.2f))
 
@@ -59,12 +73,12 @@ fun DspDebugCard(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     "Session:",
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Text(
                     if (sessionId != 0) {
-                        "✅ $sessionId"
+                        "✅ $sessionId (V4A Engine Attached)"
                     } else {
                         "❌ NOT ATTACHED"
                     },
@@ -83,7 +97,7 @@ fun DspDebugCard(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     "Route:",
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Text(
@@ -93,11 +107,11 @@ fun DspDebugCard(
                 )
             }
 
-            // Gain
+            // Headroom / Gain Budget
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    "Gain:",
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                    "Gain Headroom:",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Text(
@@ -116,7 +130,7 @@ fun DspDebugCard(
             // Active modules
             if (activeModules.isNotEmpty()) {
                 Text(
-                    "Active: ${activeModules.joinToString(" · ")}",
+                    "Active Modules: ${activeModules.joinToString(" · ")}",
                     color = Color(0xFF69F0AE),
                     style = MaterialTheme.typography.bodySmall,
                 )

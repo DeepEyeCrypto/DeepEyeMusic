@@ -78,17 +78,9 @@ constructor(
     suspend fun seedBuiltinPresets() {
         if (dao.getBuiltinCount() > 0) return
 
-        val builtins =
-            listOf(
-                "Flat" to DspParams.flat(),
-                "Audiophile USB DAC" to DspParams.audiophileUsbDac(),
-                "Premium Headphone Bass" to DspParams.premiumHeadphoneBass(),
-                "Bollywood Vocals" to DspParams.bollywoodVocals(),
-                "Night Mode" to DspParams.nightMode(),
-                "Bass Monster" to DspParams.bassMonster(),
-                "Speaker Safe" to DspParams.speakerSafe(),
-                "Bluetooth Optimized" to DspParams.bluetoothOptimized(),
-            )
+        val builtins = com.deepeye.musicpro.dsp.model.DSPPreset.entries.map {
+            it.presetName to it.params
+        }
 
         builtins.forEach { (name, params) ->
             dao.insert(

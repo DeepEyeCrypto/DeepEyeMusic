@@ -171,6 +171,7 @@ fun DSPScreen(
                             gainBudget = uiState.gainBudget,
                             activeModules = viewModel.activeModuleNames(),
                             currentRoute = uiState.currentRoute,
+                            activePresetName = uiState.activePreset.presetName,
                         )
                     }
 
@@ -228,6 +229,7 @@ fun DSPScreen(
                         gainBudget = uiState.gainBudget,
                         activeModules = viewModel.activeModuleNames(),
                         currentRoute = uiState.currentRoute,
+                        activePresetName = uiState.activePreset.presetName,
                     )
                 }
             }

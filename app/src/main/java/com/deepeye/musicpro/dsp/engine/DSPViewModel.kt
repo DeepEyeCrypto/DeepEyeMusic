@@ -34,7 +34,7 @@ data class V4AUiState(
     val sessionId: Int = 0,
     val currentRoute: AudioRoute = AudioRoute.UNKNOWN,
     val showConflictWarning: Boolean = false,
-    val activePreset: com.deepeye.musicpro.dsp.model.DSPPreset = com.deepeye.musicpro.dsp.model.DSPPreset.DEFAULT,
+    val activePreset: com.deepeye.musicpro.dsp.model.DSPPreset = com.deepeye.musicpro.dsp.model.DSPPreset.SUBWOOFER_30HZ_INFRA,
 )
 
 @HiltViewModel
@@ -194,7 +194,13 @@ constructor(
     }
 
     fun applyDSPPreset(preset: com.deepeye.musicpro.dsp.model.DSPPreset) {
-        updateParams { preset.params.copy(enabled = it.enabled) }
+        val nextParams = preset.params.copy(enabled = _uiState.value.params.enabled)
+        if (preset.params.eqBands.size == EQ_BAND_COUNT) {
+            stagedEqBands = preset.params.eqBands.copyOf()
+            pendingEqBands = preset.params.eqBands.copyOf()
+            dspEngine.updateEqBands(preset.params.eqBands)
+        }
+        updateParams { nextParams }
         _uiState.value = _uiState.value.copy(activePreset = preset)
     }
 

@@ -4,6 +4,7 @@
 package com.deepeye.musicpro.ui.dsp.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -38,48 +39,55 @@ fun DSPPresetSelector(
 ) {
     LazyRow(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp)
+        contentPadding = PaddingValues(horizontal = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(DSPPreset.entries) { preset ->
-            val isLocked = userRank > preset.requiredRank
+            val isSelected = preset == currentPreset
+            val isLocked = preset.requiredRank > 0 && userRank > preset.requiredRank
+
             Card(
                 modifier = Modifier
-                    .padding(8.dp)
-                    .width(140.dp)
-                    .height(110.dp)
+                    .width(160.dp)
+                    .height(115.dp)
                     .glassCard(
-                        elevation = if (preset == currentPreset) 12.dp else 4.dp,
-                        borderColor = if (preset == currentPreset) MaterialTheme.colorScheme.primary else Color(0xFF333333).copy(alpha = 0.5f)
+                        elevation = if (isSelected) 12.dp else 2.dp,
+                        borderColor = if (isSelected) Color(0xFF00E5FF) else Color(0x33FFFFFF)
                     )
                     .then(
                         if (isLocked) Modifier else Modifier
                             .clickable { onPresetChanged(preset) }
-                            .hoverable(scale = 1.05f)
+                            .hoverable(scale = 1.04f)
                     ),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.Transparent
+                    containerColor = if (isSelected) Color(0x2600E5FF) else Color.Transparent
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     if (isLocked) {
-                        Text(text = "🔒", fontSize = 16.sp)
+                        Text(text = "🔒", fontSize = 14.sp)
                     }
                     Text(
                         text = preset.presetName,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isLocked) Color.DarkGray else if (preset == currentPreset) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
+                        fontSize = 13.sp,
+                        fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Bold,
+                        color = if (isLocked) Color.DarkGray else if (isSelected) Color(0xFF00E5FF) else Color.White,
+                        maxLines = 1,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = if (isLocked) "Requires Top ${preset.requiredRank}" else preset.description,
-                        fontSize = 11.sp,
-                        color = if (isLocked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
+                        fontSize = 10.sp,
+                        lineHeight = 13.sp,
+                        color = if (isLocked) MaterialTheme.colorScheme.error else if (isSelected) Color.White.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.5f),
+                        maxLines = 3,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
