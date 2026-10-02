@@ -132,21 +132,21 @@ fun DSPScreen(
                     modifier =
                     Modifier
                         .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(20.dp),
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     // Left Pane: Sticky Dashboard
                     Column(
                         modifier =
                         Modifier
-                            .width(320.dp)
+                            .width(250.dp)
                             .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         StudioVisualizer(
                             fftData = fftData,
                             barColor = if (isEnabled) Color(0xFF00E5FF) else Color.Gray.copy(alpha = 0.5f),
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            modifier = Modifier.padding(bottom = 4.dp).height(42.dp)
                         )
 
                         GainBudgetCard(gainBudget = uiState.gainBudget)
@@ -257,61 +257,61 @@ fun PresetsCard(
     onSaveForTrackClick: () -> Unit,
 ) {
     Card(
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF131722).copy(alpha = 0.85f)),
         border = BorderStroke(1.dp, Color(0x22FFFFFF)),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(10.dp)) {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 48.dp),
+                    .heightIn(min = 36.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Presets", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("Presets", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 Row {
-                    IconButton(onClick = onSaveForTrackClick, modifier = Modifier.size(44.dp)) {
-                        Icon(Icons.Default.Star, contentDescription = "Link to Track", tint = Color(0xFFFFD700), modifier = Modifier.size(22.dp))
+                    IconButton(onClick = onSaveForTrackClick, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Star, contentDescription = "Link to Track", tint = Color(0xFFFFD700), modifier = Modifier.size(18.dp))
                     }
-                    IconButton(onClick = onSaveClick, modifier = Modifier.size(44.dp)) {
-                        Icon(Icons.Default.Add, contentDescription = "Save Custom Preset", tint = Color(0xFF00E5FF), modifier = Modifier.size(24.dp))
+                    IconButton(onClick = onSaveClick, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Add, contentDescription = "Save Custom Preset", tint = Color(0xFF00E5FF), modifier = Modifier.size(20.dp))
                     }
                 }
             }
-            Spacer(Modifier.height(10.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(Modifier.height(6.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 presets.forEach { (id, name) ->
                     val isSelected = id == selectedPresetId
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 52.dp)
+                            .heightIn(min = 36.dp)
                             .clickable { onPresetSelect(id) }
                             .background(
                                 color = if (isSelected) Color(0x3300E5FF) else Color(0x0AFFFFFF),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(8.dp),
                             )
                             .border(
-                                width = if (isSelected) 1.5.dp else 1.dp,
+                                width = if (isSelected) 1.dp else 0.5.dp,
                                 color = if (isSelected) Color(0xFF00E5FF) else Color(0x14FFFFFF),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(8.dp)
                             )
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = name,
                             color = if (isSelected) Color(0xFF00E5FF) else Color.White,
-                            fontSize = 15.sp,
+                            fontSize = 12.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         )
                         // Allow deletion of custom user presets (id > 7, built-ins are 1-7)
                         if (id > 7) {
-                            IconButton(onClick = { onPresetDelete(id) }, modifier = Modifier.size(36.dp)) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFFF5252))
+                            IconButton(onClick = { onPresetDelete(id) }, modifier = Modifier.size(28.dp)) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFFF5252), modifier = Modifier.size(16.dp))
                             }
                         }
                     }

@@ -63,7 +63,7 @@ fun GainBudgetCard(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         colors =
         CardDefaults.cardColors(
             containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant,
@@ -71,8 +71,8 @@ fun GainBudgetCard(
         border = BorderStroke(1.dp, riskColor.copy(alpha = 0.4f)),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             // Header row
             Row(
@@ -82,38 +82,38 @@ fun GainBudgetCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.GraphicEq,
                         contentDescription = null,
                         tint = riskColor,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(16.dp),
                     )
                     Text(
                         text = "GAIN BUDGET",
-                        style = MaterialTheme.typography.labelMedium,
+                        style = MaterialTheme.typography.labelSmall,
                         color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                        letterSpacing = 1.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.5.sp,
                     )
                 }
 
                 // Risk badge
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(6.dp),
                     color = riskColor.copy(alpha = 0.15f),
                 ) {
                     Text(
                         text = gainBudget.risk.name,
                         modifier =
                         Modifier.padding(
-                            horizontal = 10.dp,
-                            vertical = 4.dp,
+                            horizontal = 8.dp,
+                            vertical = 2.dp,
                         ),
-                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.sp,
                         color = riskColor,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp,
                     )
                 }
             }
@@ -121,19 +121,19 @@ fun GainBudgetCard(
             // dB value
             Text(
                 text = "${"%.1f".format(gainBudget.totalDb)} dB",
-                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 18.sp,
                 color = riskColor,
                 fontWeight = FontWeight.Bold,
             )
 
             // Animated progress bar
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Box(
                     modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp))
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp))
                         .background(androidx.compose.material3.MaterialTheme.colorScheme.surface),
                 ) {
                     Box(
@@ -141,7 +141,7 @@ fun GainBudgetCard(
                         Modifier
                             .fillMaxWidth(animatedProgress)
                             .fillMaxHeight()
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(RoundedCornerShape(3.dp))
                             .background(
                                 Brush.horizontalGradient(
                                     colors =
@@ -163,17 +163,17 @@ fun GainBudgetCard(
                 ) {
                     Text(
                         "0 dB",
-                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 9.sp,
                         color = Color(0xFF00B248),
                     )
                     Text(
                         "8 dB",
-                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 9.sp,
                         color = Color(0xFFE69A00),
                     )
                     Text(
                         "14 dB",
-                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 9.sp,
                         color = Color(0xFFE53935),
                     )
                 }

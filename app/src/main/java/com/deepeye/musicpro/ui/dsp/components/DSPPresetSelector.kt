@@ -39,8 +39,8 @@ fun DSPPresetSelector(
 ) {
     LazyRow(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = PaddingValues(horizontal = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         items(DSPPreset.entries) { preset ->
             val isSelected = preset == currentPreset
@@ -48,46 +48,46 @@ fun DSPPresetSelector(
 
             Card(
                 modifier = Modifier
-                    .width(160.dp)
-                    .height(115.dp)
+                    .width(125.dp)
+                    .height(78.dp)
                     .glassCard(
-                        elevation = if (isSelected) 12.dp else 2.dp,
-                        borderColor = if (isSelected) Color(0xFF00E5FF) else Color(0x33FFFFFF)
+                        elevation = if (isSelected) 8.dp else 1.dp,
+                        borderColor = if (isSelected) Color(0xFF00E5FF) else Color(0x22FFFFFF)
                     )
                     .then(
                         if (isLocked) Modifier else Modifier
                             .clickable { onPresetChanged(preset) }
-                            .hoverable(scale = 1.04f)
+                            .hoverable(scale = 1.03f)
                     ),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isSelected) Color(0x2600E5FF) else Color.Transparent
                 ),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     if (isLocked) {
-                        Text(text = "🔒", fontSize = 14.sp)
+                        Text(text = "🔒", fontSize = 12.sp)
                     }
                     Text(
                         text = preset.presetName,
-                        fontSize = 13.sp,
+                        fontSize = 11.sp,
                         fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Bold,
                         color = if (isLocked) Color.DarkGray else if (isSelected) Color(0xFF00E5FF) else Color.White,
                         maxLines = 1,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = if (isLocked) "Requires Top ${preset.requiredRank}" else preset.description,
-                        fontSize = 10.sp,
-                        lineHeight = 13.sp,
+                        fontSize = 9.sp,
+                        lineHeight = 11.sp,
                         color = if (isLocked) MaterialTheme.colorScheme.error else if (isSelected) Color.White.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.5f),
-                        maxLines = 3,
+                        maxLines = 2,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
