@@ -34,6 +34,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.*
+import com.deepeye.musicpro.ui.player.visualizer.title
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -381,6 +382,7 @@ fun NowPlayingScreen(
                         onNavigateToPersonalization = onNavigateToPersonalization,
                         pagerState = pagerState,
                         onOpenLyrics = { showLyricsSheet = true },
+                        onOpenVisualizerLibrary = { showVisualizerLibrary = true },
                         onOpenSpeedDialog = { showSpeedDialog = true },
                         onOpenAudioBoostDialog = { showAudioBoostDialog = true },
                         onOpenSleepTimerDialog = { showSleepTimerDialog = true },
@@ -558,6 +560,7 @@ fun AudioNowPlayingLayout(
     viewModel: PlayerViewModel,
     onOpenInfo: () -> Unit,
     onToggleVisualizer: () -> Unit,
+    onOpenVisualizerLibrary: () -> Unit = onToggleVisualizer,
     onEnterFullscreen: () -> Unit = {},
     onOpenDsp: () -> Unit,
     onOpenQueue: () -> Unit,
@@ -572,6 +575,7 @@ fun AudioNowPlayingLayout(
     onOpenHqPlaybackSheet: (com.deepeye.musicpro.ui.player.quality.HqSheetTab) -> Unit = {},
 ) {
     val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
+    val visualizerPrefs by viewModel.visualizerPrefs.collectAsStateWithLifecycle()
     val isDownloading = playerState.currentItem?.id != null && activeDownloads.values.any { it.id == playerState.currentItem?.id }
 
     val isHiRes = remember(playerState.currentItem?.id) { (playerState.currentItem?.id.hashCode() % 3) == 0 }
@@ -720,19 +724,46 @@ fun AudioNowPlayingLayout(
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.MusicNote,
-                                    contentDescription = null,
-                                    tint = finalAccentColor.copy(alpha = 0.5f),
-                                    modifier = Modifier.size(72.dp)
-                                )
-                                // 3D Vvavy Triangle Visualizer (replacing album art)
-                                com.deepeye.musicpro.ui.player.visualizer.VvavyTriangleVisualizer(
+                                // Fullscreen / Box visualizer using active theme or AGSL GPU scene
+                                com.deepeye.musicpro.ui.player.visualizer.VisualizerHost(
+                                    sceneId = visualizerPrefs.sceneId,
                                     fftSpectrum = viewModel.fftSpectrum,
                                     frequencyBands = viewModel.frequencyBands,
                                     accentColor = finalAccentColor,
-                                    modifier = Modifier.fillMaxSize().padding(8.dp)
+                                    intensity = visualizerPrefs.intensity,
+                                    reducedMotion = visualizerPrefs.reducedMotion,
+                                    modifier = Modifier.fillMaxSize().padding(4.dp)
                                 )
+
+                                // Scene badge & Switcher button directly on the visualizer box
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomEnd)
+                                        .padding(10.dp)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(Color.Black.copy(alpha = 0.65f))
+                                        .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
+                                        .clickable { onOpenVisualizerLibrary() }
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.AutoAwesome,
+                                            contentDescription = "Change Visualizer",
+                                            tint = finalAccentColor,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Text(
+                                            text = visualizerPrefs.sceneId.title.replace(" (AGSL)", ""),
+                                            color = Color.White,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -957,13 +988,13 @@ fun AudioNowPlayingLayout(
                         onClick = onNavigateToPersonalization
                     )
                     QuickToolButton(
-                        icon = Icons.Default.GraphicEq,
-                        label = "Visual",
-                        isActive = showVisualizer,
+                        icon = Icons.Default.AutoAwesome,
+                        label = "Visuals",
+                        isActive = false,
                         accentColor = finalAccentColor,
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),
-                        onClick = onToggleVisualizer
+                        onClick = onOpenVisualizerLibrary
                     )
                     QuickToolButton(
                         icon = Icons.Default.Fullscreen,
@@ -2641,6 +2672,7 @@ fun AudioFullscreenVisualizerLayout(
 ) {
     val context = LocalContext.current
     val fullscreenMode = LocalFullscreenMode.current
+    val visualizerPrefs by viewModel.visualizerPrefs.collectAsStateWithLifecycle()
     val diagnostics by viewModel.diagnostics.collectAsStateWithLifecycle()
     val showStatsForNerds by viewModel.showStatsForNerds.collectAsStateWithLifecycle()
     var showFullscreenQueue by remember { mutableStateOf(false) }
@@ -2652,11 +2684,14 @@ fun AudioFullscreenVisualizerLayout(
             secondaryColor = finalAccentColor.copy(alpha = 0.7f),
             modifier = Modifier.fillMaxSize()
         ) {
-            // 2. 3D Vvavy Triangle Visualizer (replaces Video Surface)
-            com.deepeye.musicpro.ui.player.visualizer.VvavyTriangleVisualizer(
+            // 2. High-Fidelity GPU Shader / Visualizer (replaces Video Surface)
+            com.deepeye.musicpro.ui.player.visualizer.VisualizerHost(
+                sceneId = visualizerPrefs.sceneId,
                 fftSpectrum = viewModel.fftSpectrum,
                 frequencyBands = viewModel.frequencyBands,
                 accentColor = finalAccentColor,
+                intensity = visualizerPrefs.intensity,
+                reducedMotion = visualizerPrefs.reducedMotion,
                 modifier = Modifier.fillMaxSize()
             )
         }
