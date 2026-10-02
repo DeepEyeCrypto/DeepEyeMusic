@@ -298,12 +298,26 @@ fun NowPlayingScreen(
         }
     }
 
-        // Hardware-Accelerated Ambilight Ambient Blur Layer
-        com.deepeye.musicpro.ui.player.components.AmbilightBackground(
-            primaryColor = finalAccentColor,
-            secondaryColor = dominantColor,
-            modifier = Modifier.fillMaxSize()
-        ) {
+        // Hardware-Accelerated Ambilight & Album Art Background Layer
+        val currentArtworkUri = playerState.currentItem?.artworkUri
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF07090E))) {
+            if (currentArtworkUri != null) {
+                AsyncImage(
+                    model = currentArtworkUri,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .blur(80.dp)
+                        .alpha(0.38f),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            com.deepeye.musicpro.ui.player.components.AmbilightBackground(
+                primaryColor = finalAccentColor,
+                secondaryColor = dominantColor,
+                modifier = Modifier.fillMaxSize()
+            ) {
             Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
                 if (isVideoMode) {
                     VideoNowPlayingLayout(
@@ -390,6 +404,7 @@ fun NowPlayingScreen(
                 }
             }
         }
+    }
 
     if (showDspSheet) {
         val dspViewModel: com.deepeye.musicpro.dsp.engine.DSPViewModel = hiltViewModel()
@@ -701,44 +716,56 @@ fun AudioNowPlayingLayout(
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
-                                // Fullscreen / Box visualizer using active theme or AGSL GPU scene
-                                com.deepeye.musicpro.ui.player.visualizer.VisualizerHost(
-                                    sceneId = visualizerPrefs.sceneId,
-                                    fftSpectrum = viewModel.fftSpectrum,
-                                    frequencyBands = viewModel.frequencyBands,
-                                    accentColor = finalAccentColor,
-                                    intensity = visualizerPrefs.intensity,
-                                    reducedMotion = visualizerPrefs.reducedMotion,
-                                    modifier = Modifier.fillMaxSize().padding(4.dp)
+                                // 1. Album Artwork Base Image
+                                AsyncImage(
+                                    model = innerItem.artworkUri,
+                                    contentDescription = "Album Art",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(RoundedCornerShape(28.dp)),
+                                    contentScale = ContentScale.Crop
                                 )
 
-                                // Scene badge & Switcher button directly on the visualizer box
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomEnd)
-                                        .padding(10.dp)
-                                        .clip(RoundedCornerShape(14.dp))
-                                        .background(Color.Black.copy(alpha = 0.65f))
-                                        .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
-                                        .clickable { onOpenVisualizerLibrary() }
-                                        .padding(horizontal = 10.dp, vertical = 6.dp)
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                // 2. Fullscreen / Box visualizer using active theme or AGSL GPU scene
+                                if (showVisualizer) {
+                                    com.deepeye.musicpro.ui.player.visualizer.VisualizerHost(
+                                        sceneId = visualizerPrefs.sceneId,
+                                        fftSpectrum = viewModel.fftSpectrum,
+                                        frequencyBands = viewModel.frequencyBands,
+                                        accentColor = finalAccentColor,
+                                        intensity = visualizerPrefs.intensity,
+                                        reducedMotion = visualizerPrefs.reducedMotion,
+                                        modifier = Modifier.fillMaxSize().padding(4.dp)
+                                    )
+
+                                    // Scene badge & Switcher button directly on the visualizer box
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .padding(10.dp)
+                                            .clip(RoundedCornerShape(14.dp))
+                                            .background(Color.Black.copy(alpha = 0.65f))
+                                            .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
+                                            .clickable { onOpenVisualizerLibrary() }
+                                            .padding(horizontal = 10.dp, vertical = 6.dp)
                                     ) {
-                                        Icon(
-                                            Icons.Default.AutoAwesome,
-                                            contentDescription = "Change Visualizer",
-                                            tint = finalAccentColor,
-                                            modifier = Modifier.size(13.dp)
-                                        )
-                                        Text(
-                                            text = visualizerPrefs.sceneId.title.replace(" (AGSL)", ""),
-                                            color = Color.White,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.AutoAwesome,
+                                                contentDescription = "Change Visualizer",
+                                                tint = finalAccentColor,
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                            Text(
+                                                text = visualizerPrefs.sceneId.title.replace(" (AGSL)", ""),
+                                                color = Color.White,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -2603,6 +2630,19 @@ fun AudioFullscreenVisualizerLayout(
     val showStatsForNerds by viewModel.showStatsForNerds.collectAsStateWithLifecycle()
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF07090E))) {
+        val currentArtworkUri = playerState.currentItem?.artworkUri
+        if (currentArtworkUri != null) {
+            AsyncImage(
+                model = currentArtworkUri,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .blur(80.dp)
+                    .alpha(0.35f),
+                contentScale = ContentScale.Crop
+            )
+        }
+
         // 1. Ambilight Background
         com.deepeye.musicpro.ui.player.components.AmbilightBackground(
             primaryColor = finalAccentColor,
