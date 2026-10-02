@@ -230,6 +230,9 @@ dependencies {
     implementation(libs.splashscreen)
     implementation("androidx.profileinstaller:profileinstaller:1.4.1")
 
+    // QR Code Generator (for YouTube Device Auth & TV Login)
+    implementation("com.google.zxing:core:3.5.3")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     testImplementation(libs.mockk)
