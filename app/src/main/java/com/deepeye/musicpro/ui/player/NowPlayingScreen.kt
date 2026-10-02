@@ -85,9 +85,8 @@ fun NowPlayingScreen(
     windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
     onNavigateBack: () -> Unit,
     onNavigateToV4A: () -> Unit,
-    onNavigateToQueue: () -> Unit,
     onNavigateToSettings: () -> Unit = {},
-    onNavigateToPersonalization: () -> Unit = {},
+    onNavigateToAccount: () -> Unit = {},
     viewModel: PlayerViewModel = hiltViewModel(),
     sheetViewModel: MiniPlayerSheetViewModel = hiltViewModel()
 ) {
@@ -108,7 +107,6 @@ fun NowPlayingScreen(
     var showLyricsSheet by remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
     var showDspSheet by remember { mutableStateOf(false) }
-    var showQueueSheet by remember { mutableStateOf(false) }
     var showInfoSheet by remember { mutableStateOf(false) }
     var showVisualizer by remember { mutableStateOf(false) }
     var showVisualizerLibrary by remember { mutableStateOf(false) }
@@ -150,7 +148,6 @@ fun NowPlayingScreen(
         if (sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.COLLAPSED) {
             showLyricsSheet = false
             showDspSheet = false
-            showQueueSheet = false
             showInfoSheet = false
             showHqPlaybackSheet = false
         }
@@ -222,7 +219,7 @@ fun NowPlayingScreen(
                 onSeekTo = { viewModel.seekTo(it) },
                 onNext = { viewModel.next() },
                 onPrevious = { viewModel.previous() },
-                onOpenQueue = { showQueueSheet = true },
+                onOpenQueue = { },
                 onLockChanged = { isLocked -> sheetViewModel.setGestureLocked(isLocked); fullscreenMode.isGestureLocked = isLocked }
             )
         } else if (innerItem != null) {
@@ -316,9 +313,8 @@ fun NowPlayingScreen(
                         onNavigateBack = onNavigateBack,
                         viewModel = viewModel,
                         onOpenDsp = { showDspSheet = true },
-                        onOpenQueue = { showQueueSheet = true },
                         onNavigateToSettings = onNavigateToSettings,
-                        onNavigateToPersonalization = onNavigateToPersonalization,
+                        onNavigateToAccount = onNavigateToAccount,
                         onLockChanged = { isLocked -> sheetViewModel.setGestureLocked(isLocked); fullscreenMode.isGestureLocked = isLocked },
                         onOpenLyrics = { showLyricsSheet = true },
                         onOpenSpeedDialog = { showSpeedDialog = true },
@@ -340,7 +336,6 @@ fun NowPlayingScreen(
                         viewModel = viewModel,
                         onExitFullscreen = { isAudioFullscreen = false },
                         onOpenDsp = { showDspSheet = true },
-                        onOpenQueue = { showQueueSheet = true },
                         onOpenSpeedDialog = { showSpeedDialog = true },
                         onOpenAudioBoostDialog = { showAudioBoostDialog = true },
                         onOpenSleepTimerDialog = { showSleepTimerDialog = true },
@@ -349,6 +344,7 @@ fun NowPlayingScreen(
                             hqSheetInitialTab = tab
                             showHqPlaybackSheet = true
                         },
+                        onNavigateToAccount = onNavigateToAccount,
                         onLockChanged = { isLocked -> sheetViewModel.setGestureLocked(isLocked); fullscreenMode.isGestureLocked = isLocked }
                     )
                 } else {
@@ -377,9 +373,8 @@ fun NowPlayingScreen(
                         },
                         onEnterFullscreen = { isAudioFullscreen = true },
                         onOpenDsp = { showDspSheet = true },
-                        onOpenQueue = { showQueueSheet = true },
                         onNavigateToSettings = onNavigateToSettings,
-                        onNavigateToPersonalization = onNavigateToPersonalization,
+                        onNavigateToAccount = onNavigateToAccount,
                         pagerState = pagerState,
                         onOpenLyrics = { showLyricsSheet = true },
                         onOpenVisualizerLibrary = { showVisualizerLibrary = true },
@@ -496,23 +491,6 @@ fun NowPlayingScreen(
         )
     }
 
-    if (showQueueSheet) {
-        val currentQueue by viewModel.queue.collectAsStateWithLifecycle()
-        val currentQueueIndex by viewModel.currentQueueIndex.collectAsStateWithLifecycle()
-
-        QueueBottomSheet(
-            queue = currentQueue,
-            currentIndex = currentQueueIndex,
-            playerState = playerState,
-            dominantColor = finalAccentColor,
-            onTrackSelected = { index -> viewModel.seekToMediaItem(index) },
-            onMoveItem = { from, to -> viewModel.moveMediaItem(from, to) },
-            onRemoveItem = { index -> viewModel.removeMediaItem(index) },
-            onClearQueue = { viewModel.clearQueue() },
-            onDismissRequest = { showQueueSheet = false }
-        )
-    }
-
     if (showSpeedDialog) {
         SmartTubeSpeedDialog(
             currentSpeed = playerState.playbackSpeed,
@@ -563,9 +541,8 @@ fun AudioNowPlayingLayout(
     onOpenVisualizerLibrary: () -> Unit = onToggleVisualizer,
     onEnterFullscreen: () -> Unit = {},
     onOpenDsp: () -> Unit,
-    onOpenQueue: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToPersonalization: () -> Unit = {},
+    onNavigateToAccount: () -> Unit = {},
     pagerState: androidx.compose.foundation.pager.PagerState,
     onOpenLyrics: () -> Unit,
     onOpenSpeedDialog: () -> Unit,
@@ -645,8 +622,8 @@ fun AudioNowPlayingLayout(
                                 )
                             }
                         }
-                        IconButton(onClick = onNavigateToPersonalization, modifier = Modifier.size(44.dp)) {
-                            Icon(Icons.Default.AutoAwesome, "Personalization", tint = finalAccentColor, modifier = Modifier.size(24.dp))
+                        IconButton(onClick = onNavigateToAccount, modifier = Modifier.size(44.dp)) {
+                            Icon(Icons.Default.Tv, "Account connection", tint = finalAccentColor, modifier = Modifier.size(24.dp))
                         }
                         IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(44.dp)) {
                             Icon(Icons.Default.Settings, "Settings", tint = headerColor, modifier = Modifier.size(24.dp))
@@ -963,29 +940,20 @@ fun AudioNowPlayingLayout(
                     )
                 }
 
-                // Row 2: Queue, Personal, Visualizer, Download, Info
+                // Row 2: TV Link, Visualizer, Fullscreen, Download, Info
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     QuickToolButton(
-                        icon = Icons.AutoMirrored.Filled.QueueMusic,
-                        label = "Queue",
-                        isActive = false,
-                        accentColor = finalAccentColor,
-                        headerColor = headerColor,
-                        modifier = Modifier.weight(1f),
-                        onClick = onOpenQueue
-                    )
-                    QuickToolButton(
-                        icon = Icons.Default.AutoAwesome,
-                        label = "Personal",
+                        icon = Icons.Default.Tv,
+                        label = "TV Link",
                         isActive = true,
                         accentColor = finalAccentColor,
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),
-                        onClick = onNavigateToPersonalization
+                        onClick = onNavigateToAccount
                     )
                     QuickToolButton(
                         icon = Icons.Default.AutoAwesome,
@@ -1093,9 +1061,8 @@ fun VideoNowPlayingLayout(
     onNavigateBack: () -> Unit,
     viewModel: PlayerViewModel,
     onOpenDsp: () -> Unit,
-    onOpenQueue: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToPersonalization: () -> Unit = {},
+    onNavigateToAccount: () -> Unit = {},
     onLockChanged: (Boolean) -> Unit,
     onOpenLyrics: () -> Unit,
     onOpenSpeedDialog: () -> Unit,
@@ -1169,8 +1136,8 @@ fun VideoNowPlayingLayout(
                     modifier = Modifier.align(Alignment.CenterEnd),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onNavigateToPersonalization, modifier = Modifier.size(44.dp)) {
-                        Icon(Icons.Default.AutoAwesome, "Personalization", tint = finalAccentColor, modifier = Modifier.size(24.dp))
+                    IconButton(onClick = onNavigateToAccount, modifier = Modifier.size(44.dp)) {
+                        Icon(Icons.Default.Tv, "Account connection", tint = finalAccentColor, modifier = Modifier.size(24.dp))
                     }
                     IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(44.dp)) {
                         Icon(Icons.Default.Settings, "Settings", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(24.dp))
@@ -1314,48 +1281,10 @@ fun VideoNowPlayingLayout(
                         onSeekTo = { viewModel.seekTo(it) },
                         onNext = { viewModel.next() },
                         onPrevious = { viewModel.previous() },
-                        onOpenQueue = {
-                            if (isFullscreen) {
-                                showFullscreenQueue = !showFullscreenQueue
-                            } else {
-                                onOpenQueue()
-                            }
-                        },
+                        onOpenQueue = { },
                         onLockChanged = onLockChanged,
                         onOpenHqSettings = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) }
                     )
-                }
-            }
-
-            androidx.compose.animation.AnimatedVisibility(
-                visible = showFullscreenQueue && isFullscreen,
-                enter = androidx.compose.animation.slideInHorizontally(initialOffsetX = { it }),
-                exit = androidx.compose.animation.slideOutHorizontally(targetOffsetX = { it }),
-                modifier = Modifier.align(Alignment.CenterEnd)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.4f)
-                        .background(Color.Black.copy(alpha = 0.85f))
-                        .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) { } // block clicks
-                ) {
-                    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides Color.White) {
-                        QueueSheetContent(
-                            queue = playerState.queue,
-                            currentIndex = playerState.currentIndex,
-                            onItemClick = { viewModel.seekToMediaItem(it) },
-                            onItemMove = { from, to -> viewModel.moveMediaItem(from, to) },
-                            onItemRemove = { viewModel.removeMediaItem(it) },
-                            accentColor = finalAccentColor
-                        )
-                    }
-                    IconButton(
-                        onClick = { showFullscreenQueue = false },
-                        modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
-                    ) {
-                        Icon(androidx.compose.material.icons.Icons.Default.Close, "Close Queue", tint = Color.White)
-                    }
                 }
             }
         }
@@ -1533,13 +1462,13 @@ fun VideoNowPlayingLayout(
                         onClick = { showPlaylistSheet = true }
                     )
 
-                    // 5. Personalization Pill
+                    // 5. TV Link Pill
                     ActionPill(
-                        icon = Icons.Default.AutoAwesome,
-                        label = "Personal",
+                        icon = Icons.Default.Tv,
+                        label = "TV Link",
                         isActive = true,
                         activeColor = finalAccentColor,
-                        onClick = onNavigateToPersonalization
+                        onClick = onNavigateToAccount
                     )
 
                     // 6. Lyrics Pill
@@ -1640,10 +1569,7 @@ fun VideoNowPlayingLayout(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Next Up (Video Queue)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                        TextButton(onClick = onOpenQueue) {
-                            Text("See Queue", color = finalAccentColor, fontSize = 12.sp)
-                        }
+                        Text("Next Up", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     }
                     
                     LazyRow(
@@ -2662,12 +2588,12 @@ fun AudioFullscreenVisualizerLayout(
     viewModel: PlayerViewModel,
     onExitFullscreen: () -> Unit,
     onOpenDsp: () -> Unit,
-    onOpenQueue: () -> Unit,
     onOpenSpeedDialog: () -> Unit,
     onOpenAudioBoostDialog: () -> Unit,
     onOpenSleepTimerDialog: () -> Unit,
     onEnableOledMode: () -> Unit,
     onOpenHqPlaybackSheet: (com.deepeye.musicpro.ui.player.quality.HqSheetTab) -> Unit = {},
+    onNavigateToAccount: () -> Unit = {},
     onLockChanged: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -2675,7 +2601,6 @@ fun AudioFullscreenVisualizerLayout(
     val visualizerPrefs by viewModel.visualizerPrefs.collectAsStateWithLifecycle()
     val diagnostics by viewModel.diagnostics.collectAsStateWithLifecycle()
     val showStatsForNerds by viewModel.showStatsForNerds.collectAsStateWithLifecycle()
-    var showFullscreenQueue by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF07090E))) {
         // 1. Ambilight Background
@@ -2710,7 +2635,7 @@ fun AudioFullscreenVisualizerLayout(
                     }
                 },
                 skipSegment = { },
-                openQueue = { showFullscreenQueue = !showFullscreenQueue },
+                openAccount = onNavigateToAccount,
                 openSearch = { },
                 seekStarted = { },
                 seekChanged = { target -> viewModel.seekTo(target) },
@@ -2762,32 +2687,5 @@ fun AudioFullscreenVisualizerLayout(
             onSeekTo = { target -> viewModel.seekTo(target) },
             onSetSpeed = { speed -> viewModel.setPlaybackSpeed(speed) }
         )
-
-        // 4. Fullscreen Queue Panel
-        androidx.compose.animation.AnimatedVisibility(
-            visible = showFullscreenQueue,
-            enter = androidx.compose.animation.slideInHorizontally(initialOffsetX = { it }),
-            exit = androidx.compose.animation.slideOutHorizontally(targetOffsetX = { it }),
-            modifier = Modifier.align(Alignment.CenterEnd)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth(0.4f)
-                    .background(Color.Black.copy(alpha = 0.85f))
-                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
-            ) {
-                androidx.compose.runtime.CompositionLocalProvider(LocalContentColor provides Color.White) {
-                    QueueSheetContent(
-                        queue = playerState.queue,
-                        currentIndex = playerState.currentIndex,
-                        onItemClick = { index -> viewModel.seekToMediaItem(index) },
-                        onItemMove = { from, to -> viewModel.moveMediaItem(from, to) },
-                        onItemRemove = { index -> viewModel.removeMediaItem(index) },
-                        accentColor = finalAccentColor
-                    )
-                }
-            }
-        }
     }
 }

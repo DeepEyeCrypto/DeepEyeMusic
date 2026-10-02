@@ -18,7 +18,8 @@ interface VideoPlayerOverlayActions {
     fun openSpeed()
     fun openPipOrBackgroundPlay()
     fun skipSegment()
-    fun openQueue()
+    fun openQueue() {}
+    fun openAccount() {}
     fun openSearch()
     fun seekStarted()
     fun seekChanged(positionMs: Long)
@@ -53,6 +54,7 @@ interface VideoPlayerOverlayActions {
             openPipOrBackgroundPlay: () -> Unit = {},
             skipSegment: () -> Unit = {},
             openQueue: () -> Unit = {},
+            openAccount: () -> Unit = {},
             openSearch: () -> Unit = {},
             seekStarted: () -> Unit = {},
             seekChanged: (Long) -> Unit = {},
@@ -83,6 +85,7 @@ interface VideoPlayerOverlayActions {
             override fun openPipOrBackgroundPlay() = openPipOrBackgroundPlay()
             override fun skipSegment() = skipSegment()
             override fun openQueue() = openQueue()
+            override fun openAccount() = openAccount()
             override fun openSearch() = openSearch()
             override fun seekStarted() = seekStarted()
             override fun seekChanged(positionMs: Long) = seekChanged(positionMs)

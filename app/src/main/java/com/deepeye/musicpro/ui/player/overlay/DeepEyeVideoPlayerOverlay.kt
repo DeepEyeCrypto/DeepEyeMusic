@@ -924,7 +924,7 @@ fun DeepEyeVideoPlayerOverlay(
 
                             // ─── Utility Group ───
                             ActionChip(Icons.AutoMirrored.Filled.PlaylistAdd, "Add") { resetTimer(); actions.addToPlaylist() }
-                            ActionChip(Icons.AutoMirrored.Filled.QueueMusic, "Queue") { resetTimer(); actions.openQueue() }
+                            ActionChip(Icons.Default.Tv, "TV Link") { resetTimer(); actions.openAccount() }
                             ActionChip(Icons.Default.Info, "Info") { resetTimer(); actions.openInfo() }
                             ActionChip(Icons.Default.FullscreenExit, "Exit") { actions.dismiss() }
                         }

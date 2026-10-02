@@ -560,14 +560,13 @@ fun DeepEyeMusicApp(
                                 sheetViewModel.collapse()
                                 navController.navigate(Routes.DSP.route)
                             },
-                            onNavigateToQueue = { /* Implement full queue view logic later */ },
                             onNavigateToSettings = {
                                 sheetViewModel.collapse()
                                 navController.navigate(Routes.Settings.route)
                             },
-                            onNavigateToPersonalization = {
+                            onNavigateToAccount = {
                                 sheetViewModel.collapse()
-                                navController.navigate(Routes.PersonalizationSettings.route)
+                                navController.navigate(Routes.YouTubeLogin.route)
                             },
                         )
                     }
