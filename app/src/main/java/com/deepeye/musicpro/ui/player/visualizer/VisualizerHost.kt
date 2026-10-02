@@ -73,5 +73,29 @@ fun VisualizerHost(
             reducedMotion = reducedMotion,
             modifier = modifier
         )
+
+        VisualizerSceneId.LIQUID_PLASMA -> com.deepeye.musicpro.ui.player.visualizer.agsl.AgslVisualizer(
+            fftSpectrum = fftSpectrum,
+            frequencyBands = frequencyBands,
+            scene = com.deepeye.musicpro.ui.player.visualizer.agsl.AgslScene.LIQUID_PLASMA,
+            accentColor = accentColor,
+            modifier = modifier
+        )
+
+        VisualizerSceneId.CRYSTAL_TUNNEL -> com.deepeye.musicpro.ui.player.visualizer.agsl.AgslVisualizer(
+            fftSpectrum = fftSpectrum,
+            frequencyBands = frequencyBands,
+            scene = com.deepeye.musicpro.ui.player.visualizer.agsl.AgslScene.CRYSTAL_TUNNEL,
+            accentColor = accentColor,
+            modifier = modifier
+        )
+
+        VisualizerSceneId.CYBER_GRID -> com.deepeye.musicpro.ui.player.visualizer.agsl.AgslVisualizer(
+            fftSpectrum = fftSpectrum,
+            frequencyBands = frequencyBands,
+            scene = com.deepeye.musicpro.ui.player.visualizer.agsl.AgslScene.CYBER_GRID,
+            accentColor = accentColor,
+            modifier = modifier
+        )
     }
 }

@@ -5,7 +5,10 @@ enum class VisualizerSceneId {
     SPECTRUM_BARS,
     WAVEFORM,
     RADIAL_PULSE,
-    PARTICLE_FIELD
+    PARTICLE_FIELD,
+    LIQUID_PLASMA,
+    CRYSTAL_TUNNEL,
+    CYBER_GRID
 }
 
 data class VisualizerSceneMetadata(
@@ -80,6 +83,33 @@ val AvailableVisualizerScenes = listOf(
         supportsAmplitude = true,
         supportsReducedMotion = true,
         tags = setOf("Particle", "Ambient")
+    ),
+    VisualizerSceneMetadata(
+        id = VisualizerSceneId.LIQUID_PLASMA,
+        title = "Liquid Plasma (AGSL)",
+        description = "Direct GPU-accelerated viscous ferrofluid with Navier-Stokes curl noise.",
+        supportsFft = true,
+        supportsAmplitude = true,
+        supportsReducedMotion = true,
+        tags = setOf("Ambient", "3D", "Intense")
+    ),
+    VisualizerSceneMetadata(
+        id = VisualizerSceneId.CRYSTAL_TUNNEL,
+        title = "Crystal Tunnel (AGSL)",
+        description = "Raymarched 3D crystalline tunnel with analytical depth fog.",
+        supportsFft = true,
+        supportsAmplitude = true,
+        supportsReducedMotion = true,
+        tags = setOf("Geometric", "3D", "Intense")
+    ),
+    VisualizerSceneMetadata(
+        id = VisualizerSceneId.CYBER_GRID,
+        title = "Cyber Synthwave (AGSL)",
+        description = "Infinite perspective grid plane with retro sunset horizon.",
+        supportsFft = true,
+        supportsAmplitude = true,
+        supportsReducedMotion = true,
+        tags = setOf("Spectrum", "Classic", "3D")
     )
 )
 
