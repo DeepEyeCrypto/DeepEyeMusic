@@ -14,9 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.WifiOff
@@ -51,14 +48,17 @@ fun VideoRail(
     val activeSections = state.sections
 
     Column(modifier.fillMaxWidth()) {
-        // ── Section filter pills ────────────────
+        // ── Section filter pills (No side scroll) ────────────────
         if (activeSections.isNotEmpty()) {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
+            OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+            androidx.compose.foundation.layout.FlowRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                items(activeSections) { section ->
+                activeSections.forEach { section ->
                     val isActive = section.category == activeSection
                     FilterChip(
                         selected = isActive,
@@ -127,38 +127,55 @@ fun VideoRail(
 
             Spacer(Modifier.height(8.dp))
 
-            // Video cards
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            // Video cards (Adaptive Grid - No side scroll)
+            val displayedItems = section.items.take(4)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // Composite key (index + videoId) avoids "Key was already used"
-                // crashes if a section returns the same videoId twice.
-                itemsIndexed(
-                    section.items,
-                    key = { index, item -> "$index-${item.videoId}" },
-                ) { _, item ->
-                    VideoRailCard(
-                        item = item,
-                        isExpanded = expandedId == item.videoId,
-                        onTap = { viewModel.onCardTap(item.videoId) },
-                        onExpandedTap = {
-                            viewModel.onExpandedCardTap(item.videoId)
-                            onNavigateToVideo(item.videoId)
-                        },
-                    )
+                displayedItems.chunked(2).forEach { chunk ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        chunk.forEach { item ->
+                            VideoRailCard(
+                                item = item,
+                                isExpanded = expandedId == item.videoId,
+                                onTap = { viewModel.onCardTap(item.videoId) },
+                                onExpandedTap = {
+                                    viewModel.onExpandedCardTap(item.videoId)
+                                    onNavigateToVideo(item.videoId)
+                                },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        repeat(2 - chunk.size) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
             }
         }
 
-        // Loading shimmer
+        // Loading shimmer (No side scroll)
         if (state.isLoading) {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.height(160.dp),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(6) { ShimmerVideoCard(Modifier.width(180.dp)) }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    repeat(2) {
+                        ShimmerVideoCard(Modifier.weight(1f))
+                    }
+                }
             }
         }
 

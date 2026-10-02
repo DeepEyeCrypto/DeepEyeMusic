@@ -14,7 +14,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -216,16 +215,20 @@ fun HomeScreen(
                 .fillMaxSize()
                 .premiumScrollHaptics(listState)
         ) {
-            // 1. Mood / Vibe Filter Carousel
+            // 1. Mood / Vibe Filter Flow (No side scroll)
             item {
-                LazyRow(
-                    contentPadding = PaddingValues(
-                        horizontal = CardGeometry.ScreenGutter,
-                        vertical = 4.dp
-                    ),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                OptIn(ExperimentalLayoutApi::class)
+                FlowRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = CardGeometry.ScreenGutter,
+                            vertical = 4.dp
+                        ),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    itemsIndexed(MoodFilters) { index, mood ->
+                    MoodFilters.forEachIndexed { index, mood ->
                         val isSelected = selectedMoodIndex == index
                         val bgBrush = if (isSelected) {
                             Brush.horizontalGradient(listOf(NeonCyan.copy(alpha = 0.35f), ElectricViolet.copy(alpha = 0.45f)))
@@ -685,20 +688,31 @@ fun ModernRecommendationRow(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Horizontal Carousel
-        val rowState = rememberLazyListState()
-        LazyRow(
-            state = rowState,
-            modifier = Modifier.premiumScrollHaptics(rowState),
-            contentPadding = PaddingValues(horizontal = CardGeometry.ScreenGutter),
-            horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
+        // Adaptive Grid (No side scroll)
+        val columns = if (cardWidth > 200.dp) 3 else 2
+        val displayedItems = row.items.take(4)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = CardGeometry.ScreenGutter),
+            verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing)
         ) {
-            itemsIndexed(row.items, key = { index, video -> "$index-${video.videoId}" }) { _, video ->
-                ModernVideoCard(
-                    video = video,
-                    cardWidth = cardWidth,
-                    onClick = { onVideoClick(video) },
-                )
+            displayedItems.chunked(columns).forEach { chunk ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing)
+                ) {
+                    chunk.forEach { video ->
+                        ModernVideoCard(
+                            video = video,
+                            modifier = Modifier.weight(1f),
+                            onClick = { onVideoClick(video) },
+                        )
+                    }
+                    repeat(columns - chunk.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
@@ -707,7 +721,8 @@ fun ModernRecommendationRow(
 @Composable
 fun ModernVideoCard(
     video: VideoItem,
-    cardWidth: Dp,
+    modifier: Modifier = Modifier,
+    cardWidth: Dp = Dp.Unspecified,
     onClick: () -> Unit = {},
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -721,9 +736,14 @@ fun ModernVideoCard(
         label = "cardPressScale"
     )
 
+    val finalModifier = if (cardWidth != Dp.Unspecified && cardWidth > 0.dp) {
+        modifier.width(cardWidth)
+    } else {
+        modifier
+    }
+
     Column(
-        modifier = Modifier
-            .width(cardWidth)
+        modifier = finalModifier
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
@@ -830,15 +850,22 @@ fun ShimmerRecommendationRow(cardWidth: Dp = CardGeometry.Video.minWidth) {
             SectionHeaderSkeleton()
         }
         Spacer(Modifier.height(10.dp))
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = CardGeometry.ScreenGutter),
-            horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
+        val columns = if (cardWidth > 200.dp) 3 else 2
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = CardGeometry.ScreenGutter),
+            verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing)
         ) {
-            items(4) {
-                // VideoCardSkeleton reads CardGeometry.Video, which is the same
-                // source ModernVideoCard uses — identical box by construction,
-                // and the cardWidth passed in is the one the loaded rail computes.
-                VideoCardSkeleton(width = cardWidth)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing)
+            ) {
+                repeat(columns) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        VideoCardSkeleton(width = CardGeometry.Video.minWidth)
+                    }
+                }
             }
         }
     }

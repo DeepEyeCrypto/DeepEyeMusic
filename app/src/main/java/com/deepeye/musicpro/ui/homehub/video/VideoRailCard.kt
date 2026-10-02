@@ -14,14 +14,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayCircle
@@ -50,34 +43,15 @@ fun VideoRailCard(
     onExpandedTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val cardWidth by animateDpAsState(
-        targetValue = if (isExpanded) 280.dp else 180.dp,
-        animationSpec =
-        spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium,
-        ),
-        label = "cardWidth",
-    )
-    val cardHeight by animateDpAsState(
-        targetValue = if (isExpanded) 180.dp else 110.dp,
-        animationSpec =
-        spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium,
-        ),
-        label = "cardHeight",
-    )
-
     Column(
-        modifier = modifier.width(cardWidth),
+        modifier = modifier.fillMaxWidth(),
     ) {
         // Thumbnail / Inline Player
         Box(
             modifier =
             Modifier
-                .width(cardWidth)
-                .height(cardHeight)
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
                 .border(
                     1.dp,
                     Color(0x22FFFFFF),

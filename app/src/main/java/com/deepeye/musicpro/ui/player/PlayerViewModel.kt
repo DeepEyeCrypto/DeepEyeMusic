@@ -116,7 +116,35 @@ constructor(
     val fftSpectrum: StateFlow<FloatArray> = visualizerEngine.fftSpectrum
     val fftData: StateFlow<FloatArray> = visualizerEngine.frequencyBands
 
-    // ── Visualizer scene selection & render tuning ─────────────────────────
+    // ── Visualizer theme & scene selection ─────────────────────────
+    private val _visualizerTheme =
+        MutableStateFlow<com.deepeye.musicpro.ui.player.visualizer.VisualizerTheme>(
+            com.deepeye.musicpro.ui.player.visualizer.VisualizerTheme.default
+        )
+    val visualizerTheme: StateFlow<com.deepeye.musicpro.ui.player.visualizer.VisualizerTheme> =
+        _visualizerTheme.asStateFlow()
+
+    fun setVisualizerTheme(theme: com.deepeye.musicpro.ui.player.visualizer.VisualizerTheme) {
+        _visualizerTheme.value = theme
+        // Map to corresponding sceneId if applicable
+        val sceneId = when (theme) {
+            is com.deepeye.musicpro.ui.player.visualizer.VisualizerTheme.Triangle,
+            is com.deepeye.musicpro.ui.player.visualizer.VisualizerTheme.VvavyTriangle ->
+                com.deepeye.musicpro.ui.player.visualizer.VisualizerSceneId.TRIANGLE_REACTIVE
+            is com.deepeye.musicpro.ui.player.visualizer.VisualizerTheme.SpectrumBars,
+            is com.deepeye.musicpro.ui.player.visualizer.VisualizerTheme.CircularEQ ->
+                com.deepeye.musicpro.ui.player.visualizer.VisualizerSceneId.SPECTRUM_BARS
+            is com.deepeye.musicpro.ui.player.visualizer.VisualizerTheme.Waveform,
+            is com.deepeye.musicpro.ui.player.visualizer.VisualizerTheme.FrequencyWaves ->
+                com.deepeye.musicpro.ui.player.visualizer.VisualizerSceneId.WAVEFORM
+            is com.deepeye.musicpro.ui.player.visualizer.VisualizerTheme.AuraOrb ->
+                com.deepeye.musicpro.ui.player.visualizer.VisualizerSceneId.RADIAL_PULSE
+            is com.deepeye.musicpro.ui.player.visualizer.VisualizerTheme.BeatDropGrid ->
+                com.deepeye.musicpro.ui.player.visualizer.VisualizerSceneId.PARTICLE_FIELD
+        }
+        selectVisualizerScene(sceneId)
+    }
+
     // Backed by DataStore so the chosen scene survives process death.
     private val _visualizerPrefs =
         MutableStateFlow(com.deepeye.musicpro.data.prefs.VisualizerPrefs())

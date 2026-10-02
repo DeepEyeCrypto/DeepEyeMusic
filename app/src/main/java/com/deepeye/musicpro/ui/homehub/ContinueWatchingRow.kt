@@ -7,8 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayCircle
@@ -51,13 +49,29 @@ fun ContinueWatchingRow(
             fontWeight = FontWeight.Bold,
         )
 
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp),
+        val displayedItems = items.take(4)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(items.size, key = { index -> "$index-${items[index].id}" }) { index ->
-                val video = items[index]
-                ContinueWatchingCard(video = video, onClick = { onItemClick(video) })
+            displayedItems.chunked(2).forEach { chunk ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    chunk.forEach { video ->
+                        ContinueWatchingCard(
+                            video = video,
+                            onClick = { onItemClick(video) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    repeat(2 - chunk.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
@@ -71,7 +85,6 @@ private fun ContinueWatchingCard(
 ) {
     Box(
         modifier = modifier
-            .width(220.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White.copy(alpha = 0.08f))
             .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))

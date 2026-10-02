@@ -8,7 +8,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -621,26 +620,35 @@ private fun HomeVideoRail(
     items: List<HomeVideoItem>,
     onClick: (HomeVideoItem) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.sdp)) {
+    if (items.isEmpty()) return
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = CardGeometry.ScreenGutter),
+        verticalArrangement = Arrangement.spacedBy(12.sdp)
+    ) {
         Text(
             title,
-            modifier = Modifier.padding(horizontal = CardGeometry.ScreenGutter),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
         )
-        val railLayout = rememberSparseAwareRailLayout(itemCount = items.size)
-        LazyRow(
-            horizontalArrangement = railLayout.arrangement,
-            contentPadding = railLayout.contentPadding,
-        ) {
-            items(items.size, key = { index -> "$index-${items[index].id}" }) { index ->
-                val video = items[index]
-                SmartTubeVideoCard(
-                    video = video,
-                    onClick = { onClick(video) },
-                    modifier = Modifier.width(CardGeometry.Video.minWidth),
-                )
+        val displayedItems = items.take(4)
+        displayedItems.chunked(2).forEach { chunk ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.sdp)
+            ) {
+                chunk.forEach { video ->
+                    SmartTubeVideoCard(
+                        video = video,
+                        onClick = { onClick(video) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                repeat(2 - chunk.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
             }
         }
     }
@@ -651,26 +659,35 @@ private fun ShortsRail(
     items: List<HomeVideoItem>,
     onClick: (HomeVideoItem) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.sdp)) {
+    if (items.isEmpty()) return
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = CardGeometry.ScreenGutter),
+        verticalArrangement = Arrangement.spacedBy(12.sdp)
+    ) {
         Text(
             "📱 Shorts",
-            modifier = Modifier.padding(horizontal = CardGeometry.ScreenGutter),
             style = MaterialTheme.typography.titleSmall,
             color = Color(0xFFE0E0E0),
             fontWeight = FontWeight.Bold,
         )
-        val railLayout = rememberSparseAwareRailLayout(itemCount = items.size)
-        LazyRow(
-            horizontalArrangement = railLayout.arrangement,
-            contentPadding = railLayout.contentPadding,
-        ) {
-            items(items.size, key = { index -> "$index-${items[index].id}" }) { index ->
-                val short = items[index]
-                SmartTubeVideoCard(
-                    video = short,
-                    onClick = { onClick(short) },
-                    modifier = Modifier.width(CardGeometry.Video.minWidth),
-                )
+        val displayedItems = items.take(4)
+        displayedItems.chunked(2).forEach { chunk ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.sdp)
+            ) {
+                chunk.forEach { short ->
+                    SmartTubeVideoCard(
+                        video = short,
+                        onClick = { onClick(short) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                repeat(2 - chunk.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
             }
         }
     }
@@ -682,72 +699,79 @@ private fun HomeMusicRail(
     items: List<HomeMusicItem>,
     onClick: (HomeMusicItem) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.sdp)) {
+    if (items.isEmpty()) return
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = CardGeometry.ScreenGutter),
+        verticalArrangement = Arrangement.spacedBy(12.sdp)
+    ) {
         Text(
             title,
-            modifier = Modifier.padding(horizontal = CardGeometry.ScreenGutter),
             style = MaterialTheme.typography.titleSmall,
             color = Color(0xFFE0E0E0),
             fontWeight = FontWeight.Bold,
         )
-        // Sparse-aware: a rail holding fewer than SparseRailThreshold items
-        // centres itself instead of hugging the leading edge, so a short feed
-        // reads as composed rather than as a load that failed halfway.
-        val railLayout = rememberSparseAwareRailLayout(itemCount = items.size)
-        LazyRow(
-            horizontalArrangement = railLayout.arrangement,
-            contentPadding = railLayout.contentPadding,
-        ) {
-            items(items, key = { it.id }) { music ->
-                Box(
-                    modifier =
-                    Modifier
-                        .width(CardGeometry.ContinueListening.maxWidth)
-                        .clip(CardGeometry.ContinueListening.shape)
-                        .background(Color.White.copy(alpha = 0.05f)) // Smoother glass effect
-                        .border(1.dp, GlassBorder, CardGeometry.ContinueListening.shape)
-                        .bouncyClickable(
-                            downScale = 0.95f,
-                            onClick = { onClick(music) }
-                        )
-                        .padding(CardGeometry.ContinueListening.contentPadding),
-                ) {
-                    Column {
-                        Box(
-                            modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(CardGeometry.Music.aspectRatio)
-                                .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f)),
-                        ) {
-                            AsyncImage(
-                                model = coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
-                                    .data(music.thumbnailUrl)
-                                    .crossfade(true)
-                                    .build(),
-                                contentDescription = music.title,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop,
+        val displayedItems = items.take(4)
+        displayedItems.chunked(2).forEach { chunk ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.sdp)
+            ) {
+                chunk.forEach { music ->
+                    Box(
+                        modifier =
+                        Modifier
+                            .weight(1f)
+                            .clip(CardGeometry.ContinueListening.shape)
+                            .background(Color.White.copy(alpha = 0.05f)) // Smoother glass effect
+                            .border(1.dp, GlassBorder, CardGeometry.ContinueListening.shape)
+                            .bouncyClickable(
+                                downScale = 0.95f,
+                                onClick = { onClick(music) }
+                            )
+                            .padding(CardGeometry.ContinueListening.contentPadding),
+                    ) {
+                        Column {
+                            Box(
+                                modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(CardGeometry.Music.aspectRatio)
+                                    .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f)),
+                            ) {
+                                AsyncImage(
+                                    model = coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                                        .data(music.thumbnailUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = music.title,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                )
+                            }
+                            Spacer(Modifier.height(10.sdp))
+                            Text(
+                                text = music.title,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            )
+                            Spacer(Modifier.height(2.sdp))
+                            Text(
+                                text = music.artist,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.LightGray.copy(alpha = 0.7f),
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             )
                         }
-                        Spacer(Modifier.height(10.sdp))
-                        Text(
-                            text = music.title,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        )
-                        Spacer(Modifier.height(2.sdp))
-                        Text(
-                            text = music.artist,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.LightGray.copy(alpha = 0.7f),
-                            maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        )
                     }
+                }
+                repeat(2 - chunk.size) {
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }

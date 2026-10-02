@@ -7,8 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayCircle
@@ -76,23 +74,29 @@ fun ContinueListeningRow(
             fontWeight = FontWeight.ExtraBold,
         )
 
-        val railLayout = rememberSparseAwareRailLayout(
-            itemCount = minOf(items.size, ContinueListeningMaxItems)
-        )
-        LazyRow(
-            // fillMaxWidth() is required for Arrangement.Center to have room to
-            // centre against: without it the row measures to its content and
-            // "centred" is indistinguishable from "leading".
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = railLayout.arrangement,
-            contentPadding = railLayout.contentPadding,
+        val displayedItems = items.take(ContinueListeningMaxItems)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            items(
-                count = minOf(items.size, ContinueListeningMaxItems),
-                key = { index -> items[index].id },
-            ) { index ->
-                val music = items[index]
-                ContinueListeningCard(music = music, onClick = { onItemClick(music) })
+            displayedItems.chunked(2).forEach { chunk ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    chunk.forEach { music ->
+                        ContinueListeningCard(
+                            music = music,
+                            onClick = { onItemClick(music) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    repeat(2 - chunk.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
@@ -106,17 +110,6 @@ private fun ContinueListeningCard(
 ) {
     Row(
         modifier = modifier
-            // Geometry from CardGeometry (SSOT): 220dp max width, 64dp
-            // artwork-driven height, 12dp radius. ListRowSkeleton uses these
-            // identical values.
-            //
-            // `heightIn(min =)` rather than `height(...)` is load-bearing here.
-            // The artwork shrinks with the viewport but the metadata beside it
-            // is floored at 12sp and then scaled again by the user's
-            // accessibility font size, so a fixed box is ~9dp too short at 1.0x
-            // and ~22dp too short at the 1.3x cap. See
-            // ContinueListeningGeometry.minHeight.
-            .widthIn(max = CardGeometry.ContinueListening.maxWidth)
             .heightIn(min = CardGeometry.ContinueListening.minHeight)
             .clip(CardGeometry.ContinueListening.shape)
             .background(Color.White.copy(alpha = 0.05f)) // Frost background
