@@ -839,95 +839,82 @@ fun DeepEyeVideoPlayerOverlay(
                 Spacer(Modifier.height(8.dp))
 
                 // 2. Smart Grouped Action Dock (Clear Liquid Glass Container with Specular Sheen)
-                // Bounded and centred. Seventeen chips laid out with
-                // `SpaceEvenly` across a full ~890dp landscape viewport put
-                // ~50dp of empty glass between every pair of 20dp glyphs. Capping
-                // the dock at ContentBounds.navigationDock packs them together and
-                // leaves the video visible on both sides, which is what a
-                // translucent control bar is for.
                 Surface(
-                    shape = RoundedCornerShape(22.dp),
-                    color = Color(0x18FFFFFF),
+                    shape = RoundedCornerShape(18.dp),
+                    color = Color(0x1E000000),
                     border = BorderStroke(
-                        1.2.dp,
+                        1.dp,
                         Brush.linearGradient(
                             listOf(Color(0x38FFFFFF), Color(0x2000E5FF), Color(0x38FFFFFF))
                         )
                     ),
                     modifier = Modifier
-                        // widthIn *before* fillMaxWidth — see boundedContent.
-                        .widthIn(max = ContentBounds.navigationDock)
-                        .align(Alignment.CenterHorizontally)
                         .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
                 ) {
-                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                        val isWide = maxWidth >= 760.dp
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = if (isWide) 16.dp else 12.dp, vertical = 10.dp)
-                                .then(if (!isWide) Modifier.horizontalScroll(rememberScrollState()) else Modifier),
-                            horizontalArrangement = if (isWide) Arrangement.SpaceEvenly else Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // ─── Quick System Group ───
-                            ActionChip(Icons.Default.Lock, "Lock") {
-                                isLocked = true
-                                actions.toggleLock()
-                                showLockOsd = true
-                                scope.launch { delay(2000); showLockOsd = false }
-                            }
-
-                            ActionChip(Icons.Default.PictureInPicture, "PiP", enabled = !isInPipMode) {
-                                resetTimer()
-                                actions.openPipOrBackgroundPlay()
-                            }
-
-                            ActionChip(Icons.Default.Analytics, "Stats", active = showStats, activeTint = NeonCyan) {
-                                resetTimer()
-                                actions.openStats()
-                                onToggleStats()
-                            }
-
-                            ChipDivider()
-
-                            // ─── Media Group ───
-                            ActionChip(Icons.Default.AspectRatio, "Aspect", active = videoScale != 1.0f, activeTint = ElectricViolet) { cycleZoomMode() }
-
-                            ActionChip(Icons.Default.Speed, "${playbackSpeed}x", active = playbackSpeed != 1.0f, activeTint = NeonCyan) {
-                                resetTimer()
-                                val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
-                                val currentIdx = speeds.indexOf(playbackSpeed).takeIf { it >= 0 } ?: 2
-                                val nextSpeed = speeds[(currentIdx + 1) % speeds.size]
-                                onSetSpeed?.invoke(nextSpeed)
-                                actions.openSpeed()
-                            }
-
-                            ActionChip(Icons.Default.HighQuality, "Quality", enabled = hasQuality) { resetTimer(); actions.openQuality() }
-                            ActionChip(Icons.Default.Equalizer, "Audio") { resetTimer(); actions.openAudioTrack() }
-
-                            ChipDivider()
-
-                            // ─── Interaction Group ───
-                            val repeatIcon = when (playerState.repeatMode) {
-                                RepeatMode.ONE -> Icons.Default.RepeatOne
-                                RepeatMode.ALL -> Icons.Default.Repeat
-                                RepeatMode.NONE -> Icons.Default.Repeat
-                            }
-                            ActionChip(repeatIcon, "Repeat", active = playerState.repeatMode != RepeatMode.NONE, activeTint = NeonCyan) { resetTimer(); actions.toggleRepeat() }
-
-                            ActionChip(Icons.Default.ThumbUp, "Like", active = playerState.isLiked, activeTint = NeonCyan) { resetTimer(); actions.toggleLike() }
-                            ActionChip(Icons.Default.ThumbDown, "Dislike", active = playerState.isDisliked, activeTint = Color(0xFFFF5252)) { resetTimer(); actions.toggleDislike() }
-                            ActionChip(Icons.Default.ClosedCaption, "CC", enabled = hasCaptions || hasVideo, active = playerState.isCaptionEnabled, activeTint = NeonCyan) { resetTimer(); actions.toggleCaptions() }
-
-                            ChipDivider()
-
-                            // ─── Utility Group ───
-                            ActionChip(Icons.AutoMirrored.Filled.PlaylistAdd, "Add") { resetTimer(); actions.addToPlaylist() }
-                            ActionChip(Icons.Default.Tv, "TV Link") { resetTimer(); actions.openAccount() }
-                            ActionChip(Icons.Default.Info, "Info") { resetTimer(); actions.openInfo() }
-                            ActionChip(Icons.Default.FullscreenExit, "Exit") { actions.dismiss() }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // ─── Quick System Group ───
+                        ActionChip(Icons.Default.Lock, "Lock") {
+                            isLocked = true
+                            actions.toggleLock()
+                            showLockOsd = true
+                            scope.launch { delay(2000); showLockOsd = false }
                         }
+
+                        ActionChip(Icons.Default.PictureInPicture, "PiP", enabled = !isInPipMode) {
+                            resetTimer()
+                            actions.openPipOrBackgroundPlay()
+                        }
+
+                        ActionChip(Icons.Default.Analytics, "Stats", active = showStats, activeTint = NeonCyan) {
+                            resetTimer()
+                            actions.openStats()
+                            onToggleStats()
+                        }
+
+                        ChipDivider()
+
+                        // ─── Media Group ───
+                        ActionChip(Icons.Default.AspectRatio, "Aspect", active = videoScale != 1.0f, activeTint = ElectricViolet) { cycleZoomMode() }
+
+                        ActionChip(Icons.Default.Speed, "${playbackSpeed}x", active = playbackSpeed != 1.0f, activeTint = NeonCyan) {
+                            resetTimer()
+                            val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
+                            val currentIdx = speeds.indexOf(playbackSpeed).takeIf { it >= 0 } ?: 2
+                            val nextSpeed = speeds[(currentIdx + 1) % speeds.size]
+                            onSetSpeed?.invoke(nextSpeed)
+                            actions.openSpeed()
+                        }
+
+                        ActionChip(Icons.Default.HighQuality, "Quality", enabled = hasQuality) { resetTimer(); actions.openQuality() }
+                        ActionChip(Icons.Default.Equalizer, "Audio") { resetTimer(); actions.openAudioTrack() }
+
+                        ChipDivider()
+
+                        // ─── Interaction Group ───
+                        val repeatIcon = when (playerState.repeatMode) {
+                            RepeatMode.ONE -> Icons.Default.RepeatOne
+                            RepeatMode.ALL -> Icons.Default.Repeat
+                            RepeatMode.NONE -> Icons.Default.Repeat
+                        }
+                        ActionChip(repeatIcon, "Repeat", active = playerState.repeatMode != RepeatMode.NONE, activeTint = NeonCyan) { resetTimer(); actions.toggleRepeat() }
+
+                        ActionChip(Icons.Default.ThumbUp, "Like", active = playerState.isLiked, activeTint = NeonCyan) { resetTimer(); actions.toggleLike() }
+                        ActionChip(Icons.Default.ThumbDown, "Dislike", active = playerState.isDisliked, activeTint = Color(0xFFFF5252)) { resetTimer(); actions.toggleDislike() }
+                        ActionChip(Icons.Default.ClosedCaption, "CC", enabled = hasCaptions || hasVideo, active = playerState.isCaptionEnabled, activeTint = NeonCyan) { resetTimer(); actions.toggleCaptions() }
+
+                        ChipDivider()
+
+                        // ─── Utility Group ───
+                        ActionChip(Icons.AutoMirrored.Filled.PlaylistAdd, "Add") { resetTimer(); actions.addToPlaylist() }
+                        ActionChip(Icons.Default.Tv, "TV Link") { resetTimer(); actions.openAccount() }
+                        ActionChip(Icons.Default.Info, "Info") { resetTimer(); actions.openInfo() }
                     }
                 }
             }
@@ -1187,34 +1174,36 @@ private fun ActionChip(
     val textColor = if (active) activeTint else Color.White
 
     Surface(
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(10.dp),
         color = chipBg,
         border = BorderStroke(1.dp, chipBorder),
         modifier = Modifier
-            .heightIn(min = 48.dp)
+            .height(34.dp)
             .alpha(if (enabled) 1f else 0.35f)
             .clickable(enabled = enabled, interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Icon(icon, contentDescription = label, tint = iconTint, modifier = Modifier.size(20.dp))
-            Text(
-                label,
-                color = textColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                maxLines = 1
-            )
+            Icon(icon, contentDescription = label, tint = iconTint, modifier = Modifier.size(16.dp))
+            if (label.isNotBlank()) {
+                Text(
+                    label,
+                    color = textColor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    maxLines = 1
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun ChipDivider() {
-    Box(Modifier.width(1.5.dp).height(24.dp).background(Color.White.copy(alpha = 0.20f)))
+    Box(Modifier.width(1.dp).height(18.dp).background(Color.White.copy(alpha = 0.20f)))
 }
 
 private fun getOverlayScreenBrightness(context: Context, activity: Activity?): Float {
