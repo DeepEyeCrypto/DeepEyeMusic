@@ -186,9 +186,11 @@ constructor(
         params: DspParams,
         presetName: String? = null,
     ) {
-        // Run auto-correction if clipping risk is in DANGER zone
-        val correctedParams = GainBudgetCalculator.autoCorrect(params)
-        val budget = GainBudgetCalculator.calculate(correctedParams)
+        // Run auto-correction if clipping risk is in DANGER zone.
+        // Compute the budget once and hand it to autoCorrect, which would
+        // otherwise recompute the entire budget internally.
+        val budget = GainBudgetCalculator.calculate(params)
+        val correctedParams = GainBudgetCalculator.autoCorrect(params, budget)
         
         if (correctedParams !== params) {
             Log.w(TAG, "⚡ AutoCorrect triggered! Risk=${budget.risk}, totalGain=${budget.totalDb}dB")
@@ -199,6 +201,63 @@ constructor(
         presetName?.let { _currentPresetName.value = it }
         applyParams(correctedParams)
         _gainBudget.value = budget
+    }
+
+    /**
+     * Applies an EQ band change without touching the rest of the DSP graph.
+     *
+     * The fader bank dispatches on every drag frame. Routing those through
+     * [updateParams] would reconfigure all eight custom audio processors and
+     * every framework effect (bass / virtualizer / reverb / loudness /
+     * dynamics) to move a single band, which is the dominant per-frame cost on
+     * the main thread. This path re-derives only what an EQ change can affect:
+     * the equalizer itself and the shared gain budget.
+     *
+     * @param bands Gain per band in dB; copied defensively by [DspParams].
+     */
+    fun updateEqBands(bands: FloatArray) {
+        val current = _currentParams.value
+        val next = current.copy(eqBands = bands, eqEnabled = true)
+        val budget = GainBudgetCalculator.calculate(next)
+        val corrected = GainBudgetCalculator.autoCorrect(next, budget)
+
+        _currentParams.value = corrected
+        _gainBudget.value = budget
+        applyEqualizer(corrected)
+    }
+
+    private fun applyEqualizer(params: DspParams) {
+        val eq = equalizer ?: return
+        try {
+            eq.enabled = params.enabled && params.eqEnabled
+            if (!eq.enabled) return
+
+            val numBands = eq.numberOfBands.toInt()
+            val levelRange = try { eq.bandLevelRange } catch (_: Exception) { shortArrayOf(-1500, 1500) }
+            val minLevel = levelRange.getOrElse(0) { -1500 }
+            val maxLevel = levelRange.getOrElse(1) { 1500 }
+            val uiFreqs = floatArrayOf(31f, 62f, 125f, 250f, 500f, 1000f, 2000f, 4000f, 8000f, 16000f)
+
+            for (b in 0 until numBands) {
+                val centerFreqHz = try {
+                    (eq.getCenterFreq(b.toShort()) / 1000f).coerceAtLeast(20f)
+                } catch (_: Exception) {
+                    uiFreqs.getOrElse(b) { 1000f }
+                }
+
+                // Logarithmic frequency interpolation across 10 EQ bands
+                val targetGainDb = interpolateGainForFreq(centerFreqHz, uiFreqs, params.eqBands)
+                val targetMilliBels = (targetGainDb * 100f).toInt().coerceIn(minLevel.toInt(), maxLevel.toInt()).toShort()
+
+                try {
+                    eq.setBandLevel(b.toShort(), targetMilliBels)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to set band level for band $b: ${e.message}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error applying equalizer bands", e)
+        }
     }
 
     private fun applyParams(params: DspParams) {
@@ -262,34 +321,7 @@ constructor(
         try {
 
             // ── Equalizer ──
-            equalizer?.let { eq ->
-                eq.enabled = isEnabled && params.eqEnabled
-                if (eq.enabled) {
-                    val numBands = eq.numberOfBands.toInt()
-                    val levelRange = try { eq.bandLevelRange } catch (_: Exception) { shortArrayOf(-1500, 1500) }
-                    val minLevel = levelRange.getOrElse(0) { -1500 }
-                    val maxLevel = levelRange.getOrElse(1) { 1500 }
-                    val uiFreqs = floatArrayOf(31f, 62f, 125f, 250f, 500f, 1000f, 2000f, 4000f, 8000f, 16000f)
-
-                    for (b in 0 until numBands) {
-                        val centerFreqHz = try {
-                            (eq.getCenterFreq(b.toShort()) / 1000f).coerceAtLeast(20f)
-                        } catch (_: Exception) {
-                            uiFreqs.getOrElse(b) { 1000f }
-                        }
-
-                        // Logarithmic frequency interpolation across 10 EQ bands
-                        val targetGainDb = interpolateGainForFreq(centerFreqHz, uiFreqs, params.eqBands)
-                        val targetMilliBels = (targetGainDb * 100f).toInt().coerceIn(minLevel.toInt(), maxLevel.toInt()).toShort()
-
-                        try {
-                            eq.setBandLevel(b.toShort(), targetMilliBels)
-                        } catch (e: Exception) {
-                            Log.w(TAG, "Failed to set band level for band $b: ${e.message}")
-                        }
-                    }
-                }
-            }
+            applyEqualizer(params)
 
             // ── Bass Boost (Framework Effect - ONLY active when custom ViperBass is disabled) ──
             bassBoost?.let { bb ->

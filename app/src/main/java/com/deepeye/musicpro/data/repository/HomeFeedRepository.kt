@@ -108,7 +108,7 @@ constructor(
 
             // When authenticated, use ONLY InnerTube data. Old search-based calls are skipped.
             val trending: List<HomeVideoItem>
-            val shorts: List<HomeVideoItem>
+            val shorts: List<HomeVideoItem> = emptyList()
             val music: List<HomeMusicItem>
             val discoverMix: List<HomeMusicItem>
             val supermix: List<HomeMusicItem>
@@ -117,8 +117,8 @@ constructor(
             val newReleases: List<HomeMusicItem>
 
             if (hasAuth) {
-                trending = if (authTrending.isNotEmpty()) authTrending else authHome.take(15)
-                shorts = (authHome + authSubscriptions).filter { it.duration in 1..60 || it.isShort }.distinctBy { it.id }.take(20)
+                trending = (if (authTrending.isNotEmpty()) authTrending else authHome.take(15))
+                    .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
                 val filteredLiked = authLiked.filter { !it.isShort && (it.duration == 0L || it.duration >= 60L) && MusicFilter.isMusicTrack(it.title, it.channelName, it.duration, it.isShort) }
                 val filteredSubs = authSubscriptions.filter { !it.isShort && (it.duration == 0L || it.duration >= 60L) && MusicFilter.isMusicTrack(it.title, it.channelName, it.duration, it.isShort) }
                 val filteredHome = authHome.filter { !it.isShort && (it.duration == 0L || it.duration >= 60L) && MusicFilter.isMusicTrack(it.title, it.channelName, it.duration, it.isShort) }
@@ -144,19 +144,12 @@ constructor(
                     try {
                         if (subscriptions.isNotEmpty()) {
                             val channel = subscriptions.random()
-                            youtubeDs.searchVideos("${channel.channelName} new").take(15)
+                            youtubeDs.searchVideos("${channel.channelName} new")
+                                .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                                .take(15)
                         } else {
-                            kotlinx.coroutines.withTimeoutOrNull(3000L) { youtubeDs.getTrending() } ?: emptyList()
-                        }
-                    } catch (e: Exception) { emptyList() }
-                }
-                val shortsDeferred = async {
-                    try {
-                        if (subscriptions.isNotEmpty()) {
-                            val channel = subscriptions.shuffled().first()
-                            youtubeDs.searchVideos("${channel.channelName} shorts").filter { it.duration < 65 }.take(15)
-                        } else {
-                            kotlinx.coroutines.withTimeoutOrNull(3000L) { youtubeDs.getShorts() } ?: emptyList()
+                            (kotlinx.coroutines.withTimeoutOrNull(3000L) { youtubeDs.getTrending() } ?: emptyList())
+                                .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
                         }
                     } catch (e: Exception) { emptyList() }
                 }
@@ -233,7 +226,6 @@ constructor(
                 }
 
                 trending = trendingDeferred.await()
-                shorts = shortsDeferred.await()
                 music = musicDeferred.await()
                 discoverMix = discoverMixDeferred.await()
                 supermix = supermixDeferred.await()

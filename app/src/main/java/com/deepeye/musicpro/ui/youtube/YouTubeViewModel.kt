@@ -223,7 +223,7 @@ constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null, hasMore = false) }
             try {
-                val items = try { authClient.search(query) } catch (e: Exception) { emptyList() }
+                val items = try { authClient.search(query).filterNot { com.deepeye.musicpro.data.source.remote.youtube.MusicFilter.isShort(it.title, it.duration, it.isShort) } } catch (e: Exception) { emptyList() }
                 if (items.isNotEmpty()) {
                     _uiState.update {
                         it.copy(
@@ -236,10 +236,11 @@ constructor(
                 }
                 
                 val result = youtubeRemoteDataSource.searchVideosFirstPage(query)
+                val filteredResult = result.items.filterNot { com.deepeye.musicpro.data.source.remote.youtube.MusicFilter.isShort(it.title, it.duration, it.isShort) }
                 nextPageToken = result.nextPageUrl
                 _uiState.update {
                     it.copy(
-                        videos = result.items,
+                        videos = filteredResult,
                         isLoading = false,
                         hasMore = result.nextPageUrl != null,
                     )

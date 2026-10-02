@@ -25,34 +25,44 @@ object MusicFilter {
         "[shorts]",
     )
 
+    /**
+     * Single Source of Truth validator to completely identify and block YouTube Shorts.
+     */
+    fun isShort(
+        title: String,
+        durationSeconds: Long = 0,
+        isShortFlag: Boolean = false,
+    ): Boolean {
+        if (isShortFlag) return true
+        if (durationSeconds in 1..59) return true
+        val lowerTitle = title.lowercase()
+        for (tag in SHORTS_HASHTAGS) {
+            if (lowerTitle.contains(tag)) return true
+        }
+        if (lowerTitle.contains("/shorts/")) return true
+        return false
+    }
+
     fun isMusicTrack(
         title: String,
         channelName: String,
         durationSeconds: Long = 0,
         isShort: Boolean = false,
     ): Boolean {
-        // 1. Explicit short flag rejection
-        if (isShort) return false
+        // 1. Explicit shorts & duration validation
+        if (isShort(title, durationSeconds, isShort)) {
+            return false
+        }
 
         val lowerTitle = title.lowercase()
         val combined = "$title $channelName"
 
-        // 2. Shorts hashtag / keyword rejection
-        for (tag in SHORTS_HASHTAGS) {
-            if (lowerTitle.contains(tag)) return false
-        }
-
-        // 3. Reject short-duration clips (< 60 seconds)
-        if (durationSeconds in 1..59) {
-            return false
-        }
-
-        // 4. Strict exclusion keyword check
+        // 2. Strict exclusion keyword check
         if (EXCLUDE_PATTERN.containsMatchIn(combined)) {
             return false
         }
 
-        // 5. Excessively long videos (> 15 mins = 900s) without jukebox/mashup/playlist keyword are excluded
+        // 3. Excessively long videos (> 15 mins = 900s) without jukebox/mashup/playlist keyword are excluded
         val lowerCombined = combined.lowercase()
         if (durationSeconds > 900 &&
             !lowerCombined.contains("jukebox") &&
@@ -64,7 +74,7 @@ object MusicFilter {
             return false
         }
 
-        // 6. Check positive music signals (Must match music pattern or legitimate music channel name)
+        // 4. Check positive music signals (Must match music pattern or legitimate music channel name)
         val channelLower = channelName.lowercase()
         val isMusicChannel = channelLower.contains("music") ||
             channelLower.contains("records") ||
@@ -79,5 +89,3 @@ object MusicFilter {
         return isMusicChannel || MUSIC_PATTERN.containsMatchIn(combined)
     }
 }
-
-

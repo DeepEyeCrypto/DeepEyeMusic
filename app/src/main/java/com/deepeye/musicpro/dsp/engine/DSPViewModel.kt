@@ -82,8 +82,26 @@ constructor(
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FloatArray(0))
 
+    // ── EQ dispatch plumbing ────────────────────────────────────────────────
+    // Declared ABOVE `init` on purpose: Kotlin initialises properties in
+    // declaration order, and `init` calls observeEqDispatch(), which reads
+    // these. Declaring them after `init` left the flow null and crashed the
+    // app on every launch.
+    /** The curve the fader renders from, updated per frame during a drag. */
+    private var stagedEqBands = FloatArray(EQ_BAND_COUNT)
+
+    /** Latest gesture value per band, pending dispatch. */
+    private var pendingEqBands = FloatArray(EQ_BAND_COUNT)
+
+    /** Bumped by [setPendingEqBand]; the dispatcher acts only when it changes. */
+    private val _eqDispatchSignal = MutableStateFlow(0L)
+    private val eqDispatchSignal = _eqDispatchSignal.asStateFlow()
+
+    private var eqDispatcherJob: kotlinx.coroutines.Job? = null
+
     init {
         observeEngineState()
+        observeEqDispatch()
         loadInitialState()
     }
 
@@ -135,11 +153,23 @@ constructor(
 
             val enabled = prefs[DSPKeys.ENABLED] ?: false
             val finalParams = params.copy(enabled = enabled)
+            // Hydrate the fader's local mirror so the first frame after launch
+            // renders the persisted curve rather than a flat bank.
+            val persistedBands = FloatArray(EQ_BAND_COUNT)
+            val src = finalParams.eqBands
+            for (i in 0 until minOf(src.size, EQ_BAND_COUNT)) persistedBands[i] = src[i]
+            stagedEqBands = persistedBands.copyOf()
+            pendingEqBands = persistedBands.copyOf()
             dspEngine.updateParams(finalParams)
         }
     }
 
     private var saveJob: kotlinx.coroutines.Job? = null
+
+    companion object {
+        /** Number of hardware EQ bands the fader bank renders and stages. */
+        const val EQ_BAND_COUNT = 10
+    }
 
     fun updateParams(transform: (DspParams) -> DspParams) {
         val current = _uiState.value.params
@@ -168,16 +198,109 @@ constructor(
         _uiState.value = _uiState.value.copy(activePreset = preset)
     }
 
+    /**
+     * Per-frame drag entry point.
+     *
+     * Stages the value and raises the dispatch signal; it deliberately does NOT
+     * touch the engine. [observeEqDispatch] collapses a burst of frames into a
+     * single push, so the main thread pays for one equalizer update per idle
+     * gap rather than one per pixel of finger travel.
+     */
     fun updateEqBand(
         bandIndex: Int,
         value: Float,
     ) {
-        updateParams { params ->
-            val newBands = params.eqBands.copyOf()
-            if (bandIndex in newBands.indices) {
-                newBands[bandIndex] = value.coerceIn(-12f, 12f)
+        setPendingEqBand(bandIndex, value)
+    }
+
+    /**
+     * Replaces the whole EQ curve (preset tap, "Flat" reset).
+     *
+     * Bypasses the conflated drag queue on purpose: these are discrete,
+     * one-shot commands where every band must land, so coalescing could
+     * legally drop a band the user just selected.
+     */
+    fun setEqBands(bands: FloatArray) {
+        val size = minOf(bands.size, EQ_BAND_COUNT)
+        val staged = FloatArray(EQ_BAND_COUNT)
+        for (i in 0 until size) staged[i] = bands[i]
+        commitEqBands(staged)
+    }
+
+    /**
+     * Queues one band's gain for dispatch, dropping superseded values.
+     *
+     * [stagedEqBands] is the local source of truth the fader UI reads, so the
+     * thumb tracks the finger at frame rate. The expensive half — re-deriving
+     * the gain budget and pushing the curve to the audio effect — is funnelled
+     * through a conflated signal: a fast drag produces far more values than the
+     * engine needs, and only the newest value per band is meaningful.
+     */
+    fun setPendingEqBand(bandIndex: Int, value: Float) {
+        if (bandIndex !in stagedEqBands.indices) return
+        val clamped = value.coerceIn(-12f, 12f)
+        if (stagedEqBands[bandIndex] == clamped) return
+        stagedEqBands[bandIndex] = clamped
+        pendingEqBands[bandIndex] = clamped
+        _eqDispatchSignal.value = System.nanoTime()
+    }
+
+    /** The EQ curve the fader UI should render right now (staged, pre-dispatch). */
+    fun stagedEqBands(): FloatArray = stagedEqBands.copyOf()
+
+    /**
+     * Flushes every staged band to the engine and persists.
+     *
+     * Called when the gesture ends so the final position is never lost to
+     * coalescing, and when a preset is applied.
+     */
+    fun commitEqBands(bands: FloatArray) {
+        if (bands.size != EQ_BAND_COUNT) return
+        stagedEqBands = bands.copyOf()
+        pendingEqBands = bands.copyOf()
+
+        val current = _uiState.value.params
+        val next = current.copy(
+            eqBands = bands.copyOf(),
+            eqEnabled = true,
+        )
+        _uiState.value = _uiState.value.copy(params = next)
+        dspEngine.updateEqBands(next.eqBands)
+        persistParams(next)
+    }
+
+    /**
+     * Drains the conflated pending values into the engine.
+     *
+     * `collectLatest` cancels an in-flight dispatch when a newer signal arrives,
+     * so a rapid drag never queues a backlog: at most one dispatch is ever
+     * pending, and it is always the most recent value per band.
+     */
+    private fun observeEqDispatch() {
+        eqDispatcherJob = viewModelScope.launch {
+            eqDispatchSignal.collectLatest {
+                val params = _uiState.value.params
+                val next = params.copy(
+                    eqBands = pendingEqBands.copyOf(),
+                    eqEnabled = true,
+                )
+                dspEngine.updateEqBands(next.eqBands)
+                _uiState.value = _uiState.value.copy(params = next)
+                persistParams(next)
             }
-            params.copy(eqBands = newBands, eqEnabled = true)
+        }
+    }
+
+    /** Extracted so the drag path and the one-shot path persist identically. */
+    private fun persistParams(next: DspParams) {
+        // Debounce DataStore disk I/O to avoid UI stuttering during slider drags
+        saveJob?.cancel()
+        saveJob = viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            kotlinx.coroutines.delay(200)
+            dataStore.edit { prefs ->
+                prefs[DSPKeys.ACTIVE_PARAMS_JSON] = gson.toJson(next)
+                prefs[DSPKeys.ENABLED] = next.enabled
+            }
         }
     }
 

@@ -359,10 +359,11 @@ class SmartTubeInnertubeExtractor(
             for (j in 0 until itemSection.length()) {
                 val entry = itemSection.optJSONObject(j) ?: continue
                 entry.optJSONObject("videoRenderer")?.let { items += parseVideoRenderer(it) }
-                entry.optJSONObject("reelItemRenderer")?.let { items += parseReelRenderer(it) }
+                // reelItemRenderer (YouTube Shorts) intentionally discarded to block shorts
             }
         }
-        return ExtractorSearchResultPage(items.filter { it.id.isNotEmpty() }, token)
+        val nonShorts = items.filter { it.id.isNotEmpty() && !com.deepeye.musicpro.data.source.remote.youtube.MusicFilter.isShort(it.title, it.duration, it.isShort) }
+        return ExtractorSearchResultPage(nonShorts, token)
     }
 
     private fun parseVideoRenderer(v: JSONObject): ExtractorVideoItem {
@@ -376,22 +377,24 @@ class SmartTubeInnertubeExtractor(
                 ?.optJSONObject("browseEndpoint")?.optString("browseId")
             ?: ""
         val duration = parseDurationSeconds(runsText(v.optJSONObject("lengthText")))
+        val titleText = runsText(v.optJSONObject("title"))
         // Channel avatar lives under ownerText runs[0].thumbnail (search / WEB client).
         val channelAvatar = lastThumb(
             v.optJSONObject("ownerText")?.optJSONArray("runs")
                 ?.optJSONObject(0)?.optJSONObject("thumbnail")
                 ?.optJSONArray("thumbnails")
         )
+        val shortFlag = com.deepeye.musicpro.data.source.remote.youtube.MusicFilter.isShort(titleText, duration, duration in 1..59)
         return ExtractorVideoItem(
             id = v.optString("videoId", ""),
-            title = runsText(v.optJSONObject("title")),
+            title = titleText,
             artist = channelName,
             duration = duration,
             thumbnailUrl = lastThumb(v.optJSONObject("thumbnail")?.optJSONArray("thumbnails")),
             viewCount = parseViewCount(runsText(v.optJSONObject("viewCountText")).ifEmpty {
                 runsText(v.optJSONObject("shortViewCountText"))
             }),
-            isShort = duration in 1..60,
+            isShort = shortFlag,
             channelAvatarUrl = channelAvatar,
             channelId = browseId,
         )
@@ -449,6 +452,7 @@ class SmartTubeInnertubeExtractor(
 
     override suspend fun getTrending(): List<ExtractorVideoItem> = withContext(Dispatchers.IO) {
         searchVideosFirstPage("trending music").videos
+            .filterNot { com.deepeye.musicpro.data.source.remote.youtube.MusicFilter.isShort(it.title, it.duration, it.isShort) }
     }
 
     override suspend fun searchMusic(query: String): List<ExtractorMusicItem> = withContext(Dispatchers.IO) {
@@ -471,9 +475,8 @@ class SmartTubeInnertubeExtractor(
     }
 
     override suspend fun getShorts(): List<ExtractorVideoItem> = withContext(Dispatchers.IO) {
-        searchVideosFirstPage("trending shorts").videos
-            .map { it.copy(isShort = true) }
-            .filter { it.id.isNotEmpty() }
+        // Hard-blocked: DeepEyeMusicPro does not display or stream YouTube Shorts
+        emptyList()
     }
 
     override suspend fun extractStream(videoId: String, preferVideo: Boolean): ExtractorStreamResult? = withContext(Dispatchers.IO) {
@@ -749,7 +752,7 @@ class SmartTubeInnertubeExtractor(
         }
         return collectObjects(root, "compactVideoRenderer")
             .map { parseCompactVideoRenderer(it) }
-            .filter { it.id.isNotEmpty() }
+            .filter { it.id.isNotEmpty() && !com.deepeye.musicpro.data.source.remote.youtube.MusicFilter.isShort(it.title, it.duration, it.isShort) }
             .distinctBy { it.id }
             .take(24)
     }

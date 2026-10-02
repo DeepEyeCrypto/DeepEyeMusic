@@ -180,6 +180,7 @@ fun DSPScreen(
                         isEnabled = isEnabled,
                         onUpdateParams = viewModel::updateParams,
                         onUpdateEqBand = viewModel::updateEqBand,
+                        onCommitEqBands = viewModel::commitEqBands,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -219,6 +220,7 @@ fun DSPScreen(
                         isEnabled = isEnabled,
                         onUpdateParams = viewModel::updateParams,
                         onUpdateEqBand = viewModel::updateEqBand,
+                        onCommitEqBands = viewModel::commitEqBands,
                     )
 
                     DspDebugCard(
@@ -403,6 +405,7 @@ fun ModulesGrid(
     isEnabled: Boolean,
     onUpdateParams: ((DspParams) -> DspParams) -> Unit,
     onUpdateEqBand: (Int, Float) -> Unit,
+    onCommitEqBands: (FloatArray) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
@@ -422,7 +425,7 @@ fun ModulesGrid(
                 onUpdateParams {
                     it.copy(eqEnabled = enabled)
                 }
-            }, onUpdateEqBand)
+            }, onUpdateEqBand, onCommitEqBands)
         }
         item { ViperBassCard(params, isEnabled, onUpdateParams) }
         item { SurroundCard(params, isEnabled, onUpdateParams) }
@@ -447,6 +450,7 @@ fun ModulesColumn(
     isEnabled: Boolean,
     onUpdateParams: ((DspParams) -> DspParams) -> Unit,
     onUpdateEqBand: (Int, Float) -> Unit,
+    onCommitEqBands: (FloatArray) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         PgcCard(params, isEnabled, onUpdateParams)
@@ -454,7 +458,7 @@ fun ModulesColumn(
             onUpdateParams {
                 it.copy(eqEnabled = enabled)
             }
-        }, onUpdateEqBand)
+        }, onUpdateEqBand, onCommitEqBands)
         ViperBassCard(params, isEnabled, onUpdateParams)
         SurroundCard(params, isEnabled, onUpdateParams)
         ReverbCard(params, isEnabled, onUpdateParams)
@@ -682,6 +686,7 @@ fun EqualizerCard(
     isMasterEnabled: Boolean,
     onToggle: (Boolean) -> Unit,
     onUpdateEqBand: (Int, Float) -> Unit,
+    onCommitEqBands: (FloatArray) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val isEnabled = params.eqEnabled
@@ -747,7 +752,8 @@ fun EqualizerCard(
                     com.deepeye.musicpro.ui.dsp.components.EqualizerCurveVisualizer(
                         eqBands = params.eqBands,
                         isEnabled = isEnabled && isMasterEnabled,
-                        onBandGainChanged = onUpdateEqBand
+                        onBandGainChanged = onUpdateEqBand,
+                        onCommitBands = onCommitEqBands,
                     )
                 }
             }

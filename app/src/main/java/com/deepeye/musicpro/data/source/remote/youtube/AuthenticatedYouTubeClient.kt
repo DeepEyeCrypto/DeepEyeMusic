@@ -295,7 +295,10 @@ class AuthenticatedYouTubeClient @Inject constructor(
         val list = mutableListOf<HomeVideoItem>()
         if (jsonStr.isEmpty()) return list
         try {
-            return parseVideoRenderersRecursive(JSONObject(jsonStr))
+            val allParsed = parseVideoRenderersRecursive(JSONObject(jsonStr))
+            return allParsed.filterNot {
+                it.isShort || it.duration in 1..59 || MusicFilter.isShort(it.title, it.duration, it.isShort)
+            }.distinctBy { it.id }
         } catch (e: Exception) {
             Log.e("AuthYTClient", "Parsing error", e)
         }
@@ -316,11 +319,7 @@ class AuthenticatedYouTubeClient @Inject constructor(
                     }
                 }
                 "reelItemRenderer" -> {
-                    val reelObj = json.optJSONObject(key)
-                    if (reelObj != null) {
-                        val item = parseReelItemRenderer(reelObj)
-                        if (item != null) list.add(item)
-                    }
+                    // YouTube Shorts reel completely dropped
                 }
                 "tileRenderer" -> {
                     val tileObj = json.optJSONObject(key)
@@ -405,6 +404,9 @@ class AuthenticatedYouTubeClient @Inject constructor(
             getLastThumbnail(videoObj.optJSONObject("channelThumbnail")?.optJSONArray("thumbnails"))
         }
 
+        val isShortFlag = MusicFilter.isShort(title, durationSeconds, durationSeconds in 1..59)
+        if (isShortFlag) return null
+
         return HomeVideoItem(
             id = id,
             title = title,
@@ -414,33 +416,13 @@ class AuthenticatedYouTubeClient @Inject constructor(
             duration = durationSeconds,
             viewCount = views,
             uploadDate = uploadDate,
-            isShort = durationSeconds in 1..60,
+            isShort = false,
             channelAvatarUrl = channelAvatar
         )
     }
 
     private fun parseReelItemRenderer(reelObj: JSONObject): HomeVideoItem? {
-        val id = reelObj.optString("videoId", "")
-        if (id.isEmpty()) return null
-
-        val title = reelObj.optJSONObject("headline")?.optString("simpleText", null)
-            ?: reelObj.optJSONObject("headline")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
-            ?: ""
-
-        val thumbUrl = getLastThumbnail(reelObj.optJSONObject("thumbnail")?.optJSONArray("thumbnails"))
-
-        val viewText = reelObj.optJSONObject("viewCountText")?.optString("simpleText", null) ?: ""
-        val views = parseViews(viewText)
-
-        return HomeVideoItem(
-            id = id,
-            title = title,
-            channelName = "",
-            thumbnailUrl = thumbUrl,
-            duration = 30L,
-            viewCount = views,
-            isShort = true
-        )
+        return null // Dropped
     }
 
     private fun parseTileRenderer(tileObj: JSONObject): HomeVideoItem? {
@@ -534,6 +516,9 @@ class AuthenticatedYouTubeClient @Inject constructor(
             }
         }
 
+        val isShortFlag = MusicFilter.isShort(title, durationSeconds, durationSeconds in 1..59)
+        if (isShortFlag) return null
+
         return HomeVideoItem(
             id = id,
             title = title,
@@ -542,7 +527,7 @@ class AuthenticatedYouTubeClient @Inject constructor(
             duration = durationSeconds,
             viewCount = parseViews(viewText),
             uploadDate = uploadDate,
-            isShort = durationSeconds in 1..60,
+            isShort = false,
             channelAvatarUrl = channelAvatar
         )
     }
@@ -637,6 +622,9 @@ class AuthenticatedYouTubeClient @Inject constructor(
         }
 
         val durationSeconds = parseDuration(durationText)
+        val isShortFlag = MusicFilter.isShort(title, durationSeconds, durationSeconds in 1..59)
+        if (isShortFlag) return null
+
         return HomeVideoItem(
             id = id,
             title = title,
@@ -645,7 +633,7 @@ class AuthenticatedYouTubeClient @Inject constructor(
             duration = durationSeconds,
             viewCount = parseViews(viewText),
             uploadDate = uploadDate,
-            isShort = durationSeconds in 1..60,
+            isShort = false,
             channelAvatarUrl = channelAvatar
         )
     }

@@ -153,7 +153,9 @@ constructor(
         withContext(ioDispatcher) {
             try {
                 val page = extractor.searchVideosFirstPage(query)
-                SearchResultPage(page.videos.map { it.toHomeVideoItem() }, page.nextPageUrl)
+                val filtered = page.videos.map { it.toHomeVideoItem() }
+                    .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                SearchResultPage(filtered, page.nextPageUrl)
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "searchVideosFirstPage failed: ${e.message}")
                 SearchResultPage(emptyList(), null)
@@ -167,7 +169,9 @@ constructor(
         withContext(ioDispatcher) {
             try {
                 val page = extractor.searchVideosNextPage(query, nextPageUrl)
-                SearchResultPage(page.videos.map { it.toHomeVideoItem() }, page.nextPageUrl)
+                val filtered = page.videos.map { it.toHomeVideoItem() }
+                    .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                SearchResultPage(filtered, page.nextPageUrl)
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "searchVideosNextPage failed: ${e.message}")
                 SearchResultPage(emptyList(), null)
@@ -179,6 +183,7 @@ constructor(
         withContext(ioDispatcher) {
             try {
                 extractor.getTrending().map { it.toHomeVideoItem() }
+                    .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "getTrending failed: ${e.message}")
                 emptyList()
@@ -568,21 +573,15 @@ constructor(
         withContext(ioDispatcher) {
             try {
                 extractor.getRelatedVideos(videoId).map { it.toHomeVideoItem() }
+                    .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
             } catch (e: Exception) {
                 Log.e("YoutubeDS", "getRelatedVideos failed: ${e.message}")
                 emptyList()
             }
         }
 
-    // 📱 Shorts — vertical format
-    suspend fun getShorts(): List<HomeVideoItem> =
-        withContext(ioDispatcher) {
-            try {
-                extractor.getShorts().map { it.toHomeVideoItem() }
-            } catch (e: Exception) {
-                emptyList()
-            }
-        }
+    // 📱 Shorts — vertical format (Hard-blocked)
+    suspend fun getShorts(): List<HomeVideoItem> = emptyList()
 
     // 💡 Search Suggestions
     suspend fun getSearchSuggestions(query: String): List<String> =

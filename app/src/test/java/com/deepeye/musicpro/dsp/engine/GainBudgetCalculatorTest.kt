@@ -11,6 +11,72 @@ import org.junit.Test
 
 class GainBudgetCalculatorTest {
     @Test
+    fun testAutoCorrectWithPrecomputedBudgetMatchesAutoComputedBudget() {
+        val dangerParams =
+            DspParams(
+                pgcEnabled = false,
+                pgcGain = 0f,
+                eqEnabled = true,
+                eqBands = floatArrayOf(10f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f),
+                bassBoostEnabled = true,
+                bassBoostStrength = 1000,
+                viperBassEnabled = true,
+                viperBassGain = 15f,
+                loudnessEnabled = false,
+                masterGain = 0f,
+            )
+
+        val budget = GainBudgetCalculator.calculate(dangerParams)
+        assertEquals(RiskLevel.DANGER, budget.risk)
+
+        // The hot EQ path passes a budget it already computed. It must produce
+        // byte-identical params to the self-computing overload, otherwise the
+        // fader and the engine would disagree about clipping correction.
+        val fromPrecomputed = GainBudgetCalculator.autoCorrect(dangerParams, budget)
+        val fromAutoComputed = GainBudgetCalculator.autoCorrect(dangerParams)
+
+        assertEquals(
+            fromAutoComputed.pgcGain,
+            fromPrecomputed.pgcGain,
+            0.001f,
+        )
+        assertEquals(
+            fromAutoComputed.bassBoostStrength,
+            fromPrecomputed.bassBoostStrength,
+        )
+        assertEquals(
+            fromAutoComputed.loudnessTargetGainMb,
+            fromPrecomputed.loudnessTargetGainMb,
+        )
+        assertEquals(
+            fromAutoComputed.viperBassGain,
+            fromPrecomputed.viperBassGain,
+            0.001f,
+        )
+    }
+
+    @Test
+    fun testAutoCorrectLeavesSafeParamsUntouchedWithEitherOverload() {
+        val safeParams =
+            DspParams(
+                pgcEnabled = true,
+                pgcGain = -6f,
+                eqEnabled = true,
+                eqBands = floatArrayOf(3f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f),
+                masterGain = 0f,
+            )
+
+        val budget = GainBudgetCalculator.calculate(safeParams)
+        assertEquals(RiskLevel.SAFE, budget.risk)
+
+        val corrected = GainBudgetCalculator.autoCorrect(safeParams, budget)
+        // A SAFE budget must be a no-op: no field may be rewritten.
+        assertEquals(safeParams.pgcGain, corrected.pgcGain, 0.001f)
+        assertEquals(safeParams.bassBoostStrength, corrected.bassBoostStrength)
+        assertEquals(safeParams.viperBassGain, corrected.viperBassGain, 0.001f)
+    }
+
+    @Test
     fun testFlatParamsYieldsLowRisk() {
         val params =
             DspParams(

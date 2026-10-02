@@ -258,6 +258,169 @@ class EqTouchMathTest {
         }
     }
 
+    // ── pannable strip: minimum slot width ───────────────────────────────────
+    // Defect class: in the landscape DSP grid the card is only ~145dp wide, so
+    // `viewportWidth / bandCount` collapsed the ten slots to ~10.5dp each — a
+    // 4.5x violation of the 48dp fat-finger floor.
+
+    @Test
+    fun `ten bands always reserve at least the 48dp minimum slot width`() {
+        // 48dp at the measured device density of 2.0 => 96px.
+        val minSlotPx = 96f
+        val content = EqTouchMath.requiredContentWidth(10, minSlotPx)
+        assertEquals("ten 48dp slots need 960px of content", 960f, content, 0.001f)
+        assertTrue("every slot must be at least 48dp", content / 10f >= minSlotPx)
+    }
+
+    @Test
+    fun `minimum slot width is honoured at every real device density`() {
+        listOf(1f, 2f, 2.75f, 3f, 4f).forEach { density ->
+            val minSlotPx = 48f * density
+            val content = EqTouchMath.requiredContentWidth(10, minSlotPx)
+            assertEquals(
+                "density $density: every slot must be >= 48dp",
+                minSlotPx,
+                content / 10f,
+                0.001f,
+            )
+        }
+    }
+
+    @Test
+    fun `degenerate slot or band counts reserve no content width`() {
+        assertEquals(0f, EqTouchMath.requiredContentWidth(0, 96f), 0.001f)
+        assertEquals(0f, EqTouchMath.requiredContentWidth(-3, 96f), 0.001f)
+        assertEquals(0f, EqTouchMath.requiredContentWidth(10, 0f), 0.001f)
+        assertEquals(0f, EqTouchMath.requiredContentWidth(10, -5f), 0.001f)
+        assertEquals(0f, EqTouchMath.requiredContentWidth(10, Float.NaN), 0.001f)
+    }
+
+    // ── pannable strip: pan bounds ───────────────────────────────────────────
+
+    @Test
+    fun `a narrow card yields exactly the overflow as legal travel`() {
+        // 210px usable viewport, 960px of content => 750px of pan.
+        assertEquals(750f, EqTouchMath.maxScrollOffset(960f, 210f), 0.001f)
+    }
+
+    @Test
+    fun `a wide card has no travel so panning stays inert`() {
+        assertEquals(0f, EqTouchMath.maxScrollOffset(960f, 1604f), 0.001f)
+        assertEquals(
+            "an exactly-fitting strip must not pan at all",
+            0f,
+            EqTouchMath.maxScrollOffset(960f, 960f),
+            0.001f,
+        )
+    }
+
+    @Test
+    fun `pan is clamped to the legal range at both ends`() {
+        assertEquals(
+            "must not pan before the start of the strip",
+            0f,
+            EqTouchMath.clampScrollOffset(-400f, 960f, 210f),
+            0.001f,
+        )
+        assertEquals(
+            "must not pan past the end of the strip",
+            750f,
+            EqTouchMath.clampScrollOffset(9999f, 960f, 210f),
+            0.001f,
+        )
+        assertEquals(300f, EqTouchMath.clampScrollOffset(300f, 960f, 210f), 0.001f)
+    }
+
+    @Test
+    fun `degenerate pan geometry is inert rather than crashing`() {
+        assertEquals(0f, EqTouchMath.maxScrollOffset(Float.NaN, 210f), 0.001f)
+        assertEquals(0f, EqTouchMath.maxScrollOffset(960f, Float.NaN), 0.001f)
+        assertEquals(0f, EqTouchMath.clampScrollOffset(Float.NaN, 960f, 210f), 0.001f)
+    }
+
+    // ── pannable strip: drawing and hit testing agree ─────────────────────────
+
+    @Test
+    fun `panned slot centres shift left by exactly the offset`() {
+        val content = 960f
+        for (i in 0 until 10) {
+            val unpanned = EqTouchMath.slotCenterX(i, content, 10)!!
+            val panned = EqTouchMath.slotCenterX(i, content, 10, 300f)!!
+            assertEquals(
+                "slot $i must shift by exactly the pan offset",
+                unpanned - 300f,
+                panned,
+                0.001f,
+            )
+        }
+    }
+
+    @Test
+    fun `the curve and the fader bank cannot drift apart when panned`() {
+        // Both draw through the same function, so for every band the drawn centre
+        // must equal the centre the hit test resolves to.
+        val content = 960f
+        for (offset in listOf(0f, 137f, 500f, 750f)) {
+            for (i in 0 until 10) {
+                val drawn = EqTouchMath.slotCenterX(i, content, 10, offset)!!
+                val hit = EqTouchMath.bandIndexForTouchX(drawn, offset, content, 10)
+                assertEquals(
+                    "offset $offset: the drawn centre of band $i must hit band $i",
+                    i,
+                    hit,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `hit testing follows the pan so the band under the finger changes`() {
+        val content = 960f
+        // At offset 0 the left edge of the viewport shows band 0.
+        assertEquals(0, EqTouchMath.bandIndexForTouchX(10f, 0f, content, 10))
+        // After panning one slot left, that same screen X now shows band 1.
+        assertEquals(1, EqTouchMath.bandIndexForTouchX(10f, 96f, content, 10))
+        // And the last band is reachable at full pan.
+        assertEquals(9, EqTouchMath.bandIndexForTouchX(205f, 750f, content, 10))
+    }
+
+    @Test
+    fun `a panned strip never leaves a dead gap in the viewport`() {
+        val content = 960f
+        val viewport = 210f
+        val maxOffset = EqTouchMath.maxScrollOffset(content, viewport)
+        var offset = 0f
+        while (offset <= maxOffset) {
+            var x = 0f
+            while (x < viewport) {
+                assertTrue(
+                    "dead gap at x=$x offset=$offset",
+                    EqTouchMath.bandIndexForTouchX(x, offset, content, 10) != null,
+                )
+                x += 0.5f
+            }
+            offset += 7f
+        }
+    }
+
+    @Test
+    fun `panned slot centre is null for degenerate geometry instead of NaN`() {
+        assertNull(EqTouchMath.slotCenterX(0, 0f, 10, 0f))
+        assertNull(EqTouchMath.slotCenterX(0, 960f, 0, 0f))
+        assertNull(EqTouchMath.slotCenterX(0, 960f, 10, Float.NaN))
+    }
+
+    @Test
+    fun `offset zero is identical to the unpanned helper`() {
+        for (i in 0 until 10) {
+            assertEquals(
+                EqTouchMath.slotCenterX(i, 960f, 10)!!,
+                EqTouchMath.slotCenterX(i, 960f, 10, 0f)!!,
+                0.001f,
+            )
+        }
+    }
+
     // ── slot centre geometry (curve grid ⇄ fader alignment) ─────────────────────
 
     @Test

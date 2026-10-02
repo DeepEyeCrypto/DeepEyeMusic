@@ -56,9 +56,13 @@ object GainBudgetCalculator {
     /**
      * Automatically adjusts parameters if the gain budget enters the DANGER zone.
      * Applies gentle reduction to avoid killing the sound signature.
+     *
+     * @param budget Pre-computed budget for [params]. Callers that already hold a
+     *   fresh [GainBudget] (e.g. the EQ fader hot path) pass it in to avoid
+     *   recomputing the whole budget on every drag frame. Defaults to computing
+     *   it, so existing single-argument callers are unaffected.
      */
-    fun autoCorrect(params: DspParams): DspParams {
-        val budget = calculate(params)
+    fun autoCorrect(params: DspParams, budget: GainBudget = calculate(params)): DspParams {
         return if (budget.risk == RiskLevel.DANGER) {
             params.copy(
                 pgcGain = minOf(params.pgcGain, -8f),

@@ -307,18 +307,6 @@ fun HomeHubScreen(
                 }
             }
 
-            if (feedState.shorts.isNotEmpty()) {
-                item {
-                    ShortsRail(
-                        items = feedState.shorts,
-                        onClick = { 
-                            viewModel.playVideo(it)
-                            onNavigateToVideo(it.id) 
-                        }
-                    )
-                }
-            }
-
             if (feedState.supermix.isNotEmpty()) {
                 item {
                     HomeMusicRail(
@@ -643,45 +631,6 @@ private fun HomeVideoRail(
                     SmartTubeVideoCard(
                         video = video,
                         onClick = { onClick(video) },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                repeat(2 - chunk.size) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ShortsRail(
-    items: List<HomeVideoItem>,
-    onClick: (HomeVideoItem) -> Unit,
-) {
-    if (items.isEmpty()) return
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = CardGeometry.ScreenGutter),
-        verticalArrangement = Arrangement.spacedBy(12.sdp)
-    ) {
-        Text(
-            "📱 Shorts",
-            style = MaterialTheme.typography.titleSmall,
-            color = Color(0xFFE0E0E0),
-            fontWeight = FontWeight.Bold,
-        )
-        val displayedItems = items.take(4)
-        displayedItems.chunked(2).forEach { chunk ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.sdp)
-            ) {
-                chunk.forEach { short ->
-                    SmartTubeVideoCard(
-                        video = short,
-                        onClick = { onClick(short) },
                         modifier = Modifier.weight(1f),
                     )
                 }
