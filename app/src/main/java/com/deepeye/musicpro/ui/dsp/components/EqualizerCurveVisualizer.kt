@@ -52,12 +52,13 @@ data class EqPreset(val name: String, val gains: FloatArray)
 
 val STUDIO_EQ_PRESETS = listOf(
     EqPreset("Flat", floatArrayOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)),
-    EqPreset("Bass Boost", floatArrayOf(7f, 6f, 4f, 2f, 0f, 0f, 1f, 2f, 3f, 4f)),
-    EqPreset("Vocal Clarity", floatArrayOf(-2f, -1f, 0f, 2f, 5f, 6f, 4f, 2f, 0f, -1f)),
-    EqPreset("Club / EDM", floatArrayOf(8f, 7f, 3f, 0f, -2f, 2f, 4f, 6f, 7f, 8f)),
+    EqPreset("Sub-Bass Boost", floatArrayOf(8f, 6f, 4f, 2f, 0f, 0f, 1f, 2f, 3f, 4f)),
+    EqPreset("Punchy 808", floatArrayOf(3f, 6f, 4f, 0f, -1f, 0f, 1f, 2f, 2.5f, 2f)),
+    EqPreset("Vocal Clarity", floatArrayOf(-1f, -0.5f, 0f, 1.5f, 3.5f, 4f, 3.5f, 4.5f, 6f, 7f)),
+    EqPreset("Club / EDM", floatArrayOf(7f, 5f, 3f, 1f, 0f, 0f, 0.5f, 1.5f, 2.5f, 3f)),
     EqPreset("Rock & Metal", floatArrayOf(6f, 4f, 2f, 0f, -1f, 1f, 4f, 5f, 6f, 6f)),
-    EqPreset("Acoustic", floatArrayOf(3f, 3f, 2f, 1f, 2f, 3f, 4f, 3f, 2f, 1f)),
-    EqPreset("Treble Sparkle", floatArrayOf(-3f, -2f, -1f, 0f, 1f, 3f, 6f, 8f, 9f, 9f)),
+    EqPreset("Acoustic Warmth", floatArrayOf(3f, 3f, 2f, 1f, 2f, 3f, 4f, 3f, 2f, 1f)),
+    EqPreset("Treble Air", floatArrayOf(-2f, -1f, 0f, 0f, 1f, 3f, 5f, 7f, 8.5f, 9f)),
 )
 
 private val neonCyan = Color(0xFF00E5FF)
@@ -345,13 +346,13 @@ private val EQ_TRACK_MAX_HEIGHT = 240.dp
  * band with room to spare and the pan offset stays pinned at `0` — the panning
  * machinery is inert, not conditional.
  */
-internal val EQ_MIN_SLOT_WIDTH = 48.dp
+internal val EQ_MIN_SLOT_WIDTH = 34.dp
 
 /** Idle width of a single fader track. */
-private val EQ_TRACK_WIDTH = 28.dp
+private val EQ_TRACK_WIDTH = 22.dp
 
 /** Hardware-console knob cap size. */
-private val EQ_THUMB_SIZE = 24.dp
+private val EQ_THUMB_SIZE = 20.dp
 
 /**
  * Extra vertical reach of a band's touch zone beyond the visible track, on both sides.

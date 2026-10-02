@@ -685,8 +685,8 @@ fun EqualizerCard(
     onUpdateEqBand: (Int, Float) -> Unit,
     onCommitEqBands: (FloatArray) -> Unit,
 ) {
-    var expanded by remember { mutableStateOf(false) }
     val isEnabled = params.eqEnabled
+    var expanded by remember(isEnabled) { mutableStateOf(isEnabled) }
     val showContent = expanded && isEnabled && isMasterEnabled
 
     Card(
@@ -726,12 +726,23 @@ fun EqualizerCard(
                             uncheckedTrackColor = Color(0x1AFFFFFF),
                         ),
                     )
-                    Text(
-                        text = "10-Band Equalizer",
-                        fontSize = 17.sp,
-                        color = if (isEnabled && isMasterEnabled) Color.White else Color.White.copy(0.5f),
-                        fontWeight = FontWeight.Bold,
-                    )
+                    Column {
+                        Text(
+                            text = "10-Band Equalizer",
+                            fontSize = 17.sp,
+                            color = if (isEnabled && isMasterEnabled) Color.White else Color.White.copy(0.5f),
+                            fontWeight = FontWeight.Bold,
+                        )
+                        if (isEnabled && isMasterEnabled) {
+                            Text(
+                                text = "STUDIO PRO • 10 BANDS ACTIVE",
+                                fontSize = 10.sp,
+                                color = Color(0xFF00E5FF),
+                                fontWeight = FontWeight.SemiBold,
+                                letterSpacing = 0.5.sp,
+                            )
+                        }
+                    }
                 }
                 Icon(
                     imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
