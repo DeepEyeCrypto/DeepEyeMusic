@@ -28,6 +28,8 @@ class ShortsBlockerTest {
         assertTrue(MusicFilter.isShort("Daily Vlog [shorts]", durationSeconds = 80, isShortFlag = false))
         assertTrue(MusicFilter.isShort("Guitar Solo (shorts)", durationSeconds = 75, isShortFlag = false))
         assertTrue(MusicFilter.isShort("https://youtube.com/shorts/xyz123", durationSeconds = 80, isShortFlag = false))
+        assertTrue(MusicFilter.isShort("she is back with her character| Twinkle Oberoi| # #hellyshah #chumbak #funny #comedy #netflix", durationSeconds = 0, isShortFlag = false))
+        assertTrue(MusicFilter.isShort("Expectation Se Jyada Mehnge Kapde Pasand Aa Gaye 😭 #neetubisht #lakhneet #funny #comedy", durationSeconds = 0, isShortFlag = false))
     }
 
     @Test

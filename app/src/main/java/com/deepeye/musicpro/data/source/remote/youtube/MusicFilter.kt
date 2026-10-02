@@ -23,6 +23,23 @@ object MusicFilter {
         "#youtubeshorts",
         "(shorts)",
         "[shorts]",
+        "#reel",
+        "#reels",
+        "#tiktok",
+        "#viralshort",
+        "#viralshorts",
+        "#trendingshorts",
+        "#funny",
+        "#comedy",
+        "#prank",
+        "#minivlog",
+        "#dailyvlog",
+        "#memes",
+        "#meme",
+        "#chumbak",
+        "#lakhneet",
+        "#neetubisht",
+        "#hellyshah",
     )
 
     /**
@@ -40,6 +57,8 @@ object MusicFilter {
             if (lowerTitle.contains(tag)) return true
         }
         if (lowerTitle.contains("/shorts/")) return true
+        // If title has 2 or more hashtags, it's typically a Shorts/Reels multi-tag title
+        if (lowerTitle.count { it == '#' } >= 2) return true
         return false
     }
 

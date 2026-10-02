@@ -40,7 +40,7 @@ constructor(
                         authClient.getTrending()
                     }.ifEmpty {
                         authClient.search("trending music india")
-                    }
+                    }.filterNot { com.deepeye.musicpro.data.source.remote.youtube.MusicFilter.isShort(it.title, it.duration, it.isShort) }
                 } catch (e: Exception) { emptyList() }
 
                 if (authHome.isNotEmpty()) {
@@ -135,9 +135,9 @@ constructor(
                         )
                     }
 
-                val trending = trendingDeferred.await()
-                val related = relatedDeferred.await()
-                val topCharts = topChartsDeferred.await()
+                val trending = trendingDeferred.await().filterNot { com.deepeye.musicpro.data.source.remote.youtube.MusicFilter.isShort(it.title, 0L, false) }
+                val related = relatedDeferred.await().filterNot { com.deepeye.musicpro.data.source.remote.youtube.MusicFilter.isShort(it.title, 0L, false) }
+                val topCharts = topChartsDeferred.await().filterNot { com.deepeye.musicpro.data.source.remote.youtube.MusicFilter.isShort(it.title, 0L, false) }
 
                 // Build sections
                 buildList {

@@ -404,6 +404,25 @@ class AuthenticatedYouTubeClient @Inject constructor(
             getLastThumbnail(videoObj.optJSONObject("channelThumbnail")?.optJSONArray("thumbnails"))
         }
 
+        val navEndpoint = videoObj.optJSONObject("navigationEndpoint")
+        val isReelWatch = navEndpoint?.has("reelWatchEndpoint") == true ||
+            navEndpoint?.optJSONObject("commandMetadata")?.optJSONObject("webCommandMetadata")?.optString("url")?.contains("/shorts/") == true
+        if (isReelWatch) return null
+
+        val overlays = videoObj.optJSONArray("thumbnailOverlays")
+        if (overlays != null) {
+            for (i in 0 until overlays.length()) {
+                val ov = overlays.optJSONObject(i) ?: continue
+                val timeStatus = ov.optJSONObject("thumbnailOverlayTimeStatusRenderer")
+                val style = timeStatus?.optString("style") ?: ""
+                val text = timeStatus?.optJSONObject("text")?.optString("simpleText") ?: ""
+                val iconType = timeStatus?.optJSONObject("icon")?.optString("iconType") ?: ""
+                if (style.equals("SHORTS", ignoreCase = true) || text.equals("SHORTS", ignoreCase = true) || iconType.contains("SHORTS", ignoreCase = true)) {
+                    return null
+                }
+            }
+        }
+
         val isShortFlag = MusicFilter.isShort(title, durationSeconds, durationSeconds in 1..59)
         if (isShortFlag) return null
 

@@ -969,10 +969,11 @@ fun VideoGridContent(
                             )
                         }
                     }
-                    if (homeFeedState.continueWatching.isNotEmpty()) {
+                    val cleanContinueWatching = homeFeedState.continueWatching.filterNot { com.deepeye.musicpro.data.source.remote.youtube.MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                    if (cleanContinueWatching.isNotEmpty()) {
                         item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                             com.deepeye.musicpro.ui.homehub.ContinueWatchingRow(
-                                items = homeFeedState.continueWatching,
+                                items = cleanContinueWatching,
                                 onItemClick = { video ->
                                     onPlayVideo(video)
                                     onVideoClick(video)

@@ -234,8 +234,10 @@ constructor(
             }
 
             val local = localDeferred.await()
-            val continueWatching = if (hasAuth && authHistory.isNotEmpty()) authHistory.take(15) else continueWatchingDeferred.await()
+            val continueWatching = (if (hasAuth && authHistory.isNotEmpty()) authHistory.take(15) else continueWatchingDeferred.await())
+                .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
             val continueListening = continueListeningDeferred.await()
+                .filterNot { MusicFilter.isShort(it.title, it.duration, false) }
             val localResume = localResumeDeferred.await()
 
             android.util.Log.d(
