@@ -3,20 +3,13 @@
 
 package com.deepeye.musicpro.ui.auth
 
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.widget.Toast
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,14 +18,21 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -47,7 +47,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -55,15 +54,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.deepeye.musicpro.R
-import com.deepeye.musicpro.ui.theme.TouchTargets
-import com.deepeye.musicpro.ui.theme.sdp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onYouTubeLoginClick: () -> Unit = {},
+    onBackClick: (() -> Unit)? = null,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -91,49 +89,53 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF05050A)),
+            .background(Color(0xFF06070D)),
     ) {
-        // Ambient Premium Background.
-        //
-        // These are radial gradients rather than blurred Boxes. A 120dp blur on a
-        // 300dp Box is clipped to that Box's own bounds, so it renders as a
-        // visibly hard-edged rectangle instead of a halo — the seams were
-        // measurable in the a11y tree as a [342,0][894,360] node. A radial
-        // gradient reaches zero alpha at its own edge, so it fades out with no
-        // seam and needs no offscreen render pass.
+        // Ambient Radial Background Glows
         Box(
             modifier = Modifier
-                .offset(x = (-150).dp, y = (-120).dp)
-                .size(520.dp)
+                .offset(x = (-120).dp, y = (-80).dp)
+                .size(450.dp)
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFF7C4DFF).copy(alpha = 0.22f),
-                            Color(0xFF7C4DFF).copy(alpha = 0.0f),
+                            Color(0xFF7C4DFF).copy(alpha = 0.20f),
+                            Color.Transparent,
                         ),
                     ),
                 ),
         )
         Box(
             modifier = Modifier
-                .offset(x = 150.dp, y = 170.dp)
-                .size(520.dp)
+                .align(Alignment.BottomEnd)
+                .offset(x = 100.dp, y = 100.dp)
+                .size(400.dp)
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            Color(0xFF00D2FF).copy(alpha = 0.22f),
-                            Color(0xFF00D2FF).copy(alpha = 0.0f),
+                            Color(0xFF00E5FF).copy(alpha = 0.15f),
+                            Color.Transparent,
                         ),
                     ),
                 ),
         )
 
-        // The form is taller than a landscape phone viewport (the stack of
-        // fields, CTA, divider and two sign-in buttons needs ~600dp), so it is
-        // scrollable and vertically centred. Without this the trailing "Sign Up"
-        // link and the guest button were laid out past the bottom edge and
-        // could not be reached at all — verified via the a11y tree, where the
-        // last node sat at [616,683][989,720], flush against the 720px floor.
+        if (onBackClick != null) {
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(start = 16.dp, top = 12.dp)
+                    .align(Alignment.TopStart)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White
+                )
+            }
+        }
+
         LoginFormBody(
             email = email,
             onEmailChange = { email = it },
@@ -154,13 +156,6 @@ fun LoginScreen(
     }
 }
 
-/**
- * The sign-in form's contents, independent of auth state and view model.
- *
- * Split out so the layout contract — that the form scrolls and that no control
- * is laid out past the bottom edge on a short viewport — can be verified
- * directly by [LoginScreenLayoutTest] without standing up Hilt.
- */
 @Composable
 fun LoginFormBody(
     email: String,
@@ -177,162 +172,391 @@ fun LoginFormBody(
     isLoading: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    // `email`/`password` are hoisted: the fields are driven straight from the
-    // caller's state so that `onPrimaryAction` always submits what the user
-    // typed. Local mirrors used to be kept here instead, which meant typing
-    // updated only this composable and the parent still submitted its initial
-    // empty values.
-    BoxWithConstraints(modifier = modifier) {
-        val compact = maxHeight < 480.dp
-        val gutter = (if (compact) 24 else 32).sdp
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val isLandscape = maxWidth > 550.dp
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = gutter, vertical = (if (compact) 16 else 24).sdp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            // App Logo / Title
-            Text(
-                text = "DEEPEYE",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 8.sp,
-                color = Color.White
-            )
-            Text(
-                text = "MUSIC PRO",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 12.sp,
-                color = Color(0xFF00D2FF)
-            )
-
-            Spacer(modifier = Modifier.height((if (compact) 20 else 64).sdp))
-
-            // Email & Password Fields
-            PremiumTextField(
-                value = email,
-                onValueChange = onEmailChange,
-                hint = "Email Address",
-                icon = Icons.Default.Email,
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
-            )
-
-            Spacer(modifier = Modifier.height((if (compact) 12 else 16).sdp))
-
-            PremiumTextField(
-                value = password,
-                onValueChange = onPasswordChange,
-                hint = "Password",
-                icon = Icons.Default.Lock,
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done,
-                isPassword = true,
-                onImeAction = onPrimaryAction
-            )
-
-            Spacer(modifier = Modifier.height((if (compact) 16 else 32).sdp))
-
-            // Main Action Button
-            PremiumActionButton(
-                text = primaryAction,
-                isLoading = isLoading,
-                onClick = onPrimaryAction
-            )
-
-            // Vertical rhythm scales with the viewport, and the `compact` branch
-            // halves it further. The two levers multiply rather than either/or:
-            // `compact` already exists because landscape is the short axis, while
-            // `.sdp` handles the width. Keeping them independent means a narrow
-            // but not compact viewport still gets proportional spacing.
-            Spacer(modifier = Modifier.height((if (compact) 12 else 24).sdp))
-
-            // Toggle Mode Text
+        if (isLandscape) {
+            // Landscape Mode: Side-by-Side Dual Pane Layout
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable { onToggleMode() }
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .padding(horizontal = 36.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = if (isSignUpMode) "Already have an account? " else "Don't have an account? ",
-                    color = Color.White.copy(alpha = 0.5f),
-                    fontSize = 14.sp
-                )
-                AnimatedContent(
-                    targetState = isSignUpMode,
-                    transitionSpec = {
-                        fadeIn(tween(300)) togetherWith fadeOut(tween(300))
-                    }, label = ""
-                ) { signUp ->
+                // Left Hero Pane
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 28.dp),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(Brush.linearGradient(listOf(Color(0xFF00E5FF), Color(0xFF7C4DFF)))),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.Headphones,
+                                contentDescription = null,
+                                tint = Color.Black,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        Spacer(Modifier.width(14.dp))
+                        Column {
+                            Text(
+                                text = "DEEPEYE",
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 4.sp,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "MUSIC PRO",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 8.sp,
+                                color = Color(0xFF00E5FF)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     Text(
-                        text = if (signUp) "Sign In" else "Sign Up",
-                        color = Color(0xFF00D2FF),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        text = "Next-Gen Cyberpunk Audio Engine & Cross-Device Cloud Sync",
+                        fontSize = 13.sp,
+                        color = Color.White.copy(alpha = 0.75f),
+                        lineHeight = 18.sp
                     )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Feature Highlights
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FeatureHighlightRow(icon = Icons.Default.GraphicEq, text = "ViPER4Android DSP & Zero-NaN Limiter")
+                        FeatureHighlightRow(icon = Icons.Default.CloudSync, text = "Cloud Playlists & Library Backup")
+                        FeatureHighlightRow(icon = Icons.Default.Tv, text = "YouTube TV Device Code Pairing")
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    OutlinedButton(
+                        onClick = onSkipAsGuest,
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White.copy(alpha = 0.85f))
+                    ) {
+                        Text("Skip & Continue as Guest", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                        Spacer(Modifier.width(6.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(16.dp))
+                    }
+                }
+
+                // Right Auth Card Pane
+                Surface(
+                    modifier = Modifier
+                        .weight(1.15f)
+                        .fillMaxHeight(),
+                    color = Color(0xFF10121C).copy(alpha = 0.9f),
+                    shape = RoundedCornerShape(22.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        AuthModeSelector(isSignUpMode = isSignUpMode, onToggleMode = onToggleMode)
+
+                        Spacer(Modifier.height(2.dp))
+
+                        PremiumTextField(
+                            value = email,
+                            onValueChange = onEmailChange,
+                            hint = "Email Address",
+                            icon = Icons.Default.Email,
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        )
+
+                        PremiumTextField(
+                            value = password,
+                            onValueChange = onPasswordChange,
+                            hint = "Password",
+                            icon = Icons.Default.Lock,
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done,
+                            isPassword = true,
+                            onImeAction = onPrimaryAction
+                        )
+
+                        PremiumActionButton(
+                            text = primaryAction,
+                            isLoading = isLoading,
+                            onClick = onPrimaryAction
+                        )
+
+                        // Divider
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.1f))
+                            Text(
+                                text = "OR",
+                                color = Color.White.copy(alpha = 0.35f),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                            HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.1f))
+                        }
+
+                        // Social Buttons Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            // Google Sign In
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable(onClick = onGoogleLogin),
+                                color = Color.White,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Text("G", color = Color(0xFFEA4335), fontSize = 18.sp, fontWeight = FontWeight.Black)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Google", color = Color.Black, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+
+                            // YouTube TV Login
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable(onClick = onYouTubeLoginClick),
+                                color = Color(0xFFCC0000),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(Icons.Default.Tv, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("YouTube TV", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height((if (compact) 16 else 32).sdp))
-
-            // Divider
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+        } else {
+            // Portrait Mode: Centered Card
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.1f))
+                // Header
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(Brush.linearGradient(listOf(Color(0xFF00E5FF), Color(0xFF7C4DFF)))),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Headphones,
+                        contentDescription = null,
+                        tint = Color.Black,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
                 Text(
-                    text = "OR",
-                    color = Color.White.copy(alpha = 0.3f),
+                    text = "DEEPEYE",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 6.sp,
+                    color = Color.White
+                )
+                Text(
+                    text = "MUSIC PRO",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 16.sdp)
+                    letterSpacing = 10.sp,
+                    color = Color(0xFF00E5FF)
                 )
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.1f))
-            }
 
-            Spacer(modifier = Modifier.height((if (compact) 16 else 32).sdp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            // Google Sign In Button
-            Spacer(modifier = Modifier.height((if (compact) 12 else 16).sdp))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color(0xFF10121C).copy(alpha = 0.9f),
+                    shape = RoundedCornerShape(22.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        AuthModeSelector(isSignUpMode = isSignUpMode, onToggleMode = onToggleMode)
 
-            Button(
-                onClick = onYouTubeLoginClick,
-                modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .height(56.sdp.coerceAtLeast(TouchTargets.Min)),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text("Login with YouTube (TV)", color = Color.White, fontWeight = FontWeight.Bold)
-            }
+                        PremiumTextField(
+                            value = email,
+                            onValueChange = onEmailChange,
+                            hint = "Email Address",
+                            icon = Icons.Default.Email,
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        )
 
-            GoogleSignInButton(
-                isLoading = isLoading,
-                onClick = onGoogleLogin
-            )
+                        PremiumTextField(
+                            value = password,
+                            onValueChange = onPasswordChange,
+                            hint = "Password",
+                            icon = Icons.Default.Lock,
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done,
+                            isPassword = true,
+                            onImeAction = onPrimaryAction
+                        )
 
-            Spacer(modifier = Modifier.height((if (compact) 8 else 12).sdp))
+                        PremiumActionButton(
+                            text = primaryAction,
+                            isLoading = isLoading,
+                            onClick = onPrimaryAction
+                        )
 
-            TextButton(
-                onClick = onSkipAsGuest,
-                modifier = Modifier.padding(top = 4.dp)
-            ) {
-                Text(
-                    text = "Skip & Continue as Guest →",
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+                        // Divider
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.1f))
+                            Text(
+                                text = "OR",
+                                color = Color.White.copy(alpha = 0.35f),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 14.dp)
+                            )
+                            HorizontalDivider(modifier = Modifier.weight(1f), color = Color.White.copy(alpha = 0.1f))
+                        }
+
+                        // Google Sign In
+                        GoogleSignInButton(isLoading = isLoading, onClick = onGoogleLogin)
+
+                        // YouTube TV Login Button
+                        Button(
+                            onClick = onYouTubeLoginClick,
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFCC0000)),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Icon(Icons.Default.Tv, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Pair with YouTube TV (QR / Code)", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+
+                        TextButton(
+                            onClick = onSkipAsGuest,
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            Text(
+                                text = "Skip & Continue as Guest →",
+                                color = Color.White.copy(alpha = 0.7f),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun FeatureHighlightRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = null, tint = Color(0xFF00E5FF), modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(10.dp))
+        Text(text, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun AuthModeSelector(isSignUpMode: Boolean, onToggleMode: () -> Unit) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(42.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = Color.White.copy(alpha = 0.05f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
+    ) {
+        Row(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (!isSignUpMode) Color(0xFF00E5FF).copy(alpha = 0.2f) else Color.Transparent)
+                    .clickable { if (isSignUpMode) onToggleMode() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Sign In",
+                    color = if (!isSignUpMode) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.5f),
+                    fontWeight = if (!isSignUpMode) FontWeight.Bold else FontWeight.Normal,
+                    fontSize = 13.sp
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (isSignUpMode) Color(0xFF00E5FF).copy(alpha = 0.2f) else Color.Transparent)
+                    .clickable { if (!isSignUpMode) onToggleMode() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Create Account",
+                    color = if (isSignUpMode) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.5f),
+                    fontWeight = if (isSignUpMode) FontWeight.Bold else FontWeight.Normal,
+                    fontSize = 13.sp
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -351,24 +575,24 @@ fun PremiumTextField(
     val focusManager = LocalFocusManager.current
     var passwordVisible by remember { mutableStateOf(false) }
 
-    val borderColor by androidx.compose.animation.animateColorAsState(
-        targetValue = if (isFocused) Color(0xFF00D2FF) else Color.White.copy(alpha = 0.1f),
+    val borderColor by animateColorAsState(
+        targetValue = if (isFocused) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.1f),
         animationSpec = tween(300), label = ""
     )
 
-    val bgColor by androidx.compose.animation.animateColorAsState(
-        targetValue = if (isFocused) Color.White.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.02f),
+    val bgColor by animateColorAsState(
+        targetValue = if (isFocused) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.03f),
         animationSpec = tween(300), label = ""
     )
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.sdp.coerceAtLeast(TouchTargets.Min))
-            .clip(RoundedCornerShape(16.dp))
+            .height(48.dp)
+            .clip(RoundedCornerShape(14.dp))
             .background(bgColor)
-            .border(1.dp, borderColor, RoundedCornerShape(16.dp))
-            .padding(horizontal = 16.sdp),
+            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
+            .padding(horizontal = 14.dp),
         contentAlignment = Alignment.CenterStart
     ) {
         Row(
@@ -378,17 +602,17 @@ fun PremiumTextField(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (isFocused) Color(0xFF00D2FF) else Color.White.copy(alpha = 0.3f),
-                modifier = Modifier.size(20.dp)
+                tint = if (isFocused) Color(0xFF00E5FF) else Color.White.copy(alpha = 0.35f),
+                modifier = Modifier.size(18.dp)
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.weight(1f),
                 textStyle = LocalTextStyle.current.copy(
                     color = Color.White,
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
                 ),
                 singleLine = true,
@@ -402,25 +626,28 @@ fun PremiumTextField(
                     }
                 ),
                 visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
-                cursorBrush = SolidColor(Color(0xFF00D2FF)),
+                cursorBrush = SolidColor(Color(0xFF00E5FF)),
                 decorationBox = { innerTextField ->
                     if (value.isEmpty()) {
                         Text(
                             text = hint,
-                            color = Color.White.copy(alpha = 0.3f),
-                            fontSize = 16.sp
+                            color = Color.White.copy(alpha = 0.35f),
+                            fontSize = 14.sp
                         )
                     }
                     innerTextField()
                 }
             )
             if (isPassword) {
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                IconButton(
+                    onClick = { passwordVisible = !passwordVisible },
+                    modifier = Modifier.size(32.dp)
+                ) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                         contentDescription = "Toggle Password",
-                        tint = Color.White.copy(alpha = 0.3f),
-                        modifier = Modifier.size(20.dp)
+                        tint = Color.White.copy(alpha = 0.35f),
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -438,7 +665,7 @@ fun PremiumActionButton(
     val isPressed by interactionSource.collectIsPressedAsState()
     
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
+        targetValue = if (isPressed) 0.97f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
         label = ""
     )
@@ -446,12 +673,12 @@ fun PremiumActionButton(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.sdp.coerceAtLeast(TouchTargets.Min))
+            .height(48.dp)
             .scale(scale)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(
                 Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF00D2FF), Color(0xFF7C4DFF))
+                    colors = listOf(Color(0xFF00E5FF), Color(0xFF7C4DFF))
                 )
             )
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
@@ -461,20 +688,19 @@ fun PremiumActionButton(
             CircularProgressIndicator(
                 color = Color.White,
                 strokeWidth = 2.dp,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(20.dp)
             )
         } else {
             Text(
                 text = text,
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Black,
                 letterSpacing = 1.sp
             )
         }
     }
 }
-
 
 @Composable
 fun GoogleSignInButton(
@@ -485,7 +711,7 @@ fun GoogleSignInButton(
     val isPressed by interactionSource.collectIsPressedAsState()
     
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
+        targetValue = if (isPressed) 0.97f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
         label = ""
     )
@@ -493,9 +719,9 @@ fun GoogleSignInButton(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.sdp.coerceAtLeast(TouchTargets.Min))
+            .height(48.dp)
             .scale(scale)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(Color.White)
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
@@ -505,21 +731,20 @@ fun GoogleSignInButton(
             CircularProgressIndicator(
                 color = Color.Black,
                 strokeWidth = 2.dp,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(20.dp)
             )
         } else {
-            // Usually we'd load an actual Google icon here. Since we don't have the drawable yet, we use a colored text stand-in
             Text(
                 text = "G",
-                color = Color(0xFFEA4335), // Google Red
-                fontSize = 24.sp,
+                color = Color(0xFFEA4335),
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
-                modifier = Modifier.padding(end = 12.dp)
+                modifier = Modifier.padding(end = 10.dp)
             )
             Text(
                 text = "Continue with Google",
                 color = Color.Black,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )
         }

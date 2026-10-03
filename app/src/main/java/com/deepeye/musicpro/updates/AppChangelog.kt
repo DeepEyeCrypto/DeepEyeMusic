@@ -8,6 +8,21 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30052,
+                versionName = "3.0.1.42",
+                releaseDate = "October 2026",
+                title = "Cyberpunk Two-Column Auth Redesign & Cloud Account Engine 🚀",
+                highlight = true,
+                items =
+                    listOf(
+                        "Dual-Pane Auth Architecture: Redesigned Login & Registration with responsive Cyberpunk landscape dual-pane layout, eliminating viewport clipping.",
+                        "Direct Google & YouTube TV Pairing: Fast-track authentication with Google SSO and YouTube TV Device Code activation.",
+                        "Lifecycle-Scoped Background Sync: App-scoped coroutine dispatching preventing cancellation during auth transitions.",
+                        "Accurate Video History Progress: Replaced mock completion statistics in Continue Watching with exact video playback time tracking.",
+                        "ViPER4Android DSP & Zero-NaN Master Limiter: Full 60 FPS slider debouncing and -0.5 dBFS hardware audio headroom."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30051,
                 versionName = "3.0.1.41",
                 releaseDate = "October 2026",

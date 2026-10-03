@@ -35,7 +35,6 @@ import com.deepeye.musicpro.ui.library.LibraryScreen
 import com.deepeye.musicpro.ui.screens.NetMirrorScreen
 import com.deepeye.musicpro.ui.player.NowPlayingScreen
 import com.deepeye.musicpro.ui.music.MusicScreen
-import com.deepeye.musicpro.ui.onboarding.OnboardingScreen
 import com.deepeye.musicpro.ui.playlist.PlaylistDetailScreen
 import com.deepeye.musicpro.ui.search.SearchScreen
 import com.deepeye.musicpro.ui.settings.SettingsScreen
@@ -56,68 +55,16 @@ import com.deepeye.musicpro.ui.auth.LoginScreen
 fun NavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    gateViewModel: OnboardingGateViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
     windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
     onExpandPlayer: () -> Unit = {},
 ) {
-    val onboardingState by gateViewModel.onboardingState.collectAsStateWithLifecycle()
-
-    if (onboardingState == null) {
-        // High-Fidelity Premium Splash Loading Gate Screen
-        Box(
-            modifier =
-            androidx.compose.ui.Modifier
-                .fillMaxSize()
-                .background(Color(0xFF030307)),
-            contentAlignment = androidx.compose.ui.Alignment.Center,
-        ) {
-            // Ambient neon backlights
-            Box(
-                modifier =
-                androidx.compose.ui.Modifier
-                    .size(250.dp)
-                    .blur(80.dp)
-                    .background(Color(0xFF7C4DFF).copy(alpha = 0.15f), CircleShape),
-            )
-            Box(
-                modifier =
-                androidx.compose.ui.Modifier
-                    .size(250.dp)
-                    .blur(80.dp)
-                    .background(Color(0xFF00D2FF).copy(alpha = 0.15f), CircleShape),
-            )
-
-            Column(
-                horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                CircularProgressIndicator(
-                    color = Color(0xFF00D2FF),
-                    strokeWidth = 3.dp,
-                    modifier = androidx.compose.ui.Modifier.size(48.dp),
-                )
-                Spacer(Modifier.height(20.dp))
-                Text(
-                    text = "DEEPEYE MUSIC PRO",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                    color = Color(0xFF00D2FF),
-                    letterSpacing = 3.sp,
-                )
-            }
-        }
-        return
-    }
-
     val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
 
     val startDestination =
-        remember(onboardingState, currentUser) {
+        remember(currentUser) {
             if (currentUser == null) Routes.Login.route
-            else if (onboardingState == true) Routes.Home.route
-            else Routes.Onboarding.route
+            else Routes.Home.route
         }
 
     val transitionEasing = androidx.compose.animation.core.CubicBezierEasing(0.16f, 1f, 0.3f, 1f)
@@ -191,22 +138,16 @@ fun NavGraph(
         composable(Routes.Login.route) {
             LoginScreen(
                 onYouTubeLoginClick = { navController.navigate(Routes.YouTubeLogin.route) },
+                onBackClick = {
+                    if (navController.previousBackStackEntry != null) {
+                        navController.popBackStack()
+                    }
+                },
                 onLoginSuccess = {
-                    navController.navigate(if (onboardingState == true) Routes.Home.route else Routes.Onboarding.route) {
+                    navController.navigate(Routes.Home.route) {
                         popUpTo(Routes.Login.route) { inclusive = true }
                     }
                 }
-            )
-        }
-
-        // Onboarding Screen
-        composable(Routes.Onboarding.route) {
-            OnboardingScreen(
-                onOnboardingComplete = {
-                    navController.navigate(Routes.Home.route) {
-                        popUpTo(Routes.Onboarding.route) { inclusive = true }
-                    }
-                },
             )
         }
 

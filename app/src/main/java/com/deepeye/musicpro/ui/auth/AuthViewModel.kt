@@ -21,6 +21,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,6 +52,7 @@ class AuthViewModel @Inject constructor(
     private val cloudRestoreManager: com.deepeye.musicpro.domain.sync.CloudRestoreManager,
     private val settingsDataStore: SettingsDataStore,
     private val accountSessionManager: AccountSessionManager,
+    @com.deepeye.musicpro.di.ApplicationScope private val appScope: CoroutineScope,
     @ApplicationContext private val appContext: Context,
 ) : ViewModel() {
 
@@ -126,6 +128,7 @@ class AuthViewModel @Inject constructor(
 
                 handleSignInResult(result, rawNonce)
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Log.e("AuthViewModel", "Google Sign In Failed", e)
                 val msg = if (e is GetCredentialException) e.errorMessage?.toString() ?: e.message.toString() else e.message.toString()
                 _authState.value = AuthState.Error(msg)
@@ -147,12 +150,19 @@ class AuthViewModel @Inject constructor(
                 val user = authResult.user
                 if (user != null) {
                     _authState.value = AuthState.Success(user)
-                    gamificationEngine.restoreFromFirestore()
-                    cloudRestoreManager.restoreAllData()
+                    appScope.launch {
+                        try {
+                            gamificationEngine.restoreFromFirestore()
+                            cloudRestoreManager.restoreAllData()
+                        } catch (e: Exception) {
+                            Log.e("AuthViewModel", "Background sync after sign in failed", e)
+                        }
+                    }
                 } else {
                     _authState.value = AuthState.Error("Firebase user is null after credential sign in.")
                 }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Log.e("AuthViewModel", "Firebase Sign In Failed", e)
                 _authState.value = AuthState.Error(e.message ?: "Authentication failed")
             }
@@ -172,12 +182,19 @@ class AuthViewModel @Inject constructor(
                 val result = auth.signInWithEmailAndPassword(email, pass).await()
                 if (result.user != null) {
                     _authState.value = AuthState.Success(result.user!!)
-                    gamificationEngine.restoreFromFirestore()
-                    cloudRestoreManager.restoreAllData()
+                    appScope.launch {
+                        try {
+                            gamificationEngine.restoreFromFirestore()
+                            cloudRestoreManager.restoreAllData()
+                        } catch (e: Exception) {
+                            Log.e("AuthViewModel", "Background sync after sign in failed", e)
+                        }
+                    }
                 } else {
                     _authState.value = AuthState.Error("User not found")
                 }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 _authState.value = AuthState.Error(e.message ?: "Login failed")
             }
         }
@@ -198,10 +215,19 @@ class AuthViewModel @Inject constructor(
                 val result = auth.createUserWithEmailAndPassword(email, pass).await()
                 if (result.user != null) {
                     _authState.value = AuthState.Success(result.user!!)
+                    appScope.launch {
+                        try {
+                            gamificationEngine.restoreFromFirestore()
+                            cloudRestoreManager.restoreAllData()
+                        } catch (e: Exception) {
+                            Log.e("AuthViewModel", "Background sync after sign up failed", e)
+                        }
+                    }
                 } else {
                     _authState.value = AuthState.Error("Registration failed")
                 }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 _authState.value = AuthState.Error(e.message ?: "Registration failed")
             }
         }
