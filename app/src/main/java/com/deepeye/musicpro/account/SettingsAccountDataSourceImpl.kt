@@ -30,12 +30,11 @@ class SettingsAccountDataSourceImpl @Inject constructor(
                     settings.youtubeRefreshToken, 
                     settings.youtubeAccessToken
                 )
-                // Existing SettingsDataStore has no profile data
                 ConnectedAccountSnapshot(
                     accountKey = accountKey,
-                    displayName = null,
-                    avatarUrl = null,
-                    channelKey = null,
+                    displayName = settings.youtubeUserName,
+                    avatarUrl = settings.youtubeUserAvatar,
+                    channelKey = settings.youtubeUserEmail,
                 )
             } else {
                 null

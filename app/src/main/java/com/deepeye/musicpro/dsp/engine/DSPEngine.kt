@@ -161,6 +161,23 @@ constructor(
         }
     }
 
+    /**
+     * Reconnects and rehydrates all DSP modules and state if an AudioEffect crashes or is unbound.
+     */
+    fun reconnectAndRehydrate() {
+        val currentSid = _currentSessionId.value
+        if (currentSid <= 0) return
+        Log.w(TAG, "⚡ Daemon Death / Audio Effect Crash Detected! Reconnecting and rehydrating session: $currentSid")
+        try {
+            releaseSession()
+            attachSession(currentSid, force = true)
+            applyParams(_currentParams.value)
+            Log.i(TAG, "✅ Reconnection and parameter rehydration successful for session $currentSid")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to rehydrate DSP session", e)
+        }
+    }
+
     fun releaseSession() {
         Log.d(TAG, "Releasing DSP Engine Session: $audioSessionId")
         equalizer?.release()
@@ -304,7 +321,7 @@ constructor(
             masterLimiterProcessor.setConfig(
                 enabled = isEnabled && params.limiterEnabled,
                 thresholdDb = params.limiterThreshold,
-                ceilingDb = -0.2f
+                ceilingDb = -0.5f
             )
             vocalRemoverProcessor.setEnabled(isEnabled && params.karaokeModeEnabled)
             crossfeedProcessor.setEnabled(isEnabled && params.crossfeedEnabled)
@@ -372,8 +389,8 @@ constructor(
                                     1f, // attackTime 1ms (fast peak clamp)
                                     50f, // releaseTime 50ms
                                     10f, // ratio
-                                    params.limiterThreshold.coerceIn(-3f, -0.2f), // threshold
-                                    0f, // postGain — 0.0dB, no digital distortion
+                                    params.limiterThreshold.coerceIn(-6f, -0.5f), // threshold
+                                    -0.5f, // postGain — -0.5dB safety headroom margin to absorb +12dB EQ boosts without clipping
                                 )
                             dp.setLimiterAllChannelsTo(limiter)
                         }

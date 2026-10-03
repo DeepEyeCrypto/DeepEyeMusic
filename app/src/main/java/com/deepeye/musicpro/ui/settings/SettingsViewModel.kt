@@ -157,4 +157,10 @@ constructor(
             settingsDataStore.setYouTubeTokens(accessToken, refreshToken)
         }
     }
+
+    fun saveYouTubeProfile(name: String?, avatarUrl: String?, email: String?) {
+        viewModelScope.launch {
+            settingsDataStore.setYouTubeProfile(name, avatarUrl, email)
+        }
+    }
 }

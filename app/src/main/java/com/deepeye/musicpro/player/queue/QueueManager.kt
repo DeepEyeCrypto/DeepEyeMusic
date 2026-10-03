@@ -66,6 +66,14 @@ constructor() {
         }
     }
 
+    @Synchronized
+    fun peekNext(): MediaItem? {
+        val q = _queue.value
+        if (q.isEmpty()) return null
+        val nextIndex = _currentIndex.value + 1
+        return if (nextIndex < q.size) q[nextIndex] else null
+    }
+
     /**
      * Moves to the next track in the queue.
      * Returns the next MediaItem, or null if at end of queue with repeat off.
@@ -237,12 +245,22 @@ constructor() {
     @Synchronized
     fun jumpTo(index: Int): MediaItem? {
         val q = _queue.value
-        return if (index in q.indices) {
+        if (index in q.indices) {
             _currentIndex.value = index
-            q[index]
-        } else {
-            null
+            return q[index]
         }
+        return null
+    }
+
+    @Synchronized
+    fun jumpToId(id: String): MediaItem? {
+        val q = _queue.value
+        val index = q.indexOfFirst { it.id == id }
+        if (index != -1) {
+            _currentIndex.value = index
+            return q[index]
+        }
+        return null
     }
 
     /**

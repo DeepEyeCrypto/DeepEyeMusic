@@ -32,7 +32,10 @@ data class AppSettings(
     val autoScanOnLaunch: Boolean = true,
     val showVisualizer: Boolean = true,
     val youtubeAccessToken: String? = null,
-    val youtubeRefreshToken: String? = null
+    val youtubeRefreshToken: String? = null,
+    val youtubeUserName: String? = null,
+    val youtubeUserAvatar: String? = null,
+    val youtubeUserEmail: String? = null
 )
 
 @Singleton
@@ -52,6 +55,9 @@ constructor(
         private val KEY_SHOW_VISUALIZER = booleanPreferencesKey("show_visualizer")
         private val KEY_YT_ACCESS_TOKEN = stringPreferencesKey("yt_access_token")
         private val KEY_YT_REFRESH_TOKEN = stringPreferencesKey("yt_refresh_token")
+        private val KEY_YT_USER_NAME = stringPreferencesKey("yt_user_name")
+        private val KEY_YT_USER_AVATAR = stringPreferencesKey("yt_user_avatar")
+        private val KEY_YT_USER_EMAIL = stringPreferencesKey("yt_user_email")
     }
 
     val settings: Flow<AppSettings> =
@@ -72,6 +78,9 @@ constructor(
                 showVisualizer = prefs[KEY_SHOW_VISUALIZER] ?: true,
                 youtubeAccessToken = prefs[KEY_YT_ACCESS_TOKEN],
                 youtubeRefreshToken = prefs[KEY_YT_REFRESH_TOKEN],
+                youtubeUserName = prefs[KEY_YT_USER_NAME],
+                youtubeUserAvatar = prefs[KEY_YT_USER_AVATAR],
+                youtubeUserEmail = prefs[KEY_YT_USER_EMAIL],
             )
         }
 
@@ -139,12 +148,23 @@ constructor(
             if (accessToken.isEmpty()) {
                 prefs.remove(KEY_YT_ACCESS_TOKEN)
                 prefs.remove(KEY_YT_REFRESH_TOKEN)
+                prefs.remove(KEY_YT_USER_NAME)
+                prefs.remove(KEY_YT_USER_AVATAR)
+                prefs.remove(KEY_YT_USER_EMAIL)
             } else {
                 prefs[KEY_YT_ACCESS_TOKEN] = accessToken
                 if (refreshToken != null) {
                     prefs[KEY_YT_REFRESH_TOKEN] = refreshToken
                 }
             }
+        }
+    }
+
+    suspend fun setYouTubeProfile(name: String?, avatarUrl: String?, email: String?) {
+        context.dataStore.edit { prefs ->
+            if (name != null) prefs[KEY_YT_USER_NAME] = name else prefs.remove(KEY_YT_USER_NAME)
+            if (avatarUrl != null) prefs[KEY_YT_USER_AVATAR] = avatarUrl else prefs.remove(KEY_YT_USER_AVATAR)
+            if (email != null) prefs[KEY_YT_USER_EMAIL] = email else prefs.remove(KEY_YT_USER_EMAIL)
         }
     }
 }

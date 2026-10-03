@@ -79,6 +79,10 @@ fun YouTubeLoginScreen(
                 coroutineScope.launch {
                     statusMessage = "Authorization Successful!"
                     settingsViewModel.saveYouTubeTokens(token.accessToken, token.refreshToken)
+                    val profile = authManager.fetchUserProfile(token.accessToken)
+                    if (profile != null) {
+                        settingsViewModel.saveYouTubeProfile(profile.name, profile.pictureUrl, profile.email)
+                    }
                     android.widget.Toast.makeText(context, "YouTube Connected! \uD83C\uDF89", android.widget.Toast.LENGTH_LONG).show()
                     kotlinx.coroutines.delay(1000)
                     onLoginSuccess(token.accessToken, token.refreshToken)

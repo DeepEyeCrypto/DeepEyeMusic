@@ -282,18 +282,21 @@ constructor(
      * so a rapid drag never queues a backlog: at most one dispatch is ever
      * pending, and it is always the most recent value per band.
      */
+    @OptIn(kotlinx.coroutines.FlowPreview::class)
     private fun observeEqDispatch() {
         eqDispatcherJob = viewModelScope.launch {
-            eqDispatchSignal.collectLatest {
-                val params = _uiState.value.params
-                val next = params.copy(
-                    eqBands = pendingEqBands.copyOf(),
-                    eqEnabled = true,
-                )
-                dspEngine.updateEqBands(next.eqBands)
-                _uiState.value = _uiState.value.copy(params = next)
-                persistParams(next)
-            }
+            eqDispatchSignal
+                .sample(16) // Conflate to max 60 FPS to prevent IPC / JNI buffer flooding
+                .collectLatest {
+                    val params = _uiState.value.params
+                    val next = params.copy(
+                        eqBands = pendingEqBands.copyOf(),
+                        eqEnabled = true,
+                    )
+                    dspEngine.updateEqBands(next.eqBands)
+                    _uiState.value = _uiState.value.copy(params = next)
+                    persistParams(next)
+                }
         }
     }
 

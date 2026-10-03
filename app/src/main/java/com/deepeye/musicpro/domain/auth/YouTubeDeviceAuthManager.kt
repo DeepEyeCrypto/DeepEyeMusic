@@ -29,6 +29,13 @@ data class TokenResponse(
     val tokenType: String
 )
 
+data class GoogleUserProfile(
+    val id: String,
+    val name: String,
+    val pictureUrl: String,
+    val email: String
+)
+
 
 class YouTubeDeviceAuthManager @Inject constructor(private val client: OkHttpClient) {
     
@@ -151,6 +158,66 @@ class YouTubeDeviceAuthManager @Inject constructor(private val client: OkHttpCli
                 Log.e("YTAuth", "Network error during polling", e)
             }
         }
+    }
+
+    suspend fun fetchUserProfile(accessToken: String): GoogleUserProfile? = withContext(Dispatchers.IO) {
+        try {
+            val req = Request.Builder()
+                .url("https://www.googleapis.com/oauth2/v3/userinfo")
+                .addHeader("Authorization", "Bearer $accessToken")
+                .get()
+                .build()
+
+            client.newCall(req).execute().use { response ->
+                if (response.isSuccessful) {
+                    val bodyString = response.body?.string() ?: ""
+                    val json = JSONObject(bodyString)
+                    return@withContext GoogleUserProfile(
+                        id = json.optString("sub"),
+                        name = json.optString("name", "YouTube User"),
+                        pictureUrl = json.optString("picture"),
+                        email = json.optString("email")
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("YTAuth", "Failed to fetch user profile via userinfo", e)
+        }
+
+        // Fallback: Query YouTube Channels API
+        try {
+            val req = Request.Builder()
+                .url("https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true")
+                .addHeader("Authorization", "Bearer $accessToken")
+                .get()
+                .build()
+
+            client.newCall(req).execute().use { response ->
+                if (response.isSuccessful) {
+                    val bodyString = response.body?.string() ?: ""
+                    val json = JSONObject(bodyString)
+                    val items = json.optJSONArray("items")
+                    if (items != null && items.length() > 0) {
+                        val snippet = items.getJSONObject(0).optJSONObject("snippet")
+                        val title = snippet?.optString("title", "YouTube User") ?: "YouTube User"
+                        val thumbnails = snippet?.optJSONObject("thumbnails")
+                        val avatarUrl = thumbnails?.optJSONObject("high")?.optString("url")
+                            ?: thumbnails?.optJSONObject("default")?.optString("url")
+                            ?: ""
+                        return@withContext GoogleUserProfile(
+                            id = items.getJSONObject(0).optString("id"),
+                            name = title,
+                            pictureUrl = avatarUrl,
+                            email = ""
+                        )
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("YTAuth", "Failed to fetch user profile via channels API", e)
+        }
+
+        return@withContext null
     }
 
     suspend fun refreshToken(refreshToken: String): TokenResponse? = withContext(Dispatchers.IO) {

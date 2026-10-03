@@ -31,13 +31,16 @@ class MasterLimiterProcessor @Inject constructor() : AudioProcessor {
     private var outputBuffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
     private var inputEnded = false
 
-    private var threshold = 0.89f // -1.0 dBFS
-    private var ceiling = 0.98f   // -0.2 dBFS
+    private var threshold = 0.84f // -1.5 dBFS safe threshold
+    private var ceiling = 0.944f  // -0.5 dBFS safety margin against DAC inter-sample clipping
 
-    fun setConfig(enabled: Boolean, thresholdDb: Float, ceilingDb: Float = -0.2f) {
+    fun setConfig(enabled: Boolean, thresholdDb: Float, ceilingDb: Float = -0.5f) {
         active = enabled
-        ceiling = 10.0f.pow(ceilingDb.coerceIn(-3.0f, 0.0f) / 20f)
-        threshold = 10.0f.pow(thresholdDb.coerceIn(-6.0f, -0.1f) / 20f).coerceAtMost(ceiling)
+        // Strictly clamp ceiling between -3.0 dBFS and -0.5 dBFS
+        ceiling = 10.0f.pow(ceilingDb.coerceIn(-3.0f, -0.5f) / 20f)
+        val rawThreshold = 10.0f.pow(thresholdDb.coerceIn(-12.0f, -0.5f) / 20f)
+        // Ensure a guaranteed minimum headroom of 0.04f to prevent division by zero / NaN in hyperbolic tangent
+        threshold = rawThreshold.coerceAtMost(ceiling - 0.04f)
     }
 
     override fun configure(inputAudioFormat: AudioFormat): AudioFormat {
@@ -70,7 +73,7 @@ class MasterLimiterProcessor @Inject constructor() : AudioProcessor {
         if (!active || inputAudioFormat.channelCount != 2) {
             buffer.put(inputBuffer)
         } else {
-            val headroom = ceiling - threshold
+            val headroom = (ceiling - threshold).coerceAtLeast(0.04f)
 
             while (inputBuffer.position() < limit) {
                 var sL = inputBuffer.short.toFloat() / 32768f

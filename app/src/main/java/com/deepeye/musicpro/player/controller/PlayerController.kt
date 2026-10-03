@@ -120,6 +120,8 @@ constructor(
     private var lastPlaybackStateTime: Long = 0L
     private val recentAutoplayTrackIds = mutableListOf<String>()
     private var playRetryCount = 0
+    private var prefetchedTrackId: String? = null
+    private var isPrefetchingNextTrack: Boolean = false
 
     var isBackgroundPlaybackEnabled = false
 
@@ -250,6 +252,57 @@ constructor(
 
                 override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
                     stablePlaybackResetJob?.cancel()
+                    val newMediaId = mediaItem?.mediaId
+                    if (newMediaId != null && newMediaId != currentTrackId) {
+                        android.util.Log.i("PlayerController", "onMediaItemTransition: Gapless transition to mediaId=$newMediaId, reason=$reason")
+                        currentTrackId = newMediaId
+                        totalPlayTimeCurrentTrack = 0L
+                        lastPlaybackStateTime = System.currentTimeMillis()
+                        lastSkippedSegment = null
+                        prefetchedTrackId = null
+
+                        val queueItem = queueManager.jumpToId(newMediaId)
+                        if (queueItem != null) {
+                            updateState { cur ->
+                                cur.copy(
+                                    currentItem = queueItem,
+                                    currentSong = (queueItem as? MediaItem.Local)?.song,
+                                    isVideo = queueItem is MediaItem.Remote && queueItem.isVideo,
+                                    isLoading = false,
+                                    isPlaying = player.isPlaying
+                                )
+                            }
+                        } else {
+                            val title = mediaItem.mediaMetadata.title?.toString() ?: "YouTube Track"
+                            val artist = mediaItem.mediaMetadata.artist?.toString() ?: "Unknown Artist"
+                            val artworkUri = mediaItem.mediaMetadata.artworkUri
+                            val newItem = MediaItem.Remote(
+                                id = newMediaId,
+                                title = title,
+                                artist = artist,
+                                artworkUri = artworkUri ?: Uri.parse("https://img.youtube.com/vi/$newMediaId/hqdefault.jpg"),
+                                duration = 0L,
+                                isVideo = false
+                            )
+                            updateState { cur ->
+                                cur.copy(
+                                    currentItem = newItem,
+                                    currentSong = null,
+                                    isVideo = false,
+                                    isLoading = false,
+                                    isPlaying = player.isPlaying
+                                )
+                            }
+                        }
+
+                        scope.launch {
+                            try {
+                                dspProfileManager.loadAndApplyProfile(newMediaId)
+                            } catch (e: Exception) {
+                                android.util.Log.e("PlayerController", "Failed to load DSP profile on transition for $newMediaId", e)
+                            }
+                        }
+                    }
                 }
 
                 override fun onPlaybackStateChanged(playbackState: Int) {
@@ -1036,13 +1089,19 @@ constructor(
                     val currentPos = player.currentPosition.coerceAtLeast(0)
                     val bufferedDuration = player.totalBufferedDuration.coerceAtLeast(0)
                     val bufferedPct = player.bufferedPercentage
+                    val dur = player.duration.coerceAtLeast(0)
                     updateState {
                         it.copy(
                             position = currentPos,
-                            duration = player.duration.coerceAtLeast(0),
+                            duration = dur,
                             bufferedDurationMs = bufferedDuration,
                             bufferedPercentage = bufferedPct,
                         )
+                    }
+
+                    // Gapless Auto-Play Proactive Pre-buffering (15s before track end)
+                    if (playerState.value.autoplayEnabled && dur > 20_000L && currentPos >= dur - 15_000L) {
+                        checkAndPrefetchNextTrack()
                     }
 
                     // SponsorBlock Auto-Skip Logic
@@ -1061,6 +1120,90 @@ constructor(
                     delay(250)
                 }
             }
+    }
+
+    private fun checkAndPrefetchNextTrack() {
+        if (isPrefetchingNextTrack || !playerState.value.autoplayEnabled) return
+        val currentItem = playerState.value.currentItem
+        val currentTrack = currentItem as? MediaItem.Remote ?: return
+        
+        // Only prefetch if ExoPlayer doesn't already have a next item queued
+        if (player.mediaItemCount > 1) return
+
+        isPrefetchingNextTrack = true
+        scope.launch {
+            try {
+                // 1. Check if queue has a next track
+                val nextInQueue = queueManager.peekNext()
+                val candidate: MediaItem? = if (nextInQueue != null) {
+                    nextInQueue
+                } else {
+                    // Generate autoplay candidates
+                    val activeArtists = queueManager.queue.value.map { it.artist }
+                    val candidates = withContext(Dispatchers.IO) {
+                        autoplayRepository.generateNextQueue(currentTrack, _autoplayState.value, activeArtists)
+                    }
+                    val validCandidates = candidates.filter {
+                        !recentAutoplayTrackIds.contains(it.videoId) && it.videoId != currentTrack.id
+                    }
+                    if (validCandidates.isNotEmpty()) {
+                        val mediaItems = validCandidates.map { c ->
+                            MediaItem.Remote(
+                                id = c.videoId,
+                                title = c.title,
+                                artist = c.artist,
+                                artworkUri = Uri.parse("https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg"),
+                                isVideo = currentTrack.isVideo,
+                                duration = 0L,
+                            )
+                        }
+                        queueManager.addItems(mediaItems)
+                        val newIds = validCandidates.map { it.videoId }
+                        recentAutoplayTrackIds.addAll(newIds)
+                        if (recentAutoplayTrackIds.size > 1000) {
+                            recentAutoplayTrackIds.subList(0, recentAutoplayTrackIds.size - 500).clear()
+                        }
+                        mediaItems.firstOrNull()
+                    } else null
+                }
+
+                if (candidate == null || candidate.id == currentTrack.id || candidate.id == prefetchedTrackId) return@launch
+
+                // 2. Resolve stream URL on Dispatchers.IO
+                val finalMediaItem: MediaItem? = when (candidate) {
+                    is MediaItem.Local -> candidate
+                    is MediaItem.Remote -> {
+                        if (candidate.streamUri == null || candidate.streamUri == Uri.EMPTY) {
+                            val resolved = withContext(Dispatchers.IO) {
+                                sourceResolverManager.resolveSource(candidate.id, candidate.isVideo, forceRefresh = false)
+                            }
+                            val url = resolved?.url
+                            if (!url.isNullOrBlank()) {
+                                candidate.copy(streamUri = Uri.parse(url))
+                            } else null
+                        } else candidate
+                    }
+                }
+
+                if (finalMediaItem == null) return@launch
+
+                // 3. Enqueue to ExoPlayer gaplessly
+                withContext(Dispatchers.Main) {
+                    if (player.mediaItemCount <= 1 && currentTrackId == currentTrack.id) {
+                        val media3Item = finalMediaItem.toMedia3Item()
+                        if (media3Item.localConfiguration?.uri != null && media3Item.localConfiguration?.uri != Uri.EMPTY) {
+                            player.addMediaItem(media3Item)
+                            prefetchedTrackId = finalMediaItem.id
+                            android.util.Log.i("PlayerController", "Gapless Radio: Pre-buffered next track -> ${finalMediaItem.title} (${finalMediaItem.id})")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("PlayerController", "Gapless Radio prefetch failed: ${e.message}")
+            } finally {
+                isPrefetchingNextTrack = false
+            }
+        }
     }
 
     private fun stopPositionUpdates() {
