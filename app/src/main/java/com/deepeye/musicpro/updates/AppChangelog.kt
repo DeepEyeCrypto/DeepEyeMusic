@@ -8,6 +8,21 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30051,
+                versionName = "3.0.1.41",
+                releaseDate = "October 2026",
+                title = "Google & YouTube Cloud Account Engine & Real Watch Tracking 🚀",
+                highlight = true,
+                items =
+                    listOf(
+                        "Unified Cloud & Account Control Center: Integrated Google Account (Firebase Auth/SSO) and YouTube TV Device OAuth Pairing directly in Settings > Account.",
+                        "Direct Google & YouTube Login: Fast-track authentication for subscriptions, playlists, and cloud sync across all devices.",
+                        "Accurate Video History Progress: Replaced mock completion statistics in Continue Watching with exact video playback time tracking.",
+                        "ViPER4Android DSP & Zero-NaN Master Limiter: Full 60 FPS slider debouncing and -0.5 dBFS hardware audio headroom.",
+                        "InnerTube Authenticated Client: Full Bearer token support for private streams, playlists, and subscription feeds."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30046,
                 versionName = "3.0.1.36",
                 releaseDate = "September 2026",
