@@ -16,4 +16,5 @@ object BackgroundWorkNames {
     const val REC_REFRESH = "rec_refresh"
     const val QUEUE_PREFETCH = "queue_prefetch"
     const val CHANNEL_SYNC = "channel_sync"
+    const val YT_SUBSCRIPTION_WORKER = "yt_subscription_worker"
 }

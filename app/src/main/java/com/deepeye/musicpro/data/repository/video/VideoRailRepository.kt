@@ -26,11 +26,15 @@ class VideoRailRepository
 constructor(
     private val contentFetcher: ContentFetcher,
     private val recommendationDao: RecommendationDao,
+    private val settingsDataStore: SettingsDataStore,
     private val authClient: AuthenticatedYouTubeClient,
 ) {
     suspend fun loadAllSections(): List<VideoRailSection> =
         withContext(Dispatchers.IO) {
             coroutineScope {
+                val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
+                val hasAuth = authSettings?.youtubeAccessToken != null
+
                 val authHome = try {
                     authClient.getHomeFeed().ifEmpty {
                         authClient.getTrending()

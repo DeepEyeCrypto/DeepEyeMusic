@@ -566,7 +566,7 @@ fun DeepEyeMusicApp(
                             },
                             onNavigateToAccount = {
                                 sheetViewModel.collapse()
-                                navController.navigate(Routes.Settings.route)
+                                navController.navigate(Routes.YouTubeLogin.route)
                             },
                         )
                     }

@@ -13,8 +13,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,7 +30,12 @@ data class AppSettings(
     val sampleRate: Int = 44100,
     val bitDepth: Int = 16,
     val autoScanOnLaunch: Boolean = true,
-    val showVisualizer: Boolean = true
+    val showVisualizer: Boolean = true,
+    val youtubeAccessToken: String? = null,
+    val youtubeRefreshToken: String? = null,
+    val youtubeUserName: String? = null,
+    val youtubeUserAvatar: String? = null,
+    val youtubeUserEmail: String? = null
 )
 
 @Singleton
@@ -48,6 +53,11 @@ constructor(
         private val KEY_BIT_DEPTH = intPreferencesKey("bit_depth")
         private val KEY_AUTO_SCAN = booleanPreferencesKey("auto_scan")
         private val KEY_SHOW_VISUALIZER = booleanPreferencesKey("show_visualizer")
+        private val KEY_YT_ACCESS_TOKEN = stringPreferencesKey("yt_access_token")
+        private val KEY_YT_REFRESH_TOKEN = stringPreferencesKey("yt_refresh_token")
+        private val KEY_YT_USER_NAME = stringPreferencesKey("yt_user_name")
+        private val KEY_YT_USER_AVATAR = stringPreferencesKey("yt_user_avatar")
+        private val KEY_YT_USER_EMAIL = stringPreferencesKey("yt_user_email")
     }
 
     val settings: Flow<AppSettings> =
@@ -65,7 +75,12 @@ constructor(
                 sampleRate = prefs[KEY_SAMPLE_RATE] ?: 44100,
                 bitDepth = prefs[KEY_BIT_DEPTH] ?: 16,
                 autoScanOnLaunch = prefs[KEY_AUTO_SCAN] ?: true,
-                showVisualizer = prefs[KEY_SHOW_VISUALIZER] ?: true
+                showVisualizer = prefs[KEY_SHOW_VISUALIZER] ?: true,
+                youtubeAccessToken = prefs[KEY_YT_ACCESS_TOKEN],
+                youtubeRefreshToken = prefs[KEY_YT_REFRESH_TOKEN],
+                youtubeUserName = prefs[KEY_YT_USER_NAME],
+                youtubeUserAvatar = prefs[KEY_YT_USER_AVATAR],
+                youtubeUserEmail = prefs[KEY_YT_USER_EMAIL],
             )
         }
 
@@ -125,6 +140,31 @@ constructor(
             }
         } catch (e: Exception) {
             android.util.Log.e("SettingsDataStore", "Failed to restore settings", e)
+        }
+    }
+
+    suspend fun setYouTubeTokens(accessToken: String, refreshToken: String?) {
+        context.dataStore.edit { prefs ->
+            if (accessToken.isEmpty()) {
+                prefs.remove(KEY_YT_ACCESS_TOKEN)
+                prefs.remove(KEY_YT_REFRESH_TOKEN)
+                prefs.remove(KEY_YT_USER_NAME)
+                prefs.remove(KEY_YT_USER_AVATAR)
+                prefs.remove(KEY_YT_USER_EMAIL)
+            } else {
+                prefs[KEY_YT_ACCESS_TOKEN] = accessToken
+                if (refreshToken != null) {
+                    prefs[KEY_YT_REFRESH_TOKEN] = refreshToken
+                }
+            }
+        }
+    }
+
+    suspend fun setYouTubeProfile(name: String?, avatarUrl: String?, email: String?) {
+        context.dataStore.edit { prefs ->
+            if (name != null) prefs[KEY_YT_USER_NAME] = name else prefs.remove(KEY_YT_USER_NAME)
+            if (avatarUrl != null) prefs[KEY_YT_USER_AVATAR] = avatarUrl else prefs.remove(KEY_YT_USER_AVATAR)
+            if (email != null) prefs[KEY_YT_USER_EMAIL] = email else prefs.remove(KEY_YT_USER_EMAIL)
         }
     }
 }

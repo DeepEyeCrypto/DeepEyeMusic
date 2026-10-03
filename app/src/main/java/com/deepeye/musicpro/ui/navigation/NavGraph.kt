@@ -39,6 +39,9 @@ import com.deepeye.musicpro.ui.onboarding.OnboardingScreen
 import com.deepeye.musicpro.ui.playlist.PlaylistDetailScreen
 import com.deepeye.musicpro.ui.search.SearchScreen
 import com.deepeye.musicpro.ui.settings.SettingsScreen
+import com.deepeye.musicpro.ui.settings.PersonalizationSettingsScreen
+import com.deepeye.musicpro.ui.settings.HiddenContentScreen
+import com.deepeye.musicpro.ui.settings.PersonalizationDiagnosticsScreen
 import com.deepeye.musicpro.ui.youtube.YouTubeScreen
 import com.deepeye.musicpro.ui.library.LikedSongsScreen
 import com.deepeye.musicpro.ui.library.PlaylistsScreen
@@ -46,12 +49,15 @@ import com.deepeye.musicpro.ui.library.SavedItemsScreen
 import com.deepeye.musicpro.ui.chat.ChatListScreen
 import com.deepeye.musicpro.ui.chat.ChatAuthScreen
 import com.deepeye.musicpro.ui.chat.ChatRoomScreen
+import com.deepeye.musicpro.ui.auth.AuthViewModel
+import com.deepeye.musicpro.ui.auth.LoginScreen
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     gateViewModel: OnboardingGateViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel(),
     windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
     onExpandPlayer: () -> Unit = {},
 ) {
@@ -105,9 +111,12 @@ fun NavGraph(
         return
     }
 
+    val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
+
     val startDestination =
-        remember(onboardingState) {
-            if (onboardingState == true) Routes.Home.route
+        remember(onboardingState, currentUser) {
+            if (currentUser == null) Routes.Login.route
+            else if (onboardingState == true) Routes.Home.route
             else Routes.Onboarding.route
         }
 
@@ -121,6 +130,27 @@ fun NavGraph(
         durationMillis = 420,
         easing = transitionEasing
     )
+
+    // Sign-out routing.
+    //
+    // Fires only after [AuthViewModel.signOut] has finished tearing down the
+    // session, so the login screen never renders against a still-valid user.
+    //
+    // `popUpTo(0) { inclusive = true }` empties the back stack rather than just
+    // popping Settings. That is what stops the hardware Back button from
+    // returning the user to Home, Library or any other signed-in screen: with
+    // no prior entry, Back exits the activity instead of re-entering the app
+    // as a logged-in user. `launchSingleTop` guards against a duplicate Login
+    // entry if the graph is re-entered.
+    LaunchedEffect(navController, authViewModel) {
+        authViewModel.signOutCompleted.collect {
+            android.util.Log.i("NavGraph", "event=sign_out_nav stage=purge_backstack result=success")
+            navController.navigate(Routes.Login.route) {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -151,12 +181,22 @@ fun NavGraph(
             ) + androidx.compose.animation.fadeOut(animationSpec = fadeSpec)
         }
     ) {
+        // Login Screen
+        composable(Routes.YouTubeLogin.route) {
+            com.deepeye.musicpro.ui.screens.YouTubeLoginScreen(
+                onLoginSuccess = { _, _ -> navController.popBackStack() },
+                onCancel = { navController.popBackStack() }
+            )
+        }
         composable(Routes.Login.route) {
-            LaunchedEffect(Unit) {
-                navController.navigate(if (onboardingState == true) Routes.Home.route else Routes.Onboarding.route) {
-                    popUpTo(Routes.Login.route) { inclusive = true }
+            LoginScreen(
+                onYouTubeLoginClick = { navController.navigate(Routes.YouTubeLogin.route) },
+                onLoginSuccess = {
+                    navController.navigate(if (onboardingState == true) Routes.Home.route else Routes.Onboarding.route) {
+                        popUpTo(Routes.Login.route) { inclusive = true }
+                    }
                 }
-            }
+            )
         }
 
         // Onboarding Screen
@@ -206,7 +246,7 @@ fun NavGraph(
                     onExpandPlayer()
                 },
                 onNavigateToSearch = { navController.navigate(Routes.Search.route) },
-                onConnectAccount = {}
+                onConnectAccount = { navController.navigate(Routes.YouTubeLogin.route) }
             )
         }
 
@@ -288,7 +328,33 @@ fun NavGraph(
             SettingsScreen(
                 windowSizeClass = windowSizeClass,
                 onNavigateToAEOS = { navController.navigate(Routes.AEOS.route) },
+                onYouTubeLoginClick = { navController.navigate(Routes.YouTubeLogin.route) },
+                onNavigateToPersonalization = { navController.navigate(Routes.PersonalizationSettings.route) },
                 onLaunchTvMode = { navController.navigate(Routes.TvDashboard.route) },
+                onSignOut = { authViewModel.signOut() },
+                isSignedIn = currentUser != null,
+                signedInEmail = currentUser?.email,
+            )
+        }
+
+        composable(Routes.PersonalizationSettings.route) {
+            PersonalizationSettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToHiddenContent = { navController.navigate(Routes.HiddenContent.route) },
+                onNavigateToAccount = { navController.navigate(Routes.YouTubeLogin.route) },
+                onNavigateToDiagnostics = { navController.navigate(Routes.PersonalizationDiagnostics.route) },
+            )
+        }
+
+        composable(Routes.HiddenContent.route) {
+            HiddenContentScreen(
+                onNavigateBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(Routes.PersonalizationDiagnostics.route) {
+            PersonalizationDiagnosticsScreen(
+                onNavigateBack = { navController.popBackStack() },
             )
         }
         

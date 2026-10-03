@@ -55,8 +55,10 @@ private val glassBorder = Color(0x22FFFFFF)
 enum class SettingCategory(val title: String, val subtitle: String, val icon: ImageVector) {
     APPEARANCE("Appearance", "Theme, Dynamic Glow & Contrast", Icons.Default.Palette),
     AUDIO_ENGINE("Audio Engine (DSP)", "Lossless DSP, AEOS & Visualizer", Icons.Default.GraphicEq),
+    NOTIFICATIONS("Notifications", "New Uploads & Channel Alerts", Icons.Default.Notifications),
     LIBRARY("Storage & Library", "Rescan, Cache & Cloud Sync", Icons.Default.Folder),
-    UPDATES("Updates & Version", "OTA Engine & Release Status", Icons.Default.SystemUpdate)
+    UPDATES("Updates & Version", "OTA Engine & Release Status", Icons.Default.SystemUpdate),
+    ACCOUNT("Account", "Session & Sign Out", Icons.Default.AccountCircle)
 }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
@@ -65,6 +67,8 @@ fun SettingsScreen(
     windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass? = null,
     onNavigateBack: () -> Unit = {},
     onNavigateToAEOS: () -> Unit = {},
+    onYouTubeLoginClick: () -> Unit = {},
+    onNavigateToPersonalization: () -> Unit = {},
     onLaunchTvMode: () -> Unit = {},
     onSignOut: () -> Unit = {},
     isSignedIn: Boolean = false,
@@ -207,11 +211,52 @@ fun SettingsScreen(
                         )
                     }
                     Text(
-                        text = "System Architecture & Audio Engine",
+                        text = "System Architecture & Account Engine",
                         color = Color.White.copy(alpha = 0.6f),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
+                }
+
+                Spacer(Modifier.weight(1f))
+
+                // YouTube Account Status Chip (Automotive scaled)
+                if (settings.youtubeAccessToken != null) {
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = Color(0x2200E676),
+                        border = BorderStroke(1.5.dp, Color(0xFF00E676)),
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .clickable { viewModel.logoutYouTube() }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF00E676), modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("YouTube Active", color = Color(0xFF00E676), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                } else {
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = Color(0x22FF5252),
+                        border = BorderStroke(1.5.dp, Color(0xFFFF5252)),
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .clickable(onClick = onYouTubeLoginClick)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.AccountCircle, null, tint = Color(0xFFFF5252), modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Connect YouTube", color = Color(0xFFFF5252), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
 
@@ -241,6 +286,65 @@ fun SettingsScreen(
                                         }
                                     }
                                 )
+                            }
+
+                            item {
+                                Spacer(Modifier.height(4.dp))
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 68.dp)
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .clickable(onClick = onNavigateToPersonalization),
+                                    color = darkSurface,
+                                    border = BorderStroke(1.dp, Color(0x3300E5FF)),
+                                    shape = RoundedCornerShape(20.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 18.dp, vertical = 14.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(42.dp)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(Color(0x33FFD700)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.AutoAwesome,
+                                                    null,
+                                                    tint = Color(0xFFFFD700),
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            }
+                                            Spacer(Modifier.width(14.dp))
+                                            Column {
+                                                Text(
+                                                    "Taste Profile",
+                                                    color = Color.White,
+                                                    fontSize = 16.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                                Text(
+                                                    "Smart AI recommendations tuning",
+                                                    color = Color.White.copy(alpha = 0.6f),
+                                                    fontSize = 12.sp
+                                                )
+                                            }
+                                        }
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.ArrowForward,
+                                            null,
+                                            tint = neonCyan,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -499,6 +603,49 @@ private fun SettingsDetailPane(
                         }
                     }
                 }
+                SettingCategory.NOTIFICATIONS -> {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            SettingSwitchRow(
+                                label = "YouTube Upload Alerts",
+                                description = "Receive rich background notifications when subscribed channels upload new tracks",
+                                isChecked = uiState.notificationsEnabled,
+                                onCheckedChange = { enabled ->
+                                    viewModel.setNotificationsEnabled(enabled)
+                                }
+                            )
+
+                            // Manual Check Button
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 68.dp)
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(darkSurface)
+                                    .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
+                                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                                    Text("Check Subscriptions Now", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                    Text("Scans subscribed channels for new uploads immediately", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
+                                }
+                                Button(
+                                    onClick = {
+                                        viewModel.triggerSubscriptionCheckNow(context)
+                                        android.widget.Toast.makeText(context, "Scanning subscriptions for new uploads...", android.widget.Toast.LENGTH_SHORT).show()
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = neonCyan),
+                                    shape = RoundedCornerShape(14.dp),
+                                    modifier = Modifier.heightIn(min = 48.dp)
+                                ) {
+                                    Text("Check Now", color = Color(0xFF090B10), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
                 SettingCategory.LIBRARY -> {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -608,6 +755,90 @@ private fun SettingsDetailPane(
                                     Text("Latest Version ✓", color = Color(0xFF090B10), fontWeight = FontWeight.Black, fontSize = 14.sp)
                                 } else {
                                     Text("Check Updates", color = Color(0xFF090B10), fontWeight = FontWeight.Black, fontSize = 14.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+                SettingCategory.ACCOUNT -> {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            // Who is currently signed in
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 68.dp)
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(darkSurface)
+                                    .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
+                                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.AccountCircle,
+                                    contentDescription = null,
+                                    tint = neonCyan,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                                Spacer(Modifier.width(14.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "Signed In",
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        fontSize = 13.sp
+                                    )
+                                    Text(
+                                        signedInEmail ?: "Guest session",
+                                        color = Color.White,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            // Destructive action, visually isolated from every
+                            // other row so it cannot be hit by muscle memory.
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 68.dp)
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(MaterialTheme.colorScheme.error.copy(alpha = 0.10f))
+                                    .border(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                                        RoundedCornerShape(18.dp)
+                                    )
+                                    .clickable(enabled = isSignedIn) { onRequestSignOut() }
+                                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.Logout,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                                Spacer(Modifier.width(14.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "Sign Out",
+                                        color = MaterialTheme.colorScheme.error,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        "End this session on this device",
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        fontSize = 13.sp
+                                    )
+                                }
+                                if (!isSignedIn) {
+                                    Text(
+                                        "Inactive",
+                                        color = Color.White.copy(alpha = 0.4f),
+                                        fontSize = 13.sp
+                                    )
                                 }
                             }
                         }
