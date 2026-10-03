@@ -68,6 +68,7 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToAEOS: () -> Unit = {},
     onYouTubeLoginClick: () -> Unit = {},
+    onGoogleSignInClick: () -> Unit = {},
     onNavigateToPersonalization: () -> Unit = {},
     onLaunchTvMode: () -> Unit = {},
     onSignOut: () -> Unit = {},
@@ -84,6 +85,49 @@ fun SettingsScreen(
     // Sign-out is irreversible and destroys the user's session, so it is gated
     // behind an explicit confirmation rather than firing on a single tap.
     var showSignOutConfirm by remember { mutableStateOf(false) }
+    var showYouTubeDisconnectConfirm by remember { mutableStateOf(false) }
+
+    if (showYouTubeDisconnectConfirm) {
+        AppAlertDialog(
+            onDismissRequest = { showYouTubeDisconnectConfirm = false },
+            containerColor = Color(0xFF131722),
+            icon = {
+                Icon(
+                    Icons.Default.LinkOff,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            },
+            title = {
+                Text("Disconnect YouTube Account", color = Color.White, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text(
+                    "Disconnecting will remove your authenticated YouTube session and account subscriptions from this device.",
+                    color = Color.White.copy(alpha = 0.8f),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showYouTubeDisconnectConfirm = false
+                        viewModel.logoutYouTube()
+                    },
+                ) {
+                    Text(
+                        "Disconnect",
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showYouTubeDisconnectConfirm = false }) {
+                    Text("Cancel", color = Color.White.copy(alpha = 0.8f))
+                }
+            },
+        )
+    }
 
     if (showSignOutConfirm) {
         AppAlertDialog(
@@ -228,7 +272,7 @@ fun SettingsScreen(
                         border = BorderStroke(1.5.dp, Color(0xFF00E676)),
                         modifier = Modifier
                             .heightIn(min = 48.dp)
-                            .clickable { viewModel.logoutYouTube() }
+                            .clickable { showYouTubeDisconnectConfirm = true }
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -368,6 +412,9 @@ fun SettingsScreen(
                                 isSignedIn = isSignedIn,
                                 signedInEmail = signedInEmail,
                                 onRequestSignOut = { showSignOutConfirm = true },
+                                onGoogleSignInClick = onGoogleSignInClick,
+                                onYouTubeLoginClick = onYouTubeLoginClick,
+                                onNavigateToPersonalization = onNavigateToPersonalization,
                             )
                         }
                     }
@@ -446,6 +493,9 @@ private fun SettingsDetailPane(
     isSignedIn: Boolean,
     signedInEmail: String?,
     onRequestSignOut: () -> Unit,
+    onGoogleSignInClick: () -> Unit = {},
+    onYouTubeLoginClick: () -> Unit = {},
+    onNavigateToPersonalization: () -> Unit = {},
 ) {
     val settings = uiState.settings
 
@@ -762,82 +812,211 @@ private fun SettingsDetailPane(
                 }
                 SettingCategory.ACCOUNT -> {
                     item {
-                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            // Who is currently signed in
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(min = 68.dp)
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .background(darkSurface)
-                                    .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
-                                    .padding(horizontal = 18.dp, vertical = 14.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                            // 1. Google Cloud / DeepEye Account Section
+                            Text(
+                                "Google Account",
+                                color = neonCyan,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = darkSurface,
+                                shape = RoundedCornerShape(20.dp),
+                                border = BorderStroke(1.dp, glassBorder)
                             ) {
-                                Icon(
-                                    Icons.Default.AccountCircle,
-                                    contentDescription = null,
-                                    tint = neonCyan,
-                                    modifier = Modifier.size(28.dp)
-                                )
-                                Spacer(Modifier.width(14.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        "Signed In",
-                                        color = Color.White.copy(alpha = 0.6f),
-                                        fontSize = 13.sp
-                                    )
-                                    Text(
-                                        signedInEmail ?: "Guest session",
-                                        color = Color.White,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .clip(CircleShape)
+                                                .background(if (isSignedIn) Color(0x3300E5FF) else Color(0x14FFFFFF)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isSignedIn) Icons.Default.AccountCircle else Icons.Default.PersonOutline,
+                                                contentDescription = null,
+                                                tint = if (isSignedIn) neonCyan else Color.White.copy(alpha = 0.6f),
+                                                modifier = Modifier.size(30.dp)
+                                            )
+                                        }
+                                        Spacer(Modifier.width(16.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                if (isSignedIn) (signedInEmail ?: "Google Account Active") else "Guest Mode (Not Signed In)",
+                                                color = Color.White,
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                if (isSignedIn) "Cloud sync, playlists & backup active" else "Sign in to backup & sync your library across devices",
+                                                color = Color.White.copy(alpha = 0.6f),
+                                                fontSize = 12.sp
+                                            )
+                                        }
+                                    }
+
+                                    if (isSignedIn) {
+                                        Button(
+                                            onClick = onRequestSignOut,
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.15f),
+                                                contentColor = MaterialTheme.colorScheme.error
+                                            ),
+                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
+                                            shape = RoundedCornerShape(14.dp),
+                                            modifier = Modifier.fillMaxWidth().height(48.dp)
+                                        ) {
+                                            Icon(Icons.AutoMirrored.Filled.Logout, null, modifier = Modifier.size(18.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Sign Out Google Account", fontWeight = FontWeight.Bold)
+                                        }
+                                    } else {
+                                        Button(
+                                            onClick = onGoogleSignInClick,
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = neonCyan,
+                                                contentColor = Color.Black
+                                            ),
+                                            shape = RoundedCornerShape(14.dp),
+                                            modifier = Modifier.fillMaxWidth().height(48.dp)
+                                        ) {
+                                            Icon(Icons.Default.Login, null, modifier = Modifier.size(18.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Sign In with Google", fontWeight = FontWeight.Black)
+                                        }
+                                    }
                                 }
                             }
 
-                            // Destructive action, visually isolated from every
-                            // other row so it cannot be hit by muscle memory.
-                            Row(
+                            // 2. YouTube / InnerTube Account Section
+                            Text(
+                                "YouTube Account",
+                                color = Color(0xFFFF4444),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = darkSurface,
+                                shape = RoundedCornerShape(20.dp),
+                                border = BorderStroke(1.dp, if (settings.youtubeAccessToken != null) Color(0x3300E676) else glassBorder)
+                            ) {
+                                Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .clip(CircleShape)
+                                                .background(if (settings.youtubeAccessToken != null) Color(0x2600E676) else Color(0x22FF4444)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = if (settings.youtubeAccessToken != null) Icons.Default.CheckCircle else Icons.Default.PlayCircle,
+                                                contentDescription = null,
+                                                tint = if (settings.youtubeAccessToken != null) Color(0xFF00E676) else Color(0xFFFF4444),
+                                                modifier = Modifier.size(28.dp)
+                                            )
+                                        }
+                                        Spacer(Modifier.width(16.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                if (settings.youtubeAccessToken != null) (settings.youtubeUserName ?: "YouTube Linked") else "YouTube Not Connected",
+                                                color = Color.White,
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                if (settings.youtubeAccessToken != null) (settings.youtubeUserEmail ?: "Authenticated InnerTube Session Active") else "Connect via TV Device Code or OAuth to access subscriptions & history",
+                                                color = Color.White.copy(alpha = 0.6f),
+                                                fontSize = 12.sp
+                                            )
+                                        }
+                                    }
+
+                                    if (settings.youtubeAccessToken != null) {
+                                        Button(
+                                            onClick = { viewModel.logoutYouTube() },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0x22FF5252),
+                                                contentColor = Color(0xFFFF5252)
+                                            ),
+                                            border = BorderStroke(1.dp, Color(0x55FF5252)),
+                                            shape = RoundedCornerShape(14.dp),
+                                            modifier = Modifier.fillMaxWidth().height(48.dp)
+                                        ) {
+                                            Icon(Icons.Default.LinkOff, null, modifier = Modifier.size(18.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Disconnect YouTube Account", fontWeight = FontWeight.Bold)
+                                        }
+                                    } else {
+                                        Button(
+                                            onClick = onYouTubeLoginClick,
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFFFF0033),
+                                                contentColor = Color.White
+                                            ),
+                                            shape = RoundedCornerShape(14.dp),
+                                            modifier = Modifier.fillMaxWidth().height(48.dp)
+                                        ) {
+                                            Icon(Icons.Default.QrCode, null, modifier = Modifier.size(18.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Connect YouTube Account", fontWeight = FontWeight.Black)
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 3. Personalization & Discovery Preferences
+                            Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .heightIn(min = 68.dp)
                                     .clip(RoundedCornerShape(18.dp))
-                                    .background(MaterialTheme.colorScheme.error.copy(alpha = 0.10f))
-                                    .border(
-                                        1.dp,
-                                        MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
-                                        RoundedCornerShape(18.dp)
-                                    )
-                                    .clickable(enabled = isSignedIn) { onRequestSignOut() }
-                                    .padding(horizontal = 18.dp, vertical = 14.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .clickable(onClick = onNavigateToPersonalization),
+                                color = darkSurface,
+                                border = BorderStroke(1.dp, glassBorder)
                             ) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.Logout,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(26.dp)
-                                )
-                                Spacer(Modifier.width(14.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        "Sign Out",
-                                        color = MaterialTheme.colorScheme.error,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold
+                                Row(
+                                    modifier = Modifier.padding(18.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.Tune,
+                                        contentDescription = null,
+                                        tint = neonCyan,
+                                        modifier = Modifier.size(24.dp)
                                     )
-                                    Text(
-                                        "End this session on this device",
-                                        color = Color.White.copy(alpha = 0.6f),
-                                        fontSize = 13.sp
-                                    )
-                                }
-                                if (!isSignedIn) {
-                                    Text(
-                                        "Inactive",
-                                        color = Color.White.copy(alpha = 0.4f),
-                                        fontSize = 13.sp
+                                    Spacer(Modifier.width(14.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            "Personalization & Feed Settings",
+                                            color = Color.White,
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            "Manage recommendations, hidden content & history",
+                                            color = Color.White.copy(alpha = 0.6f),
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowForward,
+                                        contentDescription = null,
+                                        tint = Color.White.copy(alpha = 0.4f),
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }

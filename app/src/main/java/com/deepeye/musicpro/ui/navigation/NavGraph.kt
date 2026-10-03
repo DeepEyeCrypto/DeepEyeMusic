@@ -329,6 +329,7 @@ fun NavGraph(
                 windowSizeClass = windowSizeClass,
                 onNavigateToAEOS = { navController.navigate(Routes.AEOS.route) },
                 onYouTubeLoginClick = { navController.navigate(Routes.YouTubeLogin.route) },
+                onGoogleSignInClick = { navController.navigate(Routes.Login.route) },
                 onNavigateToPersonalization = { navController.navigate(Routes.PersonalizationSettings.route) },
                 onLaunchTvMode = { navController.navigate(Routes.TvDashboard.route) },
                 onSignOut = { authViewModel.signOut() },
