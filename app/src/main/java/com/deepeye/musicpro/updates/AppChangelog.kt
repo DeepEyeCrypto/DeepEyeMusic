@@ -8,6 +8,22 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30050,
+                versionName = "3.0.1.40",
+                releaseDate = "October 2026",
+                title = "ViPER4Android Rescue, Zero-NaN Limiter & Gapless Radio Engine 🚀",
+                highlight = true,
+                items =
+                    listOf(
+                        "V4A DSP 10 Master Presets: 5 dedicated Sub-Bass presets (30Hz Infra, Earthquake Monster, Punchy 808, Velvet Lo-Fi, Sub-Harmonic Synthesizer) & 5 Studio/Spatial presets (Audiophile Master, Crystal Vocal, 3D Holographic Stage, 300B Tube, IMAX Dolby Theatre).",
+                        "Zero-NaN Master Limiter & Anti-Clipping: Eliminated hyperbolic tangent divide-by-zero distortion with guaranteed headroom and -0.5 dBFS safety ceiling for clean, punchy +12dB EQ boosts.",
+                        "likelikeslike V2 IPC Conflation: Throttled high-frequency UI slider drag events to 60 FPS (16ms) to protect AIDL/JNI double-buffered shared memory.",
+                        "Daemon Immortality & State Rehydration: Autonomous recovery protocol catches audio server crashes, re-attaching the active session and restoring all DSP modules with zero playback interruption.",
+                        "Gapless Zero-Latency Auto-Play Radio: Proactive 15s background stream pre-extraction with ExoPlayer addMediaItem() pre-buffering for gapless continuous radio playback.",
+                        "Anonymous Streaming Architecture: Purged background sync and authentication overhead for pure, lightning-fast, privacy-first audio and video playback."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30046,
                 versionName = "3.0.1.36",
                 releaseDate = "September 2026",

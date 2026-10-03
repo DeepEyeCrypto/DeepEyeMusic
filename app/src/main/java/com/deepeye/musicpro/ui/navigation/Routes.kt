@@ -29,8 +29,6 @@ sealed class Routes(val route: String) {
 
     data object Login : Routes("login")
 
-    data object YouTubeLogin : Routes("youtube_login")
-
     data object Onboarding : Routes("onboarding")
 
     data object Downloads : Routes("downloads")
@@ -46,12 +44,6 @@ sealed class Routes(val route: String) {
     data object Playlists : Routes("playlists")
 
     data object Gamification : Routes("gamification")
-    data object PersonalizationSettings : Routes("personalization_settings")
-
-    data object HiddenContent : Routes("hidden_content")
-
-    data object PersonalizationDiagnostics : Routes("personalization_diagnostics")
-
 
     data object TvDashboard : Routes("tv_dashboard")
 

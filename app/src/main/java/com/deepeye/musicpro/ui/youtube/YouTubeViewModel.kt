@@ -48,7 +48,6 @@ constructor(
     private val tasteProfileRepository: com.deepeye.musicpro.domain.repository.TasteProfileRepository,
     private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
     private val authClient: com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient,
-    private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(YouTubeUiState())
     val uiState: StateFlow<YouTubeUiState> = _uiState.asStateFlow()
@@ -64,18 +63,8 @@ constructor(
     }
 
     init {
-        observeAuth()
         loadCategory("Home")
         loadHomeFeed()
-    }
-
-    private fun observeAuth() {
-        viewModelScope.launch {
-            settingsDataStore.settings.collect { settings ->
-                val auth = settings.youtubeAccessToken != null
-                _uiState.update { it.copy(hasAuth = auth) }
-            }
-        }
     }
 
     private fun loadHomeFeed() {
@@ -153,17 +142,10 @@ constructor(
 
     private fun loadCategory(category: String) {
         viewModelScope.launch {
-            val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
-            val hasAuth = authSettings?.youtubeAccessToken != null
-
             _uiState.update { it.copy(isLoading = true, error = null, hasMore = false) }
             try {
                 val authItems = when (category) {
                     "Home" -> authClient.getHomeFeed().ifEmpty { authClient.getTrending() }.ifEmpty { authClient.search("trending music") }
-                    "Subscriptions" -> if (hasAuth) authClient.getSubscriptionsFeed() else emptyList()
-                    "History" -> if (hasAuth) authClient.getHistory() else emptyList()
-                    "Liked" -> if (hasAuth) authClient.getLikedVideos() else emptyList()
-                    "Watch Later" -> if (hasAuth) authClient.getWatchLater() else emptyList()
                     "Music" -> authClient.getMusicFeed().ifEmpty { authClient.search("top music videos") }
                     "Movies" -> authClient.getMoviesFeed().ifEmpty { authClient.search("full movies") }
                     "Gaming" -> authClient.getGamingFeed().ifEmpty { authClient.search("gaming walkthrough") }

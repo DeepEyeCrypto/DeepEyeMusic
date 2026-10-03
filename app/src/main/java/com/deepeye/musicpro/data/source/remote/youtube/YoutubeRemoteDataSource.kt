@@ -42,7 +42,7 @@ constructor(
             client = extractorClient,
             formatAdapter = formatAdapter
         ) {
-            settingsDataStore.settings.first().youtubeAccessToken?.takeIf { it.isNotBlank() }
+            null
         }
     }
 

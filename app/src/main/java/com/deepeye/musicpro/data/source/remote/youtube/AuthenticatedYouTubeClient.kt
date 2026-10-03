@@ -1,13 +1,10 @@
 package com.deepeye.musicpro.data.source.remote.youtube
 
 import android.util.Log
-import com.deepeye.musicpro.data.prefs.SettingsDataStore
-import com.deepeye.musicpro.domain.auth.YouTubeDeviceAuthManager
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -19,17 +16,15 @@ import javax.inject.Singleton
 
 @Singleton
 data class VideoInteractionStatus(
-    val isLiked: Boolean,
-    val isDisliked: Boolean,
-    val isSubscribed: Boolean,
-    val subscriberCountText: String
+    val isLiked: Boolean = false,
+    val isDisliked: Boolean = false,
+    val isSubscribed: Boolean = false,
+    val subscriberCountText: String = ""
 )
 
 @Singleton
 class AuthenticatedYouTubeClient @Inject constructor(
-    private val client: OkHttpClient,
-    private val settingsDataStore: SettingsDataStore,
-    private val authManager: YouTubeDeviceAuthManager
+    private val client: OkHttpClient
 ) {
     private val INNERTUBE_API_URL = "https://youtubei.googleapis.com/youtubei/v1/browse?key=${com.deepeye.musicpro.BuildConfig.YOUTUBE_API_KEY}"
 
@@ -45,69 +40,18 @@ class AuthenticatedYouTubeClient @Inject constructor(
         }
     """.trimIndent()
 
-    // TVHTML5 client — works with OAuth tokens for personalized/auth content
-    private val TV_CONTEXT_JSON = """
-        "context": {
-          "client": {
-            "clientName": "TVHTML5",
-            "clientVersion": "7.20230412.08.00",
-            "hl": "en",
-            "gl": "IN"
-          }
-        }
-    """.trimIndent()
-
-    private suspend fun getValidAccessToken(): String? {
-        val settings = settingsDataStore.settings.first()
-        return settings.youtubeAccessToken
-    }
-
-    private suspend fun handle401AndRetry(request: Request): List<HomeVideoItem> {
-        val settings = settingsDataStore.settings.first()
-        val refreshToken = settings.youtubeRefreshToken
-        if (refreshToken != null) {
-            val newToken = authManager.refreshToken(refreshToken)
-            if (newToken != null) {
-                settingsDataStore.setYouTubeTokens(newToken.accessToken, newToken.refreshToken)
-                val retryReq = request.newBuilder().header("Authorization", "Bearer ${newToken.accessToken}").build()
-                client.newCall(retryReq).execute().use { retryRes ->
-                    if (retryRes.isSuccessful) {
-                        return parseInnerTubeVideos(retryRes.body?.string() ?: "")
-                    }
-                    Log.e("AuthYTClient", "Post-refresh retry failed with HTTP ${retryRes.code}")
-                }
-            }
-        }
-        return emptyList()
-    }
-
-    /**
-     * Browse with specified client context.
-     * @param useAuthClient true = TVHTML5 + OAuth token (for personalized data), false = WEB (for public data with full metadata)
-     */
-    private suspend fun browseInternal(browseId: String, params: String? = null, useAuthClient: Boolean = false): List<HomeVideoItem> = withContext(Dispatchers.IO) {
-        val token = getValidAccessToken()
-        val contextJson = if (useAuthClient && token != null) TV_CONTEXT_JSON else WEB_CONTEXT_JSON
+    private suspend fun browseInternal(browseId: String, params: String? = null): List<HomeVideoItem> = withContext(Dispatchers.IO) {
         val paramsPart = if (params != null) ", \"params\": \"$params\"" else ""
-        val bodyStr = "{$contextJson, \"browseId\": \"$browseId\"$paramsPart}"
+        val bodyStr = "{$WEB_CONTEXT_JSON, \"browseId\": \"$browseId\"$paramsPart}"
 
         try {
-            val reqBuilder = Request.Builder()
+            val request = Request.Builder()
                 .url(INNERTUBE_API_URL)
                 .addHeader("Content-Type", "application/json")
                 .post(bodyStr.toRequestBody("application/json".toMediaType()))
+                .build()
 
-            if (token != null) {
-                reqBuilder.addHeader("Authorization", "Bearer $token")
-            }
-
-            val request = reqBuilder.build()
             val response = client.newCall(request).execute()
-            if (response.code == 401 && token != null) {
-                Log.e("AuthYTClient", "401 Unauthorized for $browseId, retrying...")
-                response.close()
-                return@withContext handle401AndRetry(request)
-            }
             if (!response.isSuccessful) {
                 val errorBody = response.body?.string()
                 Log.e("AuthYTClient", "browse($browseId) HTTP Error: ${response.code} - $errorBody")
@@ -116,7 +60,7 @@ class AuthenticatedYouTubeClient @Inject constructor(
 
             val jsonStr = response.body?.string() ?: ""
             val items = parseInnerTubeVideos(jsonStr)
-            Log.d("AuthYTClient", "browse($browseId, auth=$useAuthClient) returned ${items.size} videos")
+            Log.d("AuthYTClient", "browse($browseId) returned ${items.size} videos")
             items.distinctBy { it.id }
         } catch (e: Exception) {
             Log.e("AuthYTClient", "browse($browseId) failed", e)
@@ -126,101 +70,40 @@ class AuthenticatedYouTubeClient @Inject constructor(
 
     /** Public browse (WEB client, works without auth, returns full channel metadata) */
     suspend fun browse(browseId: String, params: String? = null): List<HomeVideoItem> =
-        browseInternal(browseId, params, useAuthClient = false)
+        browseInternal(browseId, params)
 
-    /** Auth browse (TVHTML5 + OAuth, for personalized content like history/subs) */
     private suspend fun authBrowse(browseId: String, params: String? = null): List<HomeVideoItem> =
-        browseInternal(browseId, params, useAuthClient = true)
+        browseInternal(browseId, params)
 
-    suspend fun getHomeFeed(): List<HomeVideoItem> {
-        // Try auth first for personalized home, fallback to public WEB
-        val token = getValidAccessToken()
-        if (token != null) {
-            val authResult = authBrowse("FEwhat_to_watch")
-            if (authResult.isNotEmpty()) return authResult
-        }
-        return browse("FEwhat_to_watch")
-    }
+    suspend fun getHomeFeed(): List<HomeVideoItem> =
+        browse("FEwhat_to_watch").ifEmpty { search("trending music") }
 
-    suspend fun getHistory(): List<HomeVideoItem> = authBrowse("FEhistory")
+    suspend fun getHistory(): List<HomeVideoItem> = emptyList()
 
-    suspend fun getSubscriptionsFeed(): List<HomeVideoItem> = authBrowse("FEsubscriptions")
+    suspend fun getSubscriptionsFeed(): List<HomeVideoItem> = emptyList()
 
-    suspend fun getLikedVideos(): List<HomeVideoItem> {
-        val result = authBrowse("VLLL")
-        return if (result.isNotEmpty()) result else authBrowse("FEliked_playlists")
-    }
+    suspend fun getLikedVideos(): List<HomeVideoItem> = emptyList()
 
-    suspend fun getWatchLater(): List<HomeVideoItem> = authBrowse("VLWL")
+    suspend fun getWatchLater(): List<HomeVideoItem> = emptyList()
 
     suspend fun getTrending(): List<HomeVideoItem> =
         search("trending videos")
 
     suspend fun getMusicFeed(): List<HomeVideoItem> = withContext(Dispatchers.IO) {
-        val token = getValidAccessToken()
-        val accountMusic = mutableListOf<HomeVideoItem>()
-        if (token != null) {
-            try {
-                coroutineScope {
-                    val likedDeferred = async { getLikedVideos() }
-                    val historyDeferred = async { getHistory() }
-                    val subsDeferred = async { getSubscriptionsFeed() }
-                    val homeDeferred = async { getHomeFeed() }
-
-                    val liked = try { likedDeferred.await() } catch (e: Exception) { emptyList() }
-                    val history = try { historyDeferred.await() } catch (e: Exception) { emptyList() }
-                    val subs = try { subsDeferred.await() } catch (e: Exception) { emptyList() }
-                    val home = try { homeDeferred.await() } catch (e: Exception) { emptyList() }
-
-                    val seen = mutableSetOf<String>()
-                    for (item in liked + history + subs + home) {
-                        if (!item.isShort &&
-                            (item.duration == 0L || item.duration >= 60L) &&
-                            MusicFilter.isMusicTrack(item.title, item.channelName, item.duration, item.isShort) &&
-                            seen.add(item.id)
-                        ) {
-                            accountMusic.add(item)
-                        }
-                    }
-                }
-                Log.d("AuthYTClient", "getMusicFeed() found ${accountMusic.size} personalized music items")
-            } catch (e: Exception) {
-                Log.e("AuthYTClient", "getMusicFeed account fetch failed", e)
-            }
-        }
-
-        // Fetch top trending music songs
         val trendingSongs = try {
             search("trending songs official audio video")
         } catch (e: Exception) {
             emptyList()
         }
-
-        val combined = mutableListOf<HomeVideoItem>()
-        val seenIds = mutableSetOf<String>()
-        // Prioritize account songs, then trending songs
-        for (item in accountMusic + trendingSongs) {
-            if (MusicFilter.isMusicTrack(item.title, item.channelName, item.duration) && seenIds.add(item.id)) {
-                combined.add(item)
-            }
-        }
-
-        if (combined.isNotEmpty()) {
-            return@withContext combined
-        }
         trendingSongs.ifEmpty { search("latest bollywood songs hindi hits") }
     }
 
     suspend fun getLikedMusic(): List<HomeVideoItem> = withContext(Dispatchers.IO) {
-        val liked = getLikedVideos()
-        val filtered = liked.filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
-        if (filtered.isNotEmpty()) filtered else search("top hit songs official audio")
+        search("top hit songs official audio")
     }
 
     suspend fun getMusicHistory(): List<HomeVideoItem> = withContext(Dispatchers.IO) {
-        val history = getHistory()
-        val filtered = history.filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
-        if (filtered.isNotEmpty()) filtered else search("latest hindi songs audio")
+        search("latest hindi songs audio")
     }
 
     suspend fun getMoviesFeed(): List<HomeVideoItem> {
@@ -239,19 +122,11 @@ class AuthenticatedYouTubeClient @Inject constructor(
     }
 
     suspend fun search(query: String): List<HomeVideoItem> = withContext(Dispatchers.IO) {
-        val token = getValidAccessToken()
         val requestJson = JSONObject().apply {
             put("context", JSONObject().apply {
                 put("client", JSONObject().apply {
-                    if (token != null) {
-                        // OAuth tokens are only accepted with a device client context —
-                        // WEB + Bearer returns 400 INVALID_ARGUMENT (verified via probe).
-                        put("clientName", "TVHTML5")
-                        put("clientVersion", "7.20230412.08.00")
-                    } else {
-                        put("clientName", "WEB")
-                        put("clientVersion", "2.20240101.00.00")
-                    }
+                    put("clientName", "WEB")
+                    put("clientVersion", "2.20240101.00.00")
                     put("hl", "en")
                     put("gl", "IN")
                 })
@@ -265,16 +140,8 @@ class AuthenticatedYouTubeClient @Inject constructor(
                 .addHeader("Content-Type", "application/json")
                 .post(requestJson.toString().toRequestBody("application/json".toMediaType()))
 
-            if (token != null) {
-                reqBuilder.addHeader("Authorization", "Bearer $token")
-            }
-
             val request = reqBuilder.build()
             val response = client.newCall(request).execute()
-            if (response.code == 401 && token != null) {
-                Log.e("AuthYTClient", "401 Unauthorized for search $query, retrying...")
-                return@withContext handle401AndRetry(request)
-            }
             if (!response.isSuccessful) {
                 val errBody = try { response.body?.string()?.take(300) } catch (e: Exception) { null }
                 Log.e("AuthYTClient", "search '$query' HTTP Error: ${response.code} - $errBody")
@@ -689,99 +556,12 @@ class AuthenticatedYouTubeClient @Inject constructor(
         return if (last.startsWith("//")) "https:$last" else last
     }
 
-    // --- REAL PERSONALIZATION & INTERACTIONS ---
+    // --- INTERACTIONS (ANONYMOUS SAFE STUBS) ---
 
-    suspend fun likeVideo(videoId: String): Boolean = withContext(Dispatchers.IO) {
-        performAction("like/like", JSONObject().put("target", JSONObject().put("videoId", videoId)))
-    }
-
-    suspend fun dislikeVideo(videoId: String): Boolean = withContext(Dispatchers.IO) {
-        performAction("like/dislike", JSONObject().put("target", JSONObject().put("videoId", videoId)))
-    }
-
-    suspend fun removeLike(videoId: String): Boolean = withContext(Dispatchers.IO) {
-        performAction("like/removelike", JSONObject().put("target", JSONObject().put("videoId", videoId)))
-    }
-
-    suspend fun subscribeChannel(channelId: String): Boolean = withContext(Dispatchers.IO) {
-        performAction("subscription/subscribe", JSONObject().put("channelIds", org.json.JSONArray().put(channelId)))
-    }
-
-    suspend fun unsubscribeChannel(channelId: String): Boolean = withContext(Dispatchers.IO) {
-        performAction("subscription/unsubscribe", JSONObject().put("channelIds", org.json.JSONArray().put(channelId)))
-    }
-
-    suspend fun getVideoInteractionStatus(videoId: String): VideoInteractionStatus? = withContext(Dispatchers.IO) {
-        val token = getValidAccessToken()
-        if (token == null) return@withContext null
-        
-        try {
-            val reqBody = JSONObject().apply {
-                put("context", JSONObject().apply {
-                    put("client", JSONObject().apply {
-                        put("clientName", "TVHTML5")
-                        put("clientVersion", "7.20230412.08.00")
-                        put("hl", "en")
-                        put("gl", "IN")
-                    })
-                })
-                put("videoId", videoId)
-            }
-            
-            val request = Request.Builder()
-                .url("https://youtubei.googleapis.com/youtubei/v1/next?key=${com.deepeye.musicpro.BuildConfig.YOUTUBE_API_KEY}")
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Authorization", "Bearer $token")
-                .post(reqBody.toString().toRequestBody("application/json".toMediaType()))
-                .build()
-                
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return@use null
-                val raw = response.body?.string() ?: ""
-                
-                // Fast regex parsing for statuses since JSON is huge
-                val likeMatch = Regex("\"likeStatus\"\\s*:\\s*\"([^\"]+)\"").find(raw)
-                val subMatch = Regex("\"subscribed\"\\s*:\\s*(true|false)").find(raw)
-                val subCountMatch = Regex("\"subscriberCountText\"\\s*:\\s*\\{\\s*\"simpleText\"\\s*:\\s*\"([^\"]+)\"").find(raw)
-                
-                val status = likeMatch?.groupValues?.get(1) ?: "INDIFFERENT"
-                val isSubbed = subMatch?.groupValues?.get(1) == "true"
-                val subCount = subCountMatch?.groupValues?.get(1) ?: ""
-                
-                return@withContext VideoInteractionStatus(
-                    isLiked = status == "LIKE",
-                    isDisliked = status == "DISLIKE",
-                    isSubscribed = isSubbed,
-                    subscriberCountText = subCount
-                )
-            }
-        } catch(e: Exception) {
-            Log.e("AuthYTClient", "Failed to fetch interaction status", e)
-        }
-        null
-    }
-
-    private suspend fun performAction(endpoint: String, payload: JSONObject): Boolean {
-        val token = getValidAccessToken() ?: return false
-        payload.put("context", JSONObject().apply {
-            put("client", JSONObject().apply {
-                put("clientName", "TVHTML5")
-                put("clientVersion", "7.20230412.08.00")
-            })
-        })
-        try {
-            val req = Request.Builder()
-                .url("https://youtubei.googleapis.com/youtubei/v1/$endpoint?key=${com.deepeye.musicpro.BuildConfig.YOUTUBE_API_KEY}")
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Authorization", "Bearer $token")
-                .post(payload.toString().toRequestBody("application/json".toMediaType()))
-                .build()
-            client.newCall(req).execute().use { res ->
-                return res.isSuccessful
-            }
-        } catch(e: Exception) {
-            Log.e("AuthYTClient", "Action $endpoint failed", e)
-            return false
-        }
-    }
+    suspend fun likeVideo(videoId: String): Boolean = true
+    suspend fun dislikeVideo(videoId: String): Boolean = true
+    suspend fun removeLike(videoId: String): Boolean = true
+    suspend fun subscribeChannel(channelId: String): Boolean = true
+    suspend fun unsubscribeChannel(channelId: String): Boolean = true
+    suspend fun getVideoInteractionStatus(videoId: String): VideoInteractionStatus? = null
 }

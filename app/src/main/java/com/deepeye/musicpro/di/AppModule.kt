@@ -4,34 +4,36 @@
 package com.deepeye.musicpro.di
 
 import android.content.Context
-import com.deepeye.musicpro.data.prefs.PersonalizationPreferenceStore
-import com.deepeye.musicpro.data.prefs.PersonalizationPreferencesDataStore
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+@Qualifier
+@Retention(AnnotationRetention.RUNTIME)
+annotation class ApplicationScope
 
 /**
  * App-level Hilt module providing application-scoped dependencies.
  */
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class AppModule {
+object AppModule {
 
-    @Binds
+    @Provides
     @Singleton
-    abstract fun bindPersonalizationPreferenceStore(
-        impl: PersonalizationPreferencesDataStore,
-    ): PersonalizationPreferenceStore
+    fun provideApplicationContext(
+        @ApplicationContext context: Context,
+    ): Context = context
 
-    companion object {
-        @Provides
-        @Singleton
-        fun provideApplicationContext(
-            @ApplicationContext context: Context,
-        ): Context = context
-    }
+    @Provides
+    @Singleton
+    @ApplicationScope
+    fun provideApplicationScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 }

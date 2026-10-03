@@ -46,7 +46,6 @@ class NetMirrorViewModel @Inject constructor(
     private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
     private val playerController: PlayerController,
     private val authClient: com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient,
-    private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NetMirrorUiState())
@@ -60,32 +59,35 @@ class NetMirrorViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
-                val hasAuth = authSettings?.youtubeAccessToken != null
-
                 val deferredBollywood = async {
-                    if (hasAuth) authClient.search("latest official bollywood full movies 2024 -south -dubbed -hollywood -bhojpuri")
-                    else youtubeRemoteDataSource.searchVideosFirstPage("latest official bollywood full movies 2024 -south -dubbed -hollywood -bhojpuri").items
+                    authClient.search("latest official bollywood full movies 2024 -south -dubbed -hollywood -bhojpuri").ifEmpty {
+                        youtubeRemoteDataSource.searchVideosFirstPage("latest official bollywood full movies 2024 -south -dubbed -hollywood -bhojpuri").items
+                    }
                 }
                 val deferredHollywood = async {
-                    if (hasAuth) authClient.search("latest hollywood full movies action english -hindi -dubbed")
-                    else youtubeRemoteDataSource.searchVideosFirstPage("latest hollywood full movies action english -hindi -dubbed").items
+                    authClient.search("latest hollywood full movies action english -hindi -dubbed").ifEmpty {
+                        youtubeRemoteDataSource.searchVideosFirstPage("latest hollywood full movies action english -hindi -dubbed").items
+                    }
                 }
                 val deferredSouth = async {
-                    if (hasAuth) authClient.search("latest south indian movies dubbed in hindi full -bollywood")
-                    else youtubeRemoteDataSource.searchVideosFirstPage("latest south indian movies dubbed in hindi full -bollywood").items
+                    authClient.search("latest south indian movies dubbed in hindi full -bollywood").ifEmpty {
+                        youtubeRemoteDataSource.searchVideosFirstPage("latest south indian movies dubbed in hindi full -bollywood").items
+                    }
                 }
                 val deferredWebSeries = async {
-                    if (hasAuth) authClient.search("popular hindi web series 2024 2025")
-                    else youtubeRemoteDataSource.searchVideosFirstPage("popular hindi web series 2024 2025").items
+                    authClient.search("popular hindi web series 2024 2025").ifEmpty {
+                        youtubeRemoteDataSource.searchVideosFirstPage("popular hindi web series 2024 2025").items
+                    }
                 }
                 val deferredPakistani = async {
-                    if (hasAuth) authClient.search("popular pakistani drama 2024 2025")
-                    else youtubeRemoteDataSource.searchVideosFirstPage("popular pakistani drama 2024 2025").items
+                    authClient.search("popular pakistani drama 2024 2025").ifEmpty {
+                        youtubeRemoteDataSource.searchVideosFirstPage("popular pakistani drama 2024 2025").items
+                    }
                 }
                 val deferredKids = async {
-                    if (hasAuth) authClient.search("latest kids cartoons in hindi full -horror")
-                    else youtubeRemoteDataSource.searchVideosFirstPage("latest kids cartoons in hindi full -horror").items
+                    authClient.search("latest kids cartoons in hindi full -horror").ifEmpty {
+                        youtubeRemoteDataSource.searchVideosFirstPage("latest kids cartoons in hindi full -horror").items
+                    }
                 }
 
                 val bollywood = deferredBollywood.await()
