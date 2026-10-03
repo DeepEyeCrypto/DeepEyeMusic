@@ -33,6 +33,7 @@ constructor(
     private val libraryRepo: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
     private val tasteProfileRepo: TasteProfileRepository,
     private val authClient: AuthenticatedYouTubeClient,
+    private val historyRepo: com.deepeye.musicpro.domain.repository.HistoryRepository,
 ) {
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
@@ -72,9 +73,17 @@ constructor(
             }
             val continueWatchingDeferred = async {
                 try {
-                    val recentSongs = recommendationDao.getTopSongsSince(System.currentTimeMillis() - 7L * 24 * 3600 * 1000, 10)
-                    recentSongs.filter { it.avgCompletion < 0.9f && it.avgCompletion > 0.1f }.take(6).map { stats ->
-                        HomeVideoItem(id = stats.videoId, title = stats.title, channelName = stats.artist, channelId = stats.channelId, thumbnailUrl = "https://i.ytimg.com/vi/${stats.videoId}/maxresdefault.jpg", progressPercent = stats.avgCompletion)
+                    val recentVideos = historyRepo.getRecentVideos(limit = 10).first()
+                    recentVideos.filter { it.completionPercent in 0.05f..0.95f }.take(6).map { v ->
+                        HomeVideoItem(
+                            id = v.videoId,
+                            title = v.title,
+                            channelName = "",
+                            channelId = "",
+                            thumbnailUrl = v.thumbnailUri ?: "https://i.ytimg.com/vi/${v.videoId}/maxresdefault.jpg",
+                            progressPercent = v.completionPercent.coerceIn(0f, 1f),
+                            duration = v.durationMs / 1000
+                        )
                     }
                 } catch (e: Exception) { emptyList() }
             }
