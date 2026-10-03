@@ -34,6 +34,7 @@ constructor(
     private val tasteProfileRepo: TasteProfileRepository,
     private val authClient: AuthenticatedYouTubeClient,
     private val settingsDataStore: SettingsDataStore,
+    private val historyRepo: com.deepeye.musicpro.domain.repository.HistoryRepository,
 ) {
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
@@ -84,17 +85,35 @@ constructor(
             }
             val continueWatchingDeferred = async {
                 try {
-                    val recentSongs = recommendationDao.getTopSongsSince(System.currentTimeMillis() - 7L * 24 * 3600 * 1000, 10)
-                    recentSongs.filter { it.avgCompletion < 0.9f && it.avgCompletion > 0.1f }.take(6).map { stats ->
-                        HomeVideoItem(id = stats.videoId, title = stats.title, channelName = stats.artist, channelId = stats.channelId, thumbnailUrl = "https://i.ytimg.com/vi/${stats.videoId}/maxresdefault.jpg", progressPercent = stats.avgCompletion)
+                    val recentVideos = historyRepo.getRecentVideos(limit = 10).first()
+                    recentVideos.filter { 
+                        val p = if (it.completionPercent > 1f) it.completionPercent / 100f else it.completionPercent
+                        p in 0.03f..0.97f 
+                    }.take(6).map { v ->
+                        val p = if (v.completionPercent > 1f) v.completionPercent / 100f else v.completionPercent
+                        HomeVideoItem(
+                            id = v.videoId,
+                            title = v.title,
+                            channelName = "",
+                            channelId = "",
+                            thumbnailUrl = v.thumbnailUri ?: "https://i.ytimg.com/vi/${v.videoId}/maxresdefault.jpg",
+                            progressPercent = p.coerceIn(0f, 1f),
+                            duration = v.durationMs / 1000
+                        )
                     }
                 } catch (e: Exception) { emptyList() }
             }
             val continueListeningDeferred = async {
                 try {
-                    val recentSongs = recommendationDao.getTopSongsSince(System.currentTimeMillis() - 3L * 24 * 3600 * 1000, 10)
-                    recentSongs.filter { it.avgCompletion > 0.5f }.take(8).map { stats ->
-                        HomeMusicItem(id = stats.videoId, title = stats.title, artist = stats.artist, thumbnailUrl = "https://i.ytimg.com/vi/${stats.videoId}/maxresdefault.jpg", lastPlayedAt = stats.lastPlayed)
+                    val recentPlaybacks = historyRepo.getRecentPlaybacks(limit = 8).first()
+                    recentPlaybacks.map { p ->
+                        HomeMusicItem(
+                            id = p.mediaId,
+                            title = p.title,
+                            artist = p.artist,
+                            thumbnailUrl = p.artworkUri ?: "https://i.ytimg.com/vi/${p.mediaId}/maxresdefault.jpg",
+                            lastPlayedAt = p.playedAt
+                        )
                     }
                 } catch (e: Exception) { emptyList() }
             }

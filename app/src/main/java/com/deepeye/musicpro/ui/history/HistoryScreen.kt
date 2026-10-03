@@ -209,7 +209,7 @@ fun VideoHistoryCard(
         ),
         onClick = onClick,
         modifier = Modifier.width(280.dp),
-        progressFraction = video.completionPercent / 100f,
+        progressFraction = if (video.completionPercent > 1f) (video.completionPercent / 100f).coerceIn(0f, 1f) else video.completionPercent.coerceIn(0f, 1f),
     )
 }
 
