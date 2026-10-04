@@ -146,10 +146,14 @@ class AuthenticatedYouTubeClient @Inject constructor(
     suspend fun getHomeFeed(): List<HomeVideoItem> {
         val token = getValidAccessToken()
         if (token != null) {
-            val authResult = innerTubeClient.browseMain("FEwhat_to_watch")
+            val authResult = try { innerTubeClient.browseMain("FEwhat_to_watch") } catch (e: Exception) { emptyList() }
             if (authResult.isNotEmpty()) return authResult
+            val musicHome = try { innerTubeClient.browseMusic("FEmusic_home") } catch (e: Exception) { emptyList() }
+            if (musicHome.isNotEmpty()) return musicHome
         }
-        return browse("FEwhat_to_watch")
+        val publicHome = try { browse("FEwhat_to_watch") } catch (e: Exception) { emptyList() }
+        if (publicHome.isNotEmpty()) return publicHome
+        return getTrending()
     }
 
     suspend fun getHistory(): List<HomeVideoItem> = innerTubeClient.browseHistory()

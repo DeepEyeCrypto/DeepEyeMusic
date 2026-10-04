@@ -179,7 +179,7 @@ constructor(
                         )
                     }
                     return@launch
-                } else if (hasAuth && (category in setOf("Home", "Subscriptions", "History", "Liked", "Watch Later", "Music"))) {
+                } else if (hasAuth && (category in setOf("Subscriptions", "History", "Liked", "Watch Later"))) {
                     _uiState.update {
                         it.copy(
                             videos = emptyList(),
@@ -192,7 +192,7 @@ constructor(
                 }
             } catch (e: Exception) {
                 Log.e("YouTubeVM", "loadCategory error for $category", e)
-                if (hasAuth && (category in setOf("Home", "Subscriptions", "History", "Liked", "Watch Later", "Music"))) {
+                if (hasAuth && (category in setOf("Subscriptions", "History", "Liked", "Watch Later"))) {
                     _uiState.update {
                         it.copy(
                             videos = emptyList(),

@@ -442,74 +442,31 @@ class InnerTubeRemoteClient @Inject constructor(
 
     private fun parseBrowseSections(json: JSONObject): List<HomeVideoItem> {
         val results = mutableListOf<HomeVideoItem>()
-        
-        // 1. Check Music Tab & Section List Structure
-        val sectionList = json.optJSONObject("contents")
-            ?.optJSONObject("singleColumnBrowseResultsRenderer")
-            ?.optJSONArray("tabs")
-            ?.optJSONObject(0)
-            ?.optJSONObject("tabRenderer")
-            ?.optJSONObject("content")
-            ?.optJSONObject("sectionListRenderer")
-            ?.optJSONArray("contents")
+        val seen = mutableSetOf<String>()
 
-        if (sectionList != null) {
-            for (i in 0 until sectionList.length()) {
-                val shelf = sectionList.optJSONObject(i) ?: continue
-                val musicCarousel = shelf.optJSONObject("musicCarouselShelfRenderer")
-                val musicShelf = shelf.optJSONObject("musicShelfRenderer")
-                val gridRenderer = shelf.optJSONObject("gridRenderer")
-
-                val items = musicCarousel?.optJSONArray("contents")
-                    ?: musicShelf?.optJSONArray("contents")
-                    ?: gridRenderer?.optJSONArray("items")
-
-                if (items != null) {
-                    for (j in 0 until items.length()) {
-                        val itemObj = items.optJSONObject(j) ?: continue
-                        val parsed = parseAnyItemRenderer(itemObj)
-                        if (parsed != null) results.add(parsed)
+        fun scanJson(node: Any?) {
+            when (node) {
+                is JSONObject -> {
+                    val parsed = parseAnyItemRenderer(node)
+                    if (parsed != null && seen.add(parsed.id)) {
+                        results.add(parsed)
+                    }
+                    val keys = node.keys()
+                    while (keys.hasNext()) {
+                        val key = keys.next()
+                        scanJson(node.opt(key))
+                    }
+                }
+                is JSONArray -> {
+                    for (i in 0 until node.length()) {
+                        scanJson(node.opt(i))
                     }
                 }
             }
         }
 
-        // 2. Check Two-Column or Standard Single-Column Results (TV / Web formats)
-        if (results.isEmpty()) {
-            val tabs = json.optJSONObject("contents")
-                ?.optJSONObject("twoColumnBrowseResultsRenderer")
-                ?.optJSONArray("tabs")
-                ?: json.optJSONObject("contents")
-                    ?.optJSONObject("singleColumnBrowseResultsRenderer")
-                    ?.optJSONArray("tabs")
-
-            if (tabs != null) {
-                for (t in 0 until tabs.length()) {
-                    val tabContent = tabs.optJSONObject(t)?.optJSONObject("tabRenderer")?.optJSONObject("content") ?: continue
-                    val subSections = tabContent.optJSONObject("sectionListRenderer")?.optJSONArray("contents")
-                        ?: tabContent.optJSONObject("richGridRenderer")?.optJSONArray("contents")
-
-                    if (subSections != null) {
-                        for (s in 0 until subSections.length()) {
-                            val sec = subSections.optJSONObject(s) ?: continue
-                            val shelfItems = sec.optJSONObject("itemSectionRenderer")?.optJSONArray("contents")
-                                ?: sec.optJSONObject("shelfRenderer")?.optJSONObject("content")?.optJSONObject("gridRenderer")?.optJSONArray("items")
-                                ?: sec.optJSONObject("richItemRenderer")?.optJSONObject("content")?.let { JSONArray().put(it) }
-
-                            if (shelfItems != null) {
-                                for (k in 0 until shelfItems.length()) {
-                                    val candidate = shelfItems.optJSONObject(k) ?: continue
-                                    val parsed = parseAnyItemRenderer(candidate)
-                                    if (parsed != null) results.add(parsed)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return results.distinctBy { it.id }
+        scanJson(json.optJSONObject("contents") ?: json)
+        return results
     }
 
     private fun parseAnyItemRenderer(obj: JSONObject): HomeVideoItem? {
@@ -519,32 +476,39 @@ class InnerTubeRemoteClient @Inject constructor(
             ?: obj.optJSONObject("videoRenderer")
             ?: obj.optJSONObject("compactVideoRenderer")
             ?: obj.optJSONObject("playlistPanelVideoRenderer")
-            ?: obj
+            ?: obj.optJSONObject("tileRenderer")
+            ?: obj.optJSONObject("tvItemRenderer")
+            ?: if (obj.has("videoId") || obj.optJSONObject("navigationEndpoint")?.optJSONObject("watchEndpoint") != null) obj else null
+            ?: return null
 
         val videoId = extractVideoId(target)
-        if (videoId.isBlank()) return null
+        if (videoId.isBlank() || videoId.length < 11) return null
+        val cleanVideoId = if (videoId.length > 11) videoId.substring(0, 11) else videoId
 
         val title = runsText(target.optJSONObject("title"))
             .ifBlank { runsText(target.optJSONObject("headline")) }
-            .ifBlank { "YouTube Music Track" }
+            .ifBlank { target.optJSONObject("metadata")?.optJSONObject("tileMetadataRenderer")?.optJSONObject("title")?.let { runsText(it) } ?: "" }
+            .ifBlank { "YouTube Stream" }
 
         val artist = runsText(target.optJSONObject("subtitle"))
             .ifBlank { runsText(target.optJSONArray("flexColumns")?.optJSONObject(1)?.optJSONObject("musicResponsiveListItemFlexColumnRenderer")?.optJSONObject("text")) }
             .ifBlank { runsText(target.optJSONObject("shortBylineText")) }
             .ifBlank { runsText(target.optJSONObject("longBylineText")) }
-            .ifBlank { "YouTube Music" }
+            .ifBlank { target.optJSONObject("metadata")?.optJSONObject("tileMetadataRenderer")?.optJSONArray("lines")?.optJSONObject(0)?.optJSONObject("lineRenderer")?.optJSONArray("items")?.optJSONObject(0)?.optJSONObject("lineItemRenderer")?.optJSONObject("text")?.let { runsText(it) } ?: "" }
+            .ifBlank { "YouTube" }
 
         val thumb = extractThumbnail(
             target.optJSONObject("thumbnail")
                 ?: target.optJSONObject("thumbnailRenderer")
                 ?: target.optJSONObject("musicThumbnailRenderer")
-        ).ifBlank { "https://i.ytimg.com/vi/$videoId/hqdefault.jpg" }
+                ?: target.optJSONObject("header")?.optJSONObject("tileHeaderRenderer")?.optJSONObject("thumbnail")
+        ).ifBlank { "https://i.ytimg.com/vi/$cleanVideoId/hqdefault.jpg" }
 
         val durationStr = runsText(target.optJSONObject("lengthText"))
-        val duration = if (durationStr.isNotBlank()) parseDuration(durationStr) else 210000L
+        val duration = if (durationStr.isNotBlank()) parseDuration(durationStr) else 0L
 
         return HomeVideoItem(
-            id = videoId,
+            id = cleanVideoId,
             title = title,
             channelName = artist,
             thumbnailUrl = thumb,
@@ -557,6 +521,7 @@ class InnerTubeRemoteClient @Inject constructor(
         val nav = obj.optJSONObject("navigationEndpoint")
             ?: obj.optJSONObject("overlay")?.optJSONObject("musicItemThumbnailOverlayRenderer")?.optJSONObject("content")?.optJSONObject("musicPlayButtonRenderer")?.optJSONObject("playNavigationEndpoint")
             ?: obj.optJSONObject("onSelectCommand")
+            ?: obj.optJSONObject("content")?.optJSONObject("tileRenderer")?.optJSONObject("onSelectCommand")
         return nav?.optJSONObject("watchEndpoint")?.optString("videoId")
             ?: nav?.optJSONObject("watchPlaylistEndpoint")?.optString("videoId")
             ?: obj.optString("videoId")
