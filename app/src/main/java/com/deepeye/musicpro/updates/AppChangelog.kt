@@ -8,6 +8,20 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30056,
+                versionName = "3.0.1.46",
+                releaseDate = "October 2026",
+                title = "Play Protect Hardening & Full V1-V4 Signature Schemes 🛡️",
+                highlight = true,
+                items =
+                    listOf(
+                        "Play Protect Compliance: Narrowed permission scopes with 'neverForLocation' on Bluetooth/Wi-Fi to prevent unknown scanning flags.",
+                        "Full V1-V4 Signature Enforce: Release builds now enforce APK Signature Schemes V1, V2, V3, and V4 for maximum Android 14/15/16 security trust.",
+                        "Monet-Omega & Ambient Blur: Dynamic 800ms shader crossfades and 80dp hardware-accelerated background blur.",
+                        "Lyrics-Omega Engine: Live synchronized karaoke vocals with InnerTube timed parsing and LRCLIB fallback."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30055,
                 versionName = "3.0.1.45",
                 releaseDate = "October 2026",
