@@ -11,3 +11,11 @@
 ## Finding 3: InnerTube Algorithmic AutoPlay
 - **Root Cause**: Legacy recommendation system used artificial client-side scoring rather than YouTube's native recommendation graph.
 - **Fix**: Built `InnerTubeRemoteClient.kt` calling `/youtubei/v1/next` with `ANDROID_MUSIC` spoofing, extracting exact `autoplayEndpoint` / `musicQueueRenderer` candidates and prefetching into ExoPlayer gaplessly.
+
+## Finding 4: InnerTube Guest Degradation Root Cause
+- **Root Cause**: Authenticated requests were routed to `https://youtubei.googleapis.com/youtubei/v1/browse?key=...` without client spoofing headers (`X-YouTube-Client-Name: 67/85`, `User-Agent: com.google.android.apps.youtube.music`), and YouTube Music specific renderers (`musicResponsiveListItemRenderer`, `musicCarouselShelfRenderer`) were missing in the parser, causing Google to degrade responses to anonymous guest feeds or drop personalized shelves.
+- **Fix**:
+  1. Routed all music queries directly to `https://music.youtube.com/youtubei/v1/browse` with matching `ANDROID_MUSIC` context and headers (`X-YouTube-Client-Name: 67`).
+  2. Targeted exact browse IDs (`FEmusic_home`, `FEmusic_liked`).
+  3. Added auto-refresh on 401 Unauthorized via `InnerTubeAuthManager`.
+  4. Added full multi-renderer parsing supporting both YouTube Music and YouTube TV tree schemas.

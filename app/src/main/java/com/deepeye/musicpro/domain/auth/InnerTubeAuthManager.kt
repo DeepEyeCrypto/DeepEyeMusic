@@ -6,13 +6,9 @@ package com.deepeye.musicpro.domain.auth
 import android.util.Log
 import com.deepeye.musicpro.data.prefs.SettingsDataStore
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import okhttp3.FormBody
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,7 +24,7 @@ class InnerTubeAuthManager @Inject constructor(
     private val settingsDataStore: SettingsDataStore,
     private val deviceAuthManager: YouTubeDeviceAuthManager
 ) {
-    private companion object {
+    companion object {
         const val TAG = "InnerTubeAuthManager"
     }
 
@@ -55,23 +51,48 @@ class InnerTubeAuthManager @Inject constructor(
     }
 
     /**
-     * Returns the currently saved valid Bearer access token, if any.
+     * Returns the currently saved Bearer access token, or refreshes automatically if empty but refresh token exists.
      */
-    suspend fun getAccessToken(): String? {
-        return settingsDataStore.settings.first().youtubeAccessToken
+    suspend fun getAccessToken(): String? = withContext(Dispatchers.IO) {
+        val settings = settingsDataStore.settings.first()
+        val token = settings.youtubeAccessToken
+        if (!token.isNullOrBlank()) {
+            return@withContext token
+        }
+        if (!settings.youtubeRefreshToken.isNullOrBlank()) {
+            Log.i(TAG, "Access token missing, attempting proactive refresh via refresh token...")
+            return@withContext refreshAccessToken()
+        }
+        null
     }
 
     /**
-     * Refreshes the OAuth access token using the stored refresh token.
+     * Checks if an authenticated InnerTube session exists.
+     */
+    suspend fun hasAuthenticatedSession(): Boolean = withContext(Dispatchers.IO) {
+        val settings = settingsDataStore.settings.first()
+        !settings.youtubeAccessToken.isNullOrBlank() || !settings.youtubeRefreshToken.isNullOrBlank()
+    }
+
+    /**
+     * Refreshes the OAuth access token using the stored refresh token and saves to DataStore.
      */
     suspend fun refreshAccessToken(): String? = withContext(Dispatchers.IO) {
         val settings = settingsDataStore.settings.first()
-        val refreshToken = settings.youtubeRefreshToken ?: return@withContext null
+        val refreshToken = settings.youtubeRefreshToken
+        if (refreshToken.isNullOrBlank()) {
+            Log.w(TAG, "Cannot refresh access token: refresh token is null/blank")
+            return@withContext null
+        }
+        Log.i(TAG, "Executing Google OAuth token refresh...")
         val tokenResponse = deviceAuthManager.refreshToken(refreshToken)
-        if (tokenResponse != null) {
-            settingsDataStore.setYouTubeTokens(tokenResponse.accessToken, tokenResponse.refreshToken ?: refreshToken)
+        if (tokenResponse != null && tokenResponse.accessToken.isNotBlank()) {
+            val newRefreshToken = if (!tokenResponse.refreshToken.isNullOrBlank()) tokenResponse.refreshToken else refreshToken
+            settingsDataStore.setYouTubeTokens(tokenResponse.accessToken, newRefreshToken)
+            Log.i(TAG, "Successfully refreshed InnerTube Bearer token")
             return@withContext tokenResponse.accessToken
         }
+        Log.e(TAG, "Failed to refresh token from Google OAuth endpoint")
         null
     }
 
@@ -79,6 +100,7 @@ class InnerTubeAuthManager @Inject constructor(
      * Clears all InnerTube tokens (Logout).
      */
     suspend fun logout() {
+        Log.i(TAG, "Logging out of InnerTube session, clearing tokens")
         settingsDataStore.setYouTubeTokens("", null)
     }
 }

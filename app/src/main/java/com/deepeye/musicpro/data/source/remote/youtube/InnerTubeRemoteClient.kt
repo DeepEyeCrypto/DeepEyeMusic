@@ -40,8 +40,9 @@ class InnerTubeRemoteClient @Inject constructor(
     private val client: OkHttpClient,
     private val authManager: InnerTubeAuthManager
 ) {
-    private companion object {
+    companion object {
         const val TAG = "InnerTubeRemoteClient"
+        const val AUTH_TAG = "InnerTubeAuth"
         const val YOUTUBE_MUSIC_INNERTUBE = "https://music.youtube.com/youtubei/v1/"
         const val YOUTUBE_MAIN_INNERTUBE = "https://www.youtube.com/youtubei/v1/"
 
@@ -55,6 +56,10 @@ class InnerTubeRemoteClient @Inject constructor(
                 "clientVersion": "$ANDROID_MUSIC_CLIENT_VERSION",
                 "hl": "en",
                 "gl": "IN"
+              },
+              "user": {
+                "enableSafetyMode": false,
+                "lockedSafetyMode": false
               }
             }
         """.trimIndent()
@@ -66,6 +71,10 @@ class InnerTubeRemoteClient @Inject constructor(
                 "clientVersion": "$TVHTML5_CLIENT_VERSION",
                 "hl": "en",
                 "gl": "IN"
+              },
+              "user": {
+                "enableSafetyMode": false,
+                "lockedSafetyMode": false
               }
             }
         """.trimIndent()
@@ -95,6 +104,22 @@ class InnerTubeRemoteClient @Inject constructor(
             }
 
             client.newCall(reqBuilder.build()).execute().use { response ->
+                if (response.code == 401 && !token.isNullOrBlank()) {
+                    Log.w(AUTH_TAG, "[InnerTube Auth-Rescue] 401 on /next, refreshing token...")
+                    val refreshedToken = authManager.refreshAccessToken()
+                    if (!refreshedToken.isNullOrBlank()) {
+                        val retryReq = reqBuilder.header("Authorization", "Bearer $refreshedToken").build()
+                        client.newCall(retryReq).execute().use { retryRes ->
+                            if (retryRes.isSuccessful) {
+                                val bodyStr = retryRes.body?.string() ?: return@withContext null
+                                val json = JSONObject(bodyStr)
+                                val track = parseAutoplayFromJson(json, currentVideoId = videoId)
+                                if (track != null) return@withContext track
+                            }
+                        }
+                    }
+                }
+
                 if (!response.isSuccessful) {
                     Log.w(TAG, "Autoplay /next returned HTTP ${response.code}, trying fallback client")
                     return@withContext fetchNextAutoplayFallback(videoId)
@@ -103,7 +128,7 @@ class InnerTubeRemoteClient @Inject constructor(
                 val bodyStr = response.body?.string() ?: return@withContext null
                 val json = JSONObject(bodyStr)
 
-                // 1. Check direct autoplayEndpoint inside musicQueueRenderer or watchNextFeed
+                // Check direct autoplayEndpoint inside musicQueueRenderer or watchNextFeed
                 val track = parseAutoplayFromJson(json, currentVideoId = videoId)
                 if (track != null) {
                     Log.i(TAG, "Successfully resolved InnerTube AutoPlay track: ${track.videoId} (${track.title} - ${track.artist})")
@@ -244,9 +269,9 @@ class InnerTubeRemoteClient @Inject constructor(
     }
 
     /**
-     * Authenticated /browse query for personalized home mixes, liked songs, and subscriptions.
+     * Authenticated /browse query on YouTube Music endpoint for personalized home mixes, liked songs, and shelves.
      */
-    suspend fun browse(browseId: String = "FEmusic_home", params: String? = null): List<HomeVideoItem> = withContext(Dispatchers.IO) {
+    suspend fun browseMusic(browseId: String = "FEmusic_home", params: String? = null): List<HomeVideoItem> = withContext(Dispatchers.IO) {
         val token = authManager.getAccessToken()
         val paramsPart = if (params != null) ", \"params\": \"$params\"" else ""
         val payload = "{$ANDROID_MUSIC_CONTEXT, \"browseId\": \"$browseId\"$paramsPart}"
@@ -265,12 +290,28 @@ class InnerTubeRemoteClient @Inject constructor(
             }
 
             client.newCall(reqBuilder.build()).execute().use { response ->
+                if (response.code == 401 && !token.isNullOrBlank()) {
+                    Log.w(AUTH_TAG, "[InnerTube Auth-Rescue] 401 on /browse ($browseId), refreshing token...")
+                    val refreshedToken = authManager.refreshAccessToken()
+                    if (!refreshedToken.isNullOrBlank()) {
+                        val retryReq = reqBuilder.header("Authorization", "Bearer $refreshedToken").build()
+                        client.newCall(retryReq).execute().use { retryRes ->
+                            if (retryRes.isSuccessful) {
+                                val bodyStr = retryRes.body?.string() ?: return@withContext emptyList()
+                                auditBrowseTelemetry(browseId, refreshedToken, bodyStr)
+                                return@withContext parseBrowseSections(JSONObject(bodyStr))
+                            }
+                        }
+                    }
+                }
+
                 if (!response.isSuccessful) {
-                    Log.e(TAG, "InnerTube /browse failed with HTTP ${response.code}")
+                    Log.e(AUTH_TAG, "[InnerTube Auth-Rescue] /browse failed for $browseId with HTTP ${response.code}")
                     return@withContext emptyList()
                 }
 
                 val bodyStr = response.body?.string() ?: return@withContext emptyList()
+                auditBrowseTelemetry(browseId, token, bodyStr)
                 return@withContext parseBrowseSections(JSONObject(bodyStr))
             }
         } catch (e: Exception) {
@@ -279,8 +320,101 @@ class InnerTubeRemoteClient @Inject constructor(
         }
     }
 
+    /**
+     * Authenticated /browse query on Main YouTube (TVHTML5) for history, subscriptions, and what to watch.
+     */
+    suspend fun browseMain(browseId: String = "FEwhat_to_watch", params: String? = null): List<HomeVideoItem> = withContext(Dispatchers.IO) {
+        val token = authManager.getAccessToken()
+        val paramsPart = if (params != null) ", \"params\": \"$params\"" else ""
+        val payload = "{$TVHTML5_CONTEXT, \"browseId\": \"$browseId\"$paramsPart}"
+
+        try {
+            val reqBuilder = Request.Builder()
+                .url("${YOUTUBE_MAIN_INNERTUBE}browse")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("User-Agent", "Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) SamsungBrowser/4.0 TV Safari/537.36")
+                .addHeader("X-YouTube-Client-Name", "85")
+                .addHeader("X-YouTube-Client-Version", TVHTML5_CLIENT_VERSION)
+                .post(payload.toRequestBody("application/json".toMediaType()))
+
+            if (!token.isNullOrBlank()) {
+                reqBuilder.addHeader("Authorization", "Bearer $token")
+            }
+
+            client.newCall(reqBuilder.build()).execute().use { response ->
+                if (response.code == 401 && !token.isNullOrBlank()) {
+                    Log.w(AUTH_TAG, "[InnerTube Auth-Rescue] 401 on TV /browse ($browseId), refreshing token...")
+                    val refreshedToken = authManager.refreshAccessToken()
+                    if (!refreshedToken.isNullOrBlank()) {
+                        val retryReq = reqBuilder.header("Authorization", "Bearer $refreshedToken").build()
+                        client.newCall(retryReq).execute().use { retryRes ->
+                            if (retryRes.isSuccessful) {
+                                val bodyStr = retryRes.body?.string() ?: return@withContext emptyList()
+                                return@withContext parseBrowseSections(JSONObject(bodyStr))
+                            }
+                        }
+                    }
+                }
+
+                if (!response.isSuccessful) {
+                    Log.e(AUTH_TAG, "[InnerTube Auth-Rescue] Main /browse failed for $browseId with HTTP ${response.code}")
+                    return@withContext emptyList()
+                }
+
+                val bodyStr = response.body?.string() ?: return@withContext emptyList()
+                return@withContext parseBrowseSections(JSONObject(bodyStr))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in Main InnerTube /browse for browseId=$browseId", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * Dedicated browse alias for Liked Music (FEmusic_liked).
+     */
+    suspend fun browseLikedMusic(): List<HomeVideoItem> = browseMusic("FEmusic_liked")
+
+    /**
+     * Dedicated browse alias for History (FEhistory).
+     */
+    suspend fun browseHistory(): List<HomeVideoItem> = browseMain("FEhistory")
+
+    /**
+     * Dedicated browse alias for Subscriptions (FEsubscriptions).
+     */
+    suspend fun browseSubscriptions(): List<HomeVideoItem> = browseMain("FEsubscriptions")
+
+    /**
+     * Dedicated browse alias for Liked Videos (VLLL).
+     */
+    suspend fun browseLikedVideos(): List<HomeVideoItem> {
+        val ytLiked = browseMain("VLLL")
+        if (ytLiked.isNotEmpty()) return ytLiked
+        return browseMusic("FEmusic_liked")
+    }
+
+    /**
+     * Mantis Reflect telemetry logger: verifies authenticated user personalization signatures.
+     */
+    private fun auditBrowseTelemetry(browseId: String, token: String?, bodyStr: String) {
+        val preview = bodyStr.take(500).replace("\n", " ").trim()
+        Log.i(AUTH_TAG, "[InnerTube Auth-Rescue] /browse ($browseId) | AuthTokenPresent: ${!token.isNullOrBlank()} | BodyPreview: $preview")
+
+        if (browseId == "FEmusic_home") {
+            val personalSignatures = listOf(
+                "Mixed for you", "Listen again", "Quick picks", "Forgotten favorites",
+                "Similar to", "Your recap", "From your library", "Trending", "Recommended"
+            )
+            val detected = personalSignatures.filter { bodyStr.contains(it, ignoreCase = true) }
+            Log.i(AUTH_TAG, "[InnerTube-Personalized] Detected Shelves: ${if (detected.isNotEmpty()) detected.joinToString(", ") else "None (Guest feed or custom shelves)"}")
+        }
+    }
+
     private fun parseBrowseSections(json: JSONObject): List<HomeVideoItem> {
         val results = mutableListOf<HomeVideoItem>()
+        
+        // 1. Check Music Tab & Section List Structure
         val sectionList = json.optJSONObject("contents")
             ?.optJSONObject("singleColumnBrowseResultsRenderer")
             ?.optJSONArray("tabs")
@@ -288,48 +422,114 @@ class InnerTubeRemoteClient @Inject constructor(
             ?.optJSONObject("tabRenderer")
             ?.optJSONObject("content")
             ?.optJSONObject("sectionListRenderer")
-            ?.optJSONArray("contents") ?: return results
+            ?.optJSONArray("contents")
 
-        for (i in 0 until sectionList.length()) {
-            val shelf = sectionList.optJSONObject(i) ?: continue
-            val musicCarousel = shelf.optJSONObject("musicCarouselShelfRenderer")
-            val musicShelf = shelf.optJSONObject("musicShelfRenderer")
+        if (sectionList != null) {
+            for (i in 0 until sectionList.length()) {
+                val shelf = sectionList.optJSONObject(i) ?: continue
+                val musicCarousel = shelf.optJSONObject("musicCarouselShelfRenderer")
+                val musicShelf = shelf.optJSONObject("musicShelfRenderer")
+                val gridRenderer = shelf.optJSONObject("gridRenderer")
 
-            val items = musicCarousel?.optJSONArray("contents") ?: musicShelf?.optJSONArray("contents")
-            if (items != null) {
-                for (j in 0 until items.length()) {
-                    val itemObj = items.optJSONObject(j) ?: continue
-                    val responsiveItem = itemObj.optJSONObject("musicResponsiveListItemRenderer")
-                        ?: itemObj.optJSONObject("musicTwoRowItemRenderer")
-                        ?: continue
+                val items = musicCarousel?.optJSONArray("contents")
+                    ?: musicShelf?.optJSONArray("contents")
+                    ?: gridRenderer?.optJSONArray("items")
 
-                    val videoId = extractVideoId(responsiveItem)
-                    if (videoId.isNotBlank()) {
-                        val title = runsText(responsiveItem.optJSONObject("title"))
-                        val artist = runsText(responsiveItem.optJSONObject("subtitle") ?: responsiveItem.optJSONArray("flexColumns")?.optJSONObject(1)?.optJSONObject("musicResponsiveListItemFlexColumnRenderer")?.optJSONObject("text"))
-                        val thumb = extractThumbnail(responsiveItem.optJSONObject("thumbnail") ?: responsiveItem.optJSONObject("thumbnailRenderer"))
-
-                        results.add(
-                            HomeVideoItem(
-                                id = videoId,
-                                title = title.ifBlank { "YouTube Music Track" },
-                                channelName = artist.ifBlank { "YouTube Music" },
-                                thumbnailUrl = thumb.ifBlank { "https://i.ytimg.com/vi/$videoId/hqdefault.jpg" },
-                                duration = 210000L,
-                                viewCount = 0L
-                            )
-                        )
+                if (items != null) {
+                    for (j in 0 until items.length()) {
+                        val itemObj = items.optJSONObject(j) ?: continue
+                        val parsed = parseAnyItemRenderer(itemObj)
+                        if (parsed != null) results.add(parsed)
                     }
                 }
             }
         }
-        return results
+
+        // 2. Check Two-Column or Standard Single-Column Results (TV / Web formats)
+        if (results.isEmpty()) {
+            val tabs = json.optJSONObject("contents")
+                ?.optJSONObject("twoColumnBrowseResultsRenderer")
+                ?.optJSONArray("tabs")
+                ?: json.optJSONObject("contents")
+                    ?.optJSONObject("singleColumnBrowseResultsRenderer")
+                    ?.optJSONArray("tabs")
+
+            if (tabs != null) {
+                for (t in 0 until tabs.length()) {
+                    val tabContent = tabs.optJSONObject(t)?.optJSONObject("tabRenderer")?.optJSONObject("content") ?: continue
+                    val subSections = tabContent.optJSONObject("sectionListRenderer")?.optJSONArray("contents")
+                        ?: tabContent.optJSONObject("richGridRenderer")?.optJSONArray("contents")
+
+                    if (subSections != null) {
+                        for (s in 0 until subSections.length()) {
+                            val sec = subSections.optJSONObject(s) ?: continue
+                            val shelfItems = sec.optJSONObject("itemSectionRenderer")?.optJSONArray("contents")
+                                ?: sec.optJSONObject("shelfRenderer")?.optJSONObject("content")?.optJSONObject("gridRenderer")?.optJSONArray("items")
+                                ?: sec.optJSONObject("richItemRenderer")?.optJSONObject("content")?.let { JSONArray().put(it) }
+
+                            if (shelfItems != null) {
+                                for (k in 0 until shelfItems.length()) {
+                                    val candidate = shelfItems.optJSONObject(k) ?: continue
+                                    val parsed = parseAnyItemRenderer(candidate)
+                                    if (parsed != null) results.add(parsed)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return results.distinctBy { it.id }
+    }
+
+    private fun parseAnyItemRenderer(obj: JSONObject): HomeVideoItem? {
+        val target = obj.optJSONObject("musicResponsiveListItemRenderer")
+            ?: obj.optJSONObject("musicTwoRowItemRenderer")
+            ?: obj.optJSONObject("gridVideoRenderer")
+            ?: obj.optJSONObject("videoRenderer")
+            ?: obj.optJSONObject("compactVideoRenderer")
+            ?: obj.optJSONObject("playlistPanelVideoRenderer")
+            ?: obj
+
+        val videoId = extractVideoId(target)
+        if (videoId.isBlank()) return null
+
+        val title = runsText(target.optJSONObject("title"))
+            .ifBlank { runsText(target.optJSONObject("headline")) }
+            .ifBlank { "YouTube Music Track" }
+
+        val artist = runsText(target.optJSONObject("subtitle"))
+            .ifBlank { runsText(target.optJSONArray("flexColumns")?.optJSONObject(1)?.optJSONObject("musicResponsiveListItemFlexColumnRenderer")?.optJSONObject("text")) }
+            .ifBlank { runsText(target.optJSONObject("shortBylineText")) }
+            .ifBlank { runsText(target.optJSONObject("longBylineText")) }
+            .ifBlank { "YouTube Music" }
+
+        val thumb = extractThumbnail(
+            target.optJSONObject("thumbnail")
+                ?: target.optJSONObject("thumbnailRenderer")
+                ?: target.optJSONObject("musicThumbnailRenderer")
+        ).ifBlank { "https://i.ytimg.com/vi/$videoId/hqdefault.jpg" }
+
+        val durationStr = runsText(target.optJSONObject("lengthText"))
+        val duration = if (durationStr.isNotBlank()) parseDuration(durationStr) else 210000L
+
+        return HomeVideoItem(
+            id = videoId,
+            title = title,
+            channelName = artist,
+            thumbnailUrl = thumb,
+            duration = duration,
+            viewCount = 0L
+        )
     }
 
     private fun extractVideoId(obj: JSONObject): String {
         val nav = obj.optJSONObject("navigationEndpoint")
             ?: obj.optJSONObject("overlay")?.optJSONObject("musicItemThumbnailOverlayRenderer")?.optJSONObject("content")?.optJSONObject("musicPlayButtonRenderer")?.optJSONObject("playNavigationEndpoint")
+            ?: obj.optJSONObject("onSelectCommand")
         return nav?.optJSONObject("watchEndpoint")?.optString("videoId")
+            ?: nav?.optJSONObject("watchPlaylistEndpoint")?.optString("videoId")
             ?: obj.optString("videoId")
     }
 
@@ -338,6 +538,7 @@ class InnerTubeRemoteClient @Inject constructor(
         val thumbs = obj.optJSONObject("musicThumbnailRenderer")
             ?.optJSONObject("thumbnail")
             ?.optJSONArray("thumbnails")
+            ?: obj.optJSONObject("thumbnail")?.optJSONArray("thumbnails")
             ?: obj.optJSONObject("thumbnails")?.optJSONArray("thumbnails")
             ?: obj.optJSONArray("thumbnails")
             ?: return ""
