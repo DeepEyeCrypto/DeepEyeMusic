@@ -17,6 +17,11 @@ import java.net.CookieHandler
 import java.net.URI
 import java.util.HashMap
 import android.webkit.CookieManager
+import java.io.File
+import androidx.media3.datasource.cache.SimpleCache
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
+import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.database.StandaloneDatabaseProvider
 
 /**
  * Hilt module providing Media3/ExoPlayer dependencies.
@@ -35,10 +40,47 @@ object PlayerModule {
 
     @Provides
     @Singleton
+    fun provideSimpleCache(
+        @ApplicationContext context: Context
+    ): SimpleCache {
+        val cacheDir = File(context.cacheDir, "media_cache")
+        if (!cacheDir.exists()) {
+            cacheDir.mkdirs()
+        }
+        val evictor = LeastRecentlyUsedCacheEvictor(2L * 1024 * 1024 * 1024) // 2GB storage quota
+        val databaseProvider = StandaloneDatabaseProvider(context)
+        return SimpleCache(cacheDir, evictor, databaseProvider)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCacheDataSourceFactory(
+        @ApplicationContext context: Context,
+        simpleCache: SimpleCache
+    ): CacheDataSource.Factory {
+        val httpDataSourceFactory = androidx.media3.datasource.DefaultHttpDataSource.Factory()
+            .setUserAgent("com.google.android.youtube/20.10.33 (Linux; U; Android 12)")
+            .setConnectTimeoutMs(15000)
+            .setReadTimeoutMs(20000)
+            .setAllowCrossProtocolRedirects(true)
+            .setDefaultRequestProperties(mapOf(
+                "Accept" to "*/*",
+                "Connection" to "keep-alive"
+            ))
+        val upstreamFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpDataSourceFactory)
+        return CacheDataSource.Factory()
+            .setCache(simpleCache)
+            .setUpstreamDataSourceFactory(upstreamFactory)
+            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+    }
+
+    @Provides
+    @Singleton
     fun provideExoPlayer(
         @ApplicationContext context: Context,
         audioAttributes: AudioAttributes,
         okHttpClient: okhttp3.OkHttpClient,
+        cacheDataSourceFactory: CacheDataSource.Factory,
         vocalRemoverProcessor: com.deepeye.musicpro.dsp.processor.VocalRemoverProcessor,
         crossfeedProcessor: com.deepeye.musicpro.dsp.processor.CrossfeedProcessor,
         viperBassProcessor: com.deepeye.musicpro.dsp.processor.ViperBassAudioProcessor,
@@ -143,7 +185,7 @@ object PlayerModule {
         drmSessionManagerProvider.setDrmHttpDataSourceFactory(httpDataSourceFactory)
 
         val mediaSourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(context)
-            .setDataSourceFactory(dataSourceFactory)
+            .setDataSourceFactory(cacheDataSourceFactory)
             .setDrmSessionManagerProvider(drmSessionManagerProvider)
 
         val player = ExoPlayer.Builder(context)

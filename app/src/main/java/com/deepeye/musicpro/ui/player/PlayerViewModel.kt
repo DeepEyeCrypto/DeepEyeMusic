@@ -348,6 +348,7 @@ constructor(
 
     val activeDownloads = downloadManager.activeDownloads
 
+    fun isTrackCached(videoId: String): Boolean = downloadManager.isFullyCached(videoId)
 
     fun downloadCurrentTrack() { android.util.Log.e("PlayerViewModel", "downloadCurrentTrack called! currentItem=" + playerState.value.currentItem?.title);
         playerState.value.currentItem?.let {

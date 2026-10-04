@@ -172,4 +172,11 @@
 -dontwarn org.jsoup.**
 -keep class us.shandian.giga.** { *; }
 
+# Offline Caching Engine & WorkManager
+-keep class com.deepeye.musicpro.player.download.** { *; }
+-keep class androidx.media3.datasource.cache.** { *; }
+-keep class androidx.work.** { *; }
+-keep class androidx.hilt.work.** { *; }
+
+
 

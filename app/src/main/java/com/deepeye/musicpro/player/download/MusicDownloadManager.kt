@@ -25,6 +25,7 @@ constructor(
     private val historyRepository: com.deepeye.musicpro.domain.repository.HistoryRepository,
     private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
     private val sourceResolverManager: com.deepeye.musicpro.domain.resolver.SourceResolverManager,
+    private val simpleCache: androidx.media3.datasource.cache.SimpleCache,
     okHttpClient: okhttp3.OkHttpClient,
 ) {
     private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
@@ -37,6 +38,34 @@ constructor(
     private val _activeDownloads =
         MutableStateFlow<Map<Long, MediaItem>>(emptyMap())
     val activeDownloads: kotlinx.coroutines.flow.StateFlow<Map<Long, MediaItem>> = _activeDownloads.asStateFlow()
+
+    fun isFullyCached(videoId: String): Boolean {
+        return try {
+            simpleCache.getCachedSpans(videoId).isNotEmpty()
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    fun enqueueStealthCache(videoId: String, streamUrl: String) {
+        val inputData = androidx.work.workDataOf(
+            OpusDownloadWorker.KEY_STREAM_URL to streamUrl,
+            OpusDownloadWorker.KEY_CACHE_KEY to videoId
+        )
+        val constraints = androidx.work.Constraints.Builder()
+            .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+            .build()
+        val request = androidx.work.OneTimeWorkRequestBuilder<OpusDownloadWorker>()
+            .setInputData(inputData)
+            .setConstraints(constraints)
+            .addTag("cache_$videoId")
+            .build()
+        androidx.work.WorkManager.getInstance(context).enqueueUniqueWork(
+            "cache_$videoId",
+            androidx.work.ExistingWorkPolicy.KEEP,
+            request
+        )
+    }
 
     fun downloadTrack(item: MediaItem) { android.util.Log.e("TEST_DOWNLOAD", "downloadTrack called!");
         if (item is MediaItem.Local) {

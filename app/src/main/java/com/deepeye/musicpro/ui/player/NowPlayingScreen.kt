@@ -94,6 +94,7 @@ fun NowPlayingScreen(
     val videoDetails by viewModel.videoDetails.collectAsStateWithLifecycle()
     val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
     val isDownloading = playerState.currentItem?.id != null && activeDownloads.values.any { it.id == playerState.currentItem?.id }
+    val isCached = playerState.currentItem?.id?.let { viewModel.isTrackCached(it) } == true
     val sheetState by sheetViewModel.state.collectAsStateWithLifecycle()
     // Pass StateFlows directly to visualizer — reads happen inside Canvas draw phase
     val visualizerFrequencyBands = viewModel.frequencyBands
@@ -569,6 +570,7 @@ fun AudioNowPlayingLayout(
     val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
     val visualizerPrefs by viewModel.visualizerPrefs.collectAsStateWithLifecycle()
     val isDownloading = playerState.currentItem?.id != null && activeDownloads.values.any { it.id == playerState.currentItem?.id }
+    val isCached = playerState.currentItem?.id?.let { viewModel.isTrackCached(it) } == true
 
     val isHiRes = remember(playerState.currentItem?.id) { (playerState.currentItem?.id.hashCode() % 3) == 0 }
     val bitrate = remember(playerState.currentItem?.id) { if (isHiRes) "24bit • 48kHz" else "16bit • 44.1kHz" }
@@ -1001,9 +1003,9 @@ fun AudioNowPlayingLayout(
                         onClick = onEnterFullscreen
                     )
                     QuickToolButton(
-                        icon = Icons.Default.Download,
-                        label = if (isDownloading) "Saving" else "Save",
-                        isActive = isDownloading,
+                        icon = if (isCached) Icons.Default.DownloadDone else Icons.Default.Download,
+                        label = if (isDownloading) "Saving" else if (isCached) "Saved" else "Save",
+                        isActive = isDownloading || isCached,
                         accentColor = finalAccentColor,
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),

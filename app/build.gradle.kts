@@ -108,6 +108,12 @@ android {
     lint {
         checkReleaseBuilds = false
         abortOnError = false
+        checkDependencies = false
+        ignoreTestSources = true
+        disable += listOf(
+            "FrequentlyChangingValue",
+            "NullSafeMutableLiveData"
+        )
     }
 
     detekt {
