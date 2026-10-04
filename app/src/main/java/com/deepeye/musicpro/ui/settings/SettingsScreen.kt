@@ -626,6 +626,8 @@ private fun SettingsDetailPane(
                                 onCheckedChange = { viewModel.setShowVisualizer(it) }
                             )
 
+                            DSPDebugOverlay(viewModel = androidx.hilt.navigation.compose.hiltViewModel())
+
                             Surface(
                                 onClick = onNavigateToAEOS,
                                 modifier = Modifier

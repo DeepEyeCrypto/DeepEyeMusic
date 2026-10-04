@@ -71,7 +71,15 @@ constructor(
     private val _currentSessionId = MutableStateFlow(0)
     val currentSessionId = _currentSessionId.asStateFlow()
 
+    private val _isVerboseLoggingEnabled = MutableStateFlow(false)
+    val isVerboseLoggingEnabled = _isVerboseLoggingEnabled.asStateFlow()
+
     fun isAttached(): Boolean = _engineState.value == EngineState.ATTACHED || _engineState.value == EngineState.PROCESSING
+
+    fun setVerboseLogging(enabled: Boolean) {
+        _isVerboseLoggingEnabled.value = enabled
+        if (enabled) Log.i(TAG, "V4A DSP Verbose Telemetry ENABLED")
+    }
 
     fun getCurrentSessionId(): Int = _currentSessionId.value
 
@@ -82,6 +90,9 @@ constructor(
     fun attachSession(sessionId: Int, force: Boolean = false) {
         if (sessionId <= 0 || (!force && this.audioSessionId == sessionId)) return
         Log.d(TAG, "Attaching DSP Engine to Session: $sessionId")
+        if (_isVerboseLoggingEnabled.value) {
+            Log.v(TAG, "[V4A DEBUG] INIT attachSession | Session=$sessionId | Force=$force | OldSession=${this.audioSessionId}")
+        }
 
         releaseSession()
         this.audioSessionId = sessionId
@@ -180,6 +191,9 @@ constructor(
 
     fun releaseSession() {
         Log.d(TAG, "Releasing DSP Engine Session: $audioSessionId")
+        if (_isVerboseLoggingEnabled.value && audioSessionId != 0) {
+            Log.v(TAG, "[V4A DEBUG] DESTROY releaseSession | Session=$audioSessionId | Freeing resources...")
+        }
         equalizer?.release()
         bassBoost?.release()
         virtualizer?.release()

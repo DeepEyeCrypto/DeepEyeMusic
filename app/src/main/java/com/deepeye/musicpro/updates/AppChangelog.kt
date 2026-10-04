@@ -8,6 +8,21 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30053,
+                versionName = "3.0.1.43",
+                releaseDate = "October 2026",
+                title = "V4A DSP Live Telemetry Diagnostics & SmartTube-Omega Engine 🚀",
+                highlight = true,
+                items =
+                    listOf(
+                        "V4A DSP Live Diagnostics: Real-time telemetry dashboard in Settings > Audio Engine tracking AudioSession IDs, Dynamic Gain Budgets, Clip Risk, and Headroom.",
+                        "Verbose Audio Engine Logging: Granular [V4A DEBUG] telemetry switch for live ExoPlayer session attach/detach tracing.",
+                        "SmartTube-Omega InnerTube Core: Direct youtubei/v1 endpoint processing for authentic YouTube Music recommendations & zero-latency AutoPlay queue generation.",
+                        "Cyberpunk Dual-Pane Auth Architecture: Responsive landscape two-column layout with left Hero branding and right Glassmorphic Auth Card.",
+                        "Zero-Interruption Launch: Removed onboarding bottlenecks for direct, instant access to the player dashboard."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30052,
                 versionName = "3.0.1.42",
                 releaseDate = "October 2026",

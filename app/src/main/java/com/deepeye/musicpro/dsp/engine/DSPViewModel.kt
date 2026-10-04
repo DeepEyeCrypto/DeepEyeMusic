@@ -82,6 +82,33 @@ constructor(
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FloatArray(0))
 
+    val diagnostics =
+        combine(
+            dspEngine.currentSessionId,
+            dspEngine.engineState,
+            dspEngine.currentPresetName,
+            dspEngine.currentRoute,
+            dspEngine.gainBudget,
+            dspEngine.isVerboseLoggingEnabled
+        ) { args ->
+            com.deepeye.musicpro.dsp.model.DspDiagnostics(
+                sessionId = args[0] as Int,
+                state = args[1] as com.deepeye.musicpro.dsp.model.EngineState,
+                preset = args[2] as String,
+                route = args[3] as com.deepeye.musicpro.dsp.model.AudioRoute,
+                gainBudget = args[4] as com.deepeye.musicpro.dsp.model.GainBudget,
+                isVerboseLoggingEnabled = args[5] as Boolean
+            )
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            com.deepeye.musicpro.dsp.model.DspDiagnostics()
+        )
+
+    fun toggleVerboseLogging() {
+        dspEngine.setVerboseLogging(!dspEngine.isVerboseLoggingEnabled.value)
+    }
+
     // ── EQ dispatch plumbing ────────────────────────────────────────────────
     // Declared ABOVE `init` on purpose: Kotlin initialises properties in
     // declaration order, and `init` calls observeEqDispatch(), which reads
