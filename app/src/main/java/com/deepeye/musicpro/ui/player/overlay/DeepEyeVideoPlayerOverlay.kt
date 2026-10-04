@@ -893,7 +893,8 @@ fun DeepEyeVideoPlayerOverlay(
                         }
 
                         ActionChip(Icons.Default.HighQuality, "Quality", enabled = hasQuality) { resetTimer(); actions.openQuality() }
-                        ActionChip(Icons.Default.Equalizer, "Audio") { resetTimer(); actions.openAudioTrack() }
+                        ActionChip(Icons.Default.Tune, "EQ") { resetTimer(); actions.openDsp() }
+                        ActionChip(Icons.Default.MusicNote, "Lyrics") { resetTimer(); actions.openLyrics() }
 
                         ChipDivider()
 
@@ -904,15 +905,12 @@ fun DeepEyeVideoPlayerOverlay(
                             RepeatMode.NONE -> Icons.Default.Repeat
                         }
                         ActionChip(repeatIcon, "Repeat", active = playerState.repeatMode != RepeatMode.NONE, activeTint = NeonCyan) { resetTimer(); actions.toggleRepeat() }
-
-                        ActionChip(Icons.Default.ThumbUp, "Like", active = playerState.isLiked, activeTint = NeonCyan) { resetTimer(); actions.toggleLike() }
-                        ActionChip(Icons.Default.ThumbDown, "Dislike", active = playerState.isDisliked, activeTint = Color(0xFFFF5252)) { resetTimer(); actions.toggleDislike() }
                         ActionChip(Icons.Default.ClosedCaption, "CC", enabled = hasCaptions || hasVideo, active = playerState.isCaptionEnabled, activeTint = NeonCyan) { resetTimer(); actions.toggleCaptions() }
 
                         ChipDivider()
 
                         // ─── Utility Group ───
-                        ActionChip(Icons.AutoMirrored.Filled.PlaylistAdd, "Add") { resetTimer(); actions.addToPlaylist() }
+                        ActionChip(Icons.Default.Bedtime, "Sleep") { resetTimer(); actions.openSleepTimer() }
                         ActionChip(Icons.Default.Tv, "TV Link") { resetTimer(); actions.openAccount() }
                         ActionChip(Icons.Default.Info, "Info") { resetTimer(); actions.openInfo() }
                     }

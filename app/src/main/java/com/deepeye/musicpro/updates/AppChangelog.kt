@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30058,
+                versionName = "3.0.1.48",
+                releaseDate = "October 2026",
+                title = "Fullscreen Video Overlay: EQ Equalizer, Synced Lyrics & Clean Action Bar 🎛️",
+                highlight = true,
+                items =
+                    listOf(
+                        "EQ & Lyrics on Fullscreen: Added dedicated 'EQ' (DSP Engine) and 'Lyrics' (Synced Karaoke) action chips directly onto the landscape fullscreen video player overlay.",
+                        "Sleep Timer Added: Added quick 'Sleep' timer access right inside the video player bottom bar.",
+                        "Clean Action Bar: Removed non-essential Like/Dislike action chips from the video overlay for a streamlined, clutter-free viewing experience."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30057,
                 versionName = "3.0.1.47",
                 releaseDate = "October 2026",

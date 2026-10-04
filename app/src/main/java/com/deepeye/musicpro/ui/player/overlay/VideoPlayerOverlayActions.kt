@@ -43,6 +43,8 @@ interface VideoPlayerOverlayActions {
     fun toggleLock() {}
     fun openSleepTimer() {}
     fun openAudioEqualizer() {}
+    fun openLyrics() {}
+    fun openDsp() {}
 
     companion object {
         fun fromLambdas(
@@ -75,7 +77,9 @@ interface VideoPlayerOverlayActions {
             cycleAspectRatio: () -> Unit = {},
             toggleLock: () -> Unit = {},
             openSleepTimer: () -> Unit = {},
-            openAudioEqualizer: () -> Unit = {}
+            openAudioEqualizer: () -> Unit = {},
+            openLyrics: () -> Unit = {},
+            openDsp: () -> Unit = {}
         ): VideoPlayerOverlayActions = object : VideoPlayerOverlayActions {
             override fun playPause() = playPause()
             override fun previous() = previous()
@@ -107,6 +111,8 @@ interface VideoPlayerOverlayActions {
             override fun toggleLock() = toggleLock()
             override fun openSleepTimer() = openSleepTimer()
             override fun openAudioEqualizer() = openAudioEqualizer()
+            override fun openLyrics() = openLyrics()
+            override fun openDsp() = openDsp()
         }
     }
 }
