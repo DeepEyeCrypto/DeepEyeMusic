@@ -55,6 +55,7 @@ fun NavGraph(
     authViewModel: AuthViewModel = hiltViewModel(),
     windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
     onExpandPlayer: () -> Unit = {},
+    onPlayFullscreenMusic: () -> Unit = onExpandPlayer,
 ) {
     val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
 
@@ -156,7 +157,7 @@ fun NavGraph(
                     onExpandPlayer()
                 },
                 onNavigateToMusic = { musicId ->
-                    onExpandPlayer()
+                    onPlayFullscreenMusic()
                 },
                 onNavigateToLibrary = { navController.navigate(Routes.Library.route) },
                 onNavigateToChat = { navController.navigate(Routes.ChatAuth.route) },
@@ -181,7 +182,7 @@ fun NavGraph(
         composable(Routes.Music.route) {
             MusicScreen(
                 onNavigateToNowPlaying = { musicId ->
-                    onExpandPlayer()
+                    onPlayFullscreenMusic()
                 },
                 onNavigateToSearch = { navController.navigate(Routes.Search.route) },
                 onConnectAccount = { navController.navigate(Routes.YouTubeLogin.route) }

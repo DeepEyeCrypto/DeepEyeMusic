@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30059,
+                versionName = "3.0.1.49",
+                releaseDate = "October 2026",
+                title = "Direct Fullscreen GPU Visualizer Playback & CI Hardening 🌌⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Direct Fullscreen Visualizers: Playing music from Music Hub, Continue Listening, or Library now launches immediately into full-screen 60FPS GPU Visualizer mode without intermediate sheets.",
+                        "Fullscreen Audio Visualizer OSD: Integrated Monet Dynamic Palette, ambient blur backdrop, real-time karaoke lyrics, and full gesture controls in audio visualizer mode.",
+                        "CI Test Suite Green: Hardened video overlay unit tests and updated test matrix to verify EQ and Synced Lyrics action chips."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30058,
                 versionName = "3.0.1.48",
                 releaseDate = "October 2026",

@@ -370,7 +370,7 @@ fun NowPlayingScreen(
                             showHqPlaybackSheet = true
                         }
                     )
-                } else if (isAudioFullscreen && fullscreenMode.isFullscreen) {
+                } else if (fullscreenMode.isFullscreen) {
                     // ── FULLSCREEN AUDIO VISUALIZER MODE (same as video player layout) ──
                     AudioFullscreenVisualizerLayout(
                         playerState = playerState,
@@ -379,8 +379,9 @@ fun NowPlayingScreen(
                         finalSecondaryColor = finalSecondaryColor,
                         finalBgColor = finalBgColor,
                         viewModel = viewModel,
-                        onExitFullscreen = { isAudioFullscreen = false },
+                        onExitFullscreen = { fullscreenMode.exit() },
                         onOpenDsp = { showDspSheet = true },
+                        onOpenLyrics = { showLyricsSheet = true },
                         onOpenSpeedDialog = { showSpeedDialog = true },
                         onOpenAudioBoostDialog = { showAudioBoostDialog = true },
                         onOpenSleepTimerDialog = { showSleepTimerDialog = true },
@@ -2658,6 +2659,7 @@ fun AudioFullscreenVisualizerLayout(
     viewModel: PlayerViewModel,
     onExitFullscreen: () -> Unit,
     onOpenDsp: () -> Unit,
+    onOpenLyrics: () -> Unit = {},
     onOpenSpeedDialog: () -> Unit,
     onOpenAudioBoostDialog: () -> Unit,
     onOpenSleepTimerDialog: () -> Unit,
@@ -2713,6 +2715,9 @@ fun AudioFullscreenVisualizerLayout(
                 seekFinished = { target -> viewModel.seekTo(target) },
                 openQuality = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO) },
                 openAudioTrack = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO) },
+                openLyrics = onOpenLyrics,
+                openDsp = onOpenDsp,
+                openSleepTimer = onOpenSleepTimerDialog,
                 toggleLike = { viewModel.likeTrack(!playerState.isLiked) },
                 toggleDislike = { viewModel.dislikeTrack() },
                 toggleCaptions = { },

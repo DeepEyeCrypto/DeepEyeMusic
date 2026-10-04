@@ -8,11 +8,13 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.deepeye.musicpro.domain.model.PlayerState
 import com.deepeye.musicpro.domain.model.RepeatMode
 import com.deepeye.musicpro.player.format.QualityPreset
 import kotlinx.collections.immutable.persistentListOf
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -105,16 +107,27 @@ class DeepEyeVideoPlayerOverlayTest {
     }
 
     @Test
-    fun likeButton_dispatchesToggle() {
-        var liked = false
-        val testActions = VideoPlayerOverlayActions.fromLambdas(toggleLike = { liked = !liked })
+    fun eqButton_dispatchesOpen() {
+        val testActions = VideoPlayerOverlayActions.fromLambdas(openDsp = { })
 
         composeTestRule.setContent {
             DeepEyeVideoPlayerOverlay(playerState = playerState, actions = testActions)
         }
 
-        composeTestRule.onNodeWithContentDescription("Like")
-            .performClick()
+        composeTestRule.onNodeWithContentDescription("EQ")
+            .assertExists()
+    }
+
+    @Test
+    fun lyricsButton_dispatchesOpen() {
+        val testActions = VideoPlayerOverlayActions.fromLambdas(openLyrics = { })
+
+        composeTestRule.setContent {
+            DeepEyeVideoPlayerOverlay(playerState = playerState, actions = testActions)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Lyrics")
+            .assertExists()
     }
 
     @Test

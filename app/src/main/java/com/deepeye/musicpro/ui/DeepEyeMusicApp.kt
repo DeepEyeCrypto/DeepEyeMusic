@@ -312,6 +312,10 @@ fun DeepEyeMusicApp(
                             onExpandPlayer = { 
                                 fullscreenMode.enter()
                                 sheetViewModel.expand() 
+                            },
+                            onPlayFullscreenMusic = {
+                                fullscreenMode.enter(forceLandscape = true)
+                                sheetViewModel.expand()
                             }
                         )
                     }
@@ -411,6 +415,10 @@ fun DeepEyeMusicApp(
                             onExpandPlayer = { 
                                 fullscreenMode.enter()
                                 sheetViewModel.expand() 
+                            },
+                            onPlayFullscreenMusic = {
+                                fullscreenMode.enter(forceLandscape = true)
+                                sheetViewModel.expand()
                             }
                         )
                     }

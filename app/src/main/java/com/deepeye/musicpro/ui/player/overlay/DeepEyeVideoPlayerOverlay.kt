@@ -855,8 +855,9 @@ fun DeepEyeVideoPlayerOverlay(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
                             .padding(horizontal = 8.dp, vertical = 6.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // ─── Quick System Group ───
@@ -1172,13 +1173,14 @@ private fun ActionChip(
     val textColor = if (active) activeTint else Color.White
 
     Surface(
+        onClick = onClick,
+        enabled = enabled,
         shape = RoundedCornerShape(10.dp),
         color = chipBg,
         border = BorderStroke(1.dp, chipBorder),
         modifier = Modifier
             .height(34.dp)
             .alpha(if (enabled) 1f else 0.35f)
-            .clickable(enabled = enabled, interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
