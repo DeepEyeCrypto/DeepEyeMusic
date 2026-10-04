@@ -158,3 +158,18 @@
 -keep class com.deepeye.musicpro.aeos.data_plane.** { *; }
 -keep class com.deepeye.musicpro.aeos.control_plane.** { *; }
 
+# DSP Processors & Audio Engine
+-keep class com.deepeye.musicpro.dsp.** { *; }
+
+# Auth & InnerTube
+-keep class com.deepeye.musicpro.domain.auth.** { *; }
+-keep class com.deepeye.musicpro.data.source.remote.youtube.** { *; }
+
+# NewPipe Extractor & Parser
+-keep class org.schabi.newpipe.extractor.** { *; }
+-dontwarn org.schabi.newpipe.extractor.**
+-dontwarn org.mozilla.javascript.**
+-dontwarn org.jsoup.**
+-keep class us.shandian.giga.** { *; }
+
+
