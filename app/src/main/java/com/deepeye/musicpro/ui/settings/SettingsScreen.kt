@@ -69,7 +69,6 @@ fun SettingsScreen(
     onNavigateToAEOS: () -> Unit = {},
     onYouTubeLoginClick: () -> Unit = {},
     onGoogleSignInClick: () -> Unit = {},
-    onNavigateToPersonalization: () -> Unit = {},
     onLaunchTvMode: () -> Unit = {},
     onSignOut: () -> Unit = {},
     isSignedIn: Boolean = false,
@@ -331,65 +330,6 @@ fun SettingsScreen(
                                     }
                                 )
                             }
-
-                            item {
-                                Spacer(Modifier.height(4.dp))
-                                Surface(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = 68.dp)
-                                        .clip(RoundedCornerShape(20.dp))
-                                        .clickable(onClick = onNavigateToPersonalization),
-                                    color = darkSurface,
-                                    border = BorderStroke(1.dp, Color(0x3300E5FF)),
-                                    shape = RoundedCornerShape(20.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 18.dp, vertical = 14.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(42.dp)
-                                                    .clip(RoundedCornerShape(12.dp))
-                                                    .background(Color(0x33FFD700)),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.AutoAwesome,
-                                                    null,
-                                                    tint = Color(0xFFFFD700),
-                                                    modifier = Modifier.size(24.dp)
-                                                )
-                                            }
-                                            Spacer(Modifier.width(14.dp))
-                                            Column {
-                                                Text(
-                                                    "Taste Profile",
-                                                    color = Color.White,
-                                                    fontSize = 16.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                                Text(
-                                                    "Smart AI recommendations tuning",
-                                                    color = Color.White.copy(alpha = 0.6f),
-                                                    fontSize = 12.sp
-                                                )
-                                            }
-                                        }
-                                        Icon(
-                                            Icons.AutoMirrored.Filled.ArrowForward,
-                                            null,
-                                            tint = neonCyan,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                }
-                            }
                         }
                     }
                 },
@@ -414,7 +354,6 @@ fun SettingsScreen(
                                 onRequestSignOut = { showSignOutConfirm = true },
                                 onGoogleSignInClick = onGoogleSignInClick,
                                 onYouTubeLoginClick = onYouTubeLoginClick,
-                                onNavigateToPersonalization = onNavigateToPersonalization,
                             )
                         }
                     }
@@ -495,7 +434,6 @@ private fun SettingsDetailPane(
     onRequestSignOut: () -> Unit,
     onGoogleSignInClick: () -> Unit = {},
     onYouTubeLoginClick: () -> Unit = {},
-    onNavigateToPersonalization: () -> Unit = {},
 ) {
     val settings = uiState.settings
 
@@ -978,48 +916,6 @@ private fun SettingsDetailPane(
                                             Text("Connect YouTube Account", fontWeight = FontWeight.Black)
                                         }
                                     }
-                                }
-                            }
-
-                            // 3. Personalization & Discovery Preferences
-                            Surface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .clickable(onClick = onNavigateToPersonalization),
-                                color = darkSurface,
-                                border = BorderStroke(1.dp, glassBorder)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(18.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        Icons.Default.Tune,
-                                        contentDescription = null,
-                                        tint = neonCyan,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(Modifier.width(14.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            "Personalization & Feed Settings",
-                                            color = Color.White,
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Text(
-                                            "Manage recommendations, hidden content & history",
-                                            color = Color.White.copy(alpha = 0.6f),
-                                            fontSize = 12.sp
-                                        )
-                                    }
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = null,
-                                        tint = Color.White.copy(alpha = 0.4f),
-                                        modifier = Modifier.size(20.dp)
-                                    )
                                 }
                             }
                         }
