@@ -35,6 +35,9 @@ import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.*
 import com.deepeye.musicpro.ui.player.visualizer.title
+import com.deepeye.musicpro.ui.player.components.AmbientArtworkBackground
+import com.deepeye.musicpro.ui.theme.palette.getContrastLabelColor
+import com.deepeye.musicpro.ui.theme.palette.getSecondaryContrastLabelColor
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -126,6 +129,20 @@ fun NowPlayingScreen(
     val finalAccentColor = animatedPrimary
     val finalSecondaryColor = animatedSecondary
     val finalBgColor = animatedBg
+
+    val targetLabelColor = finalBgColor.getContrastLabelColor()
+    val targetSecondaryLabelColor = finalBgColor.getSecondaryContrastLabelColor()
+
+    val animatedLabelColor by androidx.compose.animation.animateColorAsState(
+        targetValue = targetLabelColor,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 800, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        label = "animatedLabelColor"
+    )
+    val animatedSecondaryLabelColor by androidx.compose.animation.animateColorAsState(
+        targetValue = targetSecondaryLabelColor,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 800, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        label = "animatedSecondaryLabelColor"
+    )
 
     var showLyricsSheet by remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
@@ -323,26 +340,14 @@ fun NowPlayingScreen(
         }
     }
 
-        // Hardware-Accelerated Ambilight & Album Art Background Layer
+        // ── 5-TIER ULTRA-PREMIUM AMBIENT ARTWORK & MONET BACKGROUND ──
         val currentArtworkUri = playerState.currentItem?.artworkUri
-        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF07090E))) {
-            if (currentArtworkUri != null) {
-                AsyncImage(
-                    model = currentArtworkUri,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .blur(80.dp)
-                        .alpha(0.38f),
-                    contentScale = ContentScale.Crop
-                )
-            }
-
-            com.deepeye.musicpro.ui.player.components.AmbilightBackground(
-                primaryColor = finalAccentColor,
-                secondaryColor = dominantColor,
-                modifier = Modifier.fillMaxSize()
-            ) {
+        AmbientArtworkBackground(
+            artworkUri = currentArtworkUri,
+            primaryColor = finalAccentColor,
+            secondaryColor = finalSecondaryColor,
+            modifier = Modifier.fillMaxSize()
+        ) {
             Box(modifier = Modifier.fillMaxSize().background(Color.Transparent)) {
                 if (isVideoMode) {
                     VideoNowPlayingLayout(
@@ -393,6 +398,8 @@ fun NowPlayingScreen(
                         finalAccentColor = finalAccentColor,
                         finalSecondaryColor = finalSecondaryColor,
                         finalBgColor = finalBgColor,
+                        labelColor = animatedLabelColor,
+                        secondaryLabelColor = animatedSecondaryLabelColor,
                         fftData = fftData,
                         showVisualizer = showVisualizer,
                         onNavigateBack = onNavigateBack,
@@ -431,7 +438,6 @@ fun NowPlayingScreen(
                 }
             }
         }
-    }
 
     if (showDspSheet) {
         val dspViewModel: com.deepeye.musicpro.dsp.engine.DSPViewModel = hiltViewModel()
@@ -575,6 +581,8 @@ fun AudioNowPlayingLayout(
     finalAccentColor: Color,
     finalSecondaryColor: Color = Color(0xFFFF007F),
     finalBgColor: Color,
+    labelColor: Color = Color.White,
+    secondaryLabelColor: Color = Color.White.copy(alpha = 0.70f),
     fftData: FloatArray,
     showVisualizer: Boolean,
     onNavigateBack: () -> Unit,
@@ -602,7 +610,7 @@ fun AudioNowPlayingLayout(
     val isHiRes = remember(playerState.currentItem?.id) { (playerState.currentItem?.id.hashCode() % 3) == 0 }
     val bitrate = remember(playerState.currentItem?.id) { if (isHiRes) "24bit • 48kHz" else "16bit • 44.1kHz" }
 
-    val headerColor = if (finalBgColor.luminance() > 0.5f) Color.Black else Color.White
+    val headerColor = labelColor
     val isInPipMode = com.deepeye.musicpro.ui.LocalPipMode.current
     
     BoxWithConstraints(
@@ -2661,39 +2669,25 @@ fun AudioFullscreenVisualizerLayout(
     val diagnostics by viewModel.diagnostics.collectAsStateWithLifecycle()
     val showStatsForNerds by viewModel.showStatsForNerds.collectAsStateWithLifecycle()
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF07090E))) {
-        val currentArtworkUri = playerState.currentItem?.artworkUri
-        if (currentArtworkUri != null) {
-            AsyncImage(
-                model = currentArtworkUri,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .blur(80.dp)
-                    .alpha(0.35f),
-                contentScale = ContentScale.Crop
-            )
-        }
-
-        // 1. Ambilight Background
-        com.deepeye.musicpro.ui.player.components.AmbilightBackground(
+    val currentArtworkUri = playerState.currentItem?.artworkUri
+    AmbientArtworkBackground(
+        artworkUri = currentArtworkUri,
+        primaryColor = finalAccentColor,
+        secondaryColor = finalSecondaryColor,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // High-Fidelity GPU Shader / Visualizer (replaces Video Surface)
+        com.deepeye.musicpro.ui.player.visualizer.VisualizerHost(
+            sceneId = visualizerPrefs.sceneId,
+            fftSpectrum = viewModel.fftSpectrum,
+            frequencyBands = viewModel.frequencyBands,
+            accentColor = finalAccentColor,
             primaryColor = finalAccentColor,
-            secondaryColor = finalSecondaryColor.copy(alpha = 0.7f),
+            secondaryColor = finalSecondaryColor,
+            intensity = visualizerPrefs.intensity,
+            reducedMotion = visualizerPrefs.reducedMotion,
             modifier = Modifier.fillMaxSize()
-        ) {
-            // 2. High-Fidelity GPU Shader / Visualizer (replaces Video Surface)
-            com.deepeye.musicpro.ui.player.visualizer.VisualizerHost(
-                sceneId = visualizerPrefs.sceneId,
-                fftSpectrum = viewModel.fftSpectrum,
-                frequencyBands = viewModel.frequencyBands,
-                accentColor = finalAccentColor,
-                primaryColor = finalAccentColor,
-                secondaryColor = finalSecondaryColor,
-                intensity = visualizerPrefs.intensity,
-                reducedMotion = visualizerPrefs.reducedMotion,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+        )
 
         // 3. DeepEyeVideoPlayerOverlay — exact same controls as video player
         val overlayActions = remember(viewModel, fullscreenMode) {

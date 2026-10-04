@@ -208,3 +208,16 @@ object PaletteConstrainer {
         )
     }
 }
+
+/**
+ * Calculates high-contrast text/icon label color based on background luminance.
+ */
+fun Color.getContrastLabelColor(): Color {
+    val lum = androidx.core.graphics.ColorUtils.calculateLuminance(this.toArgb())
+    return if (lum > 0.5) Color(0xFF121212) else Color.White
+}
+
+fun Color.getSecondaryContrastLabelColor(): Color {
+    val base = this.getContrastLabelColor()
+    return if (base == Color.White) Color.White.copy(alpha = 0.70f) else Color(0xFF121212).copy(alpha = 0.70f)
+}
