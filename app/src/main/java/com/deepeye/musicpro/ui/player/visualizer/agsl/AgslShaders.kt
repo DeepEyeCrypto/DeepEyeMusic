@@ -3,6 +3,7 @@
 //
 // AGSL (Android Graphics Shading Language) SkSL Shaders
 // Directly executed on GPU via android.graphics.RuntimeShader on Android 13+ (API 33+)
+// Powered by Monet Dynamic Theming (AndroidX Palette API & Color Engine)
 //
 package com.deepeye.musicpro.ui.player.visualizer.agsl
 
@@ -12,7 +13,7 @@ object AgslShaders {
 
     /**
      * Scene: Liquid Plasma / Viscous Ferrofluid (VVavy "liquid-carbon-plasma" / "fluid-simulator")
-     * Features: Navier-Stokes-inspired curl noise field, bass-driven dilation, and chromatic edge highlights.
+     * Features: Navier-Stokes-inspired curl noise field, bass-driven dilation, dynamic Monet palette synthesis.
      */
     @Language("AGSL")
     const val LIQUID_PLASMA = """
@@ -23,6 +24,8 @@ object AgslShaders {
         uniform float iTreble;
         uniform float iPeak;
         uniform float4 iAccentColor;
+        uniform float4 iColorPrimary;
+        uniform float4 iColorSecondary;
 
         float hash(float2 p) {
             float3 p3 = fract(float3(p.xyx) * 0.1031);
@@ -73,17 +76,23 @@ object AgslShaders {
 
             float f = fbm(uv * 2.0 + 4.0 * r);
 
-            // Color synthesis with acoustic modulation
+            // Dynamic Palette blending from Monet
+            float3 primary = iColorPrimary.rgb;
+            float3 secondary = iColorSecondary.rgb;
+
+            // Ambient background to primary mix
             float3 col = mix(
-                float3(0.02, 0.03, 0.06), // Deep ambient background
-                iAccentColor.rgb,
+                float3(0.02, 0.02, 0.05),
+                primary,
                 clamp((f * f) * 3.5, 0.0, 1.0)
             );
 
-            // Bass pulse core
-            col = mix(col, float3(0.0, 0.9, 1.0), clamp(length(q) * iBass * 0.8, 0.0, 1.0));
+            // Bass pulse core with secondary palette
+            col = mix(col, secondary, clamp(length(q) * iBass * 0.8, 0.0, 1.0));
+            
             // Treble specular highlight
-            col += float3(1.0, 0.2, 0.8) * (f * f * f * 2.5) * (0.4 + iTreble * 1.2);
+            col += mix(secondary, float3(1.0, 1.0, 1.0), 0.4) * (f * f * f * 2.5) * (0.4 + iTreble * 1.2);
+            
             // Peak transient flash
             col += float3(1.0, 1.0, 1.0) * pow(f, 5.0) * iPeak * 1.5;
 
@@ -97,7 +106,7 @@ object AgslShaders {
 
     /**
      * Scene: Raymarched Centroid Crystalline Tunnel (VVavy "centroid-crystalline-tunnel" / "deep-house")
-     * Features: Analytical 3D raymarching with twisting fractal geometry and bass-pulsing walls.
+     * Features: Analytical 3D raymarching with twisting fractal geometry, bass-pulsing walls, Monet color gradient.
      */
     @Language("AGSL")
     const val CRYSTAL_TUNNEL = """
@@ -108,6 +117,8 @@ object AgslShaders {
         uniform float iTreble;
         uniform float iPeak;
         uniform float4 iAccentColor;
+        uniform float4 iColorPrimary;
+        uniform float4 iColorSecondary;
 
         float2 rotate(float2 p, float a) {
             float c = cos(a);
@@ -133,13 +144,13 @@ object AgslShaders {
             float glow = (1.0 - smoothstep(0.01, 0.12, rings)) * 1.2 +
                          (1.0 - smoothstep(0.1, 0.45, ribs)) * 0.8;
 
-            // Palette
-            float3 cyan = float3(0.0, 0.95, 1.0);
-            float3 magenta = float3(1.0, 0.08, 0.58);
-            float3 gold = float3(1.0, 0.8, 0.1);
+            // Monet Palette
+            float3 primary = iColorPrimary.rgb;
+            float3 secondary = iColorSecondary.rgb;
+            float3 tertiary = mix(primary, secondary, 0.5);
 
-            float3 color = mix(cyan, magenta, sin(travel * 0.2 + twist) * 0.5 + 0.5);
-            color = mix(color, gold, iMid * 0.6);
+            float3 color = mix(primary, secondary, sin(travel * 0.2 + twist) * 0.5 + 0.5);
+            color = mix(color, tertiary, iMid * 0.6);
             color *= glow * (0.8 + iBass * 0.8 + iPeak * 0.6);
 
             // Depth fog
@@ -151,7 +162,7 @@ object AgslShaders {
 
     /**
      * Scene: Aura Orb Hyper-Geometric (VVavy "aura-orb-hyper-geometric" / "echo-halo")
-     * Features: Concentric pulsing halo rings, harmonic particle field, and chromatic aberration.
+     * Features: Concentric pulsing halo rings, harmonic particle field, dynamic Monet aura dispersion.
      */
     @Language("AGSL")
     const val AURA_ORB = """
@@ -162,6 +173,8 @@ object AgslShaders {
         uniform float iTreble;
         uniform float iPeak;
         uniform float4 iAccentColor;
+        uniform float4 iColorPrimary;
+        uniform float4 iColorSecondary;
 
         half4 main(float2 fragCoord) {
             float2 uv = (2.0 * fragCoord - iResolution) / min(iResolution.x, iResolution.y);
@@ -179,11 +192,14 @@ object AgslShaders {
             // Harmonic orbital rays
             float rays = abs(sin(angle * 8.0 + iTime * 0.8 + sin(dist * 10.0))) * (0.3 + iTreble * 0.7);
 
-            // Color mixing
-            float3 baseTint = iAccentColor.rgb;
-            float3 glowColor = float3(0.0, 0.95, 1.0) * coreGlow;
-            float3 ringColor = float3(1.0, 0.1, 0.6) * ring * (1.5 + iBass);
-            float3 rayColor  = float3(0.6, 0.2, 1.0) * rays * (0.5 / (dist + 0.1));
+            // Monet Color mixing
+            float3 primary = iColorPrimary.rgb;
+            float3 secondary = iColorSecondary.rgb;
+
+            float3 baseTint = primary;
+            float3 glowColor = primary * coreGlow;
+            float3 ringColor = secondary * ring * (1.5 + iBass);
+            float3 rayColor  = mix(primary, secondary, 0.5) * rays * (0.5 / (dist + 0.1));
 
             float3 col = glowColor + ringColor + rayColor;
             col += baseTint * (0.02 / (dist * dist + 0.01));
@@ -197,7 +213,7 @@ object AgslShaders {
 
     /**
      * Scene: Cyber Synthwave Grid (VVavy "the-infinite-grid" / "tron")
-     * Features: Perspective infinite horizon grid, undulating terrain waves, and neon retro sun.
+     * Features: Perspective infinite horizon grid, undulating terrain waves, neon Monet retro sun.
      */
     @Language("AGSL")
     const val CYBER_GRID = """
@@ -208,18 +224,23 @@ object AgslShaders {
         uniform float iTreble;
         uniform float iPeak;
         uniform float4 iAccentColor;
+        uniform float4 iColorPrimary;
+        uniform float4 iColorSecondary;
 
         half4 main(float2 fragCoord) {
             float2 uv = (fragCoord - 0.5 * iResolution) / iResolution.y;
 
             float3 col = float3(0.02, 0.02, 0.05);
 
+            float3 primary = iColorPrimary.rgb;
+            float3 secondary = iColorSecondary.rgb;
+
             // Sun in horizon
             float2 sunPos = float2(0.0, 0.08);
             float sunDist = length(uv - sunPos);
             if (sunDist < 0.22) {
                 float sunStripes = step(0.015, fract(uv.y * 35.0 - iTime * 0.2));
-                float3 sunCol = mix(float3(1.0, 0.1, 0.5), float3(1.0, 0.9, 0.1), (uv.y - sunPos.y + 0.22) / 0.44);
+                float3 sunCol = mix(secondary, primary, (uv.y - sunPos.y + 0.22) / 0.44);
                 col = mix(col, sunCol, sunStripes * (1.0 + iBass * 0.3));
             }
 
@@ -239,7 +260,7 @@ object AgslShaders {
                 float gridZ = abs(fract(zCoord * 0.5) - 0.5);
                 float line = smoothstep(0.42, 0.48, max(gridX, gridZ));
 
-                float3 gridColor = mix(float3(0.0, 0.9, 1.0), float3(1.0, 0.05, 0.6), sin(zCoord * 0.1) * 0.5 + 0.5);
+                float3 gridColor = mix(primary, secondary, sin(zCoord * 0.1) * 0.5 + 0.5);
                 float fog = clamp(1.0 / (depth * 0.12), 0.0, 1.0);
                 col += gridColor * line * fog * (1.2 + iMid * 0.8);
             }

@@ -102,8 +102,30 @@ fun NowPlayingScreen(
     val fftData by viewModel.fftData.collectAsStateWithLifecycle()
     val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
     val extractedColors by viewModel.extractedColors.collectAsStateWithLifecycle()
-    val finalBgColor = extractedColors?.background ?: Color(0xFF121212)
-    val finalAccentColor = extractedColors?.primary ?: dominantColor
+
+    val targetPrimary = extractedColors?.primary ?: dominantColor
+    val targetSecondary = extractedColors?.secondary ?: Color(0xFFFF007F)
+    val targetBg = extractedColors?.background ?: Color(0xFF121212)
+
+    val animatedPrimary by androidx.compose.animation.animateColorAsState(
+        targetValue = targetPrimary,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 800, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        label = "animatedPrimary"
+    )
+    val animatedSecondary by androidx.compose.animation.animateColorAsState(
+        targetValue = targetSecondary,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 800, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        label = "animatedSecondary"
+    )
+    val animatedBg by androidx.compose.animation.animateColorAsState(
+        targetValue = targetBg,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 800, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+        label = "animatedBg"
+    )
+
+    val finalAccentColor = animatedPrimary
+    val finalSecondaryColor = animatedSecondary
+    val finalBgColor = animatedBg
 
     var showLyricsSheet by remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
@@ -273,6 +295,8 @@ fun NowPlayingScreen(
                             fftSpectrum = viewModel.fftSpectrum,
                             frequencyBands = viewModel.frequencyBands,
                             accentColor = finalAccentColor,
+                            primaryColor = finalAccentColor,
+                            secondaryColor = finalSecondaryColor,
                             intensity = visualizerPrefs.intensity,
                             reducedMotion = visualizerPrefs.reducedMotion,
                             modifier = Modifier.fillMaxSize().padding(8.dp)
@@ -347,6 +371,7 @@ fun NowPlayingScreen(
                         playerState = playerState,
                         fftData = fftData,
                         finalAccentColor = finalAccentColor,
+                        finalSecondaryColor = finalSecondaryColor,
                         finalBgColor = finalBgColor,
                         viewModel = viewModel,
                         onExitFullscreen = { isAudioFullscreen = false },
@@ -366,6 +391,7 @@ fun NowPlayingScreen(
                     AudioNowPlayingLayout(
                         playerState = playerState,
                         finalAccentColor = finalAccentColor,
+                        finalSecondaryColor = finalSecondaryColor,
                         finalBgColor = finalBgColor,
                         fftData = fftData,
                         showVisualizer = showVisualizer,
@@ -547,6 +573,7 @@ fun NowPlayingScreen(
 fun AudioNowPlayingLayout(
     playerState: PlayerState,
     finalAccentColor: Color,
+    finalSecondaryColor: Color = Color(0xFFFF007F),
     finalBgColor: Color,
     fftData: FloatArray,
     showVisualizer: Boolean,
@@ -735,6 +762,8 @@ fun AudioNowPlayingLayout(
                                         fftSpectrum = viewModel.fftSpectrum,
                                         frequencyBands = viewModel.frequencyBands,
                                         accentColor = finalAccentColor,
+                                        primaryColor = finalAccentColor,
+                                        secondaryColor = finalSecondaryColor,
                                         intensity = visualizerPrefs.intensity,
                                         reducedMotion = visualizerPrefs.reducedMotion,
                                         modifier = Modifier.fillMaxSize().padding(4.dp)
@@ -2613,6 +2642,7 @@ fun AudioFullscreenVisualizerLayout(
     playerState: PlayerState,
     fftData: FloatArray,
     finalAccentColor: Color,
+    finalSecondaryColor: Color = Color(0xFFFF007F),
     finalBgColor: Color,
     viewModel: PlayerViewModel,
     onExitFullscreen: () -> Unit,
@@ -2648,7 +2678,7 @@ fun AudioFullscreenVisualizerLayout(
         // 1. Ambilight Background
         com.deepeye.musicpro.ui.player.components.AmbilightBackground(
             primaryColor = finalAccentColor,
-            secondaryColor = finalAccentColor.copy(alpha = 0.7f),
+            secondaryColor = finalSecondaryColor.copy(alpha = 0.7f),
             modifier = Modifier.fillMaxSize()
         ) {
             // 2. High-Fidelity GPU Shader / Visualizer (replaces Video Surface)
@@ -2657,6 +2687,8 @@ fun AudioFullscreenVisualizerLayout(
                 fftSpectrum = viewModel.fftSpectrum,
                 frequencyBands = viewModel.frequencyBands,
                 accentColor = finalAccentColor,
+                primaryColor = finalAccentColor,
+                secondaryColor = finalSecondaryColor,
                 intensity = visualizerPrefs.intensity,
                 reducedMotion = visualizerPrefs.reducedMotion,
                 modifier = Modifier.fillMaxSize()

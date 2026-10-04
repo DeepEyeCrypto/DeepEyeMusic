@@ -22,6 +22,8 @@ fun VisualizerHost(
     fftSpectrum: StateFlow<FloatArray>,
     frequencyBands: StateFlow<FloatArray>,
     accentColor: Color = VvavyCyan,
+    primaryColor: Color = accentColor,
+    secondaryColor: Color = Color(0xFFFF007F),
     intensity: Float = 1f,
     reducedMotion: Boolean = false,
     modifier: Modifier = Modifier
@@ -32,7 +34,7 @@ fun VisualizerHost(
         VisualizerSceneId.TRIANGLE_REACTIVE -> VvavyTriangleVisualizer(
             fftSpectrum = fftSpectrum,
             frequencyBands = frequencyBands,
-            accentColor = accentColor,
+            accentColor = primaryColor,
             intensity = intensity,
             reducedMotion = reducedMotion,
             modifier = modifier
@@ -41,7 +43,7 @@ fun VisualizerHost(
         VisualizerSceneId.SPECTRUM_BARS -> SpectrumBarsVisualizer(
             fftSpectrum = fftSpectrum,
             frequencyBands = frequencyBands,
-            accentColor = accentColor,
+            accentColor = primaryColor,
             intensity = intensity,
             reducedMotion = reducedMotion,
             modifier = modifier
@@ -50,7 +52,7 @@ fun VisualizerHost(
         VisualizerSceneId.WAVEFORM -> WaveformVisualizer(
             fftSpectrum = fftSpectrum,
             frequencyBands = frequencyBands,
-            accentColor = accentColor,
+            accentColor = primaryColor,
             intensity = intensity,
             reducedMotion = reducedMotion,
             modifier = modifier
@@ -59,7 +61,7 @@ fun VisualizerHost(
         VisualizerSceneId.RADIAL_PULSE -> RadialPulseVisualizer(
             fftSpectrum = fftSpectrum,
             frequencyBands = frequencyBands,
-            accentColor = accentColor,
+            accentColor = primaryColor,
             intensity = intensity,
             reducedMotion = reducedMotion,
             modifier = modifier
@@ -68,7 +70,7 @@ fun VisualizerHost(
         VisualizerSceneId.PARTICLE_FIELD -> ParticleFieldVisualizer(
             fftSpectrum = fftSpectrum,
             frequencyBands = frequencyBands,
-            accentColor = accentColor,
+            accentColor = primaryColor,
             intensity = intensity,
             reducedMotion = reducedMotion,
             modifier = modifier
@@ -79,6 +81,8 @@ fun VisualizerHost(
             frequencyBands = frequencyBands,
             scene = com.deepeye.musicpro.ui.player.visualizer.agsl.AgslScene.LIQUID_PLASMA,
             accentColor = accentColor,
+            primaryColor = primaryColor,
+            secondaryColor = secondaryColor,
             modifier = modifier
         )
 
@@ -87,6 +91,8 @@ fun VisualizerHost(
             frequencyBands = frequencyBands,
             scene = com.deepeye.musicpro.ui.player.visualizer.agsl.AgslScene.CRYSTAL_TUNNEL,
             accentColor = accentColor,
+            primaryColor = primaryColor,
+            secondaryColor = secondaryColor,
             modifier = modifier
         )
 
@@ -95,6 +101,8 @@ fun VisualizerHost(
             frequencyBands = frequencyBands,
             scene = com.deepeye.musicpro.ui.player.visualizer.agsl.AgslScene.CYBER_GRID,
             accentColor = accentColor,
+            primaryColor = primaryColor,
+            secondaryColor = secondaryColor,
             modifier = modifier
         )
     }

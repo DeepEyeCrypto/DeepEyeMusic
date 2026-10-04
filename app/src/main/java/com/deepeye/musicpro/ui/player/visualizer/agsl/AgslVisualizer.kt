@@ -35,6 +35,8 @@ fun AgslVisualizer(
     scene: AgslScene = AgslScene.LIQUID_PLASMA,
     themeState: StateFlow<VisualizerTheme>? = null,
     accentColor: Color = Color(0xFF00E5FF),
+    primaryColor: Color = accentColor,
+    secondaryColor: Color = Color(0xFFFF007F),
     modifier: Modifier = Modifier
 ) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -44,6 +46,8 @@ fun AgslVisualizer(
             scene = scene,
             themeState = themeState,
             accentColor = accentColor,
+            primaryColor = primaryColor,
+            secondaryColor = secondaryColor,
             modifier = modifier
         )
     } else {
@@ -66,6 +70,8 @@ private fun AgslRuntimeShaderRenderer(
     scene: AgslScene,
     themeState: StateFlow<VisualizerTheme>?,
     accentColor: Color,
+    primaryColor: Color,
+    secondaryColor: Color,
     modifier: Modifier = Modifier
 ) {
     // ── Continuous 60fps clock driven via withFrameMillis ──
@@ -152,6 +158,20 @@ private fun AgslRuntimeShaderRenderer(
             accentColor.green,
             accentColor.blue,
             accentColor.alpha
+        )
+        activeShader.setFloatUniform(
+            "iColorPrimary",
+            primaryColor.red,
+            primaryColor.green,
+            primaryColor.blue,
+            primaryColor.alpha
+        )
+        activeShader.setFloatUniform(
+            "iColorSecondary",
+            secondaryColor.red,
+            secondaryColor.green,
+            secondaryColor.blue,
+            secondaryColor.alpha
         )
 
         // Draw shader directly onto GPU surface
