@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30057,
+                versionName = "3.0.1.47",
+                releaseDate = "October 2026",
+                title = "Floating PiP Responsive Controls & Dismiss Fix 🪟",
+                highlight = true,
+                items =
+                    listOf(
+                        "Floating PiP Close Fix: Fixed touch event interception on the floating mini video player, making the 'X' (Close) button instantly responsive to dismiss the floating window.",
+                        "Seamless Background Playback: Dismissing the floating PiP window smoothly retains continuous audio playback without interruption in the bottom miniplayer bar.",
+                        "Gesture Disambiguation: Separated 1-finger drag and 2-finger pinch gestures from top action buttons for flawless touch responsiveness."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30056,
                 versionName = "3.0.1.46",
                 releaseDate = "October 2026",

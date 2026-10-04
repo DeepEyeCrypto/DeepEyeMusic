@@ -45,7 +45,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -502,8 +504,10 @@ fun DeepEyeMusicApp(
         
         // Overlay AnchoredMiniPlayer or Floating In-App Video PiP
         if (playerState.currentItem != null) {
+            var isPipDismissed by remember(playerState.currentSong?.id, playerState.currentItem?.id) { mutableStateOf(false) }
+
             val isVideo = playerState.isVideo
-            val isPipActive = !fullscreenMode.isFullscreen && isVideo && !isInPipMode
+            val isPipActive = !fullscreenMode.isFullscreen && isVideo && !isInPipMode && !isPipDismissed
 
             if (isPipActive) {
                 val stablePlayer = remember(playerController.player) {
@@ -513,12 +517,13 @@ fun DeepEyeMusicApp(
                     playerHolder = stablePlayer,
                     playerState = playerState,
                     onExpandFullscreen = {
+                        isPipDismissed = false
                         fullscreenMode.enter()
                         sheetViewModel.expand()
                     },
                     onPlayPause = { playerController.togglePlayPause() },
                     onClose = {
-                        playerController.togglePlayPause()
+                        isPipDismissed = true
                     }
                 )
             } else {
