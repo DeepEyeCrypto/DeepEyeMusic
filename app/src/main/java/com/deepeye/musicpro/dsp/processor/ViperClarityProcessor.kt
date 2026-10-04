@@ -110,14 +110,14 @@ class ViperClarityProcessor @Inject constructor() : AudioProcessor {
             val exciterAmount = (clarityGainDb / 15.0).coerceIn(0.0, 1.0)
 
             while (inputBuffer.position() < limit) {
-                val sL = inputBuffer.short.toDouble() / 32768.0
-                val sR = inputBuffer.short.toDouble() / 32768.0
+                val sL = sanitize(inputBuffer.short.toDouble() / 32768.0)
+                val sR = sanitize(inputBuffer.short.toDouble() / 32768.0)
 
                 // 1. Apply High-Shelf Biquad
-                val outL = b0 * sL + b1 * x1_L + b2 * x2_L - a1 * y1_L - a2 * y2_L
+                val outL = sanitize(b0 * sL + b1 * x1_L + b2 * x2_L - a1 * y1_L - a2 * y2_L)
                 x2_L = x1_L; x1_L = sL; y2_L = y1_L; y1_L = outL
 
-                val outR = b0 * sR + b1 * x1_R + b2 * x2_R - a1 * y1_R - a2 * y2_R
+                val outR = sanitize(b0 * sR + b1 * x1_R + b2 * x2_R - a1 * y1_R - a2 * y2_R)
                 x2_R = x1_R; x1_R = sR; y2_R = y1_R; y1_R = outR
 
                 var finalL = outL
@@ -127,22 +127,22 @@ class ViperClarityProcessor @Inject constructor() : AudioProcessor {
                 when (clarityMode) {
                     ViperClarityMode.X_HIFI, ViperClarityMode.FEELING -> {
                         // High-pass 1-pole for exciter
-                        val hpL = sL - hp_x1_L + 0.85 * hp_y1_L
+                        val hpL = sanitize(sL - hp_x1_L + 0.85 * hp_y1_L)
                         hp_x1_L = sL; hp_y1_L = hpL
 
-                        val hpR = sR - hp_x1_R + 0.85 * hp_y1_R
+                        val hpR = sanitize(sR - hp_x1_R + 0.85 * hp_y1_R)
                         hp_x1_R = sR; hp_y1_R = hpR
 
                         // Generate odd+even high-frequency sparkle
-                        val sparkleL = (hpL * abs(hpL) * 1.5) * exciterAmount
-                        val sparkleR = (hpR * abs(hpR) * 1.5) * exciterAmount
+                        val sparkleL = sanitize((hpL * abs(hpL) * 1.5) * exciterAmount)
+                        val sparkleR = sanitize((hpR * abs(hpR) * 1.5) * exciterAmount)
 
                         finalL += sparkleL
                         finalR += sparkleR
                     }
                     ViperClarityMode.OZONE_PLUS -> {
                         // Stereo phase-aligned air expansion
-                        val diff = (sL - sR) * 0.5 * exciterAmount
+                        val diff = sanitize((sL - sR) * 0.5 * exciterAmount)
                         finalL += diff
                         finalR -= diff
                     }
@@ -168,12 +168,19 @@ class ViperClarityProcessor @Inject constructor() : AudioProcessor {
         outputBuffer = this.buffer
     }
 
+    private inline fun sanitize(v: Double): Double {
+        if (v.isNaN() || v.isInfinite()) return 0.0
+        if (abs(v) < 1e-15) return 0.0 // FTZ (Flush-To-Zero) subnormals
+        return v
+    }
+
     private fun softClip(x: Double): Double {
-        val absX = abs(x)
+        val sX = sanitize(x)
+        val absX = abs(sX)
         return if (absX <= 0.88) {
-            x
+            sX
         } else {
-            val sign = if (x >= 0.0) 1.0 else -1.0
+            val sign = if (sX >= 0.0) 1.0 else -1.0
             val excess = absX - 0.88
             sign * (0.88 + 0.10 * tanh(excess / 0.10))
         }

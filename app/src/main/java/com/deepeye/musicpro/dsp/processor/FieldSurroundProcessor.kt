@@ -96,30 +96,30 @@ class FieldSurroundProcessor @Inject constructor() : AudioProcessor {
             val bufSize = delayBuffer.size
 
             while (inputBuffer.position() < limit) {
-                val inL = inputBuffer.short.toFloat() / 32768f
-                val inR = inputBuffer.short.toFloat() / 32768f
+                val inL = sanitize(inputBuffer.short.toFloat() / 32768f)
+                val inR = sanitize(inputBuffer.short.toFloat() / 32768f)
 
                 // Mid/Side Decomposition
-                val mid = (inL + inR) * 0.5f * midGain
-                val side = (inL - inR) * 0.5f
+                val mid = sanitize((inL + inR) * 0.5f * midGain)
+                val side = sanitize((inL - inR) * 0.5f)
 
                 // Push side to circular delay line
                 delayBuffer[writeIndex] = side
                 val readIndex = (writeIndex - delaySamples + bufSize) % bufSize
-                val delayedRaw = delayBuffer[readIndex]
+                val delayedRaw = sanitize(delayBuffer[readIndex])
                 writeIndex = (writeIndex + 1) % bufSize
 
                 // 1-pole low-pass on delayed side (damps harsh reflections above 4kHz)
-                lastDelayedSide += 0.35f * (delayedRaw - lastDelayedSide)
+                lastDelayedSide = sanitize(lastDelayedSide + 0.35f * (delayedRaw - lastDelayedSide))
 
                 // Synthesize enhanced stereo field
-                val expandedSide = side * stereoWidth + lastDelayedSide * wetFactor
+                val expandedSide = sanitize(side * stereoWidth + lastDelayedSide * wetFactor)
 
-                val outL = (mid + expandedSide).coerceIn(-1.0f, 1.0f)
-                val outR = (mid - expandedSide).coerceIn(-1.0f, 1.0f)
+                val outL = sanitize((mid + expandedSide).coerceIn(-1.0f, 1.0f))
+                val outR = sanitize((mid - expandedSide).coerceIn(-1.0f, 1.0f))
 
-                val outShortL = (outL * 32767f).toInt().toShort()
-                val outShortR = (outR * 32767f).toInt().toShort()
+                val outShortL = (outL * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
+                val outShortR = (outR * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
 
                 buffer.putShort(outShortL)
                 buffer.putShort(outShortR)
@@ -129,6 +129,12 @@ class FieldSurroundProcessor @Inject constructor() : AudioProcessor {
         inputBuffer.position(limit)
         buffer.flip()
         outputBuffer = this.buffer
+    }
+
+    private inline fun sanitize(v: Float): Float {
+        if (v.isNaN() || v.isInfinite()) return 0.0f
+        if (kotlin.math.abs(v) < 1e-15f) return 0.0f // FTZ (Flush-To-Zero) subnormals
+        return v
     }
 
     override fun queueEndOfStream() {

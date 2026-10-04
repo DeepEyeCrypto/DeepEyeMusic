@@ -76,8 +76,8 @@ class MasterLimiterProcessor @Inject constructor() : AudioProcessor {
             val headroom = (ceiling - threshold).coerceAtLeast(0.04f)
 
             while (inputBuffer.position() < limit) {
-                var sL = inputBuffer.short.toFloat() / 32768f
-                var sR = inputBuffer.short.toFloat() / 32768f
+                var sL = sanitize(inputBuffer.short.toFloat() / 32768f)
+                var sR = sanitize(inputBuffer.short.toFloat() / 32768f)
 
                 // Left channel soft knee limit
                 val absL = abs(sL)
@@ -95,6 +95,9 @@ class MasterLimiterProcessor @Inject constructor() : AudioProcessor {
                     sR = if (sR > 0) compressed else -compressed
                 }
 
+                sL = sanitize(sL)
+                sR = sanitize(sR)
+
                 val outShortL = (sL * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
                 val outShortR = (sR * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
 
@@ -106,6 +109,12 @@ class MasterLimiterProcessor @Inject constructor() : AudioProcessor {
         inputBuffer.position(limit)
         buffer.flip()
         outputBuffer = this.buffer
+    }
+
+    private inline fun sanitize(v: Float): Float {
+        if (v.isNaN() || v.isInfinite()) return 0.0f
+        if (abs(v) < 1e-15f) return 0.0f // FTZ (Flush-To-Zero) subnormals
+        return v
     }
 
     override fun queueEndOfStream() {

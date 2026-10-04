@@ -86,17 +86,17 @@ class CrossfeedProcessor @Inject constructor() : AudioProcessor {
         val delaySamples = (inputAudioFormat.sampleRate * 0.0003f).toInt().coerceIn(1, 31)
 
         while (inputBuffer.position() < limit) {
-            val inL = inputBuffer.short.toFloat()
-            val inR = inputBuffer.short.toFloat()
+            val inL = sanitize(inputBuffer.short.toFloat())
+            val inR = sanitize(inputBuffer.short.toFloat())
 
             // Read delayed signals
             val readIndex = (delayIndex - delaySamples + 32) % 32
-            val delayedL = delayBufferL[readIndex]
-            val delayedR = delayBufferR[readIndex]
+            val delayedL = sanitize(delayBufferL[readIndex])
+            val delayedR = sanitize(delayBufferR[readIndex])
 
             // Apply simple 1-pole lowpass filter to the crossfeed signal
-            val crossL = lastCrossL + cutoffAlpha * (delayedL - lastCrossL)
-            val crossR = lastCrossR + cutoffAlpha * (delayedR - lastCrossR)
+            val crossL = sanitize(lastCrossL + cutoffAlpha * (delayedL - lastCrossL))
+            val crossR = sanitize(lastCrossR + cutoffAlpha * (delayedR - lastCrossR))
             lastCrossL = crossL
             lastCrossR = crossR
 
@@ -105,8 +105,8 @@ class CrossfeedProcessor @Inject constructor() : AudioProcessor {
             var outR = inR + (crossL * blendLevel)
 
             // Normalize slightly to prevent clipping
-            outL /= (1f + blendLevel)
-            outR /= (1f + blendLevel)
+            outL = sanitize(outL / (1f + blendLevel))
+            outR = sanitize(outR / (1f + blendLevel))
 
             // Write current samples to delay buffer
             delayBufferL[delayIndex] = inL
@@ -121,6 +121,12 @@ class CrossfeedProcessor @Inject constructor() : AudioProcessor {
         inputBuffer.position(limit)
         buffer.flip()
         outputBuffer = buffer
+    }
+
+    private inline fun sanitize(v: Float): Float {
+        if (v.isNaN() || v.isInfinite()) return 0.0f
+        if (kotlin.math.abs(v) < 1e-15f) return 0.0f // FTZ (Flush-To-Zero) subnormals
+        return v
     }
 
     override fun queueEndOfStream() {

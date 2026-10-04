@@ -55,16 +55,22 @@ object PlayerModule {
                 enableFloatOutput: Boolean,
                 enableAudioTrackPlaybackParams: Boolean
             ): androidx.media3.exoplayer.audio.AudioSink? {
+                val bufferSizeProvider = androidx.media3.exoplayer.audio.DefaultAudioSink.AudioTrackBufferSizeProvider { minBufferSizeInBytes, _, _, _, _, _, _ ->
+                    // Multiply minBufferSize by 4x to eliminate MT6835 HAL underruns and guarantee deep headroom for ViPER DSP
+                    minBufferSizeInBytes * 4
+                }
+
                 return androidx.media3.exoplayer.audio.DefaultAudioSink.Builder(context)
-                    .setEnableFloatOutput(false) // Guarantee 16-bit PCM for native Visualizer capture
+                    .setEnableFloatOutput(false) // Guarantee 16-bit PCM for native Visualizer capture & HAL stability
                     .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                    .setAudioTrackBufferSizeProvider(bufferSizeProvider)
                     .setAudioProcessors(
                         arrayOf(
                             vocalRemoverProcessor,
                             crossfeedProcessor,
+                            fieldSurroundProcessor,
                             viperBassProcessor,
                             viperClarityProcessor,
-                            fieldSurroundProcessor,
                             tubeSimulatorProcessor,
                             playbackGainProcessor,
                             masterLimiterProcessor,
@@ -75,7 +81,7 @@ object PlayerModule {
             }
         }
         renderersFactory.setExtensionRendererMode(
-            androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON
+            androidx.media3.exoplayer.DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF
         ).setEnableDecoderFallback(true)
 
         val trackSelector = androidx.media3.exoplayer.trackselection.DefaultTrackSelector(context)
@@ -102,16 +108,16 @@ object PlayerModule {
                 .build()
         )
 
-        // Custom load control for music streaming (ultra-low latency startup & responsive playback)
+        // Custom load control for music streaming (50s buffer & robust 2.5s playback start for heavy DSP)
         val loadControl = androidx.media3.exoplayer.DefaultLoadControl.Builder()
             .setBufferDurationsMs(
-                15000, // minBufferMs (15s buffer for smooth background playback)
-                50000, // maxBufferMs (50s buffer cap)
-                250,   // bufferForPlaybackMs (Only 250ms buffer needed to start playback instantly!)
-                1000   // bufferForPlaybackAfterRebufferMs (1s buffer after rebuffering)
+                50000, // minBufferMs (50s buffer for smooth background playback)
+                100000, // maxBufferMs (100s buffer cap)
+                2500,  // bufferForPlaybackMs (2.5s buffer for rock-solid DSP convolution startup)
+                5000   // bufferForPlaybackAfterRebufferMs (5s buffer after rebuffering)
             )
             .setBackBuffer(
-                10000, // backBufferDurationMs (10s back buffer for instant scrubbing/seeking)
+                15000, // backBufferDurationMs (15s back buffer for instant scrubbing/seeking)
                 /* retainBackBufferFromKeyframe = */ true
             )
             .setTargetBufferBytes(-1)

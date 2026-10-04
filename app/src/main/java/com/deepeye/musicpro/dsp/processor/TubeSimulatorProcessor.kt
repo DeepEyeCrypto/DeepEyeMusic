@@ -78,11 +78,11 @@ class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
         if (!active || inputAudioFormat.channelCount != 2) {
             buffer.put(inputBuffer)
         } else {
-            val comp = 1.0f / tanh(drive)
+            val comp = sanitize(1.0f / tanh(drive))
 
             while (inputBuffer.position() < limit) {
-                var sL = (inputBuffer.short.toFloat() / 32768f) * drive
-                var sR = (inputBuffer.short.toFloat() / 32768f) * drive
+                var sL = sanitize((inputBuffer.short.toFloat() / 32768f) * drive)
+                var sR = sanitize((inputBuffer.short.toFloat() / 32768f) * drive)
 
                 // Tube Non-Linear Transfer Curve
                 if (tubeMode == TubeMode.TRIODE) {
@@ -95,14 +95,14 @@ class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
                     sR = tanh(sR)
                 }
 
-                sL *= comp
-                sR *= comp
+                sL = sanitize(sL * comp)
+                sR = sanitize(sR * comp)
 
                 // DC-Blocking Filter: y[n] = x[n] - x[n-1] + 0.995 * y[n-1]
-                val dcOutL = sL - dc_x1_L + 0.995f * dc_y1_L
+                val dcOutL = sanitize(sL - dc_x1_L + 0.995f * dc_y1_L)
                 dc_x1_L = sL; dc_y1_L = dcOutL
 
-                val dcOutR = sR - dc_x1_R + 0.995f * dc_y1_R
+                val dcOutR = sanitize(sR - dc_x1_R + 0.995f * dc_y1_R)
                 dc_x1_R = sR; dc_y1_R = dcOutR
 
                 // Soft knee clamp to eliminate harsh inter-sample overshoot
@@ -122,14 +122,21 @@ class TubeSimulatorProcessor @Inject constructor() : AudioProcessor {
         outputBuffer = this.buffer
     }
 
+    private inline fun sanitize(v: Float): Float {
+        if (v.isNaN() || v.isInfinite()) return 0.0f
+        if (abs(v) < 1e-15f) return 0.0f // FTZ (Flush-To-Zero) subnormals
+        return v
+    }
+
     private fun softClip(x: Float): Float {
-        val absX = kotlin.math.abs(x)
+        val sX = sanitize(x)
+        val absX = abs(sX)
         return if (absX <= 0.88f) {
-            x
+            sX
         } else {
-            val sign = if (x >= 0.0f) 1.0f else -1.0f
+            val sign = if (sX >= 0.0f) 1.0f else -1.0f
             val excess = absX - 0.88f
-            sign * (0.88f + 0.10f * kotlin.math.tanh((excess / 0.10f).toDouble()).toFloat())
+            sign * (0.88f + 0.10f * tanh((excess / 0.10f).toDouble()).toFloat())
         }
     }
 
