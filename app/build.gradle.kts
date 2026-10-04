@@ -65,6 +65,10 @@ android {
                 ?: System.getenv("KEYSTORE_KEY_PASSWORD")
                 ?: (keystoreProps["keyPassword"] as? String)
                 ?: ""
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = true
         }
     }
 
