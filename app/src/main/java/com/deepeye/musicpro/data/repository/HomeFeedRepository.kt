@@ -61,22 +61,19 @@ constructor(
             var authSubscriptions: List<HomeVideoItem> = emptyList()
             var authLiked: List<HomeVideoItem> = emptyList()
             var authMusic: List<HomeVideoItem> = emptyList()
-            var authTrending: List<HomeVideoItem> = emptyList()
 
             if (hasAuth) {
-                val authHistoryDeferred = async { authClient.getHistory() }
-                val authHomeDeferred = async { authClient.getHomeFeed() }
-                val authSubsDeferred = async { authClient.getSubscriptionsFeed() }
-                val authLikedDeferred = async { authClient.getLikedVideos() }
-                val authMusicDeferred = async { authClient.getMusicFeed() }
-                val authTrendingDeferred = async { authClient.getTrending() }
+                val authHistoryDeferred = async { try { authClient.getHistory() } catch (e: Exception) { emptyList() } }
+                val authHomeDeferred = async { try { authClient.getHomeFeed() } catch (e: Exception) { emptyList() } }
+                val authSubsDeferred = async { try { authClient.getSubscriptionsFeed() } catch (e: Exception) { emptyList() } }
+                val authLikedDeferred = async { try { authClient.getLikedVideos() } catch (e: Exception) { emptyList() } }
+                val authMusicDeferred = async { try { authClient.getMusicFeed() } catch (e: Exception) { emptyList() } }
 
                 authHistory = authHistoryDeferred.await()
                 authHome = authHomeDeferred.await()
                 authSubscriptions = authSubsDeferred.await()
                 authLiked = authLikedDeferred.await()
                 authMusic = authMusicDeferred.await()
-                authTrending = authTrendingDeferred.await()
             }
 
             // Common async tasks that run regardless of auth state
@@ -136,8 +133,9 @@ constructor(
             val newReleases: List<HomeMusicItem>
 
             if (hasAuth) {
-                trending = (if (authTrending.isNotEmpty()) authTrending else authHome.take(15))
+                trending = authHome
                     .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                    .take(15)
                 val filteredLiked = authLiked.filter { !it.isShort && (it.duration == 0L || it.duration >= 60L) && MusicFilter.isMusicTrack(it.title, it.channelName, it.duration, it.isShort) }
                 val filteredSubs = authSubscriptions.filter { !it.isShort && (it.duration == 0L || it.duration >= 60L) && MusicFilter.isMusicTrack(it.title, it.channelName, it.duration, it.isShort) }
                 val filteredHome = authHome.filter { !it.isShort && (it.duration == 0L || it.duration >= 60L) && MusicFilter.isMusicTrack(it.title, it.channelName, it.duration, it.isShort) }
@@ -145,8 +143,14 @@ constructor(
                     HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
                 }.distinctBy { it.id }
                 music = musicItems.take(15)
-                discoverMix = filteredHome.take(15).map {
-                    HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
+                discoverMix = if (authMusic.size > 5) {
+                    authMusic.drop(5).take(15).map {
+                        HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
+                    }
+                } else {
+                    filteredHome.take(15).map {
+                        HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
+                    }
                 }
                 supermix = (filteredLiked + filteredSubs).map {
                     HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)

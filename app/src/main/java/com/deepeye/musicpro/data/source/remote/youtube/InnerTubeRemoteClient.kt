@@ -29,6 +29,11 @@ data class AutoplayTrack(
 )
 
 /**
+ * Thrown when an authenticated InnerTube request fails OAuth verification.
+ */
+class InnerTubeAuthException(message: String) : Exception(message)
+
+/**
  * SmartTube-Omega Native InnerTube Remote Client.
  *
  * Communicates directly with YouTube's internal `youtubei/v1` API endpoints (/browse, /next, /search, /player)
@@ -298,24 +303,35 @@ class InnerTubeRemoteClient @Inject constructor(
                         client.newCall(retryReq).execute().use { retryRes ->
                             if (retryRes.isSuccessful) {
                                 val bodyStr = retryRes.body?.string() ?: return@withContext emptyList()
-                                auditBrowseTelemetry(browseId, refreshedToken, bodyStr)
-                                return@withContext parseBrowseSections(JSONObject(bodyStr))
+                                val items = parseBrowseSections(JSONObject(bodyStr))
+                                auditBrowseTelemetry(browseId, refreshedToken, bodyStr, items)
+                                return@withContext items
                             }
                         }
                     }
+                    throw InnerTubeAuthException("InnerTube authenticated browse failed (401 Unauthorized) for $browseId")
                 }
 
                 if (!response.isSuccessful) {
                     Log.e(AUTH_TAG, "[InnerTube Auth-Rescue] /browse failed for $browseId with HTTP ${response.code}")
+                    if (!token.isNullOrBlank() && (response.code == 401 || response.code == 403)) {
+                        throw InnerTubeAuthException("InnerTube browse HTTP ${response.code} for $browseId")
+                    }
                     return@withContext emptyList()
                 }
 
                 val bodyStr = response.body?.string() ?: return@withContext emptyList()
-                auditBrowseTelemetry(browseId, token, bodyStr)
-                return@withContext parseBrowseSections(JSONObject(bodyStr))
+                val items = parseBrowseSections(JSONObject(bodyStr))
+                auditBrowseTelemetry(browseId, token, bodyStr, items)
+                return@withContext items
             }
+        } catch (e: InnerTubeAuthException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error in InnerTube /browse for browseId=$browseId", e)
+            if (!token.isNullOrBlank()) {
+                Log.w(AUTH_TAG, "Authenticated browse failure for $browseId: ${e.message}")
+            }
             emptyList()
         }
     }
@@ -350,20 +366,30 @@ class InnerTubeRemoteClient @Inject constructor(
                         client.newCall(retryReq).execute().use { retryRes ->
                             if (retryRes.isSuccessful) {
                                 val bodyStr = retryRes.body?.string() ?: return@withContext emptyList()
-                                return@withContext parseBrowseSections(JSONObject(bodyStr))
+                                val items = parseBrowseSections(JSONObject(bodyStr))
+                                auditBrowseTelemetry(browseId, refreshedToken, bodyStr, items)
+                                return@withContext items
                             }
                         }
                     }
+                    throw InnerTubeAuthException("InnerTube TV browse failed (401 Unauthorized) for $browseId")
                 }
 
                 if (!response.isSuccessful) {
                     Log.e(AUTH_TAG, "[InnerTube Auth-Rescue] Main /browse failed for $browseId with HTTP ${response.code}")
+                    if (!token.isNullOrBlank() && (response.code == 401 || response.code == 403)) {
+                        throw InnerTubeAuthException("InnerTube TV browse HTTP ${response.code} for $browseId")
+                    }
                     return@withContext emptyList()
                 }
 
                 val bodyStr = response.body?.string() ?: return@withContext emptyList()
-                return@withContext parseBrowseSections(JSONObject(bodyStr))
+                val items = parseBrowseSections(JSONObject(bodyStr))
+                auditBrowseTelemetry(browseId, token, bodyStr, items)
+                return@withContext items
             }
+        } catch (e: InnerTubeAuthException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error in Main InnerTube /browse for browseId=$browseId", e)
             emptyList()
@@ -397,9 +423,9 @@ class InnerTubeRemoteClient @Inject constructor(
     /**
      * Mantis Reflect telemetry logger: verifies authenticated user personalization signatures.
      */
-    private fun auditBrowseTelemetry(browseId: String, token: String?, bodyStr: String) {
+    private fun auditBrowseTelemetry(browseId: String, token: String?, bodyStr: String, items: List<HomeVideoItem>) {
         val preview = bodyStr.take(500).replace("\n", " ").trim()
-        Log.i(AUTH_TAG, "[InnerTube Auth-Rescue] /browse ($browseId) | AuthTokenPresent: ${!token.isNullOrBlank()} | BodyPreview: $preview")
+        Log.i(AUTH_TAG, "[InnerTube Auth-Rescue] /browse ($browseId) | AuthTokenPresent: ${!token.isNullOrBlank()} | ItemsParsed: ${items.size} | BodyPreview: $preview")
 
         if (browseId == "FEmusic_home") {
             val personalSignatures = listOf(
@@ -408,6 +434,9 @@ class InnerTubeRemoteClient @Inject constructor(
             )
             val detected = personalSignatures.filter { bodyStr.contains(it, ignoreCase = true) }
             Log.i(AUTH_TAG, "[InnerTube-Personalized] Detected Shelves: ${if (detected.isNotEmpty()) detected.joinToString(", ") else "None (Guest feed or custom shelves)"}")
+
+            val sampleTitles = items.take(3).joinToString(" | ") { "\"${it.title}\" by ${it.channelName}" }
+            Log.i(AUTH_TAG, "[InnerTube-Personalized] Top 3 Tracks: $sampleTitles")
         }
     }
 

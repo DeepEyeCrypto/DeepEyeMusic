@@ -22,7 +22,8 @@ import javax.inject.Singleton
 class InnerTubeAuthManager @Inject constructor(
     private val client: OkHttpClient,
     private val settingsDataStore: SettingsDataStore,
-    private val deviceAuthManager: YouTubeDeviceAuthManager
+    private val deviceAuthManager: YouTubeDeviceAuthManager,
+    private val authCacheManager: AuthCacheManager
 ) {
     companion object {
         const val TAG = "InnerTubeAuthManager"
@@ -45,6 +46,7 @@ class InnerTubeAuthManager @Inject constructor(
     ) {
         deviceAuthManager.pollForToken(deviceCode, intervalSeconds) { tokenResponse ->
             kotlinx.coroutines.runBlocking {
+                authCacheManager.purgeAllCaches()
                 onTokenReceived(tokenResponse)
             }
         }
@@ -89,6 +91,7 @@ class InnerTubeAuthManager @Inject constructor(
         if (tokenResponse != null && tokenResponse.accessToken.isNotBlank()) {
             val newRefreshToken = if (!tokenResponse.refreshToken.isNullOrBlank()) tokenResponse.refreshToken else refreshToken
             settingsDataStore.setYouTubeTokens(tokenResponse.accessToken, newRefreshToken)
+            authCacheManager.purgeAllCaches()
             Log.i(TAG, "Successfully refreshed InnerTube Bearer token")
             return@withContext tokenResponse.accessToken
         }
@@ -102,5 +105,6 @@ class InnerTubeAuthManager @Inject constructor(
     suspend fun logout() {
         Log.i(TAG, "Logging out of InnerTube session, clearing tokens")
         settingsDataStore.setYouTubeTokens("", null)
+        authCacheManager.purgeAllCaches()
     }
 }

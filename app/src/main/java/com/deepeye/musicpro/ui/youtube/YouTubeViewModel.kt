@@ -159,12 +159,12 @@ constructor(
             _uiState.update { it.copy(isLoading = true, error = null, hasMore = false) }
             try {
                 val authItems = when (category) {
-                    "Home" -> authClient.getHomeFeed().ifEmpty { authClient.getTrending() }.ifEmpty { authClient.search("trending music") }
+                    "Home" -> authClient.getHomeFeed()
                     "Subscriptions" -> if (hasAuth) authClient.getSubscriptionsFeed() else emptyList()
                     "History" -> if (hasAuth) authClient.getHistory() else emptyList()
                     "Liked" -> if (hasAuth) authClient.getLikedVideos() else emptyList()
                     "Watch Later" -> if (hasAuth) authClient.getWatchLater() else emptyList()
-                    "Music" -> authClient.getMusicFeed().ifEmpty { authClient.search("top music videos") }
+                    "Music" -> authClient.getMusicFeed()
                     "Movies" -> authClient.getMoviesFeed().ifEmpty { authClient.search("full movies") }
                     "Gaming" -> authClient.getGamingFeed().ifEmpty { authClient.search("gaming walkthrough") }
                     "News" -> authClient.getNewsFeed().ifEmpty { authClient.search("news live report") }
@@ -179,9 +179,30 @@ constructor(
                         )
                     }
                     return@launch
+                } else if (hasAuth && (category in setOf("Home", "Subscriptions", "History", "Liked", "Watch Later", "Music"))) {
+                    _uiState.update {
+                        it.copy(
+                            videos = emptyList(),
+                            isLoading = false,
+                            hasMore = false,
+                            error = "No items found in your account for $category"
+                        )
+                    }
+                    return@launch
                 }
             } catch (e: Exception) {
-                // Fallthrough to baseQuery fetchVideos
+                Log.e("YouTubeVM", "loadCategory error for $category", e)
+                if (hasAuth && (category in setOf("Home", "Subscriptions", "History", "Liked", "Watch Later", "Music"))) {
+                    _uiState.update {
+                        it.copy(
+                            videos = emptyList(),
+                            isLoading = false,
+                            hasMore = false,
+                            error = "Error loading account feed: ${e.message}"
+                        )
+                    }
+                    return@launch
+                }
             }
 
             var baseQuery =

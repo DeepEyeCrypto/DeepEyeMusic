@@ -160,8 +160,10 @@ class AuthenticatedYouTubeClient @Inject constructor(
 
     suspend fun getWatchLater(): List<HomeVideoItem> = authBrowse("VLWL")
 
-    suspend fun getTrending(): List<HomeVideoItem> =
-        search("trending videos")
+    suspend fun getTrending(): List<HomeVideoItem> {
+        val result = browse("FEtrending")
+        return if (result.isNotEmpty()) result else search("trending videos")
+    }
 
     suspend fun getMusicFeed(): List<HomeVideoItem> = withContext(Dispatchers.IO) {
         val token = getValidAccessToken()
@@ -191,14 +193,12 @@ class AuthenticatedYouTubeClient @Inject constructor(
                 Log.d("AuthYTClient", "getMusicFeed() found ${accountMusic.size} personalized InnerTube music items")
             } catch (e: Exception) {
                 Log.e("AuthYTClient", "getMusicFeed account fetch failed", e)
+                throw e
             }
-        }
-
-        if (accountMusic.isNotEmpty()) {
             return@withContext accountMusic
         }
 
-        // Fetch top trending music songs
+        // Fetch top trending music songs ONLY for guest/unauthenticated sessions
         val trendingSongs = try {
             search("trending songs official audio video")
         } catch (e: Exception) {
@@ -209,17 +209,29 @@ class AuthenticatedYouTubeClient @Inject constructor(
     }
 
     suspend fun getLikedMusic(): List<HomeVideoItem> = withContext(Dispatchers.IO) {
+        val token = getValidAccessToken()
         val liked = innerTubeClient.browseLikedMusic()
         if (liked.isNotEmpty()) return@withContext liked
         val ytLiked = innerTubeClient.browseLikedVideos()
         val filtered = ytLiked.filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
-        if (filtered.isNotEmpty()) filtered else search("top hit songs official audio")
+        if (filtered.isNotEmpty()) return@withContext filtered
+
+        if (token != null) {
+            return@withContext emptyList()
+        }
+        search("top hit songs official audio")
     }
 
     suspend fun getMusicHistory(): List<HomeVideoItem> = withContext(Dispatchers.IO) {
+        val token = getValidAccessToken()
         val history = innerTubeClient.browseHistory()
         val filtered = history.filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
-        if (filtered.isNotEmpty()) filtered else search("latest hindi songs audio")
+        if (filtered.isNotEmpty()) return@withContext filtered
+
+        if (token != null) {
+            return@withContext emptyList()
+        }
+        search("latest hindi songs audio")
     }
 
     suspend fun getMoviesFeed(): List<HomeVideoItem> {
