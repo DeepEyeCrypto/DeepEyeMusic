@@ -12,9 +12,11 @@ import kotlinx.coroutines.test.setMain
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 
+@Ignore("Manual live network integration test for local scratch extraction testing")
 class YoutubeExtractionTest {
 
     private fun mockLogger() {
