@@ -86,15 +86,15 @@ fun LyricsBottomSheet(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         shape = CircleShape,
-                        color = NeonCyan.copy(alpha = 0.2f),
-                        border = BorderStroke(1.dp, NeonCyan.copy(alpha = 0.6f)),
+                        color = dominantColor.copy(alpha = 0.2f),
+                        border = BorderStroke(1.dp, dominantColor.copy(alpha = 0.6f)),
                         modifier = Modifier.size(32.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = if (lyrics?.isSynced == true) Icons.Default.Sync else Icons.Default.MusicNote,
                                 contentDescription = null,
-                                tint = NeonCyan,
+                                tint = dominantColor,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -110,7 +110,7 @@ fun LyricsBottomSheet(
                         Text(
                             text = if (lyrics?.isSynced == true) "Karaoke Synchronized" else "Plain Text",
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (lyrics?.isSynced == true) NeonCyan else Color.White.copy(alpha = 0.6f)
+                            color = if (lyrics?.isSynced == true) dominantColor else Color.White.copy(alpha = 0.6f)
                         )
                     }
                 }
@@ -260,7 +260,7 @@ fun LyricsBottomSheet(
                         )
 
                         val animatedColor by animateColorAsState(
-                            targetValue = if (isActive) NeonCyan else Color.White,
+                            targetValue = if (isActive) dominantColor else Color.White,
                             animationSpec = tween(300),
                             label = "lyricColor"
                         )

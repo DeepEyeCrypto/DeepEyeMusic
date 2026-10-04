@@ -26,7 +26,7 @@ constructor(
     private val colorExtractor: ColorExtractor,
     private val downloadManager: com.deepeye.musicpro.player.download.MusicDownloadManager,
     private val tasteProfileRepository: com.deepeye.musicpro.domain.repository.TasteProfileRepository,
-    private val lyricsRepository: com.deepeye.musicpro.domain.repository.LyricsRepository,
+    private val lyricsRepository: com.deepeye.musicpro.domain.lyrics.LyricsRepository,
     private val sleepTimerManager: com.deepeye.musicpro.player.timer.SleepTimerManager,
     private val recommendationEngine: com.deepeye.musicpro.domain.recommendation.RecommendationEngine,
     private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
@@ -62,6 +62,30 @@ constructor(
 
     private val _currentLyrics = MutableStateFlow<com.deepeye.musicpro.domain.model.Lyrics?>(null)
     val currentLyrics: StateFlow<com.deepeye.musicpro.domain.model.Lyrics?> = _currentLyrics.asStateFlow()
+
+    val activeLyricIndex: StateFlow<Int> = kotlinx.coroutines.flow.combine(
+        playerState.map { it.position }.distinctUntilChanged(),
+        _currentLyrics
+    ) { position, lyrics ->
+        if (lyrics == null || !lyrics.isSynced || lyrics.lines.isEmpty()) {
+            -1
+        } else {
+            val lines = lyrics.lines
+            var activeIdx = -1
+            for (i in lines.indices) {
+                if (lines[i].timestampMs <= position) {
+                    activeIdx = i
+                } else {
+                    break
+                }
+            }
+            activeIdx
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), -1)
+
+    fun seekToLyric(timestampMs: Long) {
+        playerController.seekTo(timestampMs)
+    }
 
     val sleepTimerRemainingMs: StateFlow<Long?> = sleepTimerManager.timeRemainingMs
 
@@ -260,8 +284,13 @@ constructor(
                         }
                     }
                     if (mediaItem != null) {
-                        // Duration from playerState might be delayed, we use current duration or 0
-                        val lyrics = lyricsRepository.getLyrics(mediaItem.title, mediaItem.artist, 0L)
+                        val duration = playerState.value.duration
+                        val lyrics = lyricsRepository.getLyricsForTrack(
+                            title = mediaItem.title,
+                            artist = mediaItem.artist,
+                            videoId = mediaItem.id,
+                            durationMs = duration
+                        )
                         _currentLyrics.value = lyrics
                     }
                 }

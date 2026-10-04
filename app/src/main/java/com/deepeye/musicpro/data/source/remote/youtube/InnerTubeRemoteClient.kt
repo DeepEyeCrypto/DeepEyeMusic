@@ -4,7 +4,10 @@
 package com.deepeye.musicpro.data.source.remote.youtube
 
 import android.util.Log
+import com.deepeye.musicpro.core.utils.LrcParser
 import com.deepeye.musicpro.domain.auth.InnerTubeAuthManager
+import com.deepeye.musicpro.domain.model.Lyrics
+import com.deepeye.musicpro.domain.model.LyricsLine
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -178,6 +181,152 @@ class InnerTubeRemoteClient @Inject constructor(
             Log.e(TAG, "Error in fallback InnerTube /next", e)
             null
         }
+    }
+
+    /**
+     * Fetches YouTube Music synchronized or plain lyrics for [videoId] via InnerTube /next -> /browse.
+     */
+    suspend fun fetchLyrics(videoId: String): Lyrics? = withContext(Dispatchers.IO) {
+        if (videoId.isBlank()) return@withContext null
+
+        val token = authManager.getAccessToken()
+        val payload = "{$ANDROID_MUSIC_CONTEXT, \"videoId\": \"$videoId\"}"
+
+        try {
+            val reqBuilder = Request.Builder()
+                .url("${YOUTUBE_MUSIC_INNERTUBE}next")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("User-Agent", "com.google.android.apps.youtube.music/$ANDROID_MUSIC_CLIENT_VERSION (Linux; U; Android 14)")
+                .addHeader("X-YouTube-Client-Name", "67")
+                .addHeader("X-YouTube-Client-Version", ANDROID_MUSIC_CLIENT_VERSION)
+                .post(payload.toRequestBody("application/json".toMediaType()))
+
+            if (!token.isNullOrBlank()) {
+                reqBuilder.addHeader("Authorization", "Bearer $token")
+            }
+
+            var lyricsBrowseId: String? = null
+            client.newCall(reqBuilder.build()).execute().use { response ->
+                if (response.isSuccessful) {
+                    val bodyStr = response.body?.string() ?: return@withContext null
+                    val json = JSONObject(bodyStr)
+                    lyricsBrowseId = extractLyricsBrowseId(json)
+                }
+            }
+
+            if (!lyricsBrowseId.isNullOrBlank()) {
+                Log.d(TAG, "Found lyrics browseId=$lyricsBrowseId for videoId=$videoId")
+                return@withContext fetchLyricsFromBrowse(lyricsBrowseId!!)
+            }
+            null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching InnerTube lyrics for $videoId", e)
+            null
+        }
+    }
+
+    private fun extractLyricsBrowseId(json: JSONObject): String? {
+        val tabs = json.optJSONObject("contents")
+            ?.optJSONObject("singleColumnMusicWatchNextResultsRenderer")
+            ?.optJSONObject("tabbedRenderer")
+            ?.optJSONObject("watchNextTabbedResultsRenderer")
+            ?.optJSONArray("tabs") ?: return null
+
+        for (i in 0 until tabs.length()) {
+            val tab = tabs.optJSONObject(i)?.optJSONObject("tabRenderer") ?: continue
+            val title = tab.optString("title", "")
+            val endpoint = tab.optJSONObject("endpoint")
+            val browseId = endpoint?.optJSONObject("browseEndpoint")?.optString("browseId")
+
+            if (title.equals("Lyrics", ignoreCase = true) || (browseId != null && browseId.startsWith("MPLY"))) {
+                return browseId
+            }
+        }
+        return null
+    }
+
+    private suspend fun fetchLyricsFromBrowse(browseId: String): Lyrics? = withContext(Dispatchers.IO) {
+        val token = authManager.getAccessToken()
+        val payload = "{$ANDROID_MUSIC_CONTEXT, \"browseId\": \"$browseId\"}"
+
+        try {
+            val reqBuilder = Request.Builder()
+                .url("${YOUTUBE_MUSIC_INNERTUBE}browse")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("User-Agent", "com.google.android.apps.youtube.music/$ANDROID_MUSIC_CLIENT_VERSION (Linux; U; Android 14)")
+                .addHeader("X-YouTube-Client-Name", "67")
+                .addHeader("X-YouTube-Client-Version", ANDROID_MUSIC_CLIENT_VERSION)
+                .post(payload.toRequestBody("application/json".toMediaType()))
+
+            if (!token.isNullOrBlank()) {
+                reqBuilder.addHeader("Authorization", "Bearer $token")
+            }
+
+            client.newCall(reqBuilder.build()).execute().use { response ->
+                if (!response.isSuccessful) {
+                    Log.w(TAG, "Lyrics /browse returned HTTP ${response.code} for $browseId")
+                    return@withContext null
+                }
+                val bodyStr = response.body?.string() ?: return@withContext null
+                val json = JSONObject(bodyStr)
+                return@withContext parseLyricsBrowseResponse(json)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error resolving lyrics browse payload for $browseId", e)
+            null
+        }
+    }
+
+    private fun parseLyricsBrowseResponse(json: JSONObject): Lyrics? {
+        val sectionList = json.optJSONObject("contents")
+            ?.optJSONObject("sectionListRenderer")
+            ?.optJSONArray("contents")
+
+        if (sectionList != null) {
+            for (i in 0 until sectionList.length()) {
+                val section = sectionList.optJSONObject(i) ?: continue
+
+                // Strategy 1: musicTimedLyricsRenderer (Synchronized/Karaoke Timestamps)
+                val musicTimedLyricsRenderer = section.optJSONObject("musicTimedLyricsRenderer")
+                if (musicTimedLyricsRenderer != null) {
+                    val timedLyricsData = musicTimedLyricsRenderer.optJSONArray("timedLyricsData")
+                    if (timedLyricsData != null && timedLyricsData.length() > 0) {
+                        val lines = mutableListOf<LyricsLine>()
+                        for (j in 0 until timedLyricsData.length()) {
+                            val lineObj = timedLyricsData.optJSONObject(j) ?: continue
+                            val lyricLine = lineObj.optString("lyricLine", "").trim()
+                            val cueRange = lineObj.optJSONObject("cueRange")
+                            val startMs = cueRange?.optLong("startTimeMilliseconds") ?: 0L
+                            if (lyricLine.isNotEmpty()) {
+                                lines.add(LyricsLine(startMs, lyricLine))
+                            }
+                        }
+                        if (lines.isNotEmpty()) {
+                            Log.i(TAG, "Parsed ${lines.size} synchronized lyrics lines from InnerTube")
+                            return Lyrics(lines = lines.sortedBy { it.timestampMs }, isSynced = true)
+                        }
+                    }
+                }
+
+                // Strategy 2: musicDescriptionShelfRenderer (Plain Text Lyrics)
+                val shelfRenderer = section.optJSONObject("musicDescriptionShelfRenderer")
+                if (shelfRenderer != null) {
+                    val runs = shelfRenderer.optJSONObject("description")?.optJSONArray("runs")
+                    if (runs != null && runs.length() > 0) {
+                        val fullText = StringBuilder()
+                        for (j in 0 until runs.length()) {
+                            fullText.append(runs.optJSONObject(j)?.optString("text", "") ?: "")
+                        }
+                        val plain = fullText.toString().trim()
+                        if (plain.isNotEmpty()) {
+                            Log.i(TAG, "Parsed plain text lyrics from InnerTube shelfRenderer")
+                            return LrcParser.parsePlainLyrics(plain)
+                        }
+                    }
+                }
+            }
+        }
+        return null
     }
 
     /**
