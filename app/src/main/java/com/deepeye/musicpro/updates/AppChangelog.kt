@@ -8,6 +8,21 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30055,
+                versionName = "3.0.1.45",
+                releaseDate = "October 2026",
+                title = "Omega Triple Threat: Monet AGSL Shaders, Ambient Blur & Synced Lyrics 🚀",
+                highlight = true,
+                items =
+                    listOf(
+                        "Monet-Omega Dynamic AGSL Shaders: Real-time 60FPS GPU visualizers dynamically modulated with extracted thumbnail colors (iColorPrimary, iColorSecondary) via 800ms smooth state-driven crossfades.",
+                        "Ambient-Omega Immersive UI: 80dp hardware-accelerated ambient blur background, luminance-driven contrast text math, and 3-tier gradient safety scrim.",
+                        "Lyrics-Omega Synced Vocals: Dual-engine live karaoke lyrics with YouTube Music InnerTube timed lyrics extraction (/next -> /browse MPLY) and LRCLIB fallback with viewport-centering auto-scroll.",
+                        "Enterprise Offline Caching: ExoPlayer 2GB LRU SimpleCache with background WorkManager Opus ITAG 251 caching for gapless offline playback.",
+                        "DSP FTZ/DAZ Audio Engine: Zero NaN/Infinity flushing and float sanitization across all ViPER4Android DSP audio processors."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30053,
                 versionName = "3.0.1.43",
                 releaseDate = "October 2026",

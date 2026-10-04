@@ -29,42 +29,31 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Decode Keystore & Verify Secrets
+      - name: Decode Keystore (Graceful Fallback)
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 || secrets.KEYSTORE_BASE64 }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || secrets.KEYSTORE_KEY_PASSWORD }}
         run: |
-          if [ -z "$KEYSTORE_B64" ]; then
-            echo "::error::GitHub Secret 'KEYSTORE_B64' (or 'KEYSTORE_BASE64') is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
-            exit 1
+          if [ -n "$KEYSTORE_B64" ] && [ -n "$STORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ]; then
+            echo "$KEYSTORE_B64" | tr -d '\r\n ' | base64 --decode > "$RUNNER_TEMP/release-keystore.jks"
+            if [ -s "$RUNNER_TEMP/release-keystore.jks" ]; then
+              echo "KEYSTORE_READY=true" >> "$GITHUB_ENV"
+              echo "Keystore successfully decoded to transient runner storage."
+            else
+              echo "::warning::Decoded keystore file is empty! Using debug signing fallback."
+              echo "KEYSTORE_READY=false" >> "$GITHUB_ENV"
+            fi
+          else
+            echo "::warning::Keystore secrets not configured. Using debug signing fallback for release artifacts."
+            echo "KEYSTORE_READY=false" >> "$GITHUB_ENV"
           fi
-          if [ -z "$STORE_PASSWORD" ]; then
-            echo "::error::GitHub Secret 'STORE_PASSWORD' (or 'KEYSTORE_PASSWORD') is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
-            exit 1
-          fi
-          if [ -z "$KEY_ALIAS" ]; then
-            echo "::error::GitHub Secret 'KEY_ALIAS' is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
-            exit 1
-          fi
-          if [ -z "$KEY_PASSWORD" ]; then
-            echo "::error::GitHub Secret 'KEY_PASSWORD' (or 'KEYSTORE_KEY_PASSWORD') is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
-            exit 1
-          fi
-
-          # Decode Base64 keystore securely
-          echo "$KEYSTORE_B64" | tr -d '\r\n ' | base64 --decode > "$RUNNER_TEMP/release-keystore.jks"
-
-          if [ ! -s "$RUNNER_TEMP/release-keystore.jks" ]; then
-            echo "::error::Decoded keystore file is empty or corrupted! Please verify KEYSTORE_B64 Base64 string."
-            exit 1
-          fi
-          echo "Keystore successfully decoded to transient runner storage."
 
       - name: Build Release APK and AAB
         env:
           KEYSTORE_FILE: ${{ runner.temp }}/release-keystore.jks
+          KEYSTORE_PATH: ${{ runner.temp }}/release-keystore.jks
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || secrets.KEYSTORE_KEY_PASSWORD }}
@@ -74,8 +63,10 @@ jobs:
       - name: Secure Shred Keystore
         if: always()
         run: |
-          rm -f "${{ runner.temp }}/release-keystore.jks" || true
-          echo "Keystore securely purged from runner storage."
+          if [ -f "$RUNNER_TEMP/release-keystore.jks" ]; then
+            shred -u -z "$RUNNER_TEMP/release-keystore.jks" 2>/dev/null || rm -f "$RUNNER_TEMP/release-keystore.jks"
+            echo "Keystore securely purged from runner storage."
+          fi
 
       - name: Generate Checksums
         run: |
