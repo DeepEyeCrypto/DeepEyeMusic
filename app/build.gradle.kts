@@ -45,6 +45,7 @@ android {
         create("release") {
             val keystorePath =
                 System.getenv("KEYSTORE_FILE")
+                    ?: System.getenv("KEYSTORE_PATH")
                     ?: (keystoreProps["storeFile"] as? String)
                     ?: "keystore.jks"
             storeFile =
@@ -53,13 +54,15 @@ android {
                 } else {
                     rootProject.file(keystorePath)
                 }
-            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            storePassword = System.getenv("STORE_PASSWORD")
+                ?: System.getenv("KEYSTORE_PASSWORD")
                 ?: (keystoreProps["storePassword"] as? String)
                 ?: ""
             keyAlias = System.getenv("KEY_ALIAS")
                 ?: (keystoreProps["keyAlias"] as? String)
                 ?: ""
             keyPassword = System.getenv("KEY_PASSWORD")
+                ?: System.getenv("KEYSTORE_KEY_PASSWORD")
                 ?: (keystoreProps["keyPassword"] as? String)
                 ?: ""
         }

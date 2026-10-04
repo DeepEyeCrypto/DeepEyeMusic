@@ -16,7 +16,33 @@
   - `us.shandian.giga.**` (Download engine components)
 
 ### Completed Tasks:
-1. **R8-Omega Production Protocol**:
+1. **CI/CD Omega-Master (DevSecOps Protocol)**:
+   - Dynamic signing in `app/build.gradle.kts` reading `STORE_PASSWORD` / `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`, and `KEYSTORE_FILE`.
+   - Hardened `.github/workflows/release.yml` with Base64 keystore decoding to transient storage and automatic shredding.
+   - Dual artifact generation: `./gradlew assembleRelease bundleRelease` with SHA-256 checksum generation (`checksums.sha256`).
+   - Advanced Gradle caching enabled.
+
+### Human Setup Guide: GitHub Secrets Configuration
+To ensure automated production release signing without exposing private `.jks` keys:
+
+1. **Convert Keystore to Base64 (on Mac/Linux terminal)**:
+   ```bash
+   base64 -i release-keystore.jks -o keystore_b64.txt
+   ```
+   *(Or on Linux: `base64 -w 0 release-keystore.jks > keystore_b64.txt`)*
+
+2. **Add Secrets in GitHub Repository**:
+   - Navigate to: **GitHub Repo -> Settings -> Secrets and variables -> Actions -> New repository secret**.
+   - Create the following 4 secrets:
+     - `KEYSTORE_B64`: *(Paste the entire contents of `keystore_b64.txt`)*
+     - `STORE_PASSWORD`: *(Password for your keystore file)*
+     - `KEY_ALIAS`: *(Alias name of the signing key)*
+     - `KEY_PASSWORD`: *(Password for the key alias)*
+
+3. **Trigger Automatic Release**:
+   - Pushing any tag (`git tag -a v3.0.1.45 -m "Release" && git push origin v3.0.1.45`) automatically builds, signs, validates SHA-256 checksums, and publishes `app-release.apk` + `app-release.aab` to GitHub Releases.
+
+2. **R8-Omega Production Protocol**:
    - `app/proguard-rules.pro` hardened with full reflective model and JNI protections.
    - `app/build.gradle.kts` release build configured with `isMinifyEnabled = true` and `isShrinkResources = true`.
    - Local signing fallback enabled.

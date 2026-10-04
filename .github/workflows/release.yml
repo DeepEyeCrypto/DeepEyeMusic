@@ -23,23 +23,25 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Verify and Decode Keystore
+      - name: Decode Keystore & Verify Secrets
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 || secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || secrets.KEYSTORE_KEY_PASSWORD }}
         run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "::error::GitHub Secret 'KEYSTORE_BASE64' is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::GitHub Secret 'KEYSTORE_B64' (or 'KEYSTORE_BASE64') is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
             exit 1
           fi
-          if [ -z "$KEYSTORE_PASSWORD" ]; then
-            echo "::error::GitHub Secret 'KEYSTORE_PASSWORD' is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
+          if [ -z "$STORE_PASSWORD" ]; then
+            echo "::error::GitHub Secret 'STORE_PASSWORD' (or 'KEYSTORE_PASSWORD') is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
             exit 1
           fi
           if [ -z "$KEY_ALIAS" ]; then
@@ -47,42 +49,50 @@ jobs:
             exit 1
           fi
           if [ -z "$KEY_PASSWORD" ]; then
-            echo "::error::GitHub Secret 'KEY_PASSWORD' is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
+            echo "::error::GitHub Secret 'KEY_PASSWORD' (or 'KEYSTORE_KEY_PASSWORD') is missing or empty! Please set it in Repo Settings -> Secrets and variables -> Actions."
             exit 1
           fi
-          
-          # Decode keystore safely
-          echo -n "$KEYSTORE_BASE64" | base64 --decode > app/release-keystore.jks
-          
-          # Verify keystore size and type
-          if [ ! -s app/release-keystore.jks ]; then
-            echo "::error::Decoded keystore file is empty! Please verify that KEYSTORE_BASE64 is a valid base64-encoded string."
+
+          # Decode Base64 keystore securely
+          echo "$KEYSTORE_B64" | tr -d '\r\n ' | base64 --decode > "$RUNNER_TEMP/release-keystore.jks"
+
+          if [ ! -s "$RUNNER_TEMP/release-keystore.jks" ]; then
+            echo "::error::Decoded keystore file is empty or corrupted! Please verify KEYSTORE_B64 Base64 string."
             exit 1
           fi
-          echo "Keystore successfully decoded: $(ls -lh app/release-keystore.jks)"
+          echo "Keystore successfully decoded to transient runner storage."
 
-      - name: Build release APK
+      - name: Build Release APK and AAB
         env:
-          KEYSTORE_FILE: "app/release-keystore.jks"
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_FILE: ${{ runner.temp }}/release-keystore.jks
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew assembleRelease
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || secrets.KEYSTORE_KEY_PASSWORD }}
+        run: |
+          ./gradlew assembleRelease bundleRelease --no-daemon
 
-      - name: Build release AAB
-        env:
-          KEYSTORE_FILE: "app/release-keystore.jks"
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew bundleRelease
+      - name: Secure Shred Keystore
+        if: always()
+        run: |
+          rm -f "${{ runner.temp }}/release-keystore.jks" || true
+          echo "Keystore securely purged from runner storage."
+
+      - name: Generate Checksums
+        run: |
+          cd app/build/outputs
+          mkdir -p release_artifacts
+          cp apk/release/*.apk release_artifacts/ 2>/dev/null || true
+          cp bundle/release/*.aab release_artifacts/ 2>/dev/null || true
+          cd release_artifacts
+          sha256sum * > checksums.sha256
+          echo "Generated SHA-256 Checksums:"
+          cat checksums.sha256
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/bundle/release/*.aab
+            app/build/outputs/release_artifacts/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
