@@ -8,6 +8,20 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30064,
+                versionName = "3.0.1.54",
+                releaseDate = "October 2026",
+                title = "Update & Download Engine Debug: Offline Playback, Live Progress & Storage Control 🚀📦",
+                highlight = true,
+                items =
+                    listOf(
+                        "100% Offline Playback: Downloaded tracks now resolve and stream directly from local storage with zero network dependency.",
+                        "Live Download Metrics: Real-time progress bar, percentage calculations, and transfer sizes (MB) in downloads hub and OTA dialog.",
+                        "Storage Management: Added instant delete actions for downloaded tracks to effortlessly free up on-device storage.",
+                        "Dynamic OTA Reporting: Accurate GitHub release asset parsing, rate-limit fallback messages, and dynamic version indicators."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30063,
                 versionName = "3.0.1.53",
                 releaseDate = "October 2026",

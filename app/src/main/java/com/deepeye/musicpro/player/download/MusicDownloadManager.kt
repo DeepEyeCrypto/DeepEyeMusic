@@ -11,11 +11,21 @@ import android.widget.Toast
 import com.deepeye.musicpro.domain.model.MediaItem
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+
+data class DownloadProgressState(
+    val item: MediaItem,
+    val progress: Float = 0f,
+    val bytesDownloaded: Long = 0L,
+    val totalBytes: Long = 0L
+)
 
 @Singleton
 class MusicDownloadManager
@@ -35,9 +45,13 @@ constructor(
         .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
         .build()
 
-    private val _activeDownloads =
-        MutableStateFlow<Map<Long, MediaItem>>(emptyMap())
-    val activeDownloads: kotlinx.coroutines.flow.StateFlow<Map<Long, MediaItem>> = _activeDownloads.asStateFlow()
+    private val _activeDownloadStates =
+        MutableStateFlow<Map<Long, DownloadProgressState>>(emptyMap())
+    val activeDownloadStates: StateFlow<Map<Long, DownloadProgressState>> = _activeDownloadStates.asStateFlow()
+
+    val activeDownloads: StateFlow<Map<Long, MediaItem>> =
+        _activeDownloadStates.map { map -> map.mapValues { it.value.item } }
+            .stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
 
     fun isFullyCached(videoId: String): Boolean {
         return try {
@@ -67,7 +81,7 @@ constructor(
         )
     }
 
-    fun downloadTrack(item: MediaItem) { android.util.Log.e("TEST_DOWNLOAD", "downloadTrack called!");
+    fun downloadTrack(item: MediaItem) {
         if (item is MediaItem.Local) {
             Toast.makeText(context, "Track already in local library", Toast.LENGTH_SHORT).show()
             return
@@ -79,14 +93,20 @@ constructor(
                 val sanitizedTitle = item.title.replace(Regex("[^a-zA-Z0-9.-]"), "_")
                 
                 withContext(kotlinx.coroutines.Dispatchers.Main) {
-                    _activeDownloads.value = _activeDownloads.value.toMutableMap().apply { put(downloadId, item) }
+                    _activeDownloadStates.value = _activeDownloadStates.value.toMutableMap().apply { 
+                        put(downloadId, DownloadProgressState(item = item, progress = 0f))
+                    }
                     Toast.makeText(context, "Download started: ${item.title}", Toast.LENGTH_SHORT).show()
                 }
                 historyRepository.recordDownload(downloadId, item.id, item.title, "STARTED")
 
-                val resolvedUrl = (item as? MediaItem.Remote)?.streamUri?.toString() 
-                    ?: sourceResolverManager.resolve(item.id, (item as? MediaItem.Remote)?.isVideo == true)
-                    ?: throw Exception("Could not resolve stream URL")
+                val rawUrl = (item as? MediaItem.Remote)?.streamUri?.toString()
+                val isExpiredOrStale = rawUrl == null || rawUrl.contains("googlevideo.com") && (rawUrl.contains("expire=") || rawUrl.contains("source=youtube"))
+                val resolvedUrl = if (!isExpiredOrStale) {
+                    rawUrl
+                } else {
+                    sourceResolverManager.resolve(item.id, (item as? MediaItem.Remote)?.isVideo == true)
+                } ?: throw Exception("Could not resolve stream URL")
 
                 val isVideo = (item as? MediaItem.Remote)?.isVideo == true
                 val extension = if (isVideo) "mp4" else "mp3"
@@ -119,7 +139,17 @@ constructor(
                         DownloaderHelper.downloadWithResume(
                             client = downloadHttpClient,
                             url = resolvedUrl,
-                            out = out
+                            out = out,
+                            onProgress = { bytesDownloaded, totalBytes, progress ->
+                                _activeDownloadStates.value = _activeDownloadStates.value.toMutableMap().apply {
+                                    put(downloadId, DownloadProgressState(
+                                        item = item,
+                                        progress = progress,
+                                        bytesDownloaded = bytesDownloaded,
+                                        totalBytes = totalBytes
+                                    ))
+                                }
+                            }
                         )
                     }
                     success = true
@@ -145,14 +175,15 @@ constructor(
                         localPath = uri.toString()
                     )
                     withContext(kotlinx.coroutines.Dispatchers.Main) {
-                        _activeDownloads.value = _activeDownloads.value.toMutableMap().apply { remove(downloadId) }
+                        _activeDownloadStates.value = _activeDownloadStates.value.toMutableMap().apply { remove(downloadId) }
                         Toast.makeText(context, "Download complete: ${item.title}", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("MusicDownloadManager", "Download failed", e); historyRepository.recordDownload(downloadId, item.id, item.title, "FAILED")
+                android.util.Log.e("MusicDownloadManager", "Download failed", e)
+                historyRepository.recordDownload(downloadId, item.id, item.title, "FAILED")
                 withContext(kotlinx.coroutines.Dispatchers.Main) {
-                    _activeDownloads.value = _activeDownloads.value.toMutableMap().apply { remove(downloadId) }
+                    _activeDownloadStates.value = _activeDownloadStates.value.toMutableMap().apply { remove(downloadId) }
                     Toast.makeText(context, "Unable to download: ${item.title}", Toast.LENGTH_LONG).show()
                 }
             }
@@ -160,12 +191,12 @@ constructor(
     }
 
     fun cancelDownload(downloadId: Long) {
-        val item = _activeDownloads.value[downloadId]
-        if (item != null) {
+        val state = _activeDownloadStates.value[downloadId]
+        if (state != null) {
             scope.launch {
-                historyRepository.recordDownload(downloadId, item.id, item.title, "CANCELLED")
+                historyRepository.recordDownload(downloadId, state.item.id, state.item.title, "CANCELLED")
             }
         }
-        _activeDownloads.value = _activeDownloads.value.toMutableMap().apply { remove(downloadId) }
+        _activeDownloadStates.value = _activeDownloadStates.value.toMutableMap().apply { remove(downloadId) }
     }
 }

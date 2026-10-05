@@ -12,6 +12,7 @@ data class LibraryItem(
     val isLiked: Boolean = false,
     val isSaved: Boolean = false,
     val isOfflineAvailable: Boolean = false,
+    val localPath: String? = null,
     val playCount: Int = 0,
     val lastPlayedAt: Long = 0L,
     val addedAt: Long = System.currentTimeMillis(),

@@ -39,7 +39,11 @@ sealed class UpdateState {
 
     object UpToDate : UpdateState()
 
-    data class Downloading(val progress: Float) : UpdateState()
+    data class Downloading(
+        val progress: Float,
+        val bytesDownloaded: Long = 0L,
+        val totalBytes: Long = 0L
+    ) : UpdateState()
 
     data class Downloaded(val file: File, val version: String) : UpdateState()
 
@@ -106,7 +110,12 @@ constructor(
 
                 response.use { 
                     if (!it.isSuccessful) {
-                        _updateState.value = UpdateState.Error("Failed to fetch release: ${it.code}")
+                        val errMsg = if (it.code == 403) {
+                            "GitHub rate limit exceeded. Please try again shortly."
+                        } else {
+                            "Failed to fetch release (HTTP ${it.code})"
+                        }
+                        _updateState.value = UpdateState.Error(errMsg)
                         return@launch
                     }
 
@@ -118,12 +127,21 @@ constructor(
 
                     val assetsArray = json.getAsJsonArray("assets") ?: throw Exception("No assets found")
                     var apkUrl: String? = null
+                    var bestRank = -1
                     for (i in 0 until assetsArray.size()) {
                         val asset = assetsArray.get(i).asJsonObject
                         val name = asset.getAsJsonPrimitive("name")?.asString ?: ""
-                        if (name.endsWith(".apk")) {
-                            apkUrl = asset.getAsJsonPrimitive("browser_download_url")?.asString
-                            break
+                        val downloadUrl = asset.getAsJsonPrimitive("browser_download_url")?.asString
+                        if (downloadUrl != null && name.endsWith(".apk", ignoreCase = true)) {
+                            val rank = when {
+                                name.startsWith("DeepEyeMusicPro", ignoreCase = true) -> 2
+                                name.contains("release", ignoreCase = true) -> 1
+                                else -> 0
+                            }
+                            if (rank > bestRank) {
+                                bestRank = rank
+                                apkUrl = downloadUrl
+                            }
                         }
                     }
 
@@ -158,17 +176,18 @@ constructor(
         }
     }
 
-        fun downloadUpdate(
+    fun downloadUpdate(
         apkUrl: String,
         version: String,
     ) {
         if (IS_MOCK_MODE) {
             latestUpdateVersion = version
-            _updateState.value = UpdateState.Downloading(0f)
+            _updateState.value = UpdateState.Downloading(0f, 0L, 50_000_000L)
             scope.launch {
                 for (progress in 1..10) {
                     delay(200)
-                    _updateState.value = UpdateState.Downloading(progress / 10f)
+                    val p = progress / 10f
+                    _updateState.value = UpdateState.Downloading(p, (p * 50_000_000L).toLong(), 50_000_000L)
                 }
                 val dummyFile =
                     File(
@@ -184,7 +203,7 @@ constructor(
         scope.launch(Dispatchers.IO) {
             try {
                 latestUpdateVersion = version
-                _updateState.value = UpdateState.Downloading(0f)
+                _updateState.value = UpdateState.Downloading(0f, 0L, 0L)
 
                 val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "DeepEyeMusicPro-$version.apk")
                 if (file.exists()) {
@@ -195,7 +214,7 @@ constructor(
                 val response = okHttpClient.newCall(request).execute()
 
                 if (!response.isSuccessful) {
-                    _updateState.value = UpdateState.Error("Download failed: ${response.code}")
+                    _updateState.value = UpdateState.Error("Download failed (HTTP ${response.code})")
                     return@launch
                 }
 
@@ -218,9 +237,9 @@ constructor(
                             bytesCopied += bytes
                             
                             val currentTime = System.currentTimeMillis()
-                            if (contentLength > 0 && currentTime - lastEmitTime > 100) {
-                                val progress = bytesCopied.toFloat() / contentLength.toFloat()
-                                _updateState.value = UpdateState.Downloading(progress)
+                            if (contentLength > 0 && currentTime - lastEmitTime > 80) {
+                                val progress = (bytesCopied.toFloat() / contentLength.toFloat()).coerceIn(0f, 1f)
+                                _updateState.value = UpdateState.Downloading(progress, bytesCopied, contentLength)
                                 lastEmitTime = currentTime
                             }
                             bytes = input.read(buffer)

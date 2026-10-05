@@ -185,13 +185,23 @@ fun SettingsScreen(
     }
 
     LaunchedEffect(uiState.updateState) {
-        if (uiState.updateState is UpdateState.UpToDate) {
-            android.widget.Toast.makeText(
-                context,
-                "DeepEye Music Pro is up to date (v3.0.1.35)",
-                android.widget.Toast.LENGTH_SHORT
-            ).show()
-            viewModel.resetUpdateState()
+        when (val state = uiState.updateState) {
+            is UpdateState.UpToDate -> {
+                android.widget.Toast.makeText(
+                    context,
+                    "DeepEye Music Pro is up to date (v${com.deepeye.musicpro.BuildConfig.VERSION_NAME})",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+                viewModel.resetUpdateState()
+            }
+            is UpdateState.Error -> {
+                android.widget.Toast.makeText(
+                    context,
+                    state.message,
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+            else -> {}
         }
     }
 

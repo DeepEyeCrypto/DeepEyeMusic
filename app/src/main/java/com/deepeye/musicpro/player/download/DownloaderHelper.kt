@@ -12,7 +12,8 @@ object DownloaderHelper {
         client: OkHttpClient,
         url: String,
         out: OutputStream,
-        totalBytesWritten: Long = 0L
+        totalBytesWritten: Long = 0L,
+        onProgress: ((bytesDownloaded: Long, totalBytes: Long, progress: Float) -> Unit)? = null
     ): Long {
         var currentBytes = totalBytesWritten
         val maxRetries = 5
@@ -36,15 +37,29 @@ object DownloaderHelper {
                     }
                     
                     val body = response.body ?: throw Exception("Empty response body")
+                    val contentLength = body.contentLength()
+                    val totalContentLength = if (contentLength > 0) currentBytes + contentLength else -1L
                     val inputStream = body.byteStream()
                     val buffer = ByteArray(8 * 1024)
                     var bytesRead: Int
+                    var lastEmitTime = System.currentTimeMillis()
                     
                     while (coroutineContext.isActive) {
                         bytesRead = inputStream.read(buffer)
                         if (bytesRead == -1) break
                         out.write(buffer, 0, bytesRead)
                         currentBytes += bytesRead
+
+                        val now = System.currentTimeMillis()
+                        if (now - lastEmitTime > 80) {
+                            val progress = if (totalContentLength > 0) {
+                                (currentBytes.toFloat() / totalContentLength.toFloat()).coerceIn(0f, 1f)
+                            } else {
+                                0f
+                            }
+                            onProgress?.invoke(currentBytes, totalContentLength, progress)
+                            lastEmitTime = now
+                        }
                     }
                 }
                 // If we reach here normally, the download is complete

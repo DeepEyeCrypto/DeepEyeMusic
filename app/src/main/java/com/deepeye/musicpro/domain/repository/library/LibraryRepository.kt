@@ -13,6 +13,8 @@ import com.deepeye.musicpro.domain.model.library.LibraryItemType
 import com.deepeye.musicpro.ui.library.LibraryHomeState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -346,8 +348,31 @@ constructor(
             artist = artist,
             downloadState = state,
             isOfflineAvailable = state == DownloadState.COMPLETED,
+            localPath = localPath,
             addedAt = downloadedAt,
         )
+
+    suspend fun deleteDownload(context: android.content.Context, videoId: String) {
+        withContext(Dispatchers.IO) {
+            try {
+                val download = dao.getDownload(videoId)
+                if (download?.localPath != null) {
+                    val uri = android.net.Uri.parse(download.localPath)
+                    try {
+                        context.contentResolver.delete(uri, null, null)
+                    } catch (e: Exception) {
+                        try {
+                            val file = java.io.File(download.localPath)
+                            if (file.exists()) file.delete()
+                        } catch (e2: Exception) {}
+                    }
+                }
+                dao.deleteDownload(videoId)
+            } catch (e: Exception) {
+                android.util.Log.e("LibraryRepository", "Error deleting download $videoId", e)
+            }
+        }
+    }
 
     private fun RecentPlayEntity.toLibraryItem(isOfflineAvailable: Boolean = false) =
         LibraryItem(

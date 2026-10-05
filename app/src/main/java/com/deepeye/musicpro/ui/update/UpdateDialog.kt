@@ -204,19 +204,20 @@ fun UpdateDialog(
                         }
                     }
                     is UpdateState.Downloading -> {
+                        val pct = (state.progress * 100f).roundToInt().coerceIn(0, 100)
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "${state.progress}%",
+                                text = "$pct%",
                                 style = MaterialTheme.typography.displaySmall,
                                 fontWeight = FontWeight.Bold,
                                 color = BrandTeal
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             LinearProgressIndicator(
-                                progress = { state.progress / 100f },
+                                progress = { state.progress.coerceIn(0f, 1f) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(8.dp)
@@ -225,18 +226,33 @@ fun UpdateDialog(
                                 trackColor = Color.White.copy(alpha = 0.1f)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
+                            val sizeText = if (state.totalBytes > 0) {
+                                val dlMb = state.bytesDownloaded / (1024f * 1024f)
+                                val totMb = state.totalBytes / (1024f * 1024f)
+                                String.format("%.1f MB / %.1f MB", dlMb, totMb)
+                            } else {
+                                "Downloading update package..."
+                            }
                             Text(
-                                text = "Please wait while we fetch the latest version...",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color(0xFF808080)
+                                text = sizeText,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color(0xFFB0B0B0)
                             )
                         }
                     }
                     is UpdateState.Downloaded -> {
                         Text(
-                            text = "The update has been downloaded successfully. Install it now to enjoy the latest features!",
+                            text = "Update v${state.version} downloaded successfully. Install it now to apply changes!",
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextSecondary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    is UpdateState.Error -> {
+                        Text(
+                            text = state.message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFFFF5252),
                             textAlign = TextAlign.Center
                         )
                     }
