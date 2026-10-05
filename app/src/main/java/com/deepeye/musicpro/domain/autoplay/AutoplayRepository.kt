@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import com.deepeye.musicpro.data.source.remote.youtube.SmartTubeEngine
 import com.deepeye.musicpro.domain.repository.TasteProfileRepository
 
 @Singleton
@@ -21,6 +22,7 @@ constructor(
     private val dao: RecommendationDao,
     private val contentFetcher: ContentFetcher,
     private val tasteProfileRepository: TasteProfileRepository,
+    private val smartTubeEngine: SmartTubeEngine,
 ) {
     private val scorer = AutoplayScorer()
 
@@ -36,13 +38,31 @@ constructor(
             val topSongs = dao.getTopSongsSince(since, 15)
             val topArtists = dao.getTopArtistsSince(since, 10)
 
-            // Try getting history
-            // Wait, dao.getSongsForTimeContext isn't exactly all history.
-            // Let's just use the currentTrack to seed Related.
-
             // 2. Build candidate pool in parallel
             val candidatesAndScores =
                 coroutineScope {
+                    val smartTubeNext = async {
+                        if (currentTrack != null && currentTrack !is MediaItem.Local) {
+                            try {
+                                val auto = smartTubeEngine.getAlgorithmicNext(currentTrack.id)
+                                if (auto != null && auto.videoId.isNotBlank()) {
+                                    listOf(
+                                        VideoItem(
+                                            videoId = auto.videoId,
+                                            title = auto.title,
+                                            artist = auto.artist,
+                                            channelId = "",
+                                            duration = auto.durationSeconds.toString(),
+                                            genre = "SmartTube-Algorithmic"
+                                        )
+                                    )
+                                } else emptyList()
+                            } catch (_: Exception) {
+                                emptyList()
+                            }
+                        } else emptyList()
+                    }
+
                     val fromHistory =
                         async {
                             if (currentTrack != null) {
@@ -95,17 +115,20 @@ constructor(
                             }
                         }
 
+                    val smart = smartTubeNext.await()
                     val related = fromHistory.await()
                     val lang = languageQuery.await()
                     val trend = trending.await()
                     
                     val allCandidates = mutableListOf<com.deepeye.musicpro.domain.recommendation.VideoItem>()
+                    allCandidates.addAll(smart)
                     allCandidates.addAll(related)
                     allCandidates.addAll(lang)
                     allCandidates.addAll(trend)
                     
                     val relevanceMap = mutableMapOf<String, Float>()
-                    related.forEachIndexed { i, v -> relevanceMap[v.videoId] = 1.0f - (i / 40f) }
+                    smart.forEach { v -> relevanceMap[v.videoId] = 1.0f }
+                    related.forEachIndexed { i, v -> if (!relevanceMap.containsKey(v.videoId)) relevanceMap[v.videoId] = 0.95f - (i / 40f) }
                     lang.forEach { v -> if (!relevanceMap.containsKey(v.videoId)) relevanceMap[v.videoId] = 0.3f }
                     trend.forEach { v -> if (!relevanceMap.containsKey(v.videoId)) relevanceMap[v.videoId] = 0.1f }
 

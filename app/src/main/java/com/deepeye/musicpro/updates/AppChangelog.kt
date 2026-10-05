@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30077,
+                versionName = "3.0.1.67",
+                releaseDate = "October 2026",
+                title = "SmartTube-Omega TVHTML5 InnerTube Algorithmic Engine 🧠⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "TVHTML5 Client Spoofing: Direct InnerTube (youtubei/v1) integration with TVHTML5 client payload spoofing, bypassing YouTube Data API v3 rate limits.",
+                        "Algorithmic Autoplay: 1:1 SmartTube autoplay resolution (/next) extracting autoplayEndpointRenderer and watch-next recommendation queues.",
+                        "Personalized Browse Engine: Direct FEwhat_to_watch & FEmusic_home extraction with OAuth Bearer token support for account mixes and recommendations."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30076,
                 versionName = "3.0.1.66",
                 releaseDate = "October 2026",
