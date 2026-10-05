@@ -74,8 +74,9 @@ private fun AgslRuntimeShaderRenderer(
     secondaryColor: Color,
     modifier: Modifier = Modifier
 ) {
-    // ── Continuous 60fps clock driven via withFrameMillis ──
-    // MutableFloatState is updated every frame, but read ONLY inside DrawScope
+    val dataBridge = remember { VisualizerDataBridge() }
+
+    // ── Continuous 60fps clock driven via withFrameNanos ──
     val timeState = remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(Unit) {
@@ -103,6 +104,7 @@ private fun AgslRuntimeShaderRenderer(
     Canvas(modifier = modifier.fillMaxSize()) {
         // ── ZERO-RECOMPOSITION DRAW PHASE UNIFORM DISPATCH ──
         val time = timeState.floatValue
+        val spectrum = fftSpectrum.value
         val bands = frequencyBands.value
         val currentTheme = themeState?.value
 
@@ -145,7 +147,11 @@ private fun AgslRuntimeShaderRenderer(
             }
         }
 
-        // Set float uniforms
+        // 1. Update and bind Audio FFT 256x1 Bitmap Texture Bridge to iChannel0
+        val audioShader = dataBridge.updateAudioTexture(spectrum, bands)
+        activeShader.setInputShader("iChannel0", audioShader)
+
+        // 2. Set float uniforms
         activeShader.setFloatUniform("iResolution", size.width, size.height)
         activeShader.setFloatUniform("iTime", time)
         activeShader.setFloatUniform("iBass", bass)

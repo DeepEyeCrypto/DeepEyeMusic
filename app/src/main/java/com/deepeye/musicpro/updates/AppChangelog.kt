@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30073,
+                versionName = "3.0.1.63",
+                releaseDate = "October 2026",
+                title = "Visualizer-Omega AGSL Engine Rescue & Audio Texture Bridge 🚀⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "FFT Bitmap Audio Texture Bridge: Added VisualizerDataBridge converting real-time FFT spectrum into a zero-allocation 256x1 ARGB_8888 texture bound to AGSL RuntimeShader iChannel0.",
+                        "Dynamic GLSL-to-AGSL Transpiler: Built AgslShaderEngine translating WebGL/Shadertoy/VVavy GLSL shaders to Android 13+ SkSL/AGSL dialect.",
+                        "Direct GPU Uniform Binding: Automated continuous hardware VSYNC uniform dispatch for iResolution, iTime, iChannel0, iColorPrimary, and acoustic envelopes."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30072,
                 versionName = "3.0.1.62",
                 releaseDate = "October 2026",
