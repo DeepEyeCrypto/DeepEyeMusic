@@ -494,6 +494,7 @@ fun NowPlayingScreen(
                     currentSceneId = visualizerPrefs.sceneId,
                     onSceneSelected = { id ->
                         viewModel.selectVisualizerScene(id)
+                        showVisualizer = true
                         showVisualizerLibrary = false
                     },
                     reducedMotion = visualizerPrefs.reducedMotion,

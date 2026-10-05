@@ -297,7 +297,11 @@ fun VvavyTriangleVisualizer(
         val bassZ = bass * 0.4f
 
         // ── Background: deep space + ambient glow ─────────────────────────
-        drawRect(color = VvavyBg)
+        drawRect(
+            brush = Brush.verticalGradient(
+                listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
+            )
+        )
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(

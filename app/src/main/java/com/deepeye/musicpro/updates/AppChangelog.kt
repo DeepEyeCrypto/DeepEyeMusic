@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30072,
+                versionName = "3.0.1.62",
+                releaseDate = "October 2026",
+                title = "Immediate Visualizer Scene Activation & Dynamic Theming 🎨⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Auto Visualizer Activation: Selecting any scene from the Visualizer Library automatically activates and overlays the visualizer scene in real time.",
+                        "Tumbling Triangle Ambient Integration: Replaced opaque solid backdrop with translucent scrim in VvavyTriangleVisualizer so ambient artwork shines through.",
+                        "Seamless Scene Transition: Instant 0ms visualizer scene switching across all 8 GPU and canvas visualizers."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30071,
                 versionName = "3.0.1.61",
                 releaseDate = "October 2026",
