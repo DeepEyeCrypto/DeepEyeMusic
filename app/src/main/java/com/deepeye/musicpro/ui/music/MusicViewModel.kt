@@ -13,6 +13,7 @@ import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.Song
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedItem
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedState
+import com.deepeye.musicpro.domain.model.personalization.PersonalizedItemType
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedSectionType
 import com.deepeye.musicpro.domain.repository.MusicRepository
 import com.deepeye.musicpro.domain.repository.PersonalizationRepository
@@ -83,17 +84,20 @@ constructor(
     // ── Personalized Feed Actions ──────────────────────────────────────────
 
     fun playPersonalizedItem(item: PersonalizedFeedItem, itemsInSection: List<PersonalizedFeedItem>) {
-        val mediaItems = itemsInSection.mapNotNull {
+        if (item.id.isBlank()) return
+        val validItems = itemsInSection.filter { it.id.isNotBlank() }
+        val mediaItems = validItems.mapNotNull {
             it.mediaItem ?: MediaItem.Remote(
                 id = it.id,
                 title = it.title,
                 artist = it.artist,
                 artworkUri = it.artworkUrl?.let { url -> Uri.parse(url) },
                 duration = it.durationMs,
-                isVideo = true,
+                isVideo = (it.itemType == PersonalizedItemType.VIDEO),
             )
         }
-        val index = itemsInSection.indexOfFirst { it.id == item.id }
+        if (mediaItems.isEmpty()) return
+        val index = validItems.indexOfFirst { it.id == item.id }
         playerController.setQueue(mediaItems, if (index >= 0) index else 0)
     }
 

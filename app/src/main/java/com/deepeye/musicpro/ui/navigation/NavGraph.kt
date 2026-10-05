@@ -181,9 +181,7 @@ fun NavGraph(
 
         composable(Routes.Music.route) {
             MusicScreen(
-                onNavigateToNowPlaying = { musicId ->
-                    onPlayFullscreenMusic()
-                },
+                onNavigateToNowPlaying = { onExpandPlayer() },
                 onNavigateToSearch = { navController.navigate(Routes.Search.route) },
                 onConnectAccount = { navController.navigate(Routes.YouTubeLogin.route) }
             )

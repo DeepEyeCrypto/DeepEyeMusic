@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30075,
+                versionName = "3.0.1.65",
+                releaseDate = "October 2026",
+                title = "Music Section Playback Stabilization & Routing Normalization 🛡️⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Music Playback Bug Fix: Fixed crash when tapping tracks in Music section by correcting media item mapping (isVideo correctly scoped to video items only).",
+                        "Harmonized Navigation: Standardized MusicScreen to use seamless onExpandPlayer() sheet expansion without jarring forced orientation changes.",
+                        "Queue Validation: Added blank/empty item ID protection and robust queue fallback handling in MusicViewModel."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30074,
                 versionName = "3.0.1.64",
                 releaseDate = "October 2026",
