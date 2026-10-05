@@ -93,7 +93,7 @@ object MusicFilter {
             return false
         }
 
-        // 4. Check positive music signals (Must match music pattern or legitimate music channel name)
+        // 4. Check positive music signals
         val channelLower = channelName.lowercase()
         val isMusicChannel = channelLower.contains("music") ||
             channelLower.contains("records") ||
@@ -103,8 +103,19 @@ object MusicFilter {
             channelLower.contains("t-series") ||
             channelLower.contains("saregama") ||
             channelLower.contains("zee music") ||
-            channelLower.contains("yrf")
+            channelLower.contains("yrf") ||
+            channelLower.contains(" - topic") ||
+            channelLower.endsWith("topic")
 
-        return isMusicChannel || MUSIC_PATTERN.containsMatchIn(combined)
+        if (isMusicChannel || MUSIC_PATTERN.containsMatchIn(combined)) {
+            return true
+        }
+
+        // If it isn't an explicit exclusion and duration is standard song length (1 to 10 mins), consider it a music track
+        if (durationSeconds in 60..600) {
+            return true
+        }
+
+        return false
     }
 }

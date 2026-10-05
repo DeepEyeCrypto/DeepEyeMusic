@@ -184,7 +184,15 @@ class AuthenticatedYouTubeClient @Inject constructor(
                     val history = try { historyDeferred.await() } catch (e: Exception) { emptyList() }
 
                     val seen = mutableSetOf<String>()
-                    for (item in musicHome + liked + history) {
+                    // 1. YouTube Music direct feeds (100% authentic, do not aggressively filter out)
+                    for (item in musicHome + liked) {
+                        if (!item.isShort && seen.add(item.id)) {
+                            accountMusic.add(item)
+                        }
+                    }
+
+                    // 2. Personal History items (include tracks that are not blatant podcasts/news/etc.)
+                    for (item in history) {
                         if (!item.isShort &&
                             (item.duration == 0L || item.duration >= 60L) &&
                             MusicFilter.isMusicTrack(item.title, item.channelName, item.duration, item.isShort) &&
@@ -197,9 +205,10 @@ class AuthenticatedYouTubeClient @Inject constructor(
                 Log.d("AuthYTClient", "getMusicFeed() found ${accountMusic.size} personalized InnerTube music items")
             } catch (e: Exception) {
                 Log.e("AuthYTClient", "getMusicFeed account fetch failed", e)
-                throw e
             }
-            return@withContext accountMusic
+            if (accountMusic.isNotEmpty()) {
+                return@withContext accountMusic
+            }
         }
 
         // Fetch top trending music songs ONLY for guest/unauthenticated sessions
@@ -377,37 +386,37 @@ class AuthenticatedYouTubeClient @Inject constructor(
             ?: ""
         if (id.isEmpty()) return null
 
-        val title = videoObj.optJSONObject("title")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
-            ?: videoObj.optJSONObject("title")?.optString("simpleText", null)
-            ?: videoObj.optJSONObject("headline")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
-            ?: videoObj.optJSONObject("headline")?.optString("simpleText", null)
+        val title = videoObj.optJSONObject("title")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", "")
+            ?: videoObj.optJSONObject("title")?.optString("simpleText", "")
+            ?: videoObj.optJSONObject("headline")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", "")
+            ?: videoObj.optJSONObject("headline")?.optString("simpleText", "")
             ?: ""
 
-        val channelName = videoObj.optJSONObject("shortBylineText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
-            ?: videoObj.optJSONObject("longBylineText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
-            ?: videoObj.optJSONObject("ownerText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
+        val channelName = videoObj.optJSONObject("shortBylineText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", "")
+            ?: videoObj.optJSONObject("longBylineText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", "")
+            ?: videoObj.optJSONObject("ownerText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", "")
             ?: ""
 
         val channelId = videoObj.optJSONObject("shortBylineText")?.optJSONArray("runs")?.optJSONObject(0)
-            ?.optJSONObject("navigationEndpoint")?.optJSONObject("browseEndpoint")?.optString("browseId") ?: ""
+            ?.optJSONObject("navigationEndpoint")?.optJSONObject("browseEndpoint")?.optString("browseId", "") ?: ""
 
         val durationSeconds = parseDuration(
-            videoObj.optJSONObject("lengthText")?.optString("simpleText", null)
-                ?: videoObj.optJSONObject("lengthText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
+            videoObj.optJSONObject("lengthText")?.optString("simpleText", "")
+                ?: videoObj.optJSONObject("lengthText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", "")
                 ?: ""
         )
 
         val thumbUrl = getLastThumbnail(videoObj.optJSONObject("thumbnail")?.optJSONArray("thumbnails"))
 
-        val viewText = videoObj.optJSONObject("shortViewCountText")?.optString("simpleText", null)
-            ?: videoObj.optJSONObject("shortViewCountText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
-            ?: videoObj.optJSONObject("viewCountText")?.optString("simpleText", null)
-            ?: videoObj.optJSONObject("viewCountText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
+        val viewText = videoObj.optJSONObject("shortViewCountText")?.optString("simpleText", "")
+            ?: videoObj.optJSONObject("shortViewCountText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", "")
+            ?: videoObj.optJSONObject("viewCountText")?.optString("simpleText", "")
+            ?: videoObj.optJSONObject("viewCountText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", "")
             ?: ""
         val views = parseViews(viewText)
 
-        val uploadDate = videoObj.optJSONObject("publishedTimeText")?.optString("simpleText", null)
-            ?: videoObj.optJSONObject("publishedTimeText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
+        val uploadDate = videoObj.optJSONObject("publishedTimeText")?.optString("simpleText", "")
+            ?: videoObj.optJSONObject("publishedTimeText")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", "")
             ?: ""
 
         val channelAvatar = getLastThumbnail(

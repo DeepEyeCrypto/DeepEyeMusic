@@ -8,6 +8,20 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30065,
+                versionName = "3.0.1.55",
+                releaseDate = "October 2026",
+                title = "100% Authentic YouTube Account Integration: Direct Feeds & Smart Filter Optimization 🎬🎵",
+                highlight = true,
+                items =
+                    listOf(
+                        "100% Account Stream Integrity: Trusted authentic YouTube Music home feeds (`FEmusic_home`) and liked songs without dropping personal tracks.",
+                        "Smart Music Filtering: Refined regex to allow topic channels, artist names, and authentic non-keyword track titles.",
+                        "Direct Category Feeds: Prevented silent fallbacks to generic searches for authenticated users, preserving true personalized feeds.",
+                        "Robust Auth Recovery: Enhanced InnerTube OAuth 401 retry handling and streamlined parsing."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30064,
                 versionName = "3.0.1.54",
                 releaseDate = "October 2026",

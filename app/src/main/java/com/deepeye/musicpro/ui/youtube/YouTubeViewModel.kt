@@ -179,20 +179,20 @@ constructor(
                         )
                     }
                     return@launch
-                } else if (hasAuth && (category in setOf("Subscriptions", "History", "Liked", "Watch Later"))) {
+                } else if (hasAuth && (category in setOf("Subscriptions", "History", "Liked", "Watch Later", "Music", "Home"))) {
                     _uiState.update {
                         it.copy(
                             videos = emptyList(),
                             isLoading = false,
                             hasMore = false,
-                            error = "No items found in your account for $category"
+                            error = "No items found in your YouTube account for $category"
                         )
                     }
                     return@launch
                 }
             } catch (e: Exception) {
                 Log.e("YouTubeVM", "loadCategory error for $category", e)
-                if (hasAuth && (category in setOf("Subscriptions", "History", "Liked", "Watch Later"))) {
+                if (hasAuth && (category in setOf("Subscriptions", "History", "Liked", "Watch Later", "Music", "Home"))) {
                     _uiState.update {
                         it.copy(
                             videos = emptyList(),
