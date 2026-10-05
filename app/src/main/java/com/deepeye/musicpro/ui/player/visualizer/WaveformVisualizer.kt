@@ -12,7 +12,10 @@ package com.deepeye.musicpro.ui.player.visualizer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -20,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlin.math.PI
 import kotlin.math.sin
 
@@ -31,6 +35,8 @@ fun WaveformVisualizer(
     fftSpectrum: StateFlow<FloatArray>,
     frequencyBands: StateFlow<FloatArray>,
     accentColor: Color = VvavyCyan,
+    primaryColor: Color = accentColor,
+    secondaryColor: Color = Color(0xFFFF007F),
     intensity: Float = 1f,
     reducedMotion: Boolean = false,
     modifier: Modifier = Modifier
@@ -39,14 +45,26 @@ fun WaveformVisualizer(
     val history = remember { Array(TRACE_HISTORY) { FloatArray(TRACE_POINTS) } }
     val head = remember { intArrayOf(0) }
     val path = remember { Path() }
+    val frameClock = remember { mutableFloatStateOf(0f) }
+
+    LaunchedEffect(Unit) {
+        var startNanos = 0L
+        while (isActive) {
+            withFrameNanos { frameNanos ->
+                if (startNanos == 0L) startNanos = frameNanos
+                frameClock.floatValue = (frameNanos - startNanos) / 1_000_000_000f
+            }
+        }
+    }
 
     Canvas(modifier = modifier.fillMaxSize()) {
+        val time = frameClock.floatValue
         interpolator.update(
             rawBands = frequencyBands.value,
             rawSpectrum = fftSpectrum.value,
             intensity = intensity,
             reducedMotion = reducedMotion,
-            nowNanos = System.nanoTime()
+            nowNanos = (time * 1_000_000_000f).toLong()
         )
 
         val spectrum = interpolator.spectrum
@@ -63,7 +81,7 @@ fun WaveformVisualizer(
         drawRect(color = VvavyBg)
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(accentColor.copy(alpha = 0.08f + bass * 0.10f), Color.Transparent),
+                colors = listOf(primaryColor.copy(alpha = 0.08f + bass * 0.10f), Color.Transparent),
                 center = Offset(w / 2f, centerY),
                 radius = maxOf(w, h) * 0.55f
             ),
@@ -103,7 +121,7 @@ fun WaveformVisualizer(
 
             drawPath(
                 path = path,
-                color = lerpAccentToWhite(accentColor, ageT)
+                color = lerpAccentToWhite(if (age % 2 == 0) primaryColor else secondaryColor, ageT)
                     .copy(alpha = 0.06f + ageT * (0.35f + mid * 0.35f + peak * 0.2f)),
                 style = Stroke(width = 1f + ageT * (1.2f + treble * 1.6f))
             )
@@ -120,7 +138,7 @@ fun WaveformVisualizer(
         drawPath(
             path = path,
             brush = Brush.horizontalGradient(
-                colors = listOf(accentColor.copy(alpha = 0.35f), Color.White.copy(alpha = 0.95f))
+                colors = listOf(primaryColor.copy(alpha = 0.35f), Color.White.copy(alpha = 0.95f))
             ),
             style = Stroke(width = 2f + peak * 2.5f)
         )

@@ -13,12 +13,16 @@ package com.deepeye.musicpro.ui.player.visualizer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -64,6 +68,8 @@ fun ParticleFieldVisualizer(
     fftSpectrum: StateFlow<FloatArray>,
     frequencyBands: StateFlow<FloatArray>,
     accentColor: Color = VvavyCyan,
+    primaryColor: Color = accentColor,
+    secondaryColor: Color = Color(0xFFFF007F),
     intensity: Float = 1f,
     reducedMotion: Boolean = false,
     modifier: Modifier = Modifier
@@ -71,14 +77,26 @@ fun ParticleFieldVisualizer(
     val interpolator = remember { AudioFrameInterpolator() }
     val pool = remember { ParticlePool().apply { reset() } }
     val spin = remember { floatArrayOf(0f) }
+    val frameClock = remember { mutableFloatStateOf(0f) }
+
+    LaunchedEffect(Unit) {
+        var startNanos = 0L
+        while (isActive) {
+            withFrameNanos { frameNanos ->
+                if (startNanos == 0L) startNanos = frameNanos
+                frameClock.floatValue = (frameNanos - startNanos) / 1_000_000_000f
+            }
+        }
+    }
 
     Canvas(modifier = modifier.fillMaxSize()) {
+        val time = frameClock.floatValue
         interpolator.update(
             rawBands = frequencyBands.value,
             rawSpectrum = fftSpectrum.value,
             intensity = intensity,
             reducedMotion = reducedMotion,
-            nowNanos = System.nanoTime()
+            nowNanos = (time * 1_000_000_000f).toLong()
         )
 
         val spectrum = interpolator.spectrum
@@ -104,8 +122,8 @@ fun ParticleFieldVisualizer(
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    accentColor.copy(alpha = 0.14f + bass * 0.16f),
-                    VvavyMagenta.copy(alpha = 0.04f),
+                    primaryColor.copy(alpha = 0.14f + bass * 0.16f),
+                    secondaryColor.copy(alpha = 0.06f),
                     Color.Transparent
                 ),
                 center = Offset(cx, cy),

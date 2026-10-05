@@ -11,13 +11,17 @@ package com.deepeye.musicpro.ui.player.visualizer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -31,6 +35,8 @@ fun RadialPulseVisualizer(
     fftSpectrum: StateFlow<FloatArray>,
     frequencyBands: StateFlow<FloatArray>,
     accentColor: Color = VvavyCyan,
+    primaryColor: Color = accentColor,
+    secondaryColor: Color = Color(0xFFFF007F),
     intensity: Float = 1f,
     reducedMotion: Boolean = false,
     modifier: Modifier = Modifier
@@ -40,14 +46,26 @@ fun RadialPulseVisualizer(
     val shockPhase = remember { FloatArray(SHOCK_SLOTS) { -1f } }
     val shockNext = remember { intArrayOf(0) }
     val prevBass = remember { floatArrayOf(0f) }
+    val frameClock = remember { mutableFloatStateOf(0f) }
+
+    LaunchedEffect(Unit) {
+        var startNanos = 0L
+        while (isActive) {
+            withFrameNanos { frameNanos ->
+                if (startNanos == 0L) startNanos = frameNanos
+                frameClock.floatValue = (frameNanos - startNanos) / 1_000_000_000f
+            }
+        }
+    }
 
     Canvas(modifier = modifier.fillMaxSize()) {
+        val time = frameClock.floatValue
         interpolator.update(
             rawBands = frequencyBands.value,
             rawSpectrum = fftSpectrum.value,
             intensity = intensity,
             reducedMotion = reducedMotion,
-            nowNanos = System.nanoTime()
+            nowNanos = (time * 1_000_000_000f).toLong()
         )
 
         val bass = interpolator.bands.getOrElse(0) { 0f }.coerceIn(0f, 2f)
@@ -73,8 +91,8 @@ fun RadialPulseVisualizer(
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    accentColor.copy(alpha = 0.16f + bass * 0.14f),
-                    VvavyMagenta.copy(alpha = 0.05f + mid * 0.05f),
+                    primaryColor.copy(alpha = 0.18f + bass * 0.16f),
+                    secondaryColor.copy(alpha = 0.08f + mid * 0.08f),
                     Color.Transparent
                 ),
                 center = Offset(cx, cy),
@@ -88,7 +106,7 @@ fun RadialPulseVisualizer(
         val coreR = baseR * (0.16f + treble * 0.10f)
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(Color.White.copy(alpha = 0.85f), accentColor.copy(alpha = 0.25f)),
+                colors = listOf(Color.White.copy(alpha = 0.85f), primaryColor.copy(alpha = 0.25f)),
                 center = Offset(cx, cy),
                 radius = coreR
             ),
@@ -106,7 +124,7 @@ fun RadialPulseVisualizer(
             val r = baseR * (0.22f + ringT * 0.78f) * wave
 
             drawCircle(
-                color = accentColor.copy(alpha = 0.18f + (1f - ringT) * 0.35f + peak * 0.15f),
+                color = (if (i % 2 == 0) primaryColor else secondaryColor).copy(alpha = 0.18f + (1f - ringT) * 0.35f + peak * 0.15f),
                 radius = r,
                 center = Offset(cx, cy),
                 style = Stroke(width = 1.2f + (1f - ringT) * 2.4f + bass)
@@ -116,7 +134,7 @@ fun RadialPulseVisualizer(
             if (i % 2 == 0) {
                 val ang = ringPhase[i] * 1.6f
                 drawCircle(
-                    color = VvavyMagenta.copy(alpha = 0.55f + treble * 0.35f),
+                    color = secondaryColor.copy(alpha = 0.55f + treble * 0.35f),
                     radius = 2.2f + treble * 2.6f,
                     center = Offset(cx + cos(ang) * r, cy + sin(ang) * r)
                 )

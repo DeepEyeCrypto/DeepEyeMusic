@@ -43,7 +43,9 @@ fun VisualizerHost(
         VisualizerSceneId.SPECTRUM_BARS -> SpectrumBarsVisualizer(
             fftSpectrum = fftSpectrum,
             frequencyBands = frequencyBands,
-            accentColor = primaryColor,
+            accentColor = accentColor,
+            primaryColor = primaryColor,
+            secondaryColor = secondaryColor,
             intensity = intensity,
             reducedMotion = reducedMotion,
             modifier = modifier
@@ -52,7 +54,9 @@ fun VisualizerHost(
         VisualizerSceneId.WAVEFORM -> WaveformVisualizer(
             fftSpectrum = fftSpectrum,
             frequencyBands = frequencyBands,
-            accentColor = primaryColor,
+            accentColor = accentColor,
+            primaryColor = primaryColor,
+            secondaryColor = secondaryColor,
             intensity = intensity,
             reducedMotion = reducedMotion,
             modifier = modifier
@@ -61,7 +65,9 @@ fun VisualizerHost(
         VisualizerSceneId.RADIAL_PULSE -> RadialPulseVisualizer(
             fftSpectrum = fftSpectrum,
             frequencyBands = frequencyBands,
-            accentColor = primaryColor,
+            accentColor = accentColor,
+            primaryColor = primaryColor,
+            secondaryColor = secondaryColor,
             intensity = intensity,
             reducedMotion = reducedMotion,
             modifier = modifier
@@ -70,7 +76,9 @@ fun VisualizerHost(
         VisualizerSceneId.PARTICLE_FIELD -> ParticleFieldVisualizer(
             fftSpectrum = fftSpectrum,
             frequencyBands = frequencyBands,
-            accentColor = primaryColor,
+            accentColor = accentColor,
+            primaryColor = primaryColor,
+            secondaryColor = secondaryColor,
             intensity = intensity,
             reducedMotion = reducedMotion,
             modifier = modifier

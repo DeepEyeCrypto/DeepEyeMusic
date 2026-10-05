@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30067,
+                versionName = "3.0.1.57",
+                releaseDate = "October 2026",
+                title = "Visuals Engine VSYNC Overhaul: Locked 60FPS Hardware-Synced Animation 🎨⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Zero-Recomposition VSYNC Frame Clocks: Injected continuous withFrameNanos hardware clocks across Spectrum Bars, Waveform Ribbon, Radial Pulse, and Particle Field visualizers, completely eliminating the 1-FPS freeze bug.",
+                        "Liquid Audio-Reactive Interpolation: Exponential moving average interpolators now render at the display's native refresh rate (60Hz/120Hz).",
+                        "Monet Neon Palette Blending: Multi-stop gradients derived dynamically from active album artwork now illuminate all 2D and 3D visualizer scenes."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30066,
                 versionName = "3.0.1.56",
                 releaseDate = "October 2026",
