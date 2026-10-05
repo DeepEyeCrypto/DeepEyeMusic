@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30071,
+                versionName = "3.0.1.61",
+                releaseDate = "October 2026",
+                title = "Translucent Ambient Artwork Lighting & Precision Visualizer Clock ✨🌊",
+                highlight = true,
+                items =
+                    listOf(
+                        "Ambient Artwork Transparency: Replaced opaque solid backgrounds with soft translucent scrims across Spectrum Bars, Waveform, Radial Pulse, and Particle Field visualizers so blurred album artwork and Monet lighting shine through.",
+                        "Precision Nanosecond Monotonic Clock: Standardized System.nanoTime() across all canvas visualizers for silky 60/120 FPS delta-time interpolation.",
+                        "Enhanced Gradient Ribbons: Polished mirrored spectrum bars and oscilloscope waveforms with dynamic dual-tone neon gradients."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30070,
                 versionName = "3.0.1.60",
                 releaseDate = "October 2026",

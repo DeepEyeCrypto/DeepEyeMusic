@@ -96,7 +96,7 @@ fun ParticleFieldVisualizer(
             rawSpectrum = fftSpectrum.value,
             intensity = intensity,
             reducedMotion = reducedMotion,
-            nowNanos = (time * 1_000_000_000f).toLong()
+            nowNanos = System.nanoTime()
         )
 
         val spectrum = interpolator.spectrum
@@ -115,7 +115,12 @@ fun ParticleFieldVisualizer(
         val cosSpin = cos(spin[0])
         val sinSpin = sin(spin[0])
 
-        drawRect(color = VvavyBg)
+        // Soft translucent scrim to allow ambient artwork to glow through
+        drawRect(
+            brush = Brush.verticalGradient(
+                listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
+            )
+        )
 
         // Bass-driven central bloom.
         val bloomR = unit * (0.7f + bass * 0.35f)

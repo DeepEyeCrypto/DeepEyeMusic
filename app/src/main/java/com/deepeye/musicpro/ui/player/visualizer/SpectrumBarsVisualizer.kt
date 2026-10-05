@@ -61,7 +61,7 @@ fun SpectrumBarsVisualizer(
             rawSpectrum = fftSpectrum.value,
             intensity = intensity,
             reducedMotion = reducedMotion,
-            nowNanos = (time * 1_000_000_000f).toLong()
+            nowNanos = System.nanoTime()
         )
 
         val spectrum = interpolator.spectrum
@@ -73,10 +73,15 @@ fun SpectrumBarsVisualizer(
         val h = size.height
         val centerY = h / 2f
 
-        drawRect(color = VvavyBg)
+        // Soft translucent scrim to allow ambient artwork to glow through
+        drawRect(
+            brush = Brush.verticalGradient(
+                listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
+            )
+        )
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(primaryColor.copy(alpha = 0.12f + bass * 0.10f), Color.Transparent),
+                colors = listOf(primaryColor.copy(alpha = 0.18f + bass * 0.15f), Color.Transparent),
                 center = Offset(w / 2f, centerY),
                 radius = max(w, h) * 0.6f
             ),

@@ -65,7 +65,7 @@ fun RadialPulseVisualizer(
             rawSpectrum = fftSpectrum.value,
             intensity = intensity,
             reducedMotion = reducedMotion,
-            nowNanos = (time * 1_000_000_000f).toLong()
+            nowNanos = System.nanoTime()
         )
 
         val bass = interpolator.bands.getOrElse(0) { 0f }.coerceIn(0f, 2f)
@@ -77,7 +77,12 @@ fun RadialPulseVisualizer(
         val cy = size.height / 2f
         val baseR = minOf(size.width, size.height) * 0.42f
 
-        drawRect(color = VvavyBg)
+        // Soft translucent scrim to allow ambient artwork to glow through
+        drawRect(
+            brush = Brush.verticalGradient(
+                listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
+            )
+        )
 
         // Beat gate: a sharp bass rise spawns a shockwave. Disabled under
         // reduced motion so the screen does not strobe.
