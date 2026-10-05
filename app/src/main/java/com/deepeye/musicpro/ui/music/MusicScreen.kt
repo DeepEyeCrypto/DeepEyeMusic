@@ -3,6 +3,7 @@
 
 package com.deepeye.musicpro.ui.music
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
@@ -46,6 +47,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -93,6 +95,8 @@ fun MusicScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Discover", "Local Songs")
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -110,113 +114,226 @@ fun MusicScreen(
                     )
                     .statusBarsPadding()
             ) {
-                // Premium Header Section
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // Top Row: Title and Actions
+                if (isLandscape) {
+                    // Sleek Single-Line Landscape Header (Title + Compact Search + Segmented Tabs + Refresh)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = CardGeometry.ScreenGutter, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(horizontal = CardGeometry.ScreenGutter, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        // Title
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
                                 Icons.Rounded.GraphicEq,
                                 contentDescription = null,
                                 tint = NeonCyan,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                             Text(
                                 "Music",
-                                // titleLarge, not a hardcoded 26.sp: this is a
-                                // screen header over a scrolling list of carousels,
-                                // and the extra 6sp pushed the first section below
-                                // the fold on a landscape phone.
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Black,
                                 letterSpacing = (-0.5).sp,
                                 color = TextPrimary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                maxLines = 1
                             )
                         }
 
-                        // Refresh button
-                        if (selectedTab == 0) {
-                            IconButton(onClick = { viewModel.refreshPersonalizedFeed() }) {
-                                Icon(Icons.Default.Refresh, "Refresh", tint = TextSecondary)
-                            }
-                        } else {
-                            IconButton(onClick = { viewModel.syncLibrary() }) {
-                                Icon(Icons.Default.Refresh, "Sync Library", tint = TextSecondary)
+                        // Compact Search Bar Pill
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(38.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.03f))
+                                    )
+                                )
+                                .border(
+                                    width = 0.5.dp,
+                                    brush = Brush.horizontalGradient(
+                                        listOf(NeonCyan.copy(alpha = 0.3f), ElectricViolet.copy(alpha = 0.3f))
+                                    ),
+                                    shape = RoundedCornerShape(50)
+                                )
+                                .clickable(onClick = onNavigateToSearch)
+                                .padding(horizontal = 14.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    tint = TextSecondary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    "Search songs, artists...",
+                                    color = TextSecondary,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
+
+                        // Compact Tabs
+                        Row(
+                            modifier = Modifier.widthIn(max = 280.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            tabs.forEachIndexed { index, title ->
+                                val isSelected = selectedTab == index
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(
+                                            if (isSelected) Brush.horizontalGradient(
+                                                listOf(ElectricViolet.copy(alpha = 0.35f), NeonCyan.copy(alpha = 0.2f))
+                                            ) else Brush.horizontalGradient(
+                                                listOf(Color.White.copy(alpha = 0.04f), Color.White.copy(alpha = 0.02f))
+                                            )
+                                        )
+                                        .border(
+                                            width = if (isSelected) 1.dp else 0.5.dp,
+                                            color = if (isSelected) NeonCyan.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.06f),
+                                            shape = RoundedCornerShape(10.dp)
+                                        )
+                                        .clickable { selectedTab = index },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = title,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) TextPrimary else TextTertiary,
+                                    )
+                                }
+                            }
+                        }
+
+                        // Refresh button
+                        IconButton(
+                            onClick = {
+                                if (selectedTab == 0) viewModel.refreshPersonalizedFeed()
+                                else viewModel.syncLibrary()
+                            },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(Icons.Default.Refresh, "Refresh", tint = TextSecondary, modifier = Modifier.size(18.dp))
+                        }
                     }
-
-                    // Premium Search Bar (Clickable Entry Point)
-                    PremiumSearchBar(onClick = onNavigateToSearch)
-                    Spacer(Modifier.height(8.dp))
-
-                    if (selectedTab == 1 && uiState.localSongs.isNotEmpty()) {
-                        // Both action buttons are `weight(1f)` inside this Row, so
-                        // an uncapped Row gave each of them ~400dp of tap target
-                        // to render a two-word label. The cap keeps them at a
-                        // sane button width and centres the pair under the
-                        // bounded track list they act on.
+                } else {
+                    // Portrait Expansive Header Section
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        // Top Row: Title and Actions
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .boundedContent()
-                                .padding(horizontal = 16.dp)
+                                .padding(horizontal = CardGeometry.ScreenGutter, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Button(
-                                onClick = { viewModel.playAllLocalSongs(shuffle = true) },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = ElectricViolet),
-                                shape = RoundedCornerShape(12.dp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Icon(Icons.Default.Shuffle, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text("Shuffle All", fontWeight = FontWeight.Bold)
+                                Icon(
+                                    Icons.Rounded.GraphicEq,
+                                    contentDescription = null,
+                                    tint = NeonCyan,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Text(
+                                    "Music",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = (-0.5).sp,
+                                    color = TextPrimary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
-                            Spacer(Modifier.width(8.dp))
-                            Button(
-                                onClick = { viewModel.playAllLocalSongs(shuffle = false) },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = CardSurfaceElevated),
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
-                            ) {
-                                Icon(Icons.Rounded.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp), tint = NeonCyan)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Play All", fontWeight = FontWeight.Bold, color = TextPrimary)
+
+                            // Refresh button
+                            if (selectedTab == 0) {
+                                IconButton(onClick = { viewModel.refreshPersonalizedFeed() }) {
+                                    Icon(Icons.Default.Refresh, "Refresh", tint = TextSecondary)
+                                }
+                            } else {
+                                IconButton(onClick = { viewModel.syncLibrary() }) {
+                                    Icon(Icons.Default.Refresh, "Sync Library", tint = TextSecondary)
+                                }
                             }
                         }
-                        Spacer(Modifier.height(8.dp))
-                    }
-                }
 
-                // YouTube account connectivity prompt — lets the user connect so the
-                // music feed is fetched from their account (by YouTube id).
-                if (!uiState.hasAuth) {
-                    MusicAccountBanner(onConnect = onConnectAccount)
+                        // Premium Search Bar (Clickable Entry Point)
+                        PremiumSearchBar(onClick = onNavigateToSearch)
+                        Spacer(Modifier.height(8.dp))
+
+                        if (selectedTab == 1 && uiState.localSongs.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .boundedContent()
+                                    .padding(horizontal = 16.dp)
+                            ) {
+                                Button(
+                                    onClick = { viewModel.playAllLocalSongs(shuffle = true) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = ElectricViolet),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Default.Shuffle, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Shuffle All", fontWeight = FontWeight.Bold)
+                                }
+                                Spacer(Modifier.width(8.dp))
+                                Button(
+                                    onClick = { viewModel.playAllLocalSongs(shuffle = false) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = ButtonDefaults.buttonColors(containerColor = CardSurfaceElevated),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+                                ) {
+                                    Icon(Icons.Rounded.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp), tint = NeonCyan)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Play All", fontWeight = FontWeight.Bold, color = TextPrimary)
+                                }
+                            }
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+
+                    // YouTube account connectivity prompt
+                    if (!uiState.hasAuth) {
+                        MusicAccountBanner(onConnect = onConnectAccount)
+                        Spacer(Modifier.height(4.dp))
+                    }
+
+                    // Premium segmented tab bar
+                    PremiumTabBar(
+                        tabs = tabs,
+                        selectedTab = selectedTab,
+                        onTabSelected = { selectedTab = it }
+                    )
+
                     Spacer(Modifier.height(4.dp))
                 }
-
-                // Premium segmented tab bar
-                PremiumTabBar(
-                    tabs = tabs,
-                    selectedTab = selectedTab,
-                    onTabSelected = { selectedTab = it }
-                )
-
-                Spacer(Modifier.height(4.dp))
             }
         },
     ) { paddingValues ->

@@ -98,10 +98,10 @@ object CardGeometry {
     val Music: MusicCard
         get() = MusicCard(
             aspectRatio = 1f,
-            minWidth = 104.dp,
-            cornerRadius = 10.dp,
-            contentPadding = 6.dp,
-            titleMaxLines = 1,
+            minWidth = 124.dp,
+            cornerRadius = 12.dp,
+            contentPadding = 8.dp,
+            titleMaxLines = 2,
         )
 
     /**

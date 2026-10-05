@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30068,
+                versionName = "3.0.1.58",
+                releaseDate = "October 2026",
+                title = "Landscape Ultra-Compact TopBar & Music Card Geometry Refinements 🎨📱",
+                highlight = true,
+                items =
+                    listOf(
+                        "Adaptive Single-Line Landscape Header: Combined Title, Search Pill, Segmented Tabs, and Refresh into an ultra-sleek 46dp top bar, freeing +130dp of vertical viewport on landscape screens.",
+                        "Enhanced Music Card Geometry: Sized cards to 124dp with balanced 5-column grid density, 2-line title support, and glassmorphic neon borders.",
+                        "Zero-Clipping Multi-Rail Viewport: Full multi-rail carousels now visible simultaneously without vertical collision."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30067,
                 versionName = "3.0.1.57",
                 releaseDate = "October 2026",
