@@ -747,7 +747,7 @@ fun VideoNowPlayingLayout(
                             openChannel = { },
                             openInfo = { },
                             openStats = { viewModel.toggleStatsForNerds() },
-                            dismiss = { fullscreenMode.exit() },
+                            dismiss = { callbacks.onNavigateBack() },
                             rewind10 = {
                                 val currentPos = playerState.position
                                 val newPos = (currentPos - 10000L).coerceAtLeast(0L)

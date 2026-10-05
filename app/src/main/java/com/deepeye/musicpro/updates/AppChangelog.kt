@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30076,
+                versionName = "3.0.1.66",
+                releaseDate = "October 2026",
+                title = "Fullscreen Dismiss to PiP & MiniPlayer Pipeline Polish 🪟⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Instant Floating PiP Transition: Fullscreen X (close) button now instantly invokes onNavigateBack() to collapse the sheet and seamlessly launch Floating In-App Video PiP.",
+                        "Zero Dead State: Eliminated the intermediate stuck blank sheet state when dismissing video or visualizer fullscreen modes.",
+                        "Smooth Audio Docking: Audio fullscreen dismissal now collapses smoothly directly into the docked MiniPlayer."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30075,
                 versionName = "3.0.1.65",
                 releaseDate = "October 2026",
