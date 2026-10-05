@@ -840,136 +840,144 @@ fun DeepEyeVideoPlayerOverlay(
 
                 Spacer(Modifier.height(8.dp))
 
-                // 2. Smart Grouped Action Dock (Clear Liquid Glass Container with Specular Sheen)
-                Surface(
-                    shape = RoundedCornerShape(18.dp),
-                    color = Color(0x1E000000),
-                    border = BorderStroke(
-                        1.dp,
-                        Brush.linearGradient(
-                            listOf(Color(0x38FFFFFF), Color(0x2000E5FF), Color(0x38FFFFFF))
-                        )
-                    ),
+                // 2. Smart Grouped Action Dock (Floating Liquid Glass Pill Dock)
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .align(Alignment.CenterHorizontally)
+                        .wrapContentWidth(Alignment.CenterHorizontally),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Surface(
+                        shape = RoundedCornerShape(18.dp),
+                        color = Color(0xD80D1117),
+                        border = BorderStroke(
+                            1.dp,
+                            Brush.horizontalGradient(
+                                listOf(Color(0x3000E5FF), Color(0x307C4DFF), Color(0x3000E5FF))
+                            )
+                        ),
+                        modifier = Modifier.wrapContentSize()
                     ) {
-                        // ─── Quick System Group ───
-                        ActionChip(Icons.Default.Lock, "Lock") {
-                            isLocked = true
-                            actions.toggleLock()
-                            showLockOsd = true
-                            scope.launch { delay(2000); showLockOsd = false }
-                        }
-
-                        ActionChip(Icons.Default.PictureInPicture, "PiP", enabled = !isInPipMode) {
-                            resetTimer()
-                            actions.openPipOrBackgroundPlay()
-                        }
-
-                        ActionChip(Icons.Default.Analytics, "Stats", active = showStats, activeTint = NeonCyan) {
-                            resetTimer()
-                            actions.openStats()
-                            onToggleStats()
-                        }
-
-                        ChipDivider()
-
-                        // ─── Real Engagement Group (Like, Dislike, Subscribe, Download) ───
-                        ActionChip(
-                            icon = if (playerState.isLiked) Icons.Default.ThumbUp else Icons.Outlined.ThumbUp,
-                            label = "Like",
-                            active = playerState.isLiked,
-                            activeTint = NeonCyan
+                        Row(
+                            modifier = Modifier
+                                .horizontalScroll(rememberScrollState())
+                                .padding(horizontal = 8.dp, vertical = 5.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            resetTimer()
-                            actions.toggleLike()
+                            // ─── Quick System Group ───
+                            ActionChip(Icons.Default.Lock, "Lock", idleTint = Color(0xFF90A4AE)) {
+                                isLocked = true
+                                actions.toggleLock()
+                                showLockOsd = true
+                                scope.launch { delay(2000); showLockOsd = false }
+                            }
+
+                            ActionChip(Icons.Default.PictureInPicture, "PiP", enabled = !isInPipMode, idleTint = Color(0xFF81D4FA)) {
+                                resetTimer()
+                                actions.openPipOrBackgroundPlay()
+                            }
+
+                            ActionChip(Icons.Default.Analytics, "Stats", active = showStats, activeTint = NeonCyan, idleTint = Color(0xFF80DEEA)) {
+                                resetTimer()
+                                actions.openStats()
+                                onToggleStats()
+                            }
+
+                            ChipDivider()
+
+                            // ─── Real Engagement Group (Like, Dislike, Subscribe, Download) ───
+                            ActionChip(
+                                icon = if (playerState.isLiked) Icons.Default.ThumbUp else Icons.Outlined.ThumbUp,
+                                label = "Like",
+                                active = playerState.isLiked,
+                                activeTint = NeonCyan,
+                                idleTint = Color(0xFF4DD0E1)
+                            ) {
+                                resetTimer()
+                                actions.toggleLike()
+                            }
+
+                            ActionChip(
+                                icon = if (playerState.isDisliked) Icons.Default.ThumbDown else Icons.Outlined.ThumbDown,
+                                label = "Dislike",
+                                active = playerState.isDisliked,
+                                activeTint = Color(0xFFFF5252),
+                                idleTint = Color(0xFFEF9A9A)
+                            ) {
+                                resetTimer()
+                                actions.toggleDislike()
+                            }
+
+                            ActionChip(
+                                icon = if (playerState.isSubscribed) Icons.Default.NotificationsActive else Icons.Default.AddAlert,
+                                label = if (playerState.isSubscribed) "Subscribed" else "Subscribe",
+                                active = playerState.isSubscribed,
+                                activeTint = Color(0xFFFF0055),
+                                idleTint = Color(0xFFFF80AB)
+                            ) {
+                                resetTimer()
+                                actions.toggleSubscribe()
+                            }
+
+                            val downloadIcon = when {
+                                playerState.isDownloaded -> Icons.Default.CheckCircle
+                                playerState.isDownloading -> Icons.Default.Downloading
+                                else -> Icons.Default.Download
+                            }
+                            val downloadLabel = when {
+                                playerState.isDownloaded -> "Saved"
+                                playerState.isDownloading -> "Saving"
+                                else -> "Save"
+                            }
+                            ActionChip(
+                                icon = downloadIcon,
+                                label = downloadLabel,
+                                active = playerState.isDownloaded || playerState.isDownloading,
+                                activeTint = ElectricViolet,
+                                idleTint = Color(0xFFB388FF)
+                            ) {
+                                resetTimer()
+                                actions.download()
+                            }
+
+                            ChipDivider()
+
+                            // ─── Media Group ───
+                            ActionChip(Icons.Default.AspectRatio, "Aspect", active = videoScale != 1.0f, activeTint = ElectricViolet, idleTint = Color(0xFFCE93D8)) { cycleZoomMode() }
+
+                            ActionChip(Icons.Default.Speed, "${playbackSpeed}x", active = playbackSpeed != 1.0f, activeTint = Color(0xFF00E676), idleTint = Color(0xFFA5D6A7)) {
+                                resetTimer()
+                                val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
+                                val currentIdx = speeds.indexOf(playbackSpeed).takeIf { it >= 0 } ?: 2
+                                val nextSpeed = speeds[(currentIdx + 1) % speeds.size]
+                                onSetSpeed?.invoke(nextSpeed)
+                                actions.openSpeed()
+                            }
+
+                            ActionChip(Icons.Default.HighQuality, "Quality", enabled = hasQuality, idleTint = Color(0xFF90CAF9)) { resetTimer(); actions.openQuality() }
+                            ActionChip(Icons.Default.Tune, "EQ", idleTint = Color(0xFFB39DDB)) { resetTimer(); actions.openDsp() }
+                            ActionChip(Icons.Default.MusicNote, "Lyrics", idleTint = Color(0xFFF48FB1)) { resetTimer(); actions.openLyrics() }
+                            ActionChip(Icons.Default.AutoAwesome, "Visuals", idleTint = Color(0xFF80D8FF)) { resetTimer(); actions.openVisualizer() }
+
+                            ChipDivider()
+
+                            // ─── Interaction Group ───
+                            val repeatIcon = when (playerState.repeatMode) {
+                                RepeatMode.ONE -> Icons.Default.RepeatOne
+                                RepeatMode.ALL -> Icons.Default.Repeat
+                                RepeatMode.NONE -> Icons.Default.Repeat
+                            }
+                            ActionChip(repeatIcon, "Repeat", active = playerState.repeatMode != RepeatMode.NONE, activeTint = NeonCyan, idleTint = Color(0xFF80DEEA)) { resetTimer(); actions.toggleRepeat() }
+                            ActionChip(Icons.Default.ClosedCaption, "CC", enabled = hasCaptions || hasVideo, active = playerState.isCaptionEnabled, activeTint = NeonCyan, idleTint = Color(0xFFB0BEC5)) { resetTimer(); actions.toggleCaptions() }
+
+                            ChipDivider()
+
+                            // ─── Utility Group ───
+                            ActionChip(Icons.Default.Bedtime, "Sleep", idleTint = Color(0xFFFFCC80)) { resetTimer(); actions.openSleepTimer() }
+                            ActionChip(Icons.Default.Tv, "TV Link", idleTint = Color(0xFFFFAB91)) { resetTimer(); actions.openAccount() }
+                            ActionChip(Icons.Default.Info, "Info", idleTint = Color(0xFFCFD8DC)) { resetTimer(); actions.openInfo() }
                         }
-
-                        ActionChip(
-                            icon = if (playerState.isDisliked) Icons.Default.ThumbDown else Icons.Outlined.ThumbDown,
-                            label = "Dislike",
-                            active = playerState.isDisliked,
-                            activeTint = Color(0xFFFF5252)
-                        ) {
-                            resetTimer()
-                            actions.toggleDislike()
-                        }
-
-                        ActionChip(
-                            icon = if (playerState.isSubscribed) Icons.Default.NotificationsActive else Icons.Default.AddAlert,
-                            label = if (playerState.isSubscribed) "Subscribed" else "Subscribe",
-                            active = playerState.isSubscribed,
-                            activeTint = Color(0xFFFF0055)
-                        ) {
-                            resetTimer()
-                            actions.toggleSubscribe()
-                        }
-
-                        val downloadIcon = when {
-                            playerState.isDownloaded -> Icons.Default.CheckCircle
-                            playerState.isDownloading -> Icons.Default.Downloading
-                            else -> Icons.Default.Download
-                        }
-                        val downloadLabel = when {
-                            playerState.isDownloaded -> "Downloaded"
-                            playerState.isDownloading -> "Downloading..."
-                            else -> "Download"
-                        }
-                        ActionChip(
-                            icon = downloadIcon,
-                            label = downloadLabel,
-                            active = playerState.isDownloaded || playerState.isDownloading,
-                            activeTint = ElectricViolet
-                        ) {
-                            resetTimer()
-                            actions.download()
-                        }
-
-                        ChipDivider()
-
-                        // ─── Media Group ───
-                        ActionChip(Icons.Default.AspectRatio, "Aspect", active = videoScale != 1.0f, activeTint = ElectricViolet) { cycleZoomMode() }
-
-                        ActionChip(Icons.Default.Speed, "${playbackSpeed}x", active = playbackSpeed != 1.0f, activeTint = NeonCyan) {
-                            resetTimer()
-                            val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
-                            val currentIdx = speeds.indexOf(playbackSpeed).takeIf { it >= 0 } ?: 2
-                            val nextSpeed = speeds[(currentIdx + 1) % speeds.size]
-                            onSetSpeed?.invoke(nextSpeed)
-                            actions.openSpeed()
-                        }
-
-                        ActionChip(Icons.Default.HighQuality, "Quality", enabled = hasQuality) { resetTimer(); actions.openQuality() }
-                        ActionChip(Icons.Default.Tune, "EQ") { resetTimer(); actions.openDsp() }
-                        ActionChip(Icons.Default.MusicNote, "Lyrics") { resetTimer(); actions.openLyrics() }
-                        ActionChip(Icons.Default.AutoAwesome, "Visuals") { resetTimer(); actions.openVisualizer() }
-
-                        ChipDivider()
-
-                        // ─── Interaction Group ───
-                        val repeatIcon = when (playerState.repeatMode) {
-                            RepeatMode.ONE -> Icons.Default.RepeatOne
-                            RepeatMode.ALL -> Icons.Default.Repeat
-                            RepeatMode.NONE -> Icons.Default.Repeat
-                        }
-                        ActionChip(repeatIcon, "Repeat", active = playerState.repeatMode != RepeatMode.NONE, activeTint = NeonCyan) { resetTimer(); actions.toggleRepeat() }
-                        ActionChip(Icons.Default.ClosedCaption, "CC", enabled = hasCaptions || hasVideo, active = playerState.isCaptionEnabled, activeTint = NeonCyan) { resetTimer(); actions.toggleCaptions() }
-
-                        ChipDivider()
-
-                        // ─── Utility Group ───
-                        ActionChip(Icons.Default.Bedtime, "Sleep") { resetTimer(); actions.openSleepTimer() }
-                        ActionChip(Icons.Default.Tv, "TV Link") { resetTimer(); actions.openAccount() }
-                        ActionChip(Icons.Default.Info, "Info") { resetTimer(); actions.openInfo() }
                     }
                 }
             }
@@ -1221,36 +1229,40 @@ private fun ActionChip(
     enabled: Boolean = true,
     active: Boolean = false,
     activeTint: Color = NeonCyan,
+    idleTint: Color = Color(0xFF90CAF9),
     onClick: () -> Unit
 ) {
-    val chipBg = if (active) activeTint.copy(alpha = 0.28f) else Color(0x18FFFFFF)
-    val chipBorder = if (active) activeTint.copy(alpha = 0.85f) else Color(0x28FFFFFF)
-    val iconTint = if (active) activeTint else Color.White
-    val textColor = if (active) activeTint else Color.White
+    val chipBg = if (active) activeTint.copy(alpha = 0.30f) else idleTint.copy(alpha = 0.12f)
+    val chipBorder = if (active) activeTint.copy(alpha = 0.90f) else idleTint.copy(alpha = 0.35f)
+    val iconTint = if (active) activeTint else idleTint.copy(alpha = 0.92f)
+    val textColor = if (active) activeTint else Color.White.copy(alpha = 0.92f)
 
     Surface(
         onClick = onClick,
         enabled = enabled,
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(12.dp),
         color = chipBg,
         border = BorderStroke(1.dp, chipBorder),
         modifier = Modifier
-            .height(34.dp)
-            .alpha(if (enabled) 1f else 0.35f)
+            .height(36.dp)
+            .defaultMinSize(minWidth = 58.dp)
+            .alpha(if (enabled) 1f else 0.40f)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.Center
         ) {
             Icon(icon, contentDescription = label, tint = iconTint, modifier = Modifier.size(16.dp))
             if (label.isNotBlank()) {
+                Spacer(Modifier.width(4.dp))
                 Text(
                     label,
                     color = textColor,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold,
                     fontSize = 11.sp,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

@@ -1080,13 +1080,15 @@ private fun QuickToolButton(
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (isPressed) 0.92f else 1f, spring(stiffness = 500f, dampingRatio = 0.7f))
 
+    val bg = if (isActive) accentColor.copy(alpha = 0.32f) else accentColor.copy(alpha = 0.12f)
+    val border = if (isActive) accentColor.copy(alpha = 0.90f) else accentColor.copy(alpha = 0.35f)
+    val iconTint = if (isActive) accentColor else accentColor.copy(alpha = 0.90f)
+    val textColor = if (isActive) accentColor else Color.White.copy(alpha = 0.92f)
+
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = if (isActive) accentColor.copy(alpha = 0.2f) else headerColor.copy(alpha = 0.08f),
-        border = androidx.compose.foundation.BorderStroke(
-            0.5.dp,
-            if (isActive) accentColor.copy(alpha = 0.75f) else headerColor.copy(alpha = 0.12f)
-        ),
+        color = bg,
+        border = androidx.compose.foundation.BorderStroke(1.dp, border),
         modifier = modifier
             .graphicsLayer(scaleX = scale, scaleY = scale)
             .clip(RoundedCornerShape(12.dp))
@@ -1102,7 +1104,7 @@ private fun QuickToolButton(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (isActive) accentColor else headerColor.copy(alpha = 0.8f),
+                tint = iconTint,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(Modifier.height(2.dp))
@@ -1110,9 +1112,9 @@ private fun QuickToolButton(
                 text = label,
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontSize = 10.sp,
-                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium
+                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.SemiBold
                 ),
-                color = if (isActive) accentColor else headerColor.copy(alpha = 0.85f),
+                color = textColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center

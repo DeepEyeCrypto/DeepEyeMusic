@@ -178,7 +178,7 @@ class DeepEyeVideoPlayerOverlayTest {
             DeepEyeVideoPlayerOverlay(playerState = playerState.copy(isDownloaded = true), actions = actions)
         }
 
-        composeTestRule.onNodeWithContentDescription("Downloaded")
+        composeTestRule.onNodeWithContentDescription("Saved")
             .assertExists()
     }
 

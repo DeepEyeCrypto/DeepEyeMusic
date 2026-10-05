@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30062,
+                versionName = "3.0.1.52",
+                releaseDate = "October 2026",
+                title = "Polished Neon Dock & Balanced Tool Dimensioning 🎛️💎",
+                highlight = true,
+                items =
+                    listOf(
+                        "Centered Floating Pill Dock: Replaced full-width edge-stretching action bar with an elegant centered glass dock, eliminating trailing black voids.",
+                        "Uniform Button Geometry: Standardized all action pills with balanced dimensions, consistent min-widths, and high-visibility capsule shapes.",
+                        "Vibrant Neon Monet Accents: Injected rich category-specific glass colors and glowing neon active states into fullscreen controls and Now Playing quick tools."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30061,
                 versionName = "3.0.1.51",
                 releaseDate = "October 2026",
