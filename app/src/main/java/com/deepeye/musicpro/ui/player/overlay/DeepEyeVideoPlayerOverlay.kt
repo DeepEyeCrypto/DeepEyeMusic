@@ -275,7 +275,8 @@ fun DeepEyeVideoPlayerOverlay(
                     var isDragging = false
 
                     awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false)
+                        val down = awaitFirstDown(requireUnconsumed = true)
+                        if (down.isConsumed) return@awaitEachGesture
                         val downPos = down.position
                         val downTime = System.currentTimeMillis()
                         val slopThreshold = viewConfig.touchSlop
@@ -351,7 +352,7 @@ fun DeepEyeVideoPlayerOverlay(
                                                 }
                                             }
                                         } else {
-                                            // Single Tap
+                                            // Single Tap on empty background
                                             lastTapTime = now
                                             lastTapPos = downPos
                                             if (!isLocked) {
@@ -367,6 +368,10 @@ fun DeepEyeVideoPlayerOverlay(
                                         }
                                     }
                                 }
+                                break
+                            }
+
+                            if (change.isConsumed && !isDragging) {
                                 break
                             }
 
@@ -1244,23 +1249,24 @@ private fun ActionChip(
         color = chipBg,
         border = BorderStroke(1.dp, chipBorder),
         modifier = Modifier
-            .height(36.dp)
-            .defaultMinSize(minWidth = 58.dp)
+            .height(38.dp)
+            .defaultMinSize(minWidth = 60.dp)
+            .minTouchTarget()
             .alpha(if (enabled) 1f else 0.40f)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
             Icon(icon, contentDescription = label, tint = iconTint, modifier = Modifier.size(16.dp))
             if (label.isNotBlank()) {
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(5.dp))
                 Text(
                     label,
                     color = textColor,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold,
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

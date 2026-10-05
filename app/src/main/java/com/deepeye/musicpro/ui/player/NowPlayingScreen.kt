@@ -489,17 +489,13 @@ fun NowPlayingScreen(
             onDismissRequest = { showVisualizerLibrary = false },
             containerColor = Color(0xFF090B10)
         ) {
-            Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+            Box(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
                 com.deepeye.musicpro.ui.player.visualizer.VisualizerLibraryScreen(
                     currentSceneId = visualizerPrefs.sceneId,
                     onSceneSelected = { id ->
                         viewModel.selectVisualizerScene(id)
                         showVisualizerLibrary = false
                     },
-                    onDismiss = { showVisualizerLibrary = false }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                com.deepeye.musicpro.ui.player.visualizer.VisualizerSettingsSheet(
                     reducedMotion = visualizerPrefs.reducedMotion,
                     onReducedMotionChanged = viewModel::setVisualizerReducedMotion,
                     visualizerIntensity = visualizerPrefs.intensity,

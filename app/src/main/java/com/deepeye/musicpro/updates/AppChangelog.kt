@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30069,
+                versionName = "3.0.1.59",
+                releaseDate = "October 2026",
+                title = "Visualizer Scene Touch & Gesture Conflict Fix + Unified Library Modal 🎨✨",
+                highlight = true,
+                items =
+                    listOf(
+                        "Resolved Gesture & Touch Interception: Fixed background pointer handler from hijacking button clicks and horizontal scroll gestures.",
+                        "Unified Visualizer Library Modal: Redesigned scene selector with adaptive grid (2-col portrait, 3/4-col landscape), integrated intensity slider, and instantaneous touch feedback.",
+                        "Action Chip Ergonomics: Expanded touch targets to 38dp+ with minTouchTarget across all overlay and visualizer controls."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30068,
                 versionName = "3.0.1.58",
                 releaseDate = "October 2026",
