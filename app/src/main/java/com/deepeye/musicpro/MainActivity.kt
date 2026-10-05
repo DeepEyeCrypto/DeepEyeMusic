@@ -334,12 +334,7 @@ class MainActivity : FragmentActivity() {
             pipEngine.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         }
 
-        if (isInPictureInPictureMode) {
-            if (::playerController.isInitialized) {
-                playerController.player.prepare()
-                // ExoPlayer handles audio focus internally when playing
-            }
-        }
+        // No redundant prepare() call here to prevent audio/video stutter during PiP transition.
     }
 
     /**

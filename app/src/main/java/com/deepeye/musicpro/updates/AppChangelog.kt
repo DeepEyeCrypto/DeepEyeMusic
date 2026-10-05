@@ -8,6 +8,20 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30066,
+                versionName = "3.0.1.56",
+                releaseDate = "October 2026",
+                title = "PiP Engine Rewrite: Zero Stutter Transitions & True Non-Conflicting Display 🚀🖼️",
+                highlight = true,
+                items =
+                    listOf(
+                        "Zero-Stutter OS PiP: Completely eliminated audio drops and video buffering hitches when entering System Picture-in-Picture by silencing redundant preparations.",
+                        "Direct PiP Syncing: Removed artificial delays. OS snapshots and bounds calculations now transition instantly down to the millisecond.",
+                        "Smart Floating PiP Collision Fix: Floating app PiP cleanly stays out of the way when the full Player Sheet is expanded, fixing double-surface detachment bugs.",
+                        "Ergonomic Touch Bounds: Re-calibrated the floating PiP mini-player frame to 220dp for more comfortable layout flow on strict mobile displays."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30065,
                 versionName = "3.0.1.55",
                 releaseDate = "October 2026",

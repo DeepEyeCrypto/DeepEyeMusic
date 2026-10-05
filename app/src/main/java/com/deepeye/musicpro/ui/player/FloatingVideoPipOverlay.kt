@@ -68,7 +68,7 @@ fun FloatingVideoPipOverlay(
 ) {
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
-    var pipWidthDp by remember { mutableStateOf(280.dp) }
+    var pipWidthDp by remember { mutableStateOf(220.dp) }
     var showControls by remember { mutableStateOf(true) }
 
     // Auto-hide floating controls after 3 seconds

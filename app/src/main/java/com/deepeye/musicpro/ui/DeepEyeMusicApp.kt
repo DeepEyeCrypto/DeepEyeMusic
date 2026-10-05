@@ -515,7 +515,9 @@ fun DeepEyeMusicApp(
             var isPipDismissed by remember(playerState.currentSong?.id, playerState.currentItem?.id) { mutableStateOf(false) }
 
             val isVideo = playerState.isVideo
-            val isPipActive = !fullscreenMode.isFullscreen && isVideo && !isInPipMode && !isPipDismissed
+            val isPlayerExpanded = sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.EXPANDED ||
+                sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.HALF_EXPANDED
+            val isPipActive = !fullscreenMode.isFullscreen && !isPlayerExpanded && isVideo && !isInPipMode && !isPipDismissed
 
             if (isPipActive) {
                 val stablePlayer = remember(playerController.player) {

@@ -158,14 +158,11 @@ class PipEngine(
             }
             .build()
 
-        // Small delay ensures Surface is attached and layout is settled before OS takes a snapshot
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            try {
-                activity.enterPictureInPictureMode(params)
-            } catch (e: Exception) {
-                android.util.Log.e("PipEngine", "Failed to enter PiP mode", e)
-            }
-        }, 300)
+        try {
+            activity.enterPictureInPictureMode(params)
+        } catch (e: Exception) {
+            android.util.Log.e("PipEngine", "Failed to enter PiP mode", e)
+        }
     }
 
     fun updatePipParams(sourceRect: Rect? = null) {
