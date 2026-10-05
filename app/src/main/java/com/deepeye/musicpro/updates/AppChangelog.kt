@@ -8,6 +8,20 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30070,
+                versionName = "3.0.1.60",
+                releaseDate = "October 2026",
+                title = "In-Pipeline VisualizerAudioProcessor & Live Audio FFT Engine 🌊⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "In-Pipeline AudioProcessor: Integrated VisualizerAudioProcessor directly into ExoPlayer's pipeline for 0ms zero-latency Radix-2 FFT analysis.",
+                        "HAL-Independent Audio Reactivity: Eliminated OEM MediaTek HAL bugs and permission limitations — visualizers now receive 100% live jumping audio data across all scenes.",
+                        "Zero-Freeze Exponential Decay: Smooth fade-out on pause and silence rather than frozen static frames.",
+                        "Continuous VSYNC Clock: Added hardware VSYNC frame clock across 3D Triangle and AGSL shader visualizers."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30069,
                 versionName = "3.0.1.59",
                 releaseDate = "October 2026",

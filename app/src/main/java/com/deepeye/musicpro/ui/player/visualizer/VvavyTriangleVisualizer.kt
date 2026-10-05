@@ -23,8 +23,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -35,6 +38,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -247,7 +251,17 @@ fun VvavyTriangleVisualizer(
     val triPath  = remember { Path() }
     val prevBass = remember { FloatArray(1) { 0f } }
 
+    val frameTick = remember { mutableLongStateOf(0L) }
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            withFrameNanos { frameNanos ->
+                frameTick.longValue = frameNanos
+            }
+        }
+    }
+
     Canvas(modifier = modifier.fillMaxSize()) {
+        val nowNanos = frameTick.longValue
         // Interpolate on the UI thread: the engine delivers FFT at ~19 Hz while
         // this draws at 48–60 fps, so raw values step visibly between frames.
         interpolator.update(
@@ -255,7 +269,7 @@ fun VvavyTriangleVisualizer(
             rawSpectrum = fftSpectrum.value,
             intensity = intensity,
             reducedMotion = reducedMotion,
-            nowNanos = System.nanoTime()
+            nowNanos = if (nowNanos > 0L) nowNanos else System.nanoTime()
         )
 
         // ── Zero-recomposition state reads – inside Canvas draw lambda ─────

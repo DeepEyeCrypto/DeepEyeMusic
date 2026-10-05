@@ -89,7 +89,8 @@ object PlayerModule {
         tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor,
         playbackGainProcessor: com.deepeye.musicpro.dsp.processor.PlaybackGainProcessor,
         masterLimiterProcessor: com.deepeye.musicpro.dsp.processor.MasterLimiterProcessor,
-        lufsAnalyzerProcessor: com.deepeye.musicpro.dsp.processor.LufsAnalyzerProcessor
+        lufsAnalyzerProcessor: com.deepeye.musicpro.dsp.processor.LufsAnalyzerProcessor,
+        visualizerAudioProcessor: com.deepeye.musicpro.dsp.processor.VisualizerAudioProcessor
     ): ExoPlayer {
         val renderersFactory = object : androidx.media3.exoplayer.DefaultRenderersFactory(context) {
             override fun buildAudioSink(
@@ -116,7 +117,8 @@ object PlayerModule {
                             tubeSimulatorProcessor,
                             playbackGainProcessor,
                             masterLimiterProcessor,
-                            lufsAnalyzerProcessor
+                            lufsAnalyzerProcessor,
+                            visualizerAudioProcessor
                         )
                     )
                     .build()
