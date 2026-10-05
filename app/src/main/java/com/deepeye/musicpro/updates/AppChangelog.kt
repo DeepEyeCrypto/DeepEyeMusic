@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30063,
+                versionName = "3.0.1.53",
+                releaseDate = "October 2026",
+                title = "Android 16 Runtime Verifier Fix & Stable Player Architecture 🛡️⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Resolved VerifyError: Encapsulated sprawling composable parameter lists into unified `PlayerActionCallbacks` data model, fixing Android 16 ART bytecode verification rejection.",
+                        "Zero-Crash Launch: App launches smoothly at locked 60FPS with zero runtime register allocation conflicts.",
+                        "Enhanced Floating Dock: Seamlessly connects all action callbacks, Monet palette transitions, and direct visualizer studio controls."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30062,
                 versionName = "3.0.1.52",
                 releaseDate = "October 2026",

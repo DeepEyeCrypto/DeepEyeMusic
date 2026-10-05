@@ -82,6 +82,25 @@ import com.deepeye.musicpro.ui.player.overlay.DeepEyeVideoPlayerOverlay
 import com.deepeye.musicpro.ui.player.overlay.VideoPlayerOverlayActions
 import com.deepeye.musicpro.ui.util.stableLazyKeys
 
+data class PlayerActionCallbacks(
+    val onNavigateBack: () -> Unit = {},
+    val onNavigateToSettings: () -> Unit = {},
+    val onNavigateToAccount: () -> Unit = {},
+    val onOpenInfo: () -> Unit = {},
+    val onOpenDsp: () -> Unit = {},
+    val onOpenLyrics: () -> Unit = {},
+    val onOpenVisualizer: () -> Unit = {},
+    val onToggleVisualizer: () -> Unit = {},
+    val onOpenVisualizerLibrary: () -> Unit = onToggleVisualizer,
+    val onEnterFullscreen: () -> Unit = {},
+    val onOpenSpeedDialog: () -> Unit = {},
+    val onOpenAudioBoostDialog: () -> Unit = {},
+    val onOpenSleepTimerDialog: () -> Unit = {},
+    val onEnableOledMode: () -> Unit = {},
+    val onOpenHqPlaybackSheet: (com.deepeye.musicpro.ui.player.quality.HqSheetTab) -> Unit = {},
+    val onLockChanged: (Boolean) -> Unit = {}
+)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun NowPlayingScreen(
@@ -341,6 +360,51 @@ fun NowPlayingScreen(
     }
 
         // ── 5-TIER ULTRA-PREMIUM AMBIENT ARTWORK & MONET BACKGROUND ──
+        val playerActionCallbacks = remember(
+            onNavigateBack,
+            onNavigateToSettings,
+            onNavigateToAccount,
+            context
+        ) {
+            PlayerActionCallbacks(
+                onNavigateBack = onNavigateBack,
+                onNavigateToSettings = onNavigateToSettings,
+                onNavigateToAccount = onNavigateToAccount,
+                onOpenInfo = {
+                    hqSheetInitialTab = com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO
+                    showHqPlaybackSheet = true
+                },
+                onOpenDsp = { showDspSheet = true },
+                onOpenLyrics = { showLyricsSheet = true },
+                onOpenVisualizer = { showVisualizerLibrary = true },
+                onToggleVisualizer = {
+                    if (!showVisualizer) {
+                        if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                            showVisualizer = true
+                        } else {
+                            recordAudioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+                        }
+                    } else {
+                        showVisualizer = false
+                    }
+                },
+                onOpenVisualizerLibrary = { showVisualizerLibrary = true },
+                onEnterFullscreen = { isAudioFullscreen = true },
+                onOpenSpeedDialog = { showSpeedDialog = true },
+                onOpenAudioBoostDialog = { showAudioBoostDialog = true },
+                onOpenSleepTimerDialog = { showSleepTimerDialog = true },
+                onEnableOledMode = { isOledScreenOffMode = true },
+                onOpenHqPlaybackSheet = { tab ->
+                    hqSheetInitialTab = tab
+                    showHqPlaybackSheet = true
+                },
+                onLockChanged = { isLocked ->
+                    sheetViewModel.setGestureLocked(isLocked)
+                    fullscreenMode.isGestureLocked = isLocked
+                }
+            )
+        }
+
         val currentArtworkUri = playerState.currentItem?.artworkUri
         AmbientArtworkBackground(
             artworkUri = currentArtworkUri,
@@ -354,22 +418,8 @@ fun NowPlayingScreen(
                         playerState = playerState,
                         finalAccentColor = finalAccentColor,
                         finalBgColor = finalBgColor,
-                        onNavigateBack = onNavigateBack,
                         viewModel = viewModel,
-                        onOpenDsp = { showDspSheet = true },
-                        onNavigateToSettings = onNavigateToSettings,
-                        onNavigateToAccount = onNavigateToAccount,
-                        onLockChanged = { isLocked -> sheetViewModel.setGestureLocked(isLocked); fullscreenMode.isGestureLocked = isLocked },
-                        onOpenLyrics = { showLyricsSheet = true },
-                        onOpenVisualizer = { showVisualizerLibrary = true },
-                        onOpenSpeedDialog = { showSpeedDialog = true },
-                        onOpenAudioBoostDialog = { showAudioBoostDialog = true },
-                        onOpenSleepTimerDialog = { showSleepTimerDialog = true },
-                        onEnableOledMode = { isOledScreenOffMode = true },
-                        onOpenHqPlaybackSheet = { tab ->
-                            hqSheetInitialTab = tab
-                            showHqPlaybackSheet = true
-                        }
+                        callbacks = playerActionCallbacks
                     )
                 } else if (fullscreenMode.isFullscreen) {
                     // ── FULLSCREEN AUDIO VISUALIZER MODE (same as video player layout) ──
@@ -381,19 +431,7 @@ fun NowPlayingScreen(
                         finalBgColor = finalBgColor,
                         viewModel = viewModel,
                         onExitFullscreen = { fullscreenMode.exit() },
-                        onOpenDsp = { showDspSheet = true },
-                        onOpenLyrics = { showLyricsSheet = true },
-                        onOpenVisualizer = { showVisualizerLibrary = true },
-                        onOpenSpeedDialog = { showSpeedDialog = true },
-                        onOpenAudioBoostDialog = { showAudioBoostDialog = true },
-                        onOpenSleepTimerDialog = { showSleepTimerDialog = true },
-                        onEnableOledMode = { isOledScreenOffMode = true },
-                        onOpenHqPlaybackSheet = { tab ->
-                            hqSheetInitialTab = tab
-                            showHqPlaybackSheet = true
-                        },
-                        onNavigateToAccount = onNavigateToAccount,
-                        onLockChanged = { isLocked -> sheetViewModel.setGestureLocked(isLocked); fullscreenMode.isGestureLocked = isLocked }
+                        callbacks = playerActionCallbacks
                     )
                 } else {
                     AudioNowPlayingLayout(
@@ -405,38 +443,9 @@ fun NowPlayingScreen(
                         secondaryLabelColor = animatedSecondaryLabelColor,
                         fftData = fftData,
                         showVisualizer = showVisualizer,
-                        onNavigateBack = onNavigateBack,
                         viewModel = viewModel,
-                        onOpenInfo = { 
-                            hqSheetInitialTab = com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO
-                            showHqPlaybackSheet = true 
-                        },
-                        onToggleVisualizer = { 
-                            if (!showVisualizer) {
-                                if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                                    showVisualizer = true
-                                } else {
-                                    recordAudioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
-                                }
-                            } else {
-                                showVisualizer = false
-                            }
-                        },
-                        onEnterFullscreen = { isAudioFullscreen = true },
-                        onOpenDsp = { showDspSheet = true },
-                        onNavigateToSettings = onNavigateToSettings,
-                        onNavigateToAccount = onNavigateToAccount,
                         pagerState = pagerState,
-                        onOpenLyrics = { showLyricsSheet = true },
-                        onOpenVisualizerLibrary = { showVisualizerLibrary = true },
-                        onOpenSpeedDialog = { showSpeedDialog = true },
-                        onOpenAudioBoostDialog = { showAudioBoostDialog = true },
-                        onOpenSleepTimerDialog = { showSleepTimerDialog = true },
-                        onEnableOledMode = { isOledScreenOffMode = true },
-                        onOpenHqPlaybackSheet = { tab ->
-                            hqSheetInitialTab = tab
-                            showHqPlaybackSheet = true
-                        }
+                        callbacks = playerActionCallbacks
                     )
                 }
             }
@@ -588,22 +597,9 @@ fun AudioNowPlayingLayout(
     secondaryLabelColor: Color = Color.White.copy(alpha = 0.70f),
     fftData: FloatArray,
     showVisualizer: Boolean,
-    onNavigateBack: () -> Unit,
     viewModel: PlayerViewModel,
-    onOpenInfo: () -> Unit,
-    onToggleVisualizer: () -> Unit,
-    onOpenVisualizerLibrary: () -> Unit = onToggleVisualizer,
-    onEnterFullscreen: () -> Unit = {},
-    onOpenDsp: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    onNavigateToAccount: () -> Unit = {},
     pagerState: androidx.compose.foundation.pager.PagerState,
-    onOpenLyrics: () -> Unit,
-    onOpenSpeedDialog: () -> Unit,
-    onOpenAudioBoostDialog: () -> Unit,
-    onOpenSleepTimerDialog: () -> Unit,
-    onEnableOledMode: () -> Unit,
-    onOpenHqPlaybackSheet: (com.deepeye.musicpro.ui.player.quality.HqSheetTab) -> Unit = {},
+    callbacks: PlayerActionCallbacks
 ) {
     val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
     val visualizerPrefs by viewModel.visualizerPrefs.collectAsStateWithLifecycle()
@@ -642,7 +638,7 @@ fun AudioNowPlayingLayout(
                     contentAlignment = Alignment.Center
                 ) {
                     IconButton(
-                        onClick = onNavigateBack,
+                        onClick = callbacks.onNavigateBack,
                         modifier = Modifier
                             .align(Alignment.CenterStart)
                             .size(44.dp)
@@ -677,10 +673,10 @@ fun AudioNowPlayingLayout(
                                 )
                             }
                         }
-                        IconButton(onClick = onNavigateToAccount, modifier = Modifier.size(44.dp)) {
+                        IconButton(onClick = callbacks.onNavigateToAccount, modifier = Modifier.size(44.dp)) {
                             Icon(Icons.Default.Tv, "Account connection", tint = finalAccentColor, modifier = Modifier.size(24.dp))
                         }
-                        IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(44.dp)) {
+                        IconButton(onClick = callbacks.onNavigateToSettings, modifier = Modifier.size(44.dp)) {
                             Icon(Icons.Default.Settings, "Settings", tint = headerColor, modifier = Modifier.size(24.dp))
                         }
                     }
@@ -788,7 +784,7 @@ fun AudioNowPlayingLayout(
                                             .clip(RoundedCornerShape(14.dp))
                                             .background(Color.Black.copy(alpha = 0.65f))
                                             .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
-                                            .clickable { onOpenVisualizerLibrary() }
+                                            .clickable { callbacks.onOpenVisualizerLibrary() }
                                             .padding(horizontal = 10.dp, vertical = 6.dp)
                                     ) {
                                         Row(
@@ -969,7 +965,7 @@ fun AudioNowPlayingLayout(
                         accentColor = finalAccentColor,
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),
-                        onClick = onOpenSpeedDialog
+                        onClick = callbacks.onOpenSpeedDialog
                     )
                     QuickToolButton(
                         icon = Icons.AutoMirrored.Filled.VolumeUp,
@@ -978,7 +974,7 @@ fun AudioNowPlayingLayout(
                         accentColor = finalAccentColor,
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),
-                        onClick = onOpenAudioBoostDialog
+                        onClick = callbacks.onOpenAudioBoostDialog
                     )
                     QuickToolButton(
                         icon = Icons.Default.Bedtime,
@@ -987,7 +983,7 @@ fun AudioNowPlayingLayout(
                         accentColor = finalAccentColor,
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),
-                        onClick = onOpenSleepTimerDialog
+                        onClick = callbacks.onOpenSleepTimerDialog
                     )
                     QuickToolButton(
                         icon = Icons.Default.Tune,
@@ -996,7 +992,7 @@ fun AudioNowPlayingLayout(
                         accentColor = finalAccentColor,
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),
-                        onClick = onOpenDsp
+                        onClick = callbacks.onOpenDsp
                     )
                     QuickToolButton(
                         icon = Icons.Default.MusicNote,
@@ -1005,7 +1001,7 @@ fun AudioNowPlayingLayout(
                         accentColor = finalAccentColor,
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),
-                        onClick = onOpenLyrics
+                        onClick = callbacks.onOpenLyrics
                     )
                 }
 
@@ -1022,7 +1018,7 @@ fun AudioNowPlayingLayout(
                         accentColor = finalAccentColor,
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),
-                        onClick = onNavigateToAccount
+                        onClick = callbacks.onNavigateToAccount
                     )
                     QuickToolButton(
                         icon = Icons.Default.AutoAwesome,
@@ -1031,7 +1027,7 @@ fun AudioNowPlayingLayout(
                         accentColor = finalAccentColor,
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),
-                        onClick = onOpenVisualizerLibrary
+                        onClick = callbacks.onOpenVisualizerLibrary
                     )
                     QuickToolButton(
                         icon = Icons.Default.Fullscreen,
@@ -1040,7 +1036,7 @@ fun AudioNowPlayingLayout(
                         accentColor = finalAccentColor,
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),
-                        onClick = onEnterFullscreen
+                        onClick = callbacks.onEnterFullscreen
                     )
                     QuickToolButton(
                         icon = if (isCached) Icons.Default.DownloadDone else Icons.Default.Download,
@@ -1058,7 +1054,7 @@ fun AudioNowPlayingLayout(
                         accentColor = finalAccentColor,
                         headerColor = headerColor,
                         modifier = Modifier.weight(1f),
-                        onClick = onOpenInfo
+                        onClick = callbacks.onOpenInfo
                     )
                 }
             }
@@ -1129,19 +1125,8 @@ fun VideoNowPlayingLayout(
     playerState: PlayerState,
     finalAccentColor: Color,
     finalBgColor: Color,
-    onNavigateBack: () -> Unit,
     viewModel: PlayerViewModel,
-    onOpenDsp: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    onNavigateToAccount: () -> Unit = {},
-    onLockChanged: (Boolean) -> Unit,
-    onOpenLyrics: () -> Unit,
-    onOpenVisualizer: () -> Unit = {},
-    onOpenSpeedDialog: () -> Unit,
-    onOpenAudioBoostDialog: () -> Unit,
-    onOpenSleepTimerDialog: () -> Unit,
-    onEnableOledMode: () -> Unit,
-    onOpenHqPlaybackSheet: (com.deepeye.musicpro.ui.player.quality.HqSheetTab) -> Unit = {},
+    callbacks: PlayerActionCallbacks
 ) {
     val videoDetails by viewModel.videoDetails.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
@@ -1186,7 +1171,7 @@ fun VideoNowPlayingLayout(
                 contentAlignment = Alignment.Center
             ) {
                 IconButton(
-                    onClick = onNavigateBack,
+                    onClick = callbacks.onNavigateBack,
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .size(44.dp)
@@ -1208,10 +1193,10 @@ fun VideoNowPlayingLayout(
                     modifier = Modifier.align(Alignment.CenterEnd),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onNavigateToAccount, modifier = Modifier.size(44.dp)) {
+                    IconButton(onClick = callbacks.onNavigateToAccount, modifier = Modifier.size(44.dp)) {
                         Icon(Icons.Default.Tv, "Account connection", tint = finalAccentColor, modifier = Modifier.size(24.dp))
                     }
-                    IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(44.dp)) {
+                    IconButton(onClick = callbacks.onNavigateToSettings, modifier = Modifier.size(44.dp)) {
                         Icon(Icons.Default.Settings, "Settings", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(24.dp))
                     }
                 }
@@ -1286,7 +1271,7 @@ fun VideoNowPlayingLayout(
                             previous = { viewModel.previous() },
                             next = { viewModel.next() },
                             toggleRepeat = { viewModel.toggleRepeat() },
-                            openSpeed = onOpenSpeedDialog,
+                            openSpeed = callbacks.onOpenSpeedDialog,
                             openPipOrBackgroundPlay = {
                                 (context as? android.app.Activity)?.let {
                                     (it as? com.deepeye.musicpro.MainActivity)?.enterPipMode()
@@ -1298,12 +1283,12 @@ fun VideoNowPlayingLayout(
                             seekStarted = { },
                             seekChanged = { target -> viewModel.seekTo(target) },
                             seekFinished = { target -> viewModel.seekTo(target) },
-                            openQuality = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) },
-                            openAudioTrack = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO) },
-                            openLyrics = onOpenLyrics,
-                            openDsp = onOpenDsp,
-                            openVisualizer = onOpenVisualizer,
-                            openSleepTimer = onOpenSleepTimerDialog,
+                            openQuality = { callbacks.onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) },
+                            openAudioTrack = { callbacks.onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO) },
+                            openLyrics = callbacks.onOpenLyrics,
+                            openDsp = callbacks.onOpenDsp,
+                            openVisualizer = callbacks.onOpenVisualizer,
+                            openSleepTimer = callbacks.onOpenSleepTimerDialog,
                             toggleLike = { viewModel.likeTrack(!playerState.isLiked) },
                             toggleDislike = { viewModel.dislikeTrack() },
                             toggleSubscribe = { libraryViewModel.toggleSubscription(channelId, effectiveChannelName) },
@@ -1331,7 +1316,7 @@ fun VideoNowPlayingLayout(
                             },
                             toggleLock = {
                                 fullscreenMode.isGestureLocked = !fullscreenMode.isGestureLocked
-                                onLockChanged(fullscreenMode.isGestureLocked)
+                                callbacks.onLockChanged(fullscreenMode.isGestureLocked)
                             }
                         )
                     }
@@ -1374,8 +1359,8 @@ fun VideoNowPlayingLayout(
                         onNext = { viewModel.next() },
                         onPrevious = { viewModel.previous() },
                         onOpenQueue = { },
-                        onLockChanged = onLockChanged,
-                        onOpenHqSettings = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) }
+                        onLockChanged = callbacks.onLockChanged,
+                        onOpenHqSettings = { callbacks.onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) }
                     )
                 }
             }
@@ -1560,14 +1545,14 @@ fun VideoNowPlayingLayout(
                         label = "TV Link",
                         isActive = true,
                         activeColor = finalAccentColor,
-                        onClick = onNavigateToAccount
+                        onClick = callbacks.onNavigateToAccount
                     )
 
                     // 6. Lyrics Pill
                     ActionPill(
                         icon = Icons.Default.MusicNote,
                         label = "Lyrics",
-                        onClick = onOpenLyrics
+                        onClick = callbacks.onOpenLyrics
                     )
                 }
             }
@@ -1582,12 +1567,12 @@ fun VideoNowPlayingLayout(
                 selectedQuality = selectedQuality,
                 context = context,
                 viewModel = viewModel,
-                onOpenSpeedDialog = onOpenSpeedDialog,
-                onOpenAudioBoostDialog = onOpenAudioBoostDialog,
-                onOpenSleepTimerDialog = onOpenSleepTimerDialog,
-                onEnableOledMode = onEnableOledMode,
-                onOpenHqPlaybackSheet = onOpenHqPlaybackSheet,
-                onShowQualityMenu = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) }
+                onOpenSpeedDialog = callbacks.onOpenSpeedDialog,
+                onOpenAudioBoostDialog = callbacks.onOpenAudioBoostDialog,
+                onOpenSleepTimerDialog = callbacks.onOpenSleepTimerDialog,
+                onEnableOledMode = callbacks.onEnableOledMode,
+                onOpenHqPlaybackSheet = callbacks.onOpenHqPlaybackSheet,
+                onShowQualityMenu = { callbacks.onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.VIDEO) }
             )
 
             // Stats for Nerds Overlay Card (Live HUD)
@@ -1597,7 +1582,7 @@ fun VideoNowPlayingLayout(
                     quality = selectedQuality,
                     speed = playerState.playbackSpeed,
                     diagnostics = diagnostics,
-                    onOpenHqSheet = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.STATS) },
+                    onOpenHqSheet = { callbacks.onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.STATS) },
                     onDismiss = { viewModel.toggleStatsForNerds() }
                 )
             }
@@ -1625,7 +1610,7 @@ fun VideoNowPlayingLayout(
                         ),
                         RoundedCornerShape(12.dp)
                     )
-                    .clickable { onOpenDsp() }
+                    .clickable { callbacks.onOpenDsp() }
                     .padding(14.dp)
             ) {
                 Row(
@@ -2680,16 +2665,7 @@ fun AudioFullscreenVisualizerLayout(
     finalBgColor: Color,
     viewModel: PlayerViewModel,
     onExitFullscreen: () -> Unit,
-    onOpenDsp: () -> Unit,
-    onOpenLyrics: () -> Unit = {},
-    onOpenVisualizer: () -> Unit = {},
-    onOpenSpeedDialog: () -> Unit,
-    onOpenAudioBoostDialog: () -> Unit,
-    onOpenSleepTimerDialog: () -> Unit,
-    onEnableOledMode: () -> Unit,
-    onOpenHqPlaybackSheet: (com.deepeye.musicpro.ui.player.quality.HqSheetTab) -> Unit = {},
-    onNavigateToAccount: () -> Unit = {},
-    onLockChanged: (Boolean) -> Unit = {}
+    callbacks: PlayerActionCallbacks
 ) {
     val context = LocalContext.current
     val fullscreenMode = LocalFullscreenMode.current
@@ -2734,24 +2710,24 @@ fun AudioFullscreenVisualizerLayout(
                 previous = { viewModel.previous() },
                 next = { viewModel.next() },
                 toggleRepeat = { viewModel.toggleRepeat() },
-                openSpeed = onOpenSpeedDialog,
+                openSpeed = callbacks.onOpenSpeedDialog,
                 openPipOrBackgroundPlay = {
                     (context as? android.app.Activity)?.let {
                         (it as? com.deepeye.musicpro.MainActivity)?.enterPipMode()
                     }
                 },
                 skipSegment = { },
-                openAccount = onNavigateToAccount,
+                openAccount = callbacks.onNavigateToAccount,
                 openSearch = { },
                 seekStarted = { },
                 seekChanged = { target -> viewModel.seekTo(target) },
                 seekFinished = { target -> viewModel.seekTo(target) },
-                openQuality = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO) },
-                openAudioTrack = { onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO) },
-                openLyrics = onOpenLyrics,
-                openDsp = onOpenDsp,
-                openVisualizer = onOpenVisualizer,
-                openSleepTimer = onOpenSleepTimerDialog,
+                openQuality = { callbacks.onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO) },
+                openAudioTrack = { callbacks.onOpenHqPlaybackSheet(com.deepeye.musicpro.ui.player.quality.HqSheetTab.AUDIO) },
+                openLyrics = callbacks.onOpenLyrics,
+                openDsp = callbacks.onOpenDsp,
+                openVisualizer = callbacks.onOpenVisualizer,
+                openSleepTimer = callbacks.onOpenSleepTimerDialog,
                 toggleLike = { viewModel.likeTrack(!playerState.isLiked) },
                 toggleDislike = { viewModel.dislikeTrack() },
                 toggleSubscribe = { libraryViewModel.toggleSubscription(artistName, artistName) },
@@ -2779,7 +2755,7 @@ fun AudioFullscreenVisualizerLayout(
                 },
                 toggleLock = {
                     fullscreenMode.isGestureLocked = !fullscreenMode.isGestureLocked
-                    onLockChanged(fullscreenMode.isGestureLocked)
+                    callbacks.onLockChanged(fullscreenMode.isGestureLocked)
                 }
             )
         }
