@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30074,
+                versionName = "3.0.1.64",
+                releaseDate = "October 2026",
+                title = "Unified Fullscreen Video & Visualizer Engine 🎬⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Unified Fullscreen Playback: Removed legacy portrait NowPlaying layout in favor of immersive Fullscreen Video Player and Fullscreen Visualizer Engine.",
+                        "Direct Navigation Wiring: All track, search, library, playlist, and mini-player taps now directly expand the unified Fullscreen Player interface.",
+                        "Optimized Surface Architecture: Video mode renders native Ambilight video surface, while audio mode renders real-time GPU/Canvas visualizers."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30073,
                 versionName = "3.0.1.63",
                 releaseDate = "October 2026",
