@@ -131,6 +131,46 @@ class DeepEyeVideoPlayerOverlayTest {
     }
 
     @Test
+    fun likeButton_visible_and_exists() {
+        composeTestRule.setContent {
+            DeepEyeVideoPlayerOverlay(playerState = playerState.copy(isLiked = true), actions = actions)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Like")
+            .assertExists()
+    }
+
+    @Test
+    fun dislikeButton_visible_and_exists() {
+        composeTestRule.setContent {
+            DeepEyeVideoPlayerOverlay(playerState = playerState.copy(isDisliked = true), actions = actions)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Dislike")
+            .assertExists()
+    }
+
+    @Test
+    fun subscribeButton_visible_and_exists() {
+        composeTestRule.setContent {
+            DeepEyeVideoPlayerOverlay(playerState = playerState.copy(isSubscribed = true), actions = actions)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Subscribed")
+            .assertExists()
+    }
+
+    @Test
+    fun downloadButton_visible_and_exists() {
+        composeTestRule.setContent {
+            DeepEyeVideoPlayerOverlay(playerState = playerState.copy(isDownloaded = true), actions = actions)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Downloaded")
+            .assertExists()
+    }
+
+    @Test
     fun ccButton_disabled_whenNoCaptions() {
         composeTestRule.setContent {
             DeepEyeVideoPlayerOverlay(playerState = playerState, actions = actions)

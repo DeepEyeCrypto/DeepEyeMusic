@@ -1265,7 +1265,17 @@ fun VideoNowPlayingLayout(
                     }
 
                     // DeepEye Video Player Overlay — Full Kodi, SmartTube & VLC TV/Landscape OSD
-                    val overlayActions = remember(viewModel, fullscreenMode) {
+                    val currentItemId = playerState.currentItem?.id ?: ""
+                    val effectiveChannelName = videoDetails?.channelName?.takeIf { it.isNotBlank() } ?: playerState.currentItem?.artist ?: ""
+                    val channelId = playerState.currentItem?.artist ?: ""
+                    val isSubscribed by libraryViewModel.isChannelSubscribed(channelId).collectAsStateWithLifecycle(initialValue = false)
+                    val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
+                    val isDownloading = activeDownloads.values.any { it.id == currentItemId }
+                    val isDownloaded = remember(currentItemId, activeDownloads) {
+                        if (currentItemId.isNotBlank()) viewModel.isTrackCached(currentItemId) else false
+                    }
+
+                    val overlayActions = remember(viewModel, fullscreenMode, channelId, effectiveChannelName) {
                         VideoPlayerOverlayActions.fromLambdas(
                             playPause = { viewModel.togglePlayPause() },
                             previous = { viewModel.previous() },
@@ -1290,6 +1300,8 @@ fun VideoNowPlayingLayout(
                             openSleepTimer = onOpenSleepTimerDialog,
                             toggleLike = { viewModel.likeTrack(!playerState.isLiked) },
                             toggleDislike = { viewModel.dislikeTrack() },
+                            toggleSubscribe = { libraryViewModel.toggleSubscription(channelId, effectiveChannelName) },
+                            download = { viewModel.downloadCurrentTrack() },
                             toggleCaptions = { viewModel.toggleSubtitles() },
                             addToPlaylist = { },
                             openChannel = { },
@@ -1320,7 +1332,11 @@ fun VideoNowPlayingLayout(
 
                     if (!isInPipMode) {
                         DeepEyeVideoPlayerOverlay(
-                            playerState = playerState,
+                            playerState = playerState.copy(
+                                isSubscribed = isSubscribed,
+                                isDownloaded = isDownloaded,
+                                isDownloading = isDownloading
+                            ),
                             actions = overlayActions,
                             modifier = Modifier.fillMaxSize(),
                             videoScale = videoScale,
@@ -2695,7 +2711,17 @@ fun AudioFullscreenVisualizerLayout(
         )
 
         // 3. DeepEyeVideoPlayerOverlay — exact same controls as video player
-        val overlayActions = remember(viewModel, fullscreenMode) {
+        val currentItemId = playerState.currentItem?.id ?: ""
+        val artistName = playerState.currentItem?.artist ?: ""
+        val libraryViewModel: com.deepeye.musicpro.ui.library.LibraryViewModel = hiltViewModel()
+        val isSubscribed by libraryViewModel.isChannelSubscribed(artistName).collectAsStateWithLifecycle(initialValue = false)
+        val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
+        val isDownloading = activeDownloads.values.any { it.id == currentItemId }
+        val isDownloaded = remember(currentItemId, activeDownloads) {
+            if (currentItemId.isNotBlank()) viewModel.isTrackCached(currentItemId) else false
+        }
+
+        val overlayActions = remember(viewModel, fullscreenMode, artistName) {
             VideoPlayerOverlayActions.fromLambdas(
                 playPause = { viewModel.togglePlayPause() },
                 previous = { viewModel.previous() },
@@ -2720,6 +2746,8 @@ fun AudioFullscreenVisualizerLayout(
                 openSleepTimer = onOpenSleepTimerDialog,
                 toggleLike = { viewModel.likeTrack(!playerState.isLiked) },
                 toggleDislike = { viewModel.dislikeTrack() },
+                toggleSubscribe = { libraryViewModel.toggleSubscription(artistName, artistName) },
+                download = { viewModel.downloadCurrentTrack() },
                 toggleCaptions = { },
                 addToPlaylist = { },
                 openChannel = { },
@@ -2749,7 +2777,11 @@ fun AudioFullscreenVisualizerLayout(
         }
 
         DeepEyeVideoPlayerOverlay(
-            playerState = playerState,
+            playerState = playerState.copy(
+                isSubscribed = isSubscribed,
+                isDownloaded = isDownloaded,
+                isDownloading = isDownloading
+            ),
             actions = overlayActions,
             modifier = Modifier.fillMaxSize(),
             videoScale = 1f,

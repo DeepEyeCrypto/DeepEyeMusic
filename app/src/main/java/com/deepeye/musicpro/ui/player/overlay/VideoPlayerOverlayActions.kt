@@ -45,6 +45,8 @@ interface VideoPlayerOverlayActions {
     fun openAudioEqualizer() {}
     fun openLyrics() {}
     fun openDsp() {}
+    fun toggleSubscribe() {}
+    fun download() {}
 
     companion object {
         fun fromLambdas(
@@ -79,7 +81,9 @@ interface VideoPlayerOverlayActions {
             openSleepTimer: () -> Unit = {},
             openAudioEqualizer: () -> Unit = {},
             openLyrics: () -> Unit = {},
-            openDsp: () -> Unit = {}
+            openDsp: () -> Unit = {},
+            toggleSubscribe: () -> Unit = {},
+            download: () -> Unit = {}
         ): VideoPlayerOverlayActions = object : VideoPlayerOverlayActions {
             override fun playPause() = playPause()
             override fun previous() = previous()
@@ -113,6 +117,8 @@ interface VideoPlayerOverlayActions {
             override fun openAudioEqualizer() = openAudioEqualizer()
             override fun openLyrics() = openLyrics()
             override fun openDsp() = openDsp()
+            override fun toggleSubscribe() = toggleSubscribe()
+            override fun download() = download()
         }
     }
 }

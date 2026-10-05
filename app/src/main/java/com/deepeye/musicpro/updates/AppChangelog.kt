@@ -8,6 +8,20 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30060,
+                versionName = "3.0.1.50",
+                releaseDate = "October 2026",
+                title = "Fullscreen Engagement Engine: Real Like, Dislike, Subscribe & Download Controls 👍🔔📥",
+                highlight = true,
+                items =
+                    listOf(
+                        "Real Like & Dislike Controls: Direct InnerTube backend sync with optimistic feedback state and dynamic color glow on full video/audio overlays.",
+                        "Live Channel Subscriptions: Real-time channel subscribe/unsubscribe action chips directly accessible from the fullscreen OSD toolbar.",
+                        "Direct Offline Downloads: Instant background audio/video downloads with live caching progress indicators and offline checkmarks.",
+                        "Unified Video & Visualizer HUD: Seamless integration across both landscape video playback and 60FPS audio visualizer modes."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30059,
                 versionName = "3.0.1.49",
                 releaseDate = "October 2026",

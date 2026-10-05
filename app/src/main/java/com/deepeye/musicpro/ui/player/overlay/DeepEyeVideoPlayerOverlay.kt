@@ -32,6 +32,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.ThumbUp
+import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material3.CircularProgressIndicator
 import com.deepeye.musicpro.ui.modifiers.preventParentScrollOnDrag
 import androidx.compose.material3.Icon
@@ -877,6 +879,59 @@ fun DeepEyeVideoPlayerOverlay(
                             resetTimer()
                             actions.openStats()
                             onToggleStats()
+                        }
+
+                        ChipDivider()
+
+                        // ─── Real Engagement Group (Like, Dislike, Subscribe, Download) ───
+                        ActionChip(
+                            icon = if (playerState.isLiked) Icons.Default.ThumbUp else Icons.Outlined.ThumbUp,
+                            label = "Like",
+                            active = playerState.isLiked,
+                            activeTint = NeonCyan
+                        ) {
+                            resetTimer()
+                            actions.toggleLike()
+                        }
+
+                        ActionChip(
+                            icon = if (playerState.isDisliked) Icons.Default.ThumbDown else Icons.Outlined.ThumbDown,
+                            label = "Dislike",
+                            active = playerState.isDisliked,
+                            activeTint = Color(0xFFFF5252)
+                        ) {
+                            resetTimer()
+                            actions.toggleDislike()
+                        }
+
+                        ActionChip(
+                            icon = if (playerState.isSubscribed) Icons.Default.NotificationsActive else Icons.Default.AddAlert,
+                            label = if (playerState.isSubscribed) "Subscribed" else "Subscribe",
+                            active = playerState.isSubscribed,
+                            activeTint = Color(0xFFFF0055)
+                        ) {
+                            resetTimer()
+                            actions.toggleSubscribe()
+                        }
+
+                        val downloadIcon = when {
+                            playerState.isDownloaded -> Icons.Default.CheckCircle
+                            playerState.isDownloading -> Icons.Default.Downloading
+                            else -> Icons.Default.Download
+                        }
+                        val downloadLabel = when {
+                            playerState.isDownloaded -> "Downloaded"
+                            playerState.isDownloading -> "Downloading..."
+                            else -> "Download"
+                        }
+                        ActionChip(
+                            icon = downloadIcon,
+                            label = downloadLabel,
+                            active = playerState.isDownloaded || playerState.isDownloading,
+                            activeTint = ElectricViolet
+                        ) {
+                            resetTimer()
+                            actions.download()
                         }
 
                         ChipDivider()
