@@ -951,6 +951,7 @@ fun DeepEyeVideoPlayerOverlay(
                         ActionChip(Icons.Default.HighQuality, "Quality", enabled = hasQuality) { resetTimer(); actions.openQuality() }
                         ActionChip(Icons.Default.Tune, "EQ") { resetTimer(); actions.openDsp() }
                         ActionChip(Icons.Default.MusicNote, "Lyrics") { resetTimer(); actions.openLyrics() }
+                        ActionChip(Icons.Default.AutoAwesome, "Visuals") { resetTimer(); actions.openVisualizer() }
 
                         ChipDivider()
 

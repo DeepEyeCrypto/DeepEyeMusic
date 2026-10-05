@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30061,
+                versionName = "3.0.1.51",
+                releaseDate = "October 2026",
+                title = "Fullscreen Visualizer Studio: Direct 'Visuals' Action Chip on Fullscreen HUD ✨🎨",
+                highlight = true,
+                items =
+                    listOf(
+                        "Fullscreen 'Visuals' Action Chip: Added direct 'Visuals' button to the fullscreen video & audio player action bar for instantaneous shader switching.",
+                        "Live Shader & Particle Studio: Instantly opens the GPU Visualizer library modal sheet (AGSL shaders, Spectrum, 3D particles) with intensity and motion tuning without exiting fullscreen.",
+                        "Unified Video Experience: Complete parity between Now Playing quick tools and landscape fullscreen player controls."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30060,
                 versionName = "3.0.1.50",
                 releaseDate = "October 2026",

@@ -45,6 +45,7 @@ interface VideoPlayerOverlayActions {
     fun openAudioEqualizer() {}
     fun openLyrics() {}
     fun openDsp() {}
+    fun openVisualizer() {}
     fun toggleSubscribe() {}
     fun download() {}
 
@@ -82,6 +83,7 @@ interface VideoPlayerOverlayActions {
             openAudioEqualizer: () -> Unit = {},
             openLyrics: () -> Unit = {},
             openDsp: () -> Unit = {},
+            openVisualizer: () -> Unit = {},
             toggleSubscribe: () -> Unit = {},
             download: () -> Unit = {}
         ): VideoPlayerOverlayActions = object : VideoPlayerOverlayActions {
@@ -117,6 +119,7 @@ interface VideoPlayerOverlayActions {
             override fun openAudioEqualizer() = openAudioEqualizer()
             override fun openLyrics() = openLyrics()
             override fun openDsp() = openDsp()
+            override fun openVisualizer() = openVisualizer()
             override fun toggleSubscribe() = toggleSubscribe()
             override fun download() = download()
         }

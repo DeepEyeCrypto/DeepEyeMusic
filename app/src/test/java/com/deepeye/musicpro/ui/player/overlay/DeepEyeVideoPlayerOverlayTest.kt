@@ -131,6 +131,18 @@ class DeepEyeVideoPlayerOverlayTest {
     }
 
     @Test
+    fun visualsButton_visible_and_exists() {
+        val testActions = VideoPlayerOverlayActions.fromLambdas(openVisualizer = { })
+
+        composeTestRule.setContent {
+            DeepEyeVideoPlayerOverlay(playerState = playerState, actions = testActions)
+        }
+
+        composeTestRule.onNodeWithContentDescription("Visuals")
+            .assertExists()
+    }
+
+    @Test
     fun likeButton_visible_and_exists() {
         composeTestRule.setContent {
             DeepEyeVideoPlayerOverlay(playerState = playerState.copy(isLiked = true), actions = actions)
