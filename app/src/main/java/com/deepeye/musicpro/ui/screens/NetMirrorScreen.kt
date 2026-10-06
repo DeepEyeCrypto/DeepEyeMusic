@@ -227,10 +227,14 @@ private fun HeroBanner(
     movie: HomeVideoItem,
     onPlay: () -> Unit
 ) {
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val bannerHeight = if (isLandscape) 220.dp else 340.dp
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(340.dp)
+            .height(bannerHeight)
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(26.dp))
             .border(1.dp, glassBorder, RoundedCornerShape(26.dp))

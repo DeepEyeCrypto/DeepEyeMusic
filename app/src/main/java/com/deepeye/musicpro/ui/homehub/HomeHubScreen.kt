@@ -609,6 +609,11 @@ private fun HomeVideoRail(
     onClick: (HomeVideoItem) -> Unit,
 ) {
     if (items.isEmpty()) return
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val columns = if (isLandscape) 4 else 2
+    val maxItems = if (isLandscape) 8 else 4
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -621,8 +626,8 @@ private fun HomeVideoRail(
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
         )
-        val displayedItems = items.take(4)
-        displayedItems.chunked(2).forEach { chunk ->
+        val displayedItems = items.take(maxItems)
+        displayedItems.chunked(columns).forEach { chunk ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.sdp)
@@ -634,7 +639,7 @@ private fun HomeVideoRail(
                         modifier = Modifier.weight(1f),
                     )
                 }
-                repeat(2 - chunk.size) {
+                repeat(columns - chunk.size) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
             }
@@ -649,6 +654,11 @@ private fun HomeMusicRail(
     onClick: (HomeMusicItem) -> Unit,
 ) {
     if (items.isEmpty()) return
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val columns = if (isLandscape) 4 else 2
+    val maxItems = if (isLandscape) 8 else 4
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -661,8 +671,8 @@ private fun HomeMusicRail(
             color = Color(0xFFE0E0E0),
             fontWeight = FontWeight.Bold,
         )
-        val displayedItems = items.take(4)
-        displayedItems.chunked(2).forEach { chunk ->
+        val displayedItems = items.take(maxItems)
+        displayedItems.chunked(columns).forEach { chunk ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.sdp)
@@ -719,7 +729,7 @@ private fun HomeMusicRail(
                         }
                     }
                 }
-                repeat(2 - chunk.size) {
+                repeat(columns - chunk.size) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
             }

@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30087,
+                versionName = "3.0.1.77",
+                releaseDate = "October 2026",
+                title = "Omni-Landscape & TV Redesign: All-Section Matrix 📺✨",
+                highlight = true,
+                items =
+                    listOf(
+                        "Home Hub 4-Column Rails: Video and Music rails adapt to 4-column widescreen grid on TV and landscape phones.",
+                        "Video Hub Landscape Fitting: Scaled hero banner and category carousels for optimal 16:9/21:9 viewport geometry.",
+                        "Dual-Column Library: Local songs and album vaults display in high-density responsive columns."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30086,
                 versionName = "3.0.1.76",
                 releaseDate = "October 2026",

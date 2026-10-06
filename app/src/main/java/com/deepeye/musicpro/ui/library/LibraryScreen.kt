@@ -422,11 +422,16 @@ private fun SongsTab(
         EmptyLibraryState("No local songs found in storage.")
         return
     }
-    val songsState = rememberLazyListState()
-    LazyColumn(
-        state = songsState,
-        modifier = Modifier.premiumScrollHaptics(songsState),
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val gridState = rememberLazyGridState()
+
+    LazyVerticalGrid(
+        state = gridState,
+        modifier = Modifier.premiumScrollHaptics(gridState),
+        columns = GridCells.Fixed(if (isLandscape) 2 else 1),
         contentPadding = PaddingValues(horizontal = 20.sdp, vertical = 12.sdp),
+        horizontalArrangement = Arrangement.spacedBy(10.sdp),
         verticalArrangement = Arrangement.spacedBy(10.sdp)
     ) {
         items(songs, key = { it.id }) { song ->
