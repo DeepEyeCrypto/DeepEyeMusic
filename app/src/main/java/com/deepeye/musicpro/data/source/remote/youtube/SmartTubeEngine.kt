@@ -7,6 +7,7 @@ import android.content.Context
 import android.util.Log
 import com.deepeye.musicpro.domain.auth.InnerTubeAuthManager
 import com.deepeye.musicpro.domain.model.Song
+import com.deepeye.musicpro.domain.model.MusicTrack
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedItem
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedItemType
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedSection
@@ -392,6 +393,27 @@ class SmartTubeEngine @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing search results", e)
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Executes universal search returning [MusicTrack] domain items.
+     */
+    suspend fun searchMusicTracks(query: String): Result<List<MusicTrack>> = withContext(Dispatchers.IO) {
+        val result = searchTracks(query)
+        if (result.isSuccess) {
+            val tracks = result.getOrNull().orEmpty().map { item ->
+                MusicTrack(
+                    videoId = item.videoId ?: item.id,
+                    title = item.title,
+                    artist = item.artist ?: item.subtitle,
+                    thumbnailUrl = item.thumbnailUrl,
+                    durationSeconds = 0L,
+                )
+            }
+            Result.success(tracks)
+        } else {
+            Result.failure(result.exceptionOrNull() ?: Exception("Unknown search error"))
         }
     }
 
