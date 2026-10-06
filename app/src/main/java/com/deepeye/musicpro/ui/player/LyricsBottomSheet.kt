@@ -240,22 +240,22 @@ fun LyricsBottomSheet(
 
                         val targetAlpha = when {
                             isActive -> 1.0f
-                            isPast -> 0.45f
+                            isPast -> 0.40f
                             isFuture -> 0.25f
                             else -> 0.85f
                         }
 
-                        val targetScale = if (isActive) 1.06f else 0.98f
+                        val targetScale = if (isActive) 1.10f else 0.92f
 
                         val animatedAlpha by animateFloatAsState(
                             targetValue = targetAlpha,
-                            animationSpec = tween(300),
+                            animationSpec = tween(250),
                             label = "lyricAlpha"
                         )
 
                         val animatedScale by animateFloatAsState(
                             targetValue = targetScale,
-                            animationSpec = spring(stiffness = 300f),
+                            animationSpec = spring(stiffness = 380f, dampingRatio = 0.75f),
                             label = "lyricScale"
                         )
 

@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30079,
+                versionName = "3.0.1.69",
+                releaseDate = "October 2026",
+                title = "Lyrics-Omega Kinetic Vocals & 100ms Karaoke Precision 🎤⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "100ms Playback Ticker: Ultra-responsive 100ms ExoPlayer timeline synchronization for instant lyric tracking.",
+                        "Kinetic Typography UI: Apple Music / Spotify style fluid line scale (1.10x) and progressive ambient glow transitions.",
+                        "Dual-Engine Timed Extraction: Native InnerTube (/next -> MPLY -> /browse) with robust LRCLIB fallback."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30078,
                 versionName = "3.0.1.68",
                 releaseDate = "October 2026",

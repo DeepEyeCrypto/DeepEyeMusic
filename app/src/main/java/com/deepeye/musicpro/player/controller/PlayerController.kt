@@ -1117,7 +1117,7 @@ constructor(
                         }
                     }
 
-                    delay(250)
+                    delay(100)
                 }
             }
     }
