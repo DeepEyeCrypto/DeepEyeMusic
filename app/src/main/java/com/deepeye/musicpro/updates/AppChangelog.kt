@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30086,
+                versionName = "3.0.1.76",
+                releaseDate = "October 2026",
+                title = "InnerTube Enforcement Protocol: Pure TVHTML5 Architecture 📺⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "100% v3 API Eradication: Completely eliminated all googleapis.com/youtube/v3 Data API calls across the entire codebase.",
+                        "Global TVHTML5 Interceptor: Enforced client 85, version 7.20210614.03.00, and Tizen Smart-TV headers on all /youtubei/v1 traffic.",
+                        "Direct SmartTube Proxying: Re-routed related recommendations and artist searches exclusively through TVHTML5 InnerTube."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30085,
                 versionName = "3.0.1.75",
                 releaseDate = "October 2026",

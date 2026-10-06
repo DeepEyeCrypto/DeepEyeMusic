@@ -184,39 +184,6 @@ class YouTubeDeviceAuthManager @Inject constructor(private val client: OkHttpCli
             Log.e("YTAuth", "Failed to fetch user profile via userinfo", e)
         }
 
-        // Fallback: Query YouTube Channels API
-        try {
-            val req = Request.Builder()
-                .url("https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true")
-                .addHeader("Authorization", "Bearer $accessToken")
-                .get()
-                .build()
-
-            client.newCall(req).execute().use { response ->
-                if (response.isSuccessful) {
-                    val bodyString = response.body?.string() ?: ""
-                    val json = JSONObject(bodyString)
-                    val items = json.optJSONArray("items")
-                    if (items != null && items.length() > 0) {
-                        val snippet = items.getJSONObject(0).optJSONObject("snippet")
-                        val title = snippet?.optString("title", "YouTube User") ?: "YouTube User"
-                        val thumbnails = snippet?.optJSONObject("thumbnails")
-                        val avatarUrl = thumbnails?.optJSONObject("high")?.optString("url")
-                            ?: thumbnails?.optJSONObject("default")?.optString("url")
-                            ?: ""
-                        return@withContext GoogleUserProfile(
-                            id = items.getJSONObject(0).optString("id"),
-                            name = title,
-                            pictureUrl = avatarUrl,
-                            email = ""
-                        )
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("YTAuth", "Failed to fetch user profile via channels API", e)
-        }
-
         return@withContext null
     }
 

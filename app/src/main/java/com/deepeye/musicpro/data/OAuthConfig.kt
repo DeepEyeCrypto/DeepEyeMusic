@@ -34,7 +34,6 @@ object OAuthConfig {
     const val POLLING_TIMEOUT_MS = 120000L // 2 minutes timeout
     
     // API endpoints
-    const val YOUTUBE_DATA_API_BASE = "https://www.googleapis.com/youtube/v3/"
     const val SPONSORBLOCK_BASE = "https://sponsor.ajay.app/api/"
     const val RETURN_DISLIKE_BASE = "https://returnyoutubedislikeapi.com/"
 }

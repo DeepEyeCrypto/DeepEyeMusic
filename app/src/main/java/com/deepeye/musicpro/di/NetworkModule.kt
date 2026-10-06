@@ -36,6 +36,20 @@ object NetworkModule {
             .connectionPool(okhttp3.ConnectionPool(15, 5, java.util.concurrent.TimeUnit.MINUTES))
             .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .addInterceptor { chain ->
+                val request = chain.request()
+                val url = request.url.toString()
+                if (url.contains("/youtubei/v1")) {
+                    val newRequestBuilder = request.newBuilder()
+                        .header("User-Agent", "Mozilla/5.0 (SMART-TV; Linux; Tizen 5.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/5.0 NativeTVAds Safari/538.1,gzip(gfe)")
+                        .header("X-YouTube-Client-Name", "85")
+                        .header("X-YouTube-Client-Version", "7.20210614.03.00")
+                        .header("Content-Type", "application/json")
+                    chain.proceed(newRequestBuilder.build())
+                } else {
+                    chain.proceed(request)
+                }
+            }
             .build()
     }
 }
