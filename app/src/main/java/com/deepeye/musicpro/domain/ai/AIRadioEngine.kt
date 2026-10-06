@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-import com.deepeye.musicpro.domain.repository.TasteProfileRepository
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,7 +23,6 @@ class AIRadioEngine @Inject constructor(
     private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
     private val playerController: PlayerController,
     private val queueManager: QueueManager,
-    private val tasteProfileRepo: TasteProfileRepository
 ) {
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
@@ -41,12 +39,7 @@ class AIRadioEngine @Inject constructor(
         
         try {
             withContext(ioDispatcher) {
-                val tasteProfile = try { tasteProfileRepo.getTasteProfile().first() } catch (e: Exception) { null }
-                val preferredLangs = tasteProfile?.preferredLanguages ?: emptySet()
-                val langsToInclude = preferredLangs.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: "hindi punjabi english"
-                val negativeKeywords = com.deepeye.musicpro.domain.util.LanguageUtils.buildNegativeLanguageConstraints(preferredLangs)
-                val artists = tasteProfile?.favoriteArtists?.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: ""
-                val personalSuffix = "$langsToInclude $artists $negativeKeywords".trim()
+                val personalSuffix = "hindi punjabi english"
                 
                 // Mock NLP parser: We extract core keywords to feed to YouTube Music
                 val query = parseIntentToSearchQuery(prompt, personalSuffix)

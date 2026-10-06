@@ -61,7 +61,5 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun historyDao(): HistoryDao
 
-    abstract fun personalizedSectionDao(): com.deepeye.musicpro.data.cache.dao.PersonalizedSectionDao
-
     abstract fun hiddenContentDao(): com.deepeye.musicpro.data.cache.dao.HiddenContentDao
 }

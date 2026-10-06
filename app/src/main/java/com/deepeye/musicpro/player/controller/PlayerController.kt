@@ -58,7 +58,6 @@ constructor(
     private val sourceResolverManager: SourceResolverManager,
     private val audioSessionManager: com.deepeye.musicpro.dsp.session.AudioSessionManager,
     private val dspEngine: com.deepeye.musicpro.dsp.engine.DSPEngine,
-    private val tasteProfileRepository: com.deepeye.musicpro.domain.repository.TasteProfileRepository,
     private val historyRepository: com.deepeye.musicpro.domain.repository.HistoryRepository,
     private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
     private val musicRepository: com.deepeye.musicpro.domain.repository.MusicRepository,
@@ -72,7 +71,6 @@ constructor(
     private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
     private val tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor,
     private val dspController: com.deepeye.musicpro.dsp.controller.DSPController,
-    private val cloudSyncManager: com.deepeye.musicpro.domain.sync.CloudSyncManager,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
     val qualitySelectionEngine: com.deepeye.musicpro.player.format.QualitySelectionEngine = com.deepeye.musicpro.player.format.QualitySelectionEngine(com.deepeye.musicpro.player.format.DeviceCodecCapabilities()),
     val deviceCodecCapabilities: com.deepeye.musicpro.player.format.DeviceCodecCapabilities = com.deepeye.musicpro.player.format.DeviceCodecCapabilities(),
@@ -173,23 +171,6 @@ constructor(
                     mode = params.tubeMode,
                     drivePercent = params.tubeDrive
                 )
-            }
-        }
-
-        // VLC-style: Language-aware audio track selection
-        scope.launch {
-            tasteProfileRepository.getTasteProfile().collect { profile ->
-                val languages = profile.preferredLanguages
-                if (languages.isNotEmpty()) {
-                    val lang = languages.first() // Pick the first preferred language
-                    player.trackSelectionParameters =
-                        player.trackSelectionParameters
-                            .buildUpon()
-                            .setPreferredAudioLanguage(lang)
-                            .setPreferredTextLanguage(lang)
-                            .setForceHighestSupportedBitrate(true)
-                            .build()
-                }
             }
         }
 
@@ -597,13 +578,6 @@ constructor(
                 try {
                     if (!isRetry) {
                         playRetryCount = 0
-                    }
-                    // Check if song is blocked in the database
-                    val feedback = tasteProfileRepository.getFeedback(item.id)
-                    if (feedback != null && feedback.dontPlayAgain) {
-                        android.util.Log.i("PlayerController", "Track ${item.title} (${item.id}) is blocked. Auto-skipping!")
-                        next()
-                        return@launch
                     }
 
                     val oldCurrentItem = _playerState.value.currentItem
@@ -1445,7 +1419,6 @@ constructor(
                         source = source
                     )
                 }
-                cloudSyncManager.syncHistory()
             }
         }
     }
@@ -1504,8 +1477,6 @@ constructor(
                     gamificationEngine.updateDailyListeningMinutes(minutes)
                 }
 
-                tasteProfileRepository.recordPlayEvent(event)
-
                 val isVideo = (currentItem as? MediaItem.Remote)?.isVideo == true
                 if (isVideo) {
                     historyRepository.recordVideoProgress(
@@ -1534,14 +1505,6 @@ constructor(
                     artist = currentItem.artist,
                     artworkUrl = currentItem.artworkUri?.toString()
                 )
-
-                // Trigger cloud sync of watch history so it syncs immediately
-                cloudSyncManager.syncHistory()
-
-                // If skipped quickly (<10s) and not a full finish
-                if (played < 10000 && !finishedSuccessfully && duration > 15000) {
-                    tasteProfileRepository.recordQuickSkip(currentId)
-                }
             }
         }
 

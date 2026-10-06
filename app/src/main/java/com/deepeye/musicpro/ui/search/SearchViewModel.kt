@@ -10,7 +10,6 @@ import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.search.SearchFilter
 import com.deepeye.musicpro.domain.model.search.SearchResultItem
 import com.deepeye.musicpro.domain.model.search.SearchSort
-import com.deepeye.musicpro.domain.repository.TasteProfileRepository
 import com.deepeye.musicpro.domain.repository.search.SearchRepository
 import com.deepeye.musicpro.player.controller.PlayerController
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,12 +31,12 @@ class SearchViewModel
 @Inject
 constructor(
     private val youtubeRepository: YouTubeRepository,
-    private val tasteProfileRepository: TasteProfileRepository,
     private val historyRepository: com.deepeye.musicpro.domain.repository.HistoryRepository,
     private val playerController: PlayerController,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     val query = savedStateHandle.getStateFlow("query", "")
+    val searchQuery: StateFlow<String> = query
 
     val selectedFilter = savedStateHandle.getStateFlow("selectedFilter", SearchFilter.ALL)
 
@@ -184,8 +183,7 @@ constructor(
 
     fun loadSuggestions() {
         viewModelScope.launch {
-            val prefs = tasteProfileRepository.getTasteProfile().first()
-            _suggestions.value = youtubeRepository.buildSuggestions(prefs)
+            _suggestions.value = youtubeRepository.buildSuggestions(null)
         }
     }
 

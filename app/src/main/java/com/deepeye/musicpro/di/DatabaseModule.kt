@@ -161,12 +161,6 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun providePersonalizedSectionDao(
-        database: AppDatabase
-    ): com.deepeye.musicpro.data.cache.dao.PersonalizedSectionDao = database.personalizedSectionDao()
-
-    @Provides
-    @Singleton
     fun provideHiddenContentDao(
         database: AppDatabase
     ): com.deepeye.musicpro.data.cache.dao.HiddenContentDao = database.hiddenContentDao()

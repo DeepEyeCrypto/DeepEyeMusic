@@ -8,6 +8,32 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30084,
+                versionName = "3.0.1.74",
+                releaseDate = "October 2026",
+                title = "Search-Omega: Universal InnerTube Discovery Engine 🔍⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "TVHTML5 Search Engine: Integrated authenticated /youtubei/v1/search endpoint with robust recursive parsing.",
+                        "Debounced Search: 500ms reactive debouncing and distinct query emissions for ultra-fast, throttled search queries.",
+                        "Instant Queue & Discovery: Direct tap-to-play with immediate ExoPlayer queue streaming and smooth navigation."
+                    ),
+            ),
+            ChangelogEntry(
+                versionCode = 30083,
+                versionName = "3.0.1.73",
+                releaseDate = "October 2026",
+                title = "Purge-Omega: Final Persistence & Sync Cleanup 🗑️⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Final Cleanup: Permanently deleted all remaining local persistence structures (TasteProfile, CloudSync, AccountPersonalizationCache).",
+                        "Architecture Scrub: Stripped dangling DI bindings and Database DAOs for total codebase decoupling.",
+                        "Sterilization: Complete sterilization of all ViewModel dependencies to ensure pure reliance on YouTube InnerTube algorithms."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30082,
                 versionName = "3.0.1.72",
                 releaseDate = "October 2026",

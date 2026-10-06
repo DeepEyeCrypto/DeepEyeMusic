@@ -1,7 +1,6 @@
 package com.deepeye.musicpro.data.repository
 
 import android.util.Log
-import com.deepeye.musicpro.data.prefs.TasteProfile
 import com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.domain.model.search.SearchFilter
@@ -111,7 +110,7 @@ class YouTubeRepository @Inject constructor(
         authenticatedClient.getTrending()
     }
 
-    suspend fun buildSuggestions(prefs: TasteProfile?): List<String> =
+    suspend fun buildSuggestions(prefs: Any? = null): List<String> =
         searchRepository.buildSuggestions(prefs)
 
     suspend fun clearCache() {

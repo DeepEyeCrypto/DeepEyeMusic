@@ -6,7 +6,6 @@ package com.deepeye.musicpro.di
 import com.deepeye.musicpro.account.AccountDataSource
 import com.deepeye.musicpro.account.AccountScopedCacheInvalidator
 import com.deepeye.musicpro.account.SettingsAccountDataSourceImpl
-import com.deepeye.musicpro.data.cache.AccountPersonalizationCache
 import com.deepeye.musicpro.data.repository.PersonalizationRepositoryImpl
 import com.deepeye.musicpro.domain.repository.PersonalizationRepository
 import dagger.Binds
@@ -70,11 +69,9 @@ abstract class PersonalizationModule {
 
         @Provides
         @Singleton
-        fun provideCacheInvalidator(
-            accountPersonalizationCache: AccountPersonalizationCache,
-        ): AccountScopedCacheInvalidator =
-            AccountScopedCacheInvalidator { accountKey ->
-                accountPersonalizationCache.invalidateAccount(accountKey)
+        fun provideCacheInvalidator(): AccountScopedCacheInvalidator =
+            AccountScopedCacheInvalidator { _ ->
+                // Cache handled purely by HTTP layer
             }
     }
 }

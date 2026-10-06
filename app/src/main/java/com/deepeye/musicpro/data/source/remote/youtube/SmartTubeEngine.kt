@@ -11,6 +11,8 @@ import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedItem
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedItemType
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedSection
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedSectionType
+import com.deepeye.musicpro.domain.model.search.SearchFilter
+import com.deepeye.musicpro.domain.model.search.SearchResultItem
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -367,6 +369,163 @@ class SmartTubeEngine @Inject constructor(
             }
         } catch (_: Exception) {
             0L
+        }
+    }
+
+    /**
+     * Executes universal search using SmartTube TVHTML5 /youtubei/v1/search endpoint.
+     */
+    suspend fun searchTracks(query: String): Result<List<SearchResultItem>> = withContext(Dispatchers.IO) {
+        if (query.isBlank()) return@withContext Result.success(emptyList())
+
+        val escapedQuery = JSONObject.quote(query)
+        val extraJson = "\"query\": $escapedQuery"
+
+        val json = postInnerTube("search", extraJson)
+            ?: return@withContext Result.failure(Exception("SmartTube search network or parse error"))
+
+        try {
+            val tracks = mutableListOf<SearchResultItem>()
+            parseSearchResultsRecursively(json, tracks)
+            val distinctTracks = tracks.distinctBy { it.videoId ?: it.id }
+            Result.success(distinctTracks)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing search results", e)
+            Result.failure(e)
+        }
+    }
+
+    private fun parseSearchResultsRecursively(node: Any?, results: MutableList<SearchResultItem>) {
+        if (node == null) return
+        when (node) {
+            is JSONObject -> {
+                if (node.has("videoRenderer")) {
+                    extractVideoRenderer(node.optJSONObject("videoRenderer"), results)
+                } else if (node.has("compactVideoRenderer")) {
+                    extractVideoRenderer(node.optJSONObject("compactVideoRenderer"), results)
+                } else if (node.has("gridVideoRenderer")) {
+                    extractVideoRenderer(node.optJSONObject("gridVideoRenderer"), results)
+                } else if (node.has("musicResponsiveListItemRenderer")) {
+                    extractMusicResponsiveItem(node.optJSONObject("musicResponsiveListItemRenderer"), results)
+                } else if (node.has("musicTwoRowItemRenderer")) {
+                    extractMusicTwoRowItem(node.optJSONObject("musicTwoRowItemRenderer"), results)
+                } else {
+                    val keys = node.keys()
+                    while (keys.hasNext()) {
+                        val key = keys.next()
+                        parseSearchResultsRecursively(node.opt(key), results)
+                    }
+                }
+            }
+            is JSONArray -> {
+                for (i in 0 until node.length()) {
+                    parseSearchResultsRecursively(node.opt(i), results)
+                }
+            }
+        }
+    }
+
+    private fun extractVideoRenderer(json: JSONObject?, results: MutableList<SearchResultItem>) {
+        if (json == null) return
+        var videoId = json.optString("videoId", "")
+        if (videoId.isBlank()) {
+            videoId = json.optJSONObject("navigationEndpoint")
+                ?.optJSONObject("watchEndpoint")
+                ?.optString("videoId", "") ?: ""
+        }
+        if (videoId.isBlank()) return
+
+        val title = parseRunsText(json.optJSONObject("title"))
+        val artist = parseRunsText(json.optJSONObject("ownerText") ?: json.optJSONObject("shortBylineText") ?: json.optJSONObject("longBylineText"))
+        val thumb = extractThumbnailUrl(json.optJSONObject("thumbnail")) ?: "https://img.youtube.com/vi/$videoId/hqdefault.jpg"
+
+        if (title.isNotBlank()) {
+            results.add(
+                SearchResultItem(
+                    id = videoId,
+                    title = title,
+                    subtitle = artist.ifBlank { "YouTube" },
+                    type = SearchFilter.VIDEOS,
+                    thumbnailUrl = thumb,
+                    artist = artist.ifBlank { "YouTube" },
+                    channelId = json.optJSONObject("ownerText")?.optJSONArray("runs")?.optJSONObject(0)?.optJSONObject("navigationEndpoint")?.optJSONObject("browseEndpoint")?.optString("browseId"),
+                    videoId = videoId,
+                )
+            )
+        }
+    }
+
+    private fun extractMusicResponsiveItem(json: JSONObject?, results: MutableList<SearchResultItem>) {
+        if (json == null) return
+        var videoId = json.optJSONObject("playlistItemData")?.optString("videoId", "") ?: ""
+        if (videoId.isBlank()) {
+            videoId = json.optJSONObject("overlay")
+                ?.optJSONObject("musicItemThumbnailOverlayRenderer")
+                ?.optJSONObject("content")
+                ?.optJSONObject("musicPlayButtonRenderer")
+                ?.optJSONObject("playNavigationEndpoint")
+                ?.optJSONObject("watchEndpoint")
+                ?.optString("videoId", "") ?: ""
+        }
+        if (videoId.isBlank()) {
+            videoId = json.optJSONObject("doubleTapCommand")
+                ?.optJSONObject("watchEndpoint")
+                ?.optString("videoId", "") ?: ""
+        }
+        if (videoId.isBlank()) return
+
+        val flexColumns = json.optJSONArray("flexColumns")
+        var title = ""
+        var artist = ""
+        if (flexColumns != null && flexColumns.length() > 0) {
+            val col0 = flexColumns.optJSONObject(0)?.optJSONObject("musicResponsiveListItemFlexColumnRenderer")?.optJSONObject("text")
+            title = parseRunsText(col0)
+            if (flexColumns.length() > 1) {
+                val col1 = flexColumns.optJSONObject(1)?.optJSONObject("musicResponsiveListItemFlexColumnRenderer")?.optJSONObject("text")
+                artist = parseRunsText(col1)
+            }
+        }
+
+        val thumb = extractThumbnailUrl(json.optJSONObject("thumbnail")) ?: "https://img.youtube.com/vi/$videoId/hqdefault.jpg"
+
+        if (title.isNotBlank()) {
+            results.add(
+                SearchResultItem(
+                    id = videoId,
+                    title = title,
+                    subtitle = artist.ifBlank { "YouTube Music" },
+                    type = SearchFilter.SONGS,
+                    thumbnailUrl = thumb,
+                    artist = artist.ifBlank { "YouTube Music" },
+                    videoId = videoId,
+                )
+            )
+        }
+    }
+
+    private fun extractMusicTwoRowItem(json: JSONObject?, results: MutableList<SearchResultItem>) {
+        if (json == null) return
+        val videoId = json.optJSONObject("navigationEndpoint")
+            ?.optJSONObject("watchEndpoint")
+            ?.optString("videoId", "") ?: ""
+        if (videoId.isBlank()) return
+
+        val title = parseRunsText(json.optJSONObject("title"))
+        val artist = parseRunsText(json.optJSONObject("subtitle"))
+        val thumb = extractThumbnailUrl(json.optJSONObject("thumbnailRenderer")) ?: "https://img.youtube.com/vi/$videoId/hqdefault.jpg"
+
+        if (title.isNotBlank()) {
+            results.add(
+                SearchResultItem(
+                    id = videoId,
+                    title = title,
+                    subtitle = artist.ifBlank { "YouTube" },
+                    type = SearchFilter.SONGS,
+                    thumbnailUrl = thumb,
+                    artist = artist.ifBlank { "YouTube" },
+                    videoId = videoId,
+                )
+            )
         }
     }
 }

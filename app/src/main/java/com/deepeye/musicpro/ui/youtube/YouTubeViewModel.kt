@@ -45,7 +45,6 @@ constructor(
     private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
     private val playerController: PlayerController,
     private val homeFeedRepository: com.deepeye.musicpro.data.repository.HomeFeedRepository,
-    private val tasteProfileRepository: com.deepeye.musicpro.domain.repository.TasteProfileRepository,
     private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
     private val authClient: com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient,
     private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
@@ -227,14 +226,7 @@ constructor(
                 }
             }
             
-            try {
-                val prefs = tasteProfileRepository.getTasteProfile().first()
-                val langString = prefs.preferredLanguages.joinToString(" ")
-                val finalQuery = if (langString.isNotEmpty() && category != "News") "$baseQuery $langString" else baseQuery
-                fetchVideos(finalQuery)
-            } catch (e: Exception) {
-                fetchVideos(baseQuery)
-            }
+            fetchVideos(baseQuery)
         }
     }
 

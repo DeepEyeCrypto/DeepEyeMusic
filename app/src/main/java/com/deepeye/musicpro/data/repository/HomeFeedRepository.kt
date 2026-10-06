@@ -10,7 +10,6 @@ import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.domain.repository.MusicRepository
 import com.deepeye.musicpro.dsp.engine.DSPEngine
-import com.deepeye.musicpro.domain.repository.TasteProfileRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -31,7 +30,6 @@ constructor(
     private val recommendationDao: RecommendationDao,
     private val dspEngine: DSPEngine,
     private val libraryRepo: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
-    private val tasteProfileRepo: TasteProfileRepository,
     private val authClient: AuthenticatedYouTubeClient,
     private val settingsDataStore: SettingsDataStore,
     private val historyRepo: com.deepeye.musicpro.domain.repository.HistoryRepository,
@@ -40,10 +38,9 @@ constructor(
 
     suspend fun getHomeFeed(): HomeFeedState =
         withContext(ioDispatcher) {
-            val tasteProfile = try { tasteProfileRepo.getTasteProfile().first() } catch (e: Exception) { null }
-            val preferredLangs = tasteProfile?.preferredLanguages ?: emptySet()
-            val langsToInclude = preferredLangs.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: "hindi punjabi english"
-            val artists = tasteProfile?.favoriteArtists?.takeIf { it.isNotEmpty() }?.joinToString(" ") ?: ""
+            val preferredLangs = emptySet<String>()
+            val langsToInclude = "hindi punjabi english"
+            val artists = ""
             
             // Build negative constraints for non-preferred languages to stop YouTube API bleed
             val negativeKeywords = com.deepeye.musicpro.domain.util.LanguageUtils.buildNegativeLanguageConstraints(preferredLangs)

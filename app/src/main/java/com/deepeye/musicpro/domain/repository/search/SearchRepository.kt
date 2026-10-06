@@ -1,7 +1,7 @@
 package com.deepeye.musicpro.domain.repository.search
 
 import com.deepeye.musicpro.data.cache.CacheManager
-import com.deepeye.musicpro.data.prefs.TasteProfile
+import com.deepeye.musicpro.data.source.remote.youtube.SmartTubeEngine
 import com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
 import com.deepeye.musicpro.domain.model.search.SearchFilter
 import com.deepeye.musicpro.domain.model.search.SearchResultItem
@@ -15,6 +15,7 @@ import javax.inject.Inject
 class SearchRepository
 @Inject
 constructor(
+    private val smartTubeEngine: SmartTubeEngine,
     private val contentFetcher: ContentFetcher,
     private val cacheManager: CacheManager,
     private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
@@ -28,6 +29,18 @@ constructor(
         withContext(Dispatchers.IO) {
             if (query.isBlank()) return@withContext emptyList()
 
+            // 1. Primary: SmartTube TVHTML5 /youtubei/v1/search endpoint with Bearer token
+            val smartTubeResult = smartTubeEngine.searchTracks(query)
+            if (smartTubeResult.isSuccess) {
+                val items = smartTubeResult.getOrNull().orEmpty()
+                if (items.isNotEmpty()) {
+                    return@withContext items
+                        .let { applyFilter(it, filter) }
+                        .let { applySort(it, sort) }
+                }
+            }
+
+            // 2. Secondary fallback: Local cache & remote data source
             val cachedVideoItems = cacheManager.loadSearchResults(query).orEmpty()
             val cached =
                 cachedVideoItems.map { video ->
@@ -45,34 +58,7 @@ constructor(
 
             val remote =
                 try {
-                    val fetched =
-                        if (com.deepeye.musicpro.BuildConfig.YOUTUBE_API_KEY.isNotEmpty()) {
-                            try {
-                                android.util.Log.d(
-                                    "SearchRepo",
-                                    "YOUTUBE_API_KEY is non-empty. Fetching from contentFetcher..."
-                                )
-                                when (filter) {
-                                    SearchFilter.ARTISTS -> contentFetcher.searchByArtist(query, 20)
-                                    SearchFilter.VIDEOS -> contentFetcher.searchByQuery("$query music video", 20)
-                                    SearchFilter.SONGS -> contentFetcher.searchByQuery("$query song", 20)
-                                    SearchFilter.ALBUMS -> contentFetcher.searchByQuery("$query album", 20)
-                                    else -> contentFetcher.searchByQuery(query, 30)
-                                }
-                            } catch (e: Exception) {
-                                android.util.Log.e(
-                                    "SearchRepo",
-                                    "ContentFetcher failed, falling back to Innertube: ${e.message}",
-                                    e
-                                )
-                                fetchFromInnertubeDataSource(query, filter)
-                            }
-                        } else {
-                            android.util.Log.d("SearchRepo", "YOUTUBE_API_KEY is empty, calling Innertube directly...")
-                            fetchFromInnertubeDataSource(query, filter)
-                        }
-
-                    android.util.Log.d("SearchRepo", "Fetched ${fetched.size} items from remote source")
+                    val fetched = fetchFromInnertubeDataSource(query, filter)
                     cacheManager.saveSearchResults(query, fetched)
                     fetched.map { video ->
                         SearchResultItem(
@@ -87,7 +73,7 @@ constructor(
                         )
                     }
                 } catch (e: Exception) {
-                    android.util.Log.e("SearchRepo", "Search mapping/caching failed: ${e.message}", e)
+                    android.util.Log.e("SearchRepo", "Search mapping/caching fallback failed: ${e.message}", e)
                     emptyList()
                 }
 
@@ -97,10 +83,6 @@ constructor(
                     .let { applyFilter(it, filter) }
                     .let { applySort(it, sort) }
 
-            android.util.Log.d(
-                "SearchRepo",
-                "Search returned ${merged.size} items in total (cached=${cached.size}, remote=${remote.size})"
-            )
             merged
         }
 
@@ -167,14 +149,15 @@ constructor(
         }
     }
 
-    suspend fun buildSuggestions(prefs: TasteProfile?): List<String> {
-        val base = mutableListOf<String>()
-        if (prefs != null) {
-            base += prefs.preferredLanguages.map { "$it songs" }
-            base += prefs.favoriteArtists.map { it }
-            base += prefs.preferredGenres.map { "$it music" }
-        }
-        base += listOf("trending songs", "new releases", "top music videos")
+    suspend fun buildSuggestions(prefs: Any? = null): List<String> {
+        val base = mutableListOf(
+            "trending songs",
+            "new releases",
+            "top music videos",
+            "hindi songs",
+            "punjabi songs",
+            "english hits"
+        )
         return base.distinct().take(12)
     }
 

@@ -39,7 +39,6 @@ constructor(
     private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
     private val gamificationRepository: com.deepeye.musicpro.domain.repository.GamificationRepository,
     private val aiRadioEngine: com.deepeye.musicpro.domain.ai.AIRadioEngine,
-    private val cloudSyncManager: com.deepeye.musicpro.domain.sync.CloudSyncManager,
     val rankingRepository: com.deepeye.musicpro.domain.ranking.RankingRepository,
     val rankingEngine: com.deepeye.musicpro.domain.ranking.RankingEngine,
 ) : ViewModel() {
@@ -70,7 +69,6 @@ constructor(
         viewModelScope.launch { 
             gamificationEngine.restoreFromFirestore()
             gamificationEngine.checkAndUpdateStreak() 
-            cloudSyncManager.syncAllData()
             gamificationEngine.forceSyncToFirestore()
         }
         fetchBtcPrice()

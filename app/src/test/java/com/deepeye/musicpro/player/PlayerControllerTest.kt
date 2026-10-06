@@ -40,9 +40,6 @@ class PlayerControllerTest {
     private val historyRepository = mockk<com.deepeye.musicpro.domain.repository.HistoryRepository>(relaxed = true)
     private val audioSessionManager = mockk<com.deepeye.musicpro.dsp.session.AudioSessionManager>(relaxed = true)
     private val dspEngine = mockk<DSPEngine>(relaxed = true)
-    private val tasteProfileRepository = mockk<com.deepeye.musicpro.domain.repository.TasteProfileRepository>(
-        relaxed = true
-    )
     private val musicRepository = mockk<com.deepeye.musicpro.domain.repository.MusicRepository>(relaxed = true)
     private val autoplayRepository = mockk<com.deepeye.musicpro.domain.autoplay.AutoplayRepository>(relaxed = true)
     private val sleepTimerManager = mockk<com.deepeye.musicpro.player.timer.SleepTimerManager>(relaxed = true)
@@ -76,7 +73,6 @@ class PlayerControllerTest {
             sourceResolverManager = sourceResolverManager,
             audioSessionManager = audioSessionManager,
             dspEngine = dspEngine,
-            tasteProfileRepository = tasteProfileRepository,
             historyRepository = historyRepository,
             musicRepository = musicRepository,
             autoplayRepository = autoplayRepository,
@@ -106,7 +102,6 @@ class PlayerControllerTest {
                     sourceResolverManager = sourceResolverManager,
                     audioSessionManager = audioSessionManager,
                     dspEngine = dspEngine,
-                    tasteProfileRepository = tasteProfileRepository,
                     historyRepository = historyRepository,
                     musicRepository = musicRepository,
                     autoplayRepository = autoplayRepository,

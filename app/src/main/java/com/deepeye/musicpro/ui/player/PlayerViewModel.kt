@@ -25,7 +25,6 @@ constructor(
     private val visualizerEngine: VisualizerEngine,
     private val colorExtractor: ColorExtractor,
     private val downloadManager: com.deepeye.musicpro.player.download.MusicDownloadManager,
-    private val tasteProfileRepository: com.deepeye.musicpro.domain.repository.TasteProfileRepository,
     private val lyricsRepository: com.deepeye.musicpro.domain.lyrics.LyricsRepository,
     private val sleepTimerManager: com.deepeye.musicpro.player.timer.SleepTimerManager,
     private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
@@ -37,17 +36,8 @@ constructor(
     val autoplayState: StateFlow<com.deepeye.musicpro.domain.autoplay.AutoplayState> = playerController.autoplayState
     val player = playerController.player
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val currentSongFeedback: StateFlow<com.deepeye.musicpro.data.db.UserFeedback?> =
-        playerController.playerState
-            .map { it.currentItem?.id }
-            .flatMapLatest { songId ->
-                if (songId != null) {
-                    tasteProfileRepository.getFeedbackFlow(songId)
-                } else {
-                    flowOf(null)
-                }
-            }
+        flowOf<com.deepeye.musicpro.data.db.UserFeedback?>(null)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _dominantColor = MutableStateFlow(Color(0xFF7B3FE4))
@@ -387,16 +377,13 @@ constructor(
         fun likeTrack(liked: Boolean) {
         val currentItem = playerState.value.currentItem ?: return
         val currentId = currentItem.id
-        val previousLiked = playerState.value.isLiked
-        val previousDisliked = playerState.value.isDisliked
 
         // 1. Optimistic UI update
         playerController.updateLikeState(isLiked = liked, isDisliked = false)
 
         viewModelScope.launch(Dispatchers.IO) {
-            var success = false
             try {
-                success = if (liked) {
+                if (liked) {
                     authClient.likeVideo(currentId)
                 } else {
                     authClient.removeLike(currentId)
@@ -405,14 +392,7 @@ constructor(
                 android.util.Log.e("PlayerViewModel", "Like mutation failed", e)
             }
 
-            // Fallback / sync local DB
-            if (!success) {
-                // If remote mutation was rejected, check if we were unauthenticated, keep local optimistic or revert on hard network error
-                android.util.Log.w("PlayerViewModel", "Remote like returned false, operating in offline/local sync mode")
-            }
-
             kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
-                tasteProfileRepository.recordFeedback(currentId, liked = liked, dontPlayAgain = false)
                 if (liked) {
                     libraryRepository.likeTrack(currentId, currentItem.title, currentItem.artist, "")
                 } else {
@@ -442,10 +422,6 @@ constructor(
             } catch (e: Exception) {
                 android.util.Log.e("PlayerViewModel", "Dislike mutation failed", e)
             }
-
-            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
-                tasteProfileRepository.recordFeedback(currentId, liked = false, dontPlayAgain = targetDisliked)
-            }
         }
     }
 
@@ -453,10 +429,9 @@ constructor(
     fun blockTrack() {
         val currentId = playerState.value.currentItem?.id ?: return
         viewModelScope.launch {
-            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
-                // Block is dislike + dontPlayAgain
-                tasteProfileRepository.recordFeedback(currentId, liked = false, dontPlayAgain = true)
-            }
+            try {
+                authClient.dislikeVideo(currentId)
+            } catch (e: Exception) {}
             // Automatically advance to the next track!
             next()
         }

@@ -7,11 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deepeye.musicpro.data.prefs.AppSettings
 import com.deepeye.musicpro.data.prefs.SettingsDataStore
-import com.deepeye.musicpro.data.prefs.TasteProfile
 import com.deepeye.musicpro.data.prefs.ThemeMode
 import com.deepeye.musicpro.data.source.remote.update.AutoUpdateManager
 import com.deepeye.musicpro.data.source.remote.update.UpdateState
-import com.deepeye.musicpro.domain.repository.TasteProfileRepository
 import com.deepeye.musicpro.domain.usecase.SyncLibraryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +22,6 @@ import javax.inject.Inject
 data class SettingsUiState(
     val settings: AppSettings = AppSettings(),
     val isRescanningLibrary: Boolean = false,
-    val tasteProfile: TasteProfile = TasteProfile(),
     val updateState: UpdateState = UpdateState.Idle,
     val notificationsEnabled: Boolean = true,
 )
@@ -35,9 +32,7 @@ class SettingsViewModel
 constructor(
     private val settingsDataStore: SettingsDataStore,
     private val syncLibraryUseCase: SyncLibraryUseCase,
-    private val tasteProfileRepository: TasteProfileRepository,
     private val autoUpdateManager: AutoUpdateManager,
-    private val cloudSyncManager: com.deepeye.musicpro.domain.sync.CloudSyncManager,
     private val notificationStateRepo: com.deepeye.musicpro.data.repository.notification.NotificationStateRepo
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -51,11 +46,6 @@ constructor(
         viewModelScope.launch {
             settingsDataStore.settings.collect { settings ->
                 _uiState.value = _uiState.value.copy(settings = settings)
-            }
-        }
-        viewModelScope.launch {
-            tasteProfileRepository.getTasteProfile().collect { profile ->
-                _uiState.value = _uiState.value.copy(tasteProfile = profile)
             }
         }
         viewModelScope.launch {
@@ -105,15 +95,11 @@ constructor(
     }
 
     fun setPreferredLanguages(languages: Set<String>) {
-        viewModelScope.launch {
-            tasteProfileRepository.updatePreferredLanguages(languages)
-        }
+        // No-op: handled by YouTube InnerTube
     }
 
     fun setFavoriteArtists(artists: Set<String>) {
-        viewModelScope.launch {
-            tasteProfileRepository.updateFavoriteArtists(artists)
-        }
+        // No-op: handled by YouTube InnerTube
     }
 
     fun rescanLibrary() {
@@ -128,9 +114,7 @@ constructor(
     }
 
     fun forceCloudSync() {
-        viewModelScope.launch {
-            cloudSyncManager.syncAllData()
-        }
+        // No-op: synced directly with InnerTube
     }
 
     fun setNotificationsEnabled(enabled: Boolean) {

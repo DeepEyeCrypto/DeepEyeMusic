@@ -49,7 +49,6 @@ sealed class AuthState {
 class AuthViewModel @Inject constructor(
     private val rankingRepository: RankingRepository,
     private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
-    private val cloudRestoreManager: com.deepeye.musicpro.domain.sync.CloudRestoreManager,
     private val settingsDataStore: SettingsDataStore,
     private val accountSessionManager: AccountSessionManager,
     @com.deepeye.musicpro.di.ApplicationScope private val appScope: CoroutineScope,
@@ -153,7 +152,6 @@ class AuthViewModel @Inject constructor(
                     appScope.launch {
                         try {
                             gamificationEngine.restoreFromFirestore()
-                            cloudRestoreManager.restoreAllData()
                         } catch (e: Exception) {
                             Log.e("AuthViewModel", "Background sync after sign in failed", e)
                         }
@@ -185,7 +183,6 @@ class AuthViewModel @Inject constructor(
                     appScope.launch {
                         try {
                             gamificationEngine.restoreFromFirestore()
-                            cloudRestoreManager.restoreAllData()
                         } catch (e: Exception) {
                             Log.e("AuthViewModel", "Background sync after sign in failed", e)
                         }
@@ -218,7 +215,6 @@ class AuthViewModel @Inject constructor(
                     appScope.launch {
                         try {
                             gamificationEngine.restoreFromFirestore()
-                            cloudRestoreManager.restoreAllData()
                         } catch (e: Exception) {
                             Log.e("AuthViewModel", "Background sync after sign up failed", e)
                         }
