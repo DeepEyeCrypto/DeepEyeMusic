@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30082,
+                versionName = "3.0.1.72",
+                releaseDate = "October 2026",
+                title = "Purge-Omega: Native TVHTML5 InnerTube Architecture Finalized 🗑️⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Codebase Purge Complete: Permanently removed all on-device math scoring, MMR diversity rankers, and predictive background workers.",
+                        "Direct SmartTube Proxying: 100% authentic recommendations and mixes streamed from YouTube TVHTML5 InnerTube algorithms.",
+                        "Interaction & Two-Way Sync: Zero-latency optimistic UI with instant YouTube cloud like/dislike/subscription sync."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30081,
                 versionName = "3.0.1.71",
                 releaseDate = "October 2026",
