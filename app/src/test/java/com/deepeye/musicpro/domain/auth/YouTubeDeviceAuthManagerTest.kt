@@ -7,6 +7,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Response
 import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -44,7 +45,7 @@ class YouTubeDeviceAuthManagerTest {
                 .protocol(Protocol.HTTP_1_1)
                 .code(code)
                 .message("test")
-                .body(ResponseBody.create(jsonMedia, body))
+                .body(body.toResponseBody(jsonMedia))
                 .build()
     }
 
