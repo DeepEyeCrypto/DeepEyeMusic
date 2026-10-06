@@ -8,6 +8,20 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30078,
+                versionName = "3.0.1.68",
+                releaseDate = "October 2026",
+                title = "Auto-Omega MediaLibraryService & Android Auto Ecosystem 🚗⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "MediaLibraryService Architecture: Upgraded to Media3 MediaLibraryService & MediaLibrarySession with full root browsing hierarchy (Queue, History, Mixes).",
+                        "Android Auto Projection: Direct com.google.android.gms.car.application automotive integration with seamless playback resumption on car head units.",
+                        "Hardware Steering Wheel Controls: Key events (Next, Prev, Play, Pause) routed directly via onMediaButtonEvent.",
+                        "512x512 Lockscreen & Head Unit Artwork: Background Coil caching downscaling cover art to 512x512 for rich system notifications and car displays."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30077,
                 versionName = "3.0.1.67",
                 releaseDate = "October 2026",

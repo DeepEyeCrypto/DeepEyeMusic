@@ -138,6 +138,12 @@
 
         <!-- Android Auto: templated, driver-safe surface. The host binds only via the
              CarAppService interface and renders our templates, never custom views. -->
+        <!-- Android Auto Automotive Application Metadata -->
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+
+        <!-- Automotive Android Auto Templated UI Host Binding -->
         <service
             android:name=".auto.DeepEyeCarAppService"
             android:exported="true">
@@ -150,12 +156,15 @@
                 android:value="1" />
         </service>
 
+        <!-- Media3 MediaLibraryService for Full Android Auto, WearOS & Lockscreen Controls -->
         <service
             android:name=".player.service.MusicPlayerService"
             android:exported="true"
             android:foregroundServiceType="mediaPlayback">
             <intent-filter>
+                <action android:name="androidx.media3.session.MediaLibraryService" />
                 <action android:name="androidx.media3.session.MediaSessionService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
             <meta-data
                 android:name="androidx.media3.session.notification.small_icon"
