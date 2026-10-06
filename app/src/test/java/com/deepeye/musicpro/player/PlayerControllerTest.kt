@@ -85,7 +85,6 @@ class PlayerControllerTest {
             gamificationEngine = mockk(relaxed = true),
             tubeSimulatorProcessor = mockk(relaxed = true),
             dspController = mockk(relaxed = true),
-            cloudSyncManager = mockk(relaxed = true),
             lyricsRepository = mockk(relaxed = true),
             context = context,
         )
@@ -114,7 +113,6 @@ class PlayerControllerTest {
                     gamificationEngine = mockk(relaxed = true),
                     tubeSimulatorProcessor = mockk(relaxed = true),
                     dspController = mockk(relaxed = true),
-                    cloudSyncManager = mockk(relaxed = true),
                     lyricsRepository = mockk(relaxed = true),
                     context = context,
                 )
