@@ -147,40 +147,50 @@ private fun AgslRuntimeShaderRenderer(
             }
         }
 
-        // 1. Update and bind Audio FFT 256x1 Bitmap Texture Bridge to iChannel0
-        val audioShader = dataBridge.updateAudioTexture(spectrum, bands)
-        activeShader.setInputShader("iChannel0", audioShader)
+        // 1. Update and bind Audio FFT 256x1 Bitmap Texture Bridge to iChannel0 safely
+        runCatching {
+            val audioShader = dataBridge.updateAudioTexture(spectrum, bands)
+            activeShader.setInputShader("iChannel0", audioShader)
+        }
 
-        // 2. Set float uniforms
-        activeShader.setFloatUniform("iResolution", size.width, size.height)
-        activeShader.setFloatUniform("iTime", time)
-        activeShader.setFloatUniform("iBass", bass)
-        activeShader.setFloatUniform("iMid", mids)
-        activeShader.setFloatUniform("iTreble", treble)
-        activeShader.setFloatUniform("iPeak", peak)
-        activeShader.setFloatUniform(
-            "iAccentColor",
-            accentColor.red,
-            accentColor.green,
-            accentColor.blue,
-            accentColor.alpha
-        )
-        activeShader.setFloatUniform(
-            "iColorPrimary",
-            primaryColor.red,
-            primaryColor.green,
-            primaryColor.blue,
-            primaryColor.alpha
-        )
-        activeShader.setFloatUniform(
-            "iColorSecondary",
-            secondaryColor.red,
-            secondaryColor.green,
-            secondaryColor.blue,
-            secondaryColor.alpha
-        )
+        // 2. Set float uniforms safely
+        runCatching { activeShader.setFloatUniform("iResolution", size.width, size.height) }
+        runCatching { activeShader.setFloatUniform("iTime", time) }
+        runCatching { activeShader.setFloatUniform("iBass", bass) }
+        runCatching { activeShader.setFloatUniform("iMid", mids) }
+        runCatching { activeShader.setFloatUniform("iTreble", treble) }
+        runCatching { activeShader.setFloatUniform("iPeak", peak) }
+        runCatching {
+            activeShader.setFloatUniform(
+                "iAccentColor",
+                accentColor.red,
+                accentColor.green,
+                accentColor.blue,
+                accentColor.alpha
+            )
+        }
+        runCatching {
+            activeShader.setFloatUniform(
+                "iColorPrimary",
+                primaryColor.red,
+                primaryColor.green,
+                primaryColor.blue,
+                primaryColor.alpha
+            )
+        }
+        runCatching {
+            activeShader.setFloatUniform(
+                "iColorSecondary",
+                secondaryColor.red,
+                secondaryColor.green,
+                secondaryColor.blue,
+                secondaryColor.alpha
+            )
+        }
 
         // Draw shader directly onto GPU surface
-        drawRect(brush = activeBrush)
+        runCatching {
+            drawRect(brush = activeBrush)
+        }
     }
 }

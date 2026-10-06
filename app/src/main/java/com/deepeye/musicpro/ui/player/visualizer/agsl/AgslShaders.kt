@@ -23,6 +23,7 @@ object AgslShaders {
         uniform float iMid;
         uniform float iTreble;
         uniform float iPeak;
+        uniform shader iChannel0;
         uniform float4 iAccentColor;
         uniform float4 iColorPrimary;
         uniform float4 iColorSecondary;
@@ -116,6 +117,7 @@ object AgslShaders {
         uniform float iMid;
         uniform float iTreble;
         uniform float iPeak;
+        uniform shader iChannel0;
         uniform float4 iAccentColor;
         uniform float4 iColorPrimary;
         uniform float4 iColorSecondary;
@@ -172,6 +174,7 @@ object AgslShaders {
         uniform float iMid;
         uniform float iTreble;
         uniform float iPeak;
+        uniform shader iChannel0;
         uniform float4 iAccentColor;
         uniform float4 iColorPrimary;
         uniform float4 iColorSecondary;
@@ -223,6 +226,7 @@ object AgslShaders {
         uniform float iMid;
         uniform float iTreble;
         uniform float iPeak;
+        uniform shader iChannel0;
         uniform float4 iAccentColor;
         uniform float4 iColorPrimary;
         uniform float4 iColorSecondary;

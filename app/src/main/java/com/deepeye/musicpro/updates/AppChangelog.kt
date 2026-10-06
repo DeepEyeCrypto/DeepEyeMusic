@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30097,
+                versionName = "3.0.1.87",
+                releaseDate = "October 2026",
+                title = "AGSL GPU Visualizer Hardening & Shader Uniform Crash Fix 🛡️🎨",
+                highlight = true,
+                items =
+                    listOf(
+                        "AGSL Shader Uniform Injection: Explicitly injected uniform shader iChannel0 across all AGSL SkSL shaders (Liquid Plasma, Crystal Tunnel, Aura Orb, Cyber Grid).",
+                        "Zero-Crash Draw Loop: Wrapped AGSL RuntimeShader uniform updates and draw calls in resilient runCatching blocks to prevent Compose draw dispatch crashes.",
+                        "Direct GPU Audio Texture Binding: Stabilized 256x1 FFT audio spectrum texture sampling on Android 13+ GPU pipeline."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30096,
                 versionName = "3.0.1.86",
                 releaseDate = "October 2026",
