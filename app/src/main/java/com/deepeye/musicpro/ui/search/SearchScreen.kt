@@ -84,6 +84,8 @@ fun SearchScreen(
             }
     }
 
+    val hazeState = com.deepeye.musicpro.ui.LocalHazeState.current
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -92,9 +94,9 @@ fun SearchScreen(
                 Modifier
                     .fillMaxWidth()
                     .then(
-                        if (com.deepeye.musicpro.ui.LocalHazeState.current != null) {
+                        if (hazeState != null) {
                             Modifier.hazeEffect(
-                                state = com.deepeye.musicpro.ui.LocalHazeState.current!!,
+                                state = hazeState,
                                 style = HazeStyle(
                                     tint = HazeTint(Color(0xFF1D1E26).copy(alpha = 0.4f)),
                                     blurRadius = 32.dp,

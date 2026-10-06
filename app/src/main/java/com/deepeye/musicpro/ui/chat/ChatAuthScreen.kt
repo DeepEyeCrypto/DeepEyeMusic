@@ -281,9 +281,10 @@ fun ChatAuthScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
                 
-                if (errorMessage != null) {
+                val err = errorMessage
+                if (err != null) {
                     Text(
-                        text = errorMessage!!,
+                        text = err,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier

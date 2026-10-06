@@ -589,14 +589,16 @@ fun DeepEyeVideoPlayerOverlay(
                             Text("${volumeOsd}%", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                         }
                         seekOsd != null -> {
-                            val delta = seekOsd!! - currentPosition
+                            val currentSeek = seekOsd ?: 0L
+                            val delta = currentSeek - currentPosition
                             val sign = if (delta >= 0) "+" else ""
                             Icon(if (delta >= 0) Icons.Default.FastForward else Icons.Default.FastRewind, contentDescription = "Seek", tint = Color(0xFFFFB300), modifier = Modifier.size(22.dp))
-                            Text("${TimeFormatter.formatDuration(seekOsd!!)} ($sign${delta / 1000}s)", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                            Text("${TimeFormatter.formatDuration(currentSeek)} ($sign${delta / 1000}s)", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
                         }
                         zoomOsd != null -> {
+                            val currentZoom = zoomOsd ?: ""
                             Icon(Icons.Default.AspectRatio, contentDescription = "Zoom", tint = ElectricViolet, modifier = Modifier.size(22.dp))
-                            Text(zoomOsd!!, color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                            Text(currentZoom, color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                         }
                     }
                 }

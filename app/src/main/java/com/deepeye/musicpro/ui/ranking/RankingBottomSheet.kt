@@ -59,14 +59,15 @@ fun RankingBottomSheet(
                 textAlign = TextAlign.Center
             )
 
-            if (currentUserRank != null) {
+            val rank = currentUserRank
+            if (rank != null) {
                 Text(
                     text = "Your Standing",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
                 UserProfileCard(
-                    userRank = currentUserRank!!,
+                    userRank = rank,
                     rankingEngine = rankingEngine
                 )
             }

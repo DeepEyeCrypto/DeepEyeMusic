@@ -482,8 +482,8 @@ class AuthenticatedYouTubeClient @Inject constructor(
         if (id.isEmpty()) return null
 
         val metaRenderer = tileObj.optJSONObject("metadata")?.optJSONObject("tileMetadataRenderer")
-        val title = metaRenderer?.optJSONObject("title")?.optString("simpleText", null)
-            ?: metaRenderer?.optJSONObject("title")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
+        val title = metaRenderer?.optJSONObject("title")?.optString("simpleText", "")?.ifEmpty { null }
+            ?: metaRenderer?.optJSONObject("title")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", "")?.ifEmpty { null }
             ?: ""
 
         var channelName = ""
@@ -498,8 +498,8 @@ class AuthenticatedYouTubeClient @Inject constructor(
                 if (items != null) {
                     for (j in 0 until items.length()) {
                         val itemObj = items.optJSONObject(j)?.optJSONObject("lineItemRenderer")
-                        val text = itemObj?.optJSONObject("text")?.optString("simpleText", null)
-                            ?: itemObj?.optJSONObject("text")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
+                        val text = itemObj?.optJSONObject("text")?.optString("simpleText", "")?.ifEmpty { null }
+                            ?: itemObj?.optJSONObject("text")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", "")?.ifEmpty { null }
                             ?: ""
                         if (text.isNotBlank()) {
                             allTexts.add(text)
@@ -555,8 +555,8 @@ class AuthenticatedYouTubeClient @Inject constructor(
             for (i in 0 until overlays.length()) {
                 val timeRenderer = overlays.optJSONObject(i)?.optJSONObject("thumbnailOverlayTimeStatusRenderer")
                 if (timeRenderer != null) {
-                    val timeText = timeRenderer.optJSONObject("text")?.optString("simpleText", null)
-                        ?: timeRenderer.optJSONObject("text")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
+                    val timeText = timeRenderer.optJSONObject("text")?.optString("simpleText", "")?.ifEmpty { null }
+                        ?: timeRenderer.optJSONObject("text")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", "")?.ifEmpty { null }
                         ?: ""
                     durationSeconds = parseDuration(timeText)
                     break
@@ -585,7 +585,7 @@ class AuthenticatedYouTubeClient @Inject constructor(
         if (id.isEmpty()) return null
 
         val metaVm = lockupObj.optJSONObject("metadata")?.optJSONObject("lockupMetadataViewModel")
-        val title = metaVm?.optJSONObject("title")?.optString("content", null) ?: ""
+        val title = metaVm?.optJSONObject("title")?.optString("content", "") ?: ""
 
         var channelName = ""
         var viewText = ""
@@ -597,8 +597,8 @@ class AuthenticatedYouTubeClient @Inject constructor(
                 val parts = metadataRows.optJSONObject(i)?.optJSONArray("metadataParts")
                 if (parts != null) {
                     for (j in 0 until parts.length()) {
-                        val t = parts.optJSONObject(j)?.optJSONObject("text")?.optString("content", null)
-                            ?: parts.optJSONObject(j)?.optJSONObject("text")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", null)
+                        val t = parts.optJSONObject(j)?.optJSONObject("text")?.optString("content", "")?.ifEmpty { null }
+                            ?: parts.optJSONObject(j)?.optJSONObject("text")?.optJSONArray("runs")?.optJSONObject(0)?.optString("text", "")?.ifEmpty { null }
                             ?: ""
                         if (t.isNotBlank()) allTexts.add(t)
                     }
@@ -665,7 +665,7 @@ class AuthenticatedYouTubeClient @Inject constructor(
         if (overlays != null && overlays.length() > 0) {
             val badges = overlays.optJSONObject(0)?.optJSONObject("thumbnailBottomOverlayViewModel")?.optJSONArray("badges")
             if (badges != null && badges.length() > 0) {
-                durationText = badges.optJSONObject(0)?.optJSONObject("thumbnailBadgeViewModel")?.optString("text", null) ?: ""
+                durationText = badges.optJSONObject(0)?.optJSONObject("thumbnailBadgeViewModel")?.optString("text", "") ?: ""
             }
         }
 

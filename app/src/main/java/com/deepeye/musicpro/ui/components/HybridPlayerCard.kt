@@ -944,11 +944,12 @@ fun HybridPlayerCard(
                                         Spacer(Modifier.width(10.dp))
                                         Text(text = "${volumeOsd}%", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
                                     } else if (seekOsd != null) {
-                                        val delta = seekOsd!! - player.currentPosition
+                                        val currentSeek = seekOsd ?: 0L
+                                        val delta = currentSeek - player.currentPosition
                                         val sign = if (delta >= 0) "+" else ""
                                         Icon(imageVector = if (delta >= 0) Icons.Default.FastForward else Icons.Default.FastRewind, contentDescription = "Seek", tint = Color(0xFFFFB300), modifier = Modifier.size(24.dp))
                                         Spacer(Modifier.width(10.dp))
-                                        Text(text = "${com.deepeye.musicpro.core.utils.TimeFormatter.formatDuration(seekOsd!!)} ($sign${delta / 1000}s)", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+                                        Text(text = "${com.deepeye.musicpro.core.utils.TimeFormatter.formatDuration(currentSeek)} ($sign${delta / 1000}s)", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
                                     }
                                 }
                             }

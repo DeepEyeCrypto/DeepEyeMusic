@@ -8,6 +8,20 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30095,
+                versionName = "3.0.1.85",
+                releaseDate = "October 2026",
+                title = "Mantis Audit: Zero-Warning Compiler & Full Codebase Null-Safety Hardening 🛡️✨",
+                highlight = true,
+                items =
+                    listOf(
+                        "Compiler Warning Clean: Fixed 10 Java type mismatch warnings in AuthenticatedYouTubeClient by standardizing null-safe optString resolvers.",
+                        "Upgraded Deprecated APIs: Migrated Icons.Filled.Login to Icons.AutoMirrored.Filled.Login in Settings.",
+                        "Extractor Null-Safety: Eradicated forced unboxings (!!) across SmartTubeInnertubeExtractor and SmartTubeSourceRefreshUseCase.",
+                        "Compose State Hardening: Eliminated potential NPE vectors in SearchScreen, VideoPlayerOverlay, and Ranking sheets."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30094,
                 versionName = "3.0.1.84",
                 releaseDate = "October 2026",

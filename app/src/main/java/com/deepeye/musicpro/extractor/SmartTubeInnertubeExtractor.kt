@@ -651,7 +651,7 @@ class SmartTubeInnertubeExtractor(
             }
         }
         return best?.let {
-            val resolved = streamUrl(it)!!
+            val resolved = streamUrl(it)?.takeIf { url -> url.isNotBlank() } ?: return null
             ExtractorStreamResult(
                 url = resolved,
                 itag = it.optInt("itag", -1),
@@ -688,7 +688,7 @@ class SmartTubeInnertubeExtractor(
             }
         }
         return best?.let {
-            val resolved = streamUrl(it)!!
+            val resolved = streamUrl(it)?.takeIf { url -> url.isNotBlank() } ?: return null
             ExtractorStreamResult(
                 url = resolved,
                 itag = it.optInt("itag", -1),
@@ -725,7 +725,7 @@ class SmartTubeInnertubeExtractor(
             }
         }
         return best?.let {
-            val resolved = streamUrl(it)!!
+            val resolved = streamUrl(it)?.takeIf { url -> url.isNotBlank() } ?: return null
             ExtractorStreamResult(
                 url = resolved,
                 itag = it.optInt("itag", -1),

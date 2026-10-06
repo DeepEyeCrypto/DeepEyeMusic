@@ -85,12 +85,12 @@ class SmartTubeSourceRefreshUseCase @Inject constructor(
             if (isVideo && chosenVideoFormatId != null) {
                 val targetVFormat = resolved.videoFormats.firstOrNull { it.stableId == chosenVideoFormatId }
                 if (!targetVFormat?.streamUrl.isNullOrEmpty() && (targetVFormat?.isProgressive == true || resolved.hlsManifestUrl != null)) {
-                    effectiveUrl = targetVFormat!!.streamUrl
+                    effectiveUrl = targetVFormat?.streamUrl ?: effectiveUrl
                 }
             } else if (!isVideo && chosenAudioFormatId != null) {
                 val targetAFormat = resolved.audioFormats.firstOrNull { it.stableId == chosenAudioFormatId }
                 if (!targetAFormat?.streamUrl.isNullOrEmpty() && (targetAFormat?.isProgressive == true || resolved.hlsManifestUrl != null)) {
-                    effectiveUrl = targetAFormat!!.streamUrl
+                    effectiveUrl = targetAFormat?.streamUrl ?: effectiveUrl
                 }
             }
 
