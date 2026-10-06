@@ -8,6 +8,8 @@ import android.util.Log
 import com.deepeye.musicpro.domain.auth.InnerTubeAuthManager
 import com.deepeye.musicpro.domain.model.Song
 import com.deepeye.musicpro.domain.model.MusicTrack
+import com.deepeye.musicpro.domain.model.Lyrics
+import com.deepeye.musicpro.domain.model.LyricsLine
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedItem
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedItemType
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedSection
@@ -549,5 +551,79 @@ class SmartTubeEngine @Inject constructor(
                 )
             )
         }
+    }
+
+    /**
+     * Fetches timed/synchronized or plain lyrics from YouTube InnerTube /browse endpoint.
+     */
+    suspend fun fetchLyrics(browseId: String): Result<List<LyricsLine>> = withContext(Dispatchers.IO) {
+        if (browseId.isBlank()) return@withContext Result.failure(IllegalArgumentException("browseId cannot be blank"))
+        val extraJson = "\"browseId\": \"$browseId\""
+        val json = postInnerTube("browse", extraJson)
+            ?: return@withContext Result.failure(Exception("SmartTube browse network failure for lyrics"))
+
+        try {
+            val lyrics = parseLyricsBrowseResponse(json)
+            if (lyrics != null && lyrics.lines.isNotEmpty()) {
+                Result.success(lyrics.lines)
+            } else {
+                Result.failure(Exception("No lyrics found in browse response"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing lyrics payload for $browseId", e)
+            Result.failure(e)
+        }
+    }
+
+    private fun parseLyricsBrowseResponse(json: JSONObject): Lyrics? {
+        val sectionList = json.optJSONObject("contents")
+            ?.optJSONObject("sectionListRenderer")
+            ?.optJSONArray("contents") ?: return null
+
+        for (i in 0 until sectionList.length()) {
+            val section = sectionList.optJSONObject(i) ?: continue
+
+            // Strategy 1: musicTimedLyricsRenderer (Karaoke Synchronized)
+            val musicTimedLyricsRenderer = section.optJSONObject("musicTimedLyricsRenderer")
+            if (musicTimedLyricsRenderer != null) {
+                val timedLyricsData = musicTimedLyricsRenderer.optJSONArray("timedLyricsData")
+                if (timedLyricsData != null && timedLyricsData.length() > 0) {
+                    val lines = mutableListOf<LyricsLine>()
+                    for (j in 0 until timedLyricsData.length()) {
+                        val lineObj = timedLyricsData.optJSONObject(j) ?: continue
+                        val lyricLine = lineObj.optString("lyricLine", "").trim()
+                        val cueRange = lineObj.optJSONObject("cueRange")
+                        val startMs = cueRange?.optLong("startTimeMilliseconds") ?: 0L
+                        if (lyricLine.isNotEmpty()) {
+                            lines.add(LyricsLine(startMs, lyricLine))
+                        }
+                    }
+                    if (lines.isNotEmpty()) {
+                        return Lyrics(lines = lines.sortedBy { it.timestampMs }, isSynced = true)
+                    }
+                }
+            }
+
+            // Strategy 2: musicDescriptionShelfRenderer (Plain Text Lyrics)
+            val shelfRenderer = section.optJSONObject("musicDescriptionShelfRenderer")
+            if (shelfRenderer != null) {
+                val runs = shelfRenderer.optJSONObject("description")?.optJSONArray("runs")
+                if (runs != null && runs.length() > 0) {
+                    val fullText = StringBuilder()
+                    for (j in 0 until runs.length()) {
+                        fullText.append(runs.optJSONObject(j)?.optString("text", "") ?: "")
+                    }
+                    val plain = fullText.toString().trim()
+                    if (plain.isNotEmpty()) {
+                        val lines = plain.lines()
+                            .map { it.trim() }
+                            .filter { it.isNotEmpty() }
+                            .mapIndexed { idx, text -> LyricsLine(idx * 4000L, text) }
+                        return Lyrics(lines = lines, isSynced = false)
+                    }
+                }
+            }
+        }
+        return null
     }
 }

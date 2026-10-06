@@ -342,8 +342,9 @@ constructor(
                     val audioFormat = data.streamingData?.adaptiveFormats
                         ?.filter { it.mimeType?.contains("audio") == true }
                         ?.maxByOrNull { it.bitrate ?: 0 }
-                    if (audioFormat?.url != null) {
-                        StreamResult(audioFormat.url!!, isVideo = false)
+                    val formatUrl = audioFormat?.url
+                    if (!formatUrl.isNullOrEmpty()) {
+                        StreamResult(formatUrl, isVideo = false)
                     } else {
                         null
                     }
@@ -395,7 +396,7 @@ constructor(
                                     var bestUrl: String? = null
                                     var bestBitrate = 0
                                     for (i in 0 until videoStreams.length()) {
-                                        val stream = videoStreams.getJSONObject(i)
+                                        val stream = videoStreams.optJSONObject(i) ?: continue
                                         val sUrl = stream.optString("url", "")
                                         val bitrate = stream.optInt("bitrate", 0)
                                         // Some apis put width/height. We'll use bitrate or quality
@@ -416,7 +417,7 @@ constructor(
                                 var bestUrl: String? = null
                                 var bestBitrate = 0
                                 for (i in 0 until audioStreams.length()) {
-                                    val stream = audioStreams.getJSONObject(i)
+                                    val stream = audioStreams.optJSONObject(i) ?: continue
                                     val sUrl = stream.optString("url", "")
                                     val bitrate = stream.optInt("bitrate", 0)
                                     if (sUrl.isNotEmpty() && bitrate >= bestBitrate) {
@@ -489,7 +490,7 @@ constructor(
                                 var bestUrl: String? = null
                                 var bestBitrate = 0
                                 for (i in 0 until adaptiveFormats.length()) {
-                                    val format = adaptiveFormats.getJSONObject(i)
+                                    val format = adaptiveFormats.optJSONObject(i) ?: continue
                                     val type = format.optString("type", "")
                                     val sUrl = format.optString("url", "")
                                     val bitrate = format.optInt("bitrate", 0)
@@ -508,7 +509,7 @@ constructor(
                                 var bestUrl: String? = null
                                 var bestBitrate = 0
                                 for (i in 0 until formatStreams.length()) {
-                                    val format = formatStreams.getJSONObject(i)
+                                    val format = formatStreams.optJSONObject(i) ?: continue
                                     val sUrl = format.optString("url", "")
                                     val bitrate = format.optInt("bitrate", 0)
                                     if (sUrl.isNotEmpty() && bitrate > bestBitrate) {

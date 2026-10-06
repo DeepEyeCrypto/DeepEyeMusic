@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30085,
+                versionName = "3.0.1.75",
+                releaseDate = "October 2026",
+                title = "Mantis-Omega: Deep Audit & Synced Lyrics Engine 🛡️✨",
+                highlight = true,
+                items =
+                    listOf(
+                        "Codebase Audit & Null-Safety Purge: Remediated all force-unboxing and unsafe JSON unboxing in network layers.",
+                        "Flagship Synced Lyrics View: Built SyncedLyricsScreen with real-time auto-centering and dynamic kinetic typography.",
+                        "ExoPlayer Threading Integrity: Verified main-thread queue mutation safety and background I/O prefetching."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30084,
                 versionName = "3.0.1.74",
                 releaseDate = "October 2026",

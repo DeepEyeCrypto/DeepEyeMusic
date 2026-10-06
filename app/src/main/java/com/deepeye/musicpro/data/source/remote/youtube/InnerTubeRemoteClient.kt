@@ -214,9 +214,10 @@ class InnerTubeRemoteClient @Inject constructor(
                 }
             }
 
-            if (!lyricsBrowseId.isNullOrBlank()) {
-                Log.d(TAG, "Found lyrics browseId=$lyricsBrowseId for videoId=$videoId")
-                return@withContext fetchLyricsFromBrowse(lyricsBrowseId!!)
+            val targetBrowseId = lyricsBrowseId
+            if (!targetBrowseId.isNullOrBlank()) {
+                Log.d(TAG, "Found lyrics browseId=$targetBrowseId for videoId=$videoId")
+                return@withContext fetchLyricsFromBrowse(targetBrowseId)
             }
             null
         } catch (e: Exception) {

@@ -51,6 +51,9 @@ constructor(
 
     private val _currentLyrics = MutableStateFlow<com.deepeye.musicpro.domain.model.Lyrics?>(null)
     val currentLyrics: StateFlow<com.deepeye.musicpro.domain.model.Lyrics?> = _currentLyrics.asStateFlow()
+    val lyricLines: StateFlow<List<com.deepeye.musicpro.domain.model.LyricsLine>> = _currentLyrics
+        .map { it?.lines.orEmpty() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val activeLyricIndex: StateFlow<Int> = kotlinx.coroutines.flow.combine(
         playerState.map { it.position }.distinctUntilChanged(),
@@ -71,6 +74,8 @@ constructor(
             activeIdx
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), -1)
+
+    val activeLineIndex: StateFlow<Int> = activeLyricIndex
 
     fun seekToLyric(timestampMs: Long) {
         playerController.seekTo(timestampMs)
