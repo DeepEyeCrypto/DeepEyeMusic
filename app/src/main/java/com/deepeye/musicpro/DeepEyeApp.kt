@@ -66,26 +66,6 @@ class DeepEyeApp : Application(), Configuration.Provider, SingletonImageLoader.F
     private fun scheduleBackgroundWorkers() {
         val workManager = androidx.work.WorkManager.getInstance(this)
 
-        val recRefresh =
-            androidx.work.PeriodicWorkRequestBuilder<com.deepeye.musicpro.workers.RecommendationRefreshWorker>(
-                6,
-                java.util.concurrent.TimeUnit.HOURS,
-            )
-                .setConstraints(
-                    androidx.work.Constraints.Builder()
-                        .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
-                        .setRequiresBatteryNotLow(true)
-                        .build(),
-                )
-                .setBackoffCriteria(androidx.work.BackoffPolicy.EXPONENTIAL, 15, java.util.concurrent.TimeUnit.MINUTES)
-                .build()
-
-        workManager.enqueueUniquePeriodicWork(
-            com.deepeye.musicpro.workers.BackgroundWorkNames.REC_REFRESH,
-            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
-            recRefresh,
-        )
-
         val queuePrefetch =
             androidx.work.PeriodicWorkRequestBuilder<com.deepeye.musicpro.workers.AutoplayPrefetchWorker>(
                 3,

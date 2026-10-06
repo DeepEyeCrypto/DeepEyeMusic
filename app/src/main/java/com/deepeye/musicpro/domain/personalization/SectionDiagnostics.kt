@@ -16,7 +16,7 @@ data class SectionDiagnostics(
     val refreshState: RefreshState,
     val itemCount: Int,
     val reason: String?,
-    val rebuiltByDiversityRanker: Boolean,
+    val rebuiltByDiversityRanker: Boolean = false,
     val hiddenItemsPruned: Int,
 ) {
     enum class CacheSource { LIVE, MEMORY_CACHE, ROOM_CACHE, LOCAL_ONLY }

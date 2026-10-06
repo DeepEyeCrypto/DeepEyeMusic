@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30080,
+                versionName = "3.0.1.70",
+                releaseDate = "October 2026",
+                title = "Purge-Omega: 100% Strict Native YouTube Recommendations 🗑️⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Codebase Decoupling: Purged redundant local recommendation scoring, MMR diversity math, and custom predictive workers.",
+                        "Direct SmartTube Proxy: 100% authentic recommendations served directly from connected YouTube TVHTML5 browse/next APIs.",
+                        "Memory & CPU Boost: Eliminated background ranking overhead for lightning-fast responsiveness."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30079,
                 versionName = "3.0.1.69",
                 releaseDate = "October 2026",

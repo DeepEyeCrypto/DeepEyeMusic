@@ -606,14 +606,6 @@ private fun DiscoveryTab(
             }
         }
     }
-    
-    if (showExplanationSheet) {
-        com.deepeye.musicpro.ui.music.components.WhyThisBottomSheet(
-            item = explanationItem,
-            section = explanationSection,
-            onDismiss = { showExplanationSheet = false }
-        )
-    }
 }
 
 // ─── Personalized Section Row ───────────────────────────────────────────────

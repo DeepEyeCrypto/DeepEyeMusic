@@ -21,7 +21,6 @@ import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.domain.model.personalization.*
-import com.deepeye.musicpro.domain.personalization.DiversityRanker
 import com.deepeye.musicpro.domain.personalization.SectionDiagnostics
 import com.deepeye.musicpro.domain.repository.PersonalizationRepository
 import com.deepeye.musicpro.domain.repository.library.LibraryRepository
@@ -223,11 +222,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
                                 !MusicFilter.isMusicTrack(item.title, item.artist, item.durationMs / 1000L)
                         }
                         val filteredSection = section.copy(items = filteredItems)
-                        val processed = DiversityRanker.diversify(
-                            section = filteredSection,
-                            maxRepeatedArtistPerSection = prefs.maxRepeatedArtistPerSection,
-                            currentPlayingItemId = currentlyPlayingId,
-                        )
+                        val processed = filteredSection
 
                         if (processed.items.isNotEmpty() || processed.error != null) {
                             assembledSections.add(processed)

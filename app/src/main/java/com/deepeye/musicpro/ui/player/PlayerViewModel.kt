@@ -28,7 +28,6 @@ constructor(
     private val tasteProfileRepository: com.deepeye.musicpro.domain.repository.TasteProfileRepository,
     private val lyricsRepository: com.deepeye.musicpro.domain.lyrics.LyricsRepository,
     private val sleepTimerManager: com.deepeye.musicpro.player.timer.SleepTimerManager,
-    private val recommendationEngine: com.deepeye.musicpro.domain.recommendation.RecommendationEngine,
     private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
     private val authClient: com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient,
     private val youtubeRemoteDataSource: com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource,
@@ -401,7 +400,6 @@ constructor(
                 tasteProfileRepository.recordFeedback(currentId, liked = liked, dontPlayAgain = false)
                 if (liked) {
                     libraryRepository.likeTrack(currentId, currentItem.title, currentItem.artist, "")
-                    recommendationEngine.trackListenEvent(currentId, currentItem.title, currentItem.artist, "", 1000L, 1000L, false, true, false, false, false)
                 } else {
                     libraryRepository.unlikeTrack(currentId, currentItem.title, currentItem.artist, "")
                 }
@@ -424,9 +422,6 @@ constructor(
 
             kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
                 tasteProfileRepository.recordFeedback(currentId, liked = false, dontPlayAgain = true)
-                if (!currentlyDisliked) {
-                    recommendationEngine.trackListenEvent(currentId, currentItem.title, currentItem.artist, "", 1000L, 1000L, true, false, true, false, false)
-                }
             }
         }
     }

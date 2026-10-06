@@ -44,9 +44,6 @@ class PlayerControllerTest {
         relaxed = true
     )
     private val musicRepository = mockk<com.deepeye.musicpro.domain.repository.MusicRepository>(relaxed = true)
-    private val recommendationEngine = mockk<com.deepeye.musicpro.domain.recommendation.RecommendationEngine>(
-        relaxed = true
-    )
     private val autoplayRepository = mockk<com.deepeye.musicpro.domain.autoplay.AutoplayRepository>(relaxed = true)
     private val sleepTimerManager = mockk<com.deepeye.musicpro.player.timer.SleepTimerManager>(relaxed = true)
     private val sleepTimerManagerLazy: dagger.Lazy<com.deepeye.musicpro.player.timer.SleepTimerManager> =
@@ -82,7 +79,6 @@ class PlayerControllerTest {
             tasteProfileRepository = tasteProfileRepository,
             historyRepository = historyRepository,
             musicRepository = musicRepository,
-            recommendationEngine = recommendationEngine,
             autoplayRepository = autoplayRepository,
             sleepTimerManager = sleepTimerManagerLazy,
             playbackPathEnforcer = playbackPathEnforcer,
@@ -113,7 +109,6 @@ class PlayerControllerTest {
                     tasteProfileRepository = tasteProfileRepository,
                     historyRepository = historyRepository,
                     musicRepository = musicRepository,
-                    recommendationEngine = recommendationEngine,
                     autoplayRepository = autoplayRepository,
                     sleepTimerManager = sleepTimerManagerLazy,
                     playbackPathEnforcer = playbackPathEnforcer,

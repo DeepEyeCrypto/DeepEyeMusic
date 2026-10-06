@@ -62,7 +62,6 @@ constructor(
     private val historyRepository: com.deepeye.musicpro.domain.repository.HistoryRepository,
     private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
     private val musicRepository: com.deepeye.musicpro.domain.repository.MusicRepository,
-    private val recommendationEngine: com.deepeye.musicpro.domain.recommendation.RecommendationEngine,
     private val autoplayRepository: com.deepeye.musicpro.domain.autoplay.AutoplayRepository,
     private val sleepTimerManager: dagger.Lazy<com.deepeye.musicpro.player.timer.SleepTimerManager>,
     private val playbackPathEnforcer: com.deepeye.musicpro.diagnostics.PlaybackPathEnforcer,
@@ -937,22 +936,6 @@ constructor(
             val item = playerState.value.currentItem
             val totalMs = playerState.value.duration
             isTrackSkipped = listenMs < totalMs * 0.9f // Consider it a skip if less than 90% played
-
-            scope.launch {
-                recommendationEngine.trackListenEvent(
-                    videoId = item?.id ?: "",
-                    title = item?.title ?: "",
-                    artist = item?.artist ?: "",
-                    channelId = "",
-                    listenDurationMs = listenMs,
-                    totalDurationMs = totalMs,
-                    wasSkipped = isTrackSkipped,
-                    wasLiked = false,
-                    wasDisliked = false,
-                    wasAddedToPlaylist = false,
-                    wasReplayed = false,
-                )
-            }
         }
 
         val nextTrack = queueManager.next()
