@@ -55,7 +55,7 @@ class InnerTubeRemoteClient @Inject constructor(
         const val YOUTUBE_MAIN_INNERTUBE = "https://www.youtube.com/youtubei/v1/"
 
         const val ANDROID_MUSIC_CLIENT_VERSION = "6.42.52"
-        const val TVHTML5_CLIENT_VERSION = "7.20230412.08.00"
+        const val TVHTML5_CLIENT_VERSION = "7.20210614.03.00"
 
         val ANDROID_MUSIC_CONTEXT = """
             "context": {
@@ -498,7 +498,7 @@ class InnerTubeRemoteClient @Inject constructor(
             val reqBuilder = Request.Builder()
                 .url("${YOUTUBE_MAIN_INNERTUBE}browse")
                 .addHeader("Content-Type", "application/json")
-                .addHeader("User-Agent", "Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) SamsungBrowser/4.0 TV Safari/537.36")
+                .addHeader("User-Agent", "Mozilla/5.0 (SMART-TV; Linux; Tizen 5.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/5.0 NativeTVAds Safari/538.1,gzip(gfe)")
                 .addHeader("X-YouTube-Client-Name", "85")
                 .addHeader("X-YouTube-Client-Version", TVHTML5_CLIENT_VERSION)
                 .post(payload.toRequestBody("application/json".toMediaType()))

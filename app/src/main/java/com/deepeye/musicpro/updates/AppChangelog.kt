@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30093,
+                versionName = "3.0.1.83",
+                releaseDate = "October 2026",
+                title = "TVHTML5 Subscriptions & Music Cloud Engine Alignment 🎵⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Unified TVHTML5 Fingerprint: Standardized TVHTML5 client version 7.20210614.03.00 across all InnerTube remote layers.",
+                        "Direct Subscriptions Mapping: Subscriptions tab queries authentic FEsubscriptions uploads with zero intermediate scraping.",
+                        "Optimized Music Feed Synthesis: Music category merges live Supermixes, liked tracks, and personalized YouTube Music shelves."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30092,
                 versionName = "3.0.1.82",
                 releaseDate = "October 2026",
