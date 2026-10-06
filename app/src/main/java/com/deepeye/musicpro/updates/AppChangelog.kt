@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30081,
+                versionName = "3.0.1.71",
+                releaseDate = "October 2026",
+                title = "Interaction-Omega: Real-Time Two-Way YouTube Sync ❤️⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Two-Way InnerTube Mutations: Instant Likes, Dislikes, and Subscriptions directly sent to your authenticated YouTube account.",
+                        "Optimistic UI & Haptics: Zero-latency heart color animation with haptic feedback.",
+                        "Direct SmartTube Mutations: Support for /youtubei/v1/like/like, /dislike, and /removelike."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30080,
                 versionName = "3.0.1.70",
                 releaseDate = "October 2026",

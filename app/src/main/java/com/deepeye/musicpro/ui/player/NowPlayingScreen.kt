@@ -1510,12 +1510,18 @@ fun SegmentedLikeDislikePill(
     onLikeClick: () -> Unit,
     onDislikeClick: () -> Unit
 ) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val animatedHeartTint by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isLiked) Color(0xFFFF2A55) else MaterialTheme.colorScheme.onSurface,
+        label = "heartTint"
+    )
+
     Surface(
         shape = CircleShape,
-        color = if (isLiked) activeColor.copy(alpha = 0.18f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+        color = if (isLiked) Color(0xFFFF2A55).copy(alpha = 0.18f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
         border = androidx.compose.foundation.BorderStroke(
             0.5.dp,
-            if (isLiked) activeColor.copy(alpha = 0.55f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+            if (isLiked) Color(0xFFFF2A55).copy(alpha = 0.55f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
         )
     ) {
         Row(
@@ -1524,7 +1530,10 @@ fun SegmentedLikeDislikePill(
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp))
-                    .clickable(onClick = onLikeClick)
+                    .clickable {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                        onLikeClick()
+                    }
                     .padding(start = 14.dp, end = 10.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -1532,13 +1541,13 @@ fun SegmentedLikeDislikePill(
                 Icon(
                     imageVector = if (isLiked) Icons.Default.ThumbUp else Icons.Outlined.ThumbUp,
                     contentDescription = "Like",
-                    tint = if (isLiked) activeColor else MaterialTheme.colorScheme.onSurface,
+                    tint = animatedHeartTint,
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
                     text = if (isLiked) "Liked" else "Like",
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = if (isLiked) FontWeight.Bold else FontWeight.Medium),
-                    color = if (isLiked) activeColor else MaterialTheme.colorScheme.onSurface,
+                    color = animatedHeartTint,
                     maxLines = 1
                 )
             }
@@ -1551,7 +1560,10 @@ fun SegmentedLikeDislikePill(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp))
-                    .clickable(onClick = onDislikeClick)
+                    .clickable {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                        onDislikeClick()
+                    }
                     .padding(start = 10.dp, end = 14.dp, top = 8.dp, bottom = 8.dp),
                 contentAlignment = Alignment.Center
             ) {

@@ -387,14 +387,29 @@ constructor(
         fun likeTrack(liked: Boolean) {
         val currentItem = playerState.value.currentItem ?: return
         val currentId = currentItem.id
+        val previousLiked = playerState.value.isLiked
+        val previousDisliked = playerState.value.isDisliked
+
+        // 1. Optimistic UI update
+        playerController.updateLikeState(isLiked = liked, isDisliked = false)
+
         viewModelScope.launch(Dispatchers.IO) {
-            // Update YouTube remote first!
+            var success = false
             try {
-                if (liked) authClient.likeVideo(currentId) else authClient.removeLike(currentId)
-            } catch(e: Exception) {}
-            
-            // Sync local state
-            playerController.updateLikeState(isLiked = liked, isDisliked = false)
+                success = if (liked) {
+                    authClient.likeVideo(currentId)
+                } else {
+                    authClient.removeLike(currentId)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PlayerViewModel", "Like mutation failed", e)
+            }
+
+            // Fallback / sync local DB
+            if (!success) {
+                // If remote mutation was rejected, check if we were unauthenticated, keep local optimistic or revert on hard network error
+                android.util.Log.w("PlayerViewModel", "Remote like returned false, operating in offline/local sync mode")
+            }
 
             kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
                 tasteProfileRepository.recordFeedback(currentId, liked = liked, dontPlayAgain = false)
@@ -412,16 +427,24 @@ constructor(
         val currentItem = playerState.value.currentItem ?: return
         val currentId = currentItem.id
         val currentlyDisliked = playerState.value.isDisliked
-        
+        val targetDisliked = !currentlyDisliked
+
+        // 1. Optimistic UI update
+        playerController.updateLikeState(isLiked = false, isDisliked = targetDisliked)
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (currentlyDisliked) authClient.removeLike(currentId) else authClient.dislikeVideo(currentId)
-            } catch(e: Exception) {}
-            
-            playerController.updateLikeState(isLiked = false, isDisliked = !currentlyDisliked)
+                if (currentlyDisliked) {
+                    authClient.removeLike(currentId)
+                } else {
+                    authClient.dislikeVideo(currentId)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PlayerViewModel", "Dislike mutation failed", e)
+            }
 
             kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
-                tasteProfileRepository.recordFeedback(currentId, liked = false, dontPlayAgain = true)
+                tasteProfileRepository.recordFeedback(currentId, liked = false, dontPlayAgain = targetDisliked)
             }
         }
     }

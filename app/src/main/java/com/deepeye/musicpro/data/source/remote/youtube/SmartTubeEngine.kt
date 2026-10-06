@@ -116,6 +116,27 @@ class SmartTubeEngine @Inject constructor(
         }
     }
 
+    enum class LikeStatus {
+        LIKED,
+        DISLIKED,
+        INDIFFERENT
+    }
+
+    /**
+     * Executes a Like, Dislike or RemoveLike mutation on the user's YouTube account.
+     */
+    suspend fun setLikeStatus(videoId: String, status: LikeStatus): Boolean = withContext(Dispatchers.IO) {
+        if (videoId.isBlank()) return@withContext false
+        val endpoint = when (status) {
+            LikeStatus.LIKED -> "like/like"
+            LikeStatus.DISLIKED -> "like/dislike"
+            LikeStatus.INDIFFERENT -> "like/removelike"
+        }
+        val extraJson = "\"target\": {\"videoId\": \"$videoId\"}"
+        val res = postInnerTube(endpoint, extraJson)
+        return@withContext res != null
+    }
+
     /**
      * Fetches YouTube's exact native AutoPlay next track for [videoId] via the /next endpoint.
      */
