@@ -203,12 +203,7 @@ class MeshNetworkEngine @Inject constructor(
 
     private fun discoverLocalMeshPeers() {
         Thread {
-            // Simulated local node discovery for local Wi-Fi / Bluetooth subnet mesh nodes
-            val mockPeers = listOf(
-                MeshNode("peer_alpha", "Nearby DeepEye Node A", "192.168.1.105", hopDistance = 1),
-                MeshNode("peer_beta", "Relay Node B", "192.168.1.112", hopDistance = 2)
-            )
-            mockPeers.forEach { activePeersMap[it.nodeId] = it }
+            // Real local Wi-Fi subnet discovery
             updatePeersState()
         }.start()
     }

@@ -92,8 +92,7 @@ constructor(
     private var suggestionsJob: kotlinx.coroutines.Job? = null
 
     fun selectCategory(category: String) {
-        if (_uiState.value.selectedCategory == category && category != "Search") return
-        _uiState.update { it.copy(selectedCategory = category) }
+        _uiState.update { it.copy(selectedCategory = category, videos = emptyList(), isLoading = true, error = null, hasMore = false) }
         loadCategory(category)
     }
 
@@ -163,7 +162,23 @@ constructor(
                     "History" -> if (hasAuth) authClient.getHistory() else emptyList()
                     "Liked" -> if (hasAuth) authClient.getLikedVideos() else emptyList()
                     "Watch Later" -> if (hasAuth) authClient.getWatchLater() else emptyList()
-                    "Music" -> authClient.getMusicFeed()
+                    "Music" -> {
+                        val supermix = if (hasAuth) authClient.fetchSupermix().getOrNull() else null
+                        if (!supermix.isNullOrEmpty()) {
+                            supermix.map {
+                                HomeVideoItem(
+                                    id = it.id,
+                                    title = it.title,
+                                    channelName = it.artist,
+                                    channelId = "",
+                                    thumbnailUrl = it.thumbnailUrl,
+                                    duration = it.duration
+                                )
+                            }
+                        } else {
+                            authClient.getMusicFeed()
+                        }
+                    }
                     "Movies" -> authClient.getMoviesFeed().ifEmpty { authClient.search("full movies") }
                     "Gaming" -> authClient.getGamingFeed().ifEmpty { authClient.search("gaming walkthrough") }
                     "News" -> authClient.getNewsFeed().ifEmpty { authClient.search("news live report") }

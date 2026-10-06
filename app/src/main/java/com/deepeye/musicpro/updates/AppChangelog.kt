@@ -8,6 +8,32 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30091,
+                versionName = "3.0.1.81",
+                releaseDate = "October 2026",
+                title = "UI-Wiring-Omega: Reactive Category Chip to Cloud Binding 📺⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Live Category Chip Wiring: Filter chips in YouTube Cinema dynamically trigger authenticated TVHTML5 requests (Subscriptions, Liked, History, Supermix, Movies, Gaming).",
+                        "Instant Grid Reactivity: Immediate loading states and zero-glitch grid re-rendering upon chip selection.",
+                        "Direct Cloud Supermix Passthrough: Music category leverages TVHTML5 FEmusic_home algorithmic mixes."
+                    ),
+            ),
+            ChangelogEntry(
+                versionCode = 30090,
+                versionName = "3.0.1.80",
+                releaseDate = "October 2026",
+                title = "Strict-Wire Protocol: Exterminate Mock Data & Direct Passthrough 🛡️⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Zero-Mock Policy Enforced: Exterminated all mock comment data, simulated mesh nodes, and placeholder strings across all app layers.",
+                        "Strict 1:1 Network Passthrough: StateFlows now map cleanly to genuine InnerTube TVHTML5 network responses and official error states.",
+                        "Streamlined State Architecture: Real empty-state handlers without synthetic fallback items."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30089,
                 versionName = "3.0.1.79",
                 releaseDate = "October 2026",

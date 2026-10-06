@@ -1187,32 +1187,39 @@ fun VideoNowPlayingLayout(
             Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                 Text("Comments", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(bottom = 16.dp))
                 val commentsState = rememberLazyListState()
-                androidx.compose.foundation.lazy.LazyColumn(
-                    state = commentsState,
-                    modifier = Modifier.premiumScrollHaptics(commentsState),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    val mockComments = listOf(
-                        "Ananya" to "The audio engine handles Viper4Android perfectly on my device. Absolute masterclass engineering!",
-                        "Rahul" to "SponsorBlock works like magic on this! Video just skipped a 2 minute sponsor chunk automatically. Wow.",
-                        "Dev_Musician" to "Tesla UI / Apple Music vibes. This dark design and dynamic background glow is premium.",
-                        "Jessica" to "The bass boost on Mode B audio tracks hits incredibly hard. Good job team DeepEye!",
-                        "Kartik" to "Can we get custom equalizer presets for Mode B video tracks? This sounds amazing."
-                    )
-                    items(mockComments.size) { index ->
-                        val (name, text) = mockComments[index]
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(finalAccentColor.copy(alpha = 0.3f)), contentAlignment = Alignment.Center) {
-                                Text(name.firstOrNull()?.toString() ?: "U", color = MaterialTheme.colorScheme.onSurface, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                val comments = emptyList<Pair<String, String>>()
+                if (comments.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No comments available for this stream.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    androidx.compose.foundation.lazy.LazyColumn(
+                        state = commentsState,
+                        modifier = Modifier.premiumScrollHaptics(commentsState),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(comments.size) { index ->
+                            val (name, text) = comments[index]
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(finalAccentColor.copy(alpha = 0.3f)), contentAlignment = Alignment.Center) {
+                                    Text(name.firstOrNull()?.toString() ?: "U", color = MaterialTheme.colorScheme.onSurface, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Column {
+                                    Text(name, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f))
+                                }
                             }
-                            Column {
-                                Text(name, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                                Spacer(Modifier.height(2.dp))
-                                Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f))
-                            }
+                            Spacer(Modifier.height(8.dp))
+                            HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
                         }
-                        Spacer(Modifier.height(8.dp))
-                        HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
                     }
                 }
             }
