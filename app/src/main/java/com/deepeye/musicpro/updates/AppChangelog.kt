@@ -8,6 +8,20 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30096,
+                versionName = "3.0.1.86",
+                releaseDate = "October 2026",
+                title = "Mini Player Landscape Redesign & Cyberpunk Floating Capsule 🎛️⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Landscape Ergonomics: Adaptive 64dp height in landscape mode (vs 88dp portrait) preserving maximum vertical space for browsing.",
+                        "Floating Cyberpunk Capsule: Bounded 680dp width constraint in landscape orientation with frosted glass backdrop and glowing border.",
+                        "Refined Media Controls: Compact 38dp artwork with bass ring, tactile transport controls, and one-tap Fullscreen Expand button.",
+                        "Anchor & Gesture Synchronization: Synchronized gesture bounds and content bottom padding across landscape and portrait orientations."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30095,
                 versionName = "3.0.1.85",
                 releaseDate = "October 2026",

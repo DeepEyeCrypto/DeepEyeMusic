@@ -70,12 +70,15 @@ fun AnchoredMiniPlayer(
     expandedContent: @Composable () -> Unit,
 ) {
     val isInPipMode = com.deepeye.musicpro.ui.LocalPipMode.current
+    val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val miniPlayerHeight = if (isLandscape) 64.dp else 88.dp
+
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val density = LocalDensity.current
         val containerHeightPx = constraints.maxHeight.toFloat()
 
         val bottomBarHeightPx = with(density) { bottomBarHeight.toPx() }
-        val collapsedAnchor = containerHeightPx - bottomBarHeightPx - with(density) { 88.dp.toPx() }
+        val collapsedAnchor = containerHeightPx - bottomBarHeightPx - with(density) { miniPlayerHeight.toPx() }
         val halfAnchor = containerHeightPx * 0.45f
         val expandedAnchor = 0f
 
@@ -153,7 +156,7 @@ fun AnchoredMiniPlayer(
                             }
                         }
                         if (isAtCollapsed) {
-                            Modifier.height(with(density) { 88.dp })
+                            Modifier.height(with(density) { miniPlayerHeight })
                         } else {
                             Modifier.fillMaxHeight()
                         }
@@ -167,10 +170,10 @@ fun AnchoredMiniPlayer(
                     if (sheetState.isGestureLocked) return@pointerInput
 
                     // Calculate the content height (mini player visible area).
-                    // When collapsed: 88dp. When expanded: full container.
+                    // When collapsed: miniPlayerHeight. When expanded: full container.
                     // Touches below the content area (in the nav bar zone) must pass through
                     // so the bottom navigation bar remains tappable.
-                    val miniPlayerHeightPx = with(density) { 88.dp.toPx() }
+                    val miniPlayerHeightPx = with(density) { miniPlayerHeight.toPx() }
 
                     coroutineScope {
                         awaitEachGesture {

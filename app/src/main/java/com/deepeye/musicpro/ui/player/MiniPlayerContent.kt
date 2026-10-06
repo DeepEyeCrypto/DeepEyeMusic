@@ -15,6 +15,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.SkipNext
@@ -35,9 +36,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import android.content.res.Configuration
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -58,6 +61,7 @@ fun MiniPlayerContent(
     viewModel: PlayerViewModel = hiltViewModel(),
     expandedContent: @Composable () -> Unit,
 ) {
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val playerState = viewModel.playerState.collectAsStateWithLifecycle().value
     val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
     val fftData by viewModel.fftData.collectAsStateWithLifecycle()
@@ -68,8 +72,8 @@ fun MiniPlayerContent(
         0f
     }
 
-    val horizontalPadding = (12 * (1f - progress)).dp
-    val bottomPadding = (12 * (1f - progress)).dp
+    val horizontalPadding = if (isLandscape) (16 * (1f - progress)).dp else (12 * (1f - progress)).dp
+    val bottomPadding = if (isLandscape) (6 * (1f - progress)).dp else (12 * (1f - progress)).dp
     val animatedCornerRadius = (24 * (1f - progress)).dp
 
     Box(
@@ -132,18 +136,30 @@ fun MiniPlayerContent(
                 animationSpec = spring(stiffness = 500f, dampingRatio = 0.8f),
                 label = "miniPlayerScale"
             )
-            GlassSurface(
-                modifier = Modifier
+
+            val collapsedModifier = if (isLandscape) {
+                Modifier
+                    .fillMaxHeight()
+                    .widthIn(max = 680.dp)
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 6.dp)
+            } else {
+                Modifier
                     .fillMaxSize()
                     .padding(horizontal = 12.dp)
                     .padding(bottom = 8.dp)
+            }
+
+            GlassSurface(
+                modifier = collapsedModifier
                     .graphicsLayer(scaleX = miniPlayerScale, scaleY = miniPlayerScale)
                     .clickable(
                         interactionSource = miniPlayerInteractionSource,
                         indication = null,
                         onClick = onExpand
                     ),
-                shape = RoundedCornerShape(24.dp), // Premium floating pill
+                shape = RoundedCornerShape(if (isLandscape) 20.dp else 24.dp), // Premium floating pill
                 tintColor = dominantColor.copy(alpha = 0.12f),
                 borderColor = Color.White.copy(alpha = 0.15f),
             ) {
@@ -175,7 +191,7 @@ fun MiniPlayerContent(
                         }
                     }
                     
-                    Box(modifier = Modifier.align(Alignment.BottomStart).padding(horizontal = 24.dp).padding(bottom = 6.dp).alpha(1f - progress)) {
+                    Box(modifier = Modifier.align(Alignment.BottomStart).padding(horizontal = if (isLandscape) 18.dp else 24.dp).padding(bottom = 4.dp).alpha(1f - progress)) {
                         MiniPlayerProgressLine(
                             progress = playbackFraction,
                             accentColor = dominantColor,
@@ -221,6 +237,8 @@ fun PlayerHeaderRow(
     onNext: () -> Unit,
     onPrev: () -> Unit,
 ) {
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     // Extract bass amplitude for mini ring pulse
     val bassAmplitude = if (fftData.size >= 4) {
         ((fftData[0] + fftData[1] + fftData[2] + fftData[3]) / 4f).coerceIn(0f, 1f)
@@ -234,21 +252,24 @@ fun PlayerHeaderRow(
         label = "miniRingAlpha",
     )
 
+    val albumArtSize = if (isLandscape) 38.dp else 48.dp
+    val outerBoxSize = if (isLandscape) 42.dp else 52.dp
+
     Row(
         modifier =
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = if (isLandscape) 12.dp else 16.dp, vertical = if (isLandscape) 4.dp else 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Album art with bass ring
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(52.dp),
+            modifier = Modifier.size(outerBoxSize),
         ) {
             // Mini bass pulse ring
             Canvas(
-                modifier = Modifier.size(52.dp)
+                modifier = Modifier.size(outerBoxSize)
             ) {
                 drawCircle(
                     color = dominantColor.copy(alpha = miniRingAlpha * 0.6f),
@@ -259,8 +280,8 @@ fun PlayerHeaderRow(
 
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(albumArtSize)
+                    .clip(RoundedCornerShape(if (isLandscape) 10.dp else 12.dp))
                     .background(Brush.linearGradient(listOf(Color(0xFF2A2A35), Color(0xFF1E1E28))))
                     .clickable { onArtworkTap() },
                 contentAlignment = Alignment.Center
@@ -269,7 +290,7 @@ fun PlayerHeaderRow(
                     imageVector = Icons.Rounded.MusicNote,
                     contentDescription = null,
                     tint = dominantColor.copy(alpha = 0.5f),
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(if (isLandscape) 20.dp else 24.dp)
                 )
                 AsyncImage(
                     model = artworkUri.takeIf { it.isNotBlank() },
@@ -280,12 +301,12 @@ fun PlayerHeaderRow(
             }
         }
 
-        Spacer(Modifier.width(14.dp))
+        Spacer(Modifier.width(if (isLandscape) 10.dp else 14.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
+                style = if (isLandscape) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
                 maxLines = 1,
@@ -293,32 +314,44 @@ fun PlayerHeaderRow(
             )
             Text(
                 text = artist.takeIf { it != "<unknown>" && it.isNotBlank() } ?: "Unknown Artist",
-                style = MaterialTheme.typography.bodyMedium,
+                style = if (isLandscape) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.7f),
                 maxLines = 1,
                 modifier = Modifier.basicMarquee(),
             )
         }
 
-        TactileIconButton(onClick = onPrev, modifier = Modifier.size(40.dp)) {
-            Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = Color.White)
+        TactileIconButton(onClick = onPrev, modifier = Modifier.size(if (isLandscape) 34.dp else 40.dp)) {
+            Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = Color.White, modifier = Modifier.size(if (isLandscape) 20.dp else 24.dp))
         }
 
-        Spacer(Modifier.width(4.dp))
+        Spacer(Modifier.width(if (isLandscape) 2.dp else 4.dp))
 
-        TactileIconButton(onClick = onPlayPause, modifier = Modifier.size(44.dp)) {
+        TactileIconButton(onClick = onPlayPause, modifier = Modifier.size(if (isLandscape) 38.dp else 44.dp)) {
             Icon(
                 imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayCircle,
                 contentDescription = "Play/Pause",
                 tint = Color.White,
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(if (isLandscape) 26.dp else 32.dp),
             )
         }
 
-        Spacer(Modifier.width(4.dp))
+        Spacer(Modifier.width(if (isLandscape) 2.dp else 4.dp))
 
-        TactileIconButton(onClick = onNext, modifier = Modifier.size(40.dp)) {
-            Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White)
+        TactileIconButton(onClick = onNext, modifier = Modifier.size(if (isLandscape) 34.dp else 40.dp)) {
+            Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White, modifier = Modifier.size(if (isLandscape) 20.dp else 24.dp))
+        }
+
+        if (isLandscape) {
+            Spacer(Modifier.width(2.dp))
+            TactileIconButton(onClick = onArtworkTap, modifier = Modifier.size(34.dp)) {
+                Icon(
+                    imageVector = Icons.Default.Fullscreen,
+                    contentDescription = "Expand Fullscreen",
+                    tint = dominantColor.copy(alpha = 0.85f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }

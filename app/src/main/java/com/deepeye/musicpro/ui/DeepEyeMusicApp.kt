@@ -296,8 +296,10 @@ fun DeepEyeMusicApp(
                     } else {
                         0.dp
                     }
+                    val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+                    val miniPlayerDockHeight = if (isLandscape) 64.dp else 88.dp
                     val miniPlayerPadding by androidx.compose.animation.core.animateDpAsState(
-                        targetValue = if (playerState.currentItem != null && !isInPipMode) 88.dp else 0.dp,
+                        targetValue = if (playerState.currentItem != null && !isInPipMode) miniPlayerDockHeight else 0.dp,
                         label = "miniPlayerPadding"
                     )
 
@@ -397,8 +399,10 @@ fun DeepEyeMusicApp(
                         // Empty bottom bar, space handled by AnchoredMiniPlayer
                     },
                 ) { innerPadding ->
+                    val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+                    val miniPlayerDockHeight = if (isLandscape) 64.dp else 88.dp
                     val miniPlayerPadding by androidx.compose.animation.core.animateDpAsState(
-                        targetValue = if (playerState.currentItem != null && !isInPipMode) 88.dp else 0.dp,
+                        targetValue = if (playerState.currentItem != null && !isInPipMode) miniPlayerDockHeight else 0.dp,
                         label = "miniPlayerPadding"
                     )
 
