@@ -4,6 +4,7 @@ import android.util.Log
 import com.deepeye.musicpro.data.prefs.SettingsDataStore
 import com.deepeye.musicpro.domain.auth.YouTubeDeviceAuthManager
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
+import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -32,7 +33,7 @@ class AuthenticatedYouTubeClient @Inject constructor(
     private val authManager: YouTubeDeviceAuthManager,
     private val innerTubeClient: InnerTubeRemoteClient
 ) {
-    private val INNERTUBE_API_URL = "https://youtubei.googleapis.com/youtubei/v1/browse?key=${com.deepeye.musicpro.BuildConfig.YOUTUBE_API_KEY}"
+    private val INNERTUBE_API_URL = "https://www.youtube.com/youtubei/v1/browse"
 
     // WEB client — returns videoRenderer with full channel avatars & metadata
     private val WEB_CONTEXT_JSON = """
@@ -51,9 +52,13 @@ class AuthenticatedYouTubeClient @Inject constructor(
         "context": {
           "client": {
             "clientName": "TVHTML5",
-            "clientVersion": "7.20230412.08.00",
+            "clientVersion": "7.20210614.03.00",
             "hl": "en",
             "gl": "IN"
+          },
+          "user": {
+            "enableSafetyMode": false,
+            "lockedSafetyMode": false
           }
         }
     """.trimIndent()
@@ -727,6 +732,84 @@ class AuthenticatedYouTubeClient @Inject constructor(
         performAction("like/removelike", JSONObject().put("target", JSONObject().put("videoId", videoId)))
     }
 
+    suspend fun likeVideoResult(videoId: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        val success = performAction("like/like", JSONObject().put("target", JSONObject().put("videoId", videoId)))
+        if (success) Result.success(true) else Result.failure(Exception("Failed to like video $videoId"))
+    }
+
+    suspend fun removeLikeResult(videoId: String): Result<Boolean> = withContext(Dispatchers.IO) {
+        val success = performAction("like/removelike", JSONObject().put("target", JSONObject().put("videoId", videoId)))
+        if (success) Result.success(true) else Result.failure(Exception("Failed to remove like for $videoId"))
+    }
+
+    suspend fun fetchSupermix(): Result<List<HomeMusicItem>> = withContext(Dispatchers.IO) {
+        val token = getValidAccessToken()
+        val contextObj = JSONObject().apply {
+            put("client", JSONObject().apply {
+                put("clientName", "TVHTML5")
+                put("clientVersion", "7.20210614.03.00")
+                put("hl", "en")
+                put("gl", "IN")
+            })
+            put("user", JSONObject().apply {
+                put("enableSafetyMode", false)
+                put("lockedSafetyMode", false)
+            })
+        }
+        val reqBody = JSONObject().apply {
+            put("context", contextObj)
+            put("browseId", "FEmusic_home")
+        }
+        try {
+            val reqBuilder = Request.Builder()
+                .url("https://www.youtube.com/youtubei/v1/browse")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("X-YouTube-Client-Name", "85")
+                .addHeader("X-YouTube-Client-Version", "7.20210614.03.00")
+                .addHeader("User-Agent", "Mozilla/5.0 (SMART-TV; Linux; Tizen 5.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/5.0 NativeTVAds Safari/538.1,gzip(gfe)")
+                .post(reqBody.toString().toRequestBody("application/json".toMediaType()))
+
+            if (token != null) {
+                reqBuilder.addHeader("Authorization", "Bearer $token")
+            }
+
+            val request = reqBuilder.build()
+            client.newCall(request).execute().use { response ->
+                if (response.code == 401 && token != null) {
+                    val retryItems = handle401AndRetry(request)
+                    val musicItems = retryItems.map { 
+                        HomeMusicItem(
+                            id = it.id,
+                            title = it.title,
+                            artist = it.channelName,
+                            thumbnailUrl = it.thumbnailUrl,
+                            duration = it.duration
+                        )
+                    }
+                    return@withContext Result.success(musicItems)
+                }
+                if (!response.isSuccessful) {
+                    return@withContext Result.failure(Exception("HTTP ${response.code}"))
+                }
+                val raw = response.body?.string() ?: ""
+                val videos = parseInnerTubeVideos(raw)
+                val musicItems = videos.map {
+                    HomeMusicItem(
+                        id = it.id,
+                        title = it.title,
+                        artist = it.channelName,
+                        thumbnailUrl = it.thumbnailUrl,
+                        duration = it.duration
+                    )
+                }
+                Result.success(musicItems)
+            }
+        } catch (e: Exception) {
+            Log.e("AuthYTClient", "fetchSupermix failed", e)
+            Result.failure(e)
+        }
+    }
+
     suspend fun subscribeChannel(channelId: String): Boolean = withContext(Dispatchers.IO) {
         performAction("subscription/subscribe", JSONObject().put("channelIds", org.json.JSONArray().put(channelId)))
     }
@@ -744,17 +827,23 @@ class AuthenticatedYouTubeClient @Inject constructor(
                 put("context", JSONObject().apply {
                     put("client", JSONObject().apply {
                         put("clientName", "TVHTML5")
-                        put("clientVersion", "7.20230412.08.00")
+                        put("clientVersion", "7.20210614.03.00")
                         put("hl", "en")
                         put("gl", "IN")
+                    })
+                    put("user", JSONObject().apply {
+                        put("enableSafetyMode", false)
+                        put("lockedSafetyMode", false)
                     })
                 })
                 put("videoId", videoId)
             }
             
             val request = Request.Builder()
-                .url("https://youtubei.googleapis.com/youtubei/v1/next?key=${com.deepeye.musicpro.BuildConfig.YOUTUBE_API_KEY}")
+                .url("https://www.youtube.com/youtubei/v1/next")
                 .addHeader("Content-Type", "application/json")
+                .addHeader("X-YouTube-Client-Name", "85")
+                .addHeader("X-YouTube-Client-Version", "7.20210614.03.00")
                 .addHeader("Authorization", "Bearer $token")
                 .post(reqBody.toString().toRequestBody("application/json".toMediaType()))
                 .build()
@@ -790,13 +879,21 @@ class AuthenticatedYouTubeClient @Inject constructor(
         payload.put("context", JSONObject().apply {
             put("client", JSONObject().apply {
                 put("clientName", "TVHTML5")
-                put("clientVersion", "7.20230412.08.00")
+                put("clientVersion", "7.20210614.03.00")
+                put("hl", "en")
+                put("gl", "IN")
+            })
+            put("user", JSONObject().apply {
+                put("enableSafetyMode", false)
+                put("lockedSafetyMode", false)
             })
         })
         try {
             val req = Request.Builder()
-                .url("https://youtubei.googleapis.com/youtubei/v1/$endpoint?key=${com.deepeye.musicpro.BuildConfig.YOUTUBE_API_KEY}")
+                .url("https://www.youtube.com/youtubei/v1/$endpoint")
                 .addHeader("Content-Type", "application/json")
+                .addHeader("X-YouTube-Client-Name", "85")
+                .addHeader("X-YouTube-Client-Version", "7.20210614.03.00")
                 .addHeader("Authorization", "Bearer $token")
                 .post(payload.toString().toRequestBody("application/json".toMediaType()))
                 .build()
