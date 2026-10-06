@@ -149,17 +149,24 @@ constructor(
                         HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
                     }
                 }
-                supermix = (filteredLiked + filteredSubs).map {
-                    HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
-                }.distinctBy { it.id }.take(20)
-                becauseYouLikedMix = filteredLiked.drop(5).take(15).map {
+                
+                val cloudSupermix = authClient.fetchSupermix().getOrNull()
+                supermix = if (!cloudSupermix.isNullOrEmpty()) {
+                    cloudSupermix.take(20)
+                } else {
+                    (filteredLiked + filteredSubs).map {
+                        HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
+                    }.distinctBy { it.id }.take(20)
+                }
+                
+                becauseYouLikedMix = filteredLiked.take(15).map {
                     HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
                 }
                 newReleases = filteredSubs.take(15).map {
                     HomeMusicItem(id = it.id, title = it.title, artist = it.channelName, thumbnailUrl = it.thumbnailUrl, duration = it.duration)
                 }
             } else {
-                // Fallback: old search-based calls for non-authenticated users
+                // Fallback: search-based calls for non-authenticated users
                 val trendingDeferred = async {
                     try {
                         if (subscriptions.isNotEmpty()) {
@@ -186,7 +193,7 @@ constructor(
                     } catch (e: Exception) { emptyList() }
                 }
                 val discoverMixDeferred = async {
-                    val result = try {
+                    try {
                         val topArtists = recommendationDao.getTopArtistsSince(0, 1)
                         if (topArtists.isNotEmpty()) {
                             val topArtist = topArtists.first().artistName
@@ -197,15 +204,9 @@ constructor(
                             fallback.take(15)
                         }
                     } catch (e: Exception) { emptyList() }
-                    if (result.isEmpty()) {
-                        listOf(
-                            HomeMusicItem("dummy4", "Heat Waves", "Glass Animals", "https://i.ytimg.com/vi/mRD0-GxqHVo/mqdefault.jpg"),
-                            HomeMusicItem("dummy5", "As It Was", "Harry Styles", "https://i.ytimg.com/vi/H5v3kku4y6Q/mqdefault.jpg")
-                        )
-                    } else result
                 }
                 val supermixDeferred = async {
-                    val result = try {
+                    try {
                         val topSongs = recommendationDao.getTopSongsSince(0, 5)
                         if (topSongs.isNotEmpty()) {
                             val topSong = topSongs.first()
@@ -221,12 +222,6 @@ constructor(
                             fallback.take(15)
                         }
                     } catch (e: Exception) { emptyList() }
-                    if (result.isEmpty()) {
-                        listOf(
-                            HomeMusicItem("dummy1", "Blinding Lights", "The Weeknd", "https://i.ytimg.com/vi/4NRXx6U8ABQ/mqdefault.jpg"),
-                            HomeMusicItem("dummy2", "Levitating", "Dua Lipa", "https://i.ytimg.com/vi/TUVcZfQe-Kw/mqdefault.jpg")
-                        )
-                    } else result
                 }
                 val becauseYouLikedDeferred = async {
                     try {

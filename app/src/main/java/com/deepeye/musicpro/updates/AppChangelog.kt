@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30089,
+                versionName = "3.0.1.79",
+                releaseDate = "October 2026",
+                title = "100% Pure TVHTML5 Cloud Personalization Engine ☁️⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Pure TVHTML5 Cloud Sync: Eradicated all dummy fallbacks and bound authentic InnerTube cloud channels directly to Home discovery rails.",
+                        "Live Supermix Extraction: Direct integration with FEmusic_home algorithmic personalized mixes.",
+                        "Zero-Interference Cloud History & Liked Music: 1:1 mirror of user's genuine YouTube account history and liked vaults."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30087,
                 versionName = "3.0.1.77",
                 releaseDate = "October 2026",
