@@ -20,8 +20,8 @@ android {
         applicationId = "com.deepeye.musicpro"
         minSdk = 24
         targetSdk = 35
-        versionCode = 30098
-        versionName = "3.0.1.88"
+        versionCode = 30099
+        versionName = "3.0.1.89"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

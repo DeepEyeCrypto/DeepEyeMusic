@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30099,
+                versionName = "3.0.1.89",
+                releaseDate = "October 2026",
+                title = "Media3 Analytics Modernization & Strict URI Hardening 🛡️⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "EventLogger Modernization: Upgraded EventLogger analytics listener to Media3 non-deprecated constructor.",
+                        "Strict URI Parameter Encoding: Encoded JSON category arrays in SponsorBlock background requests to prevent MalformedURLException on Android 16.",
+                        "Zero-Lag DSP Audio Bridge: Maintained gapless 60FPS audio session pipeline with zero dropped frames."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30098,
                 versionName = "3.0.1.88",
                 releaseDate = "October 2026",

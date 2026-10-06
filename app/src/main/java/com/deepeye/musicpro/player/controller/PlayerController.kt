@@ -132,7 +132,7 @@ constructor(
         audioSessionGuardian.startMonitoring(player)
         audioSessionManager.attachToPlayer(player)
         player.addAnalyticsListener(forensics)
-        player.addAnalyticsListener(androidx.media3.exoplayer.util.EventLogger(null, "EventLogger"))
+        player.addAnalyticsListener(androidx.media3.exoplayer.util.EventLogger("EventLogger"))
 
         // Sync recovery coordinator state to PlayerState
         scope.launch {
@@ -724,7 +724,8 @@ constructor(
                     if (isVideoItem) {
                         scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                             try {
-                                val url = java.net.URL("https://sponsor.ajay.app/api/skipSegments?videoID=${finalItem.id}&categories=[\"sponsor\",\"selfpromo\",\"interaction\",\"intro\",\"outro\",\"preview\"]")
+                                val encodedCategories = java.net.URLEncoder.encode("[\"sponsor\",\"selfpromo\",\"interaction\",\"intro\",\"outro\",\"preview\"]", "UTF-8")
+                                val url = java.net.URI("https://sponsor.ajay.app/api/skipSegments?videoID=${finalItem.id}&categories=$encodedCategories").toURL()
                                 val connection = url.openConnection() as java.net.HttpURLConnection
                                 connection.requestMethod = "GET"
                                 connection.connectTimeout = 3000
