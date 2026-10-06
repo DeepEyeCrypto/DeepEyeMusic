@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30098,
+                versionName = "3.0.1.88",
+                releaseDate = "October 2026",
+                title = "Hardware Video Decoder Optimization & Zero-Discard Pipeline ⚡🔋",
+                highlight = true,
+                items =
+                    listOf(
+                        "Zero-Discard Audio Mode: Automatically disables video track decoder (setTrackTypeDisabled) during pure audio playback, eliminating 24fps background video decoding and frame discarding.",
+                        "MediaTek MT6835 Thermal Optimization: Drastically reduces battery drain and GPU/SoC load during continuous radio/music playback.",
+                        "Dynamic Track Transition Sync: Seamlessly toggles video rendering pipeline when transitioning between video cinema and audio radio tracks."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30097,
                 versionName = "3.0.1.87",
                 releaseDate = "October 2026",

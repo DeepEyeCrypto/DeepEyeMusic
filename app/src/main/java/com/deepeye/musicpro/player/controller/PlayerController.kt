@@ -275,6 +275,12 @@ constructor(
                             }
                         }
 
+                        val isVideo = (queueItem as? MediaItem.Remote)?.isVideo == true
+                        val trackParams = player.trackSelectionParameters.buildUpon()
+                            .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, !isVideo)
+                            .build()
+                        player.trackSelectionParameters = trackParams
+
                         scope.launch {
                             try {
                                 dspProfileManager.loadAndApplyProfile(newMediaId)
@@ -770,6 +776,12 @@ constructor(
                             scope.launch { delay(1000); next() }
                             return@withLock
                         }
+
+                        val isVideo = finalItem is MediaItem.Remote && finalItem.isVideo
+                        val trackParams = player.trackSelectionParameters.buildUpon()
+                            .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, !isVideo)
+                            .build()
+                        player.trackSelectionParameters = trackParams
 
                         player.setMediaItem(media3Item)
                         if (seekPosition > 0L) {
