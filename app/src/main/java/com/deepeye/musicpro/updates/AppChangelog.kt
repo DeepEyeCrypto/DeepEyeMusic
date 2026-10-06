@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30092,
+                versionName = "3.0.1.82",
+                releaseDate = "October 2026",
+                title = "UI-Wiring-Omega: Reactive Category Chip to Cloud Execution 📺⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Job-Managed Category Switching: Atomic coroutine cancellation when switching chips rapidly, eliminating network race conditions.",
+                        "Live Category Ribbon Highlighting: Cyberpunk cyan borders, frosted elevations, and instant skeleton loader triggers.",
+                        "Pure TVHTML5 Cloud Grid: 1:1 binding to YouTube account Subscriptions, Liked, History, and Supermixes."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30091,
                 versionName = "3.0.1.81",
                 releaseDate = "October 2026",

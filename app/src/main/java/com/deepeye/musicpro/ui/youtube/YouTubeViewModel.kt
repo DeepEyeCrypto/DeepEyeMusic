@@ -90,6 +90,7 @@ constructor(
     private var nextPageToken: String? = null
     private var currentActiveQuery: String = ""
     private var suggestionsJob: kotlinx.coroutines.Job? = null
+    private var loadJob: kotlinx.coroutines.Job? = null
 
     fun selectCategory(category: String) {
         _uiState.update { it.copy(selectedCategory = category, videos = emptyList(), isLoading = true, error = null, hasMore = false) }
@@ -150,7 +151,8 @@ constructor(
     }
 
     private fun loadCategory(category: String) {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
             val hasAuth = authSettings?.youtubeAccessToken != null
 
