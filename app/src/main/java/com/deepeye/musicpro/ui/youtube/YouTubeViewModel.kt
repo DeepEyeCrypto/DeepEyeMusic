@@ -305,23 +305,15 @@ constructor(
     }
 
     fun playVideo(video: HomeVideoItem) {
-        val currentVideos = if (_uiState.value.videos.any { it.id == video.id }) {
-            _uiState.value.videos
-        } else {
-            listOf(video) + _uiState.value.videos
-        }
-        val mediaItems =
-            currentVideos.map { item ->
-                MediaItem.Remote(
-                    id = item.id,
-                    title = item.title,
-                    artist = item.channelName,
-                    artworkUri = Uri.parse(item.thumbnailUrl),
-                    duration = item.duration * 1000L,
-                    isVideo = true,
-                )
-            }
-        val index = currentVideos.indexOfFirst { it.id == video.id }.coerceAtLeast(0)
-        playerController.setQueue(mediaItems, index)
+        val mediaItem = MediaItem.Remote(
+            id = video.id,
+            title = video.title,
+            artist = video.channelName,
+            artworkUri = Uri.parse(video.thumbnailUrl),
+            duration = video.duration * 1000L,
+            isVideo = true,
+        )
+        // Radio-Omega: Eradicate static screen queue, play single track and trigger true algorithmic radio
+        playerController.setQueue(listOf(mediaItem), 0)
     }
 }

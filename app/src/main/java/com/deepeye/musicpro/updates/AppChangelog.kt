@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30094,
+                versionName = "3.0.1.84",
+                releaseDate = "October 2026",
+                title = "Radio-Omega: True InnerTube Algorithmic Continuous Autoplay 📻⚡",
+                highlight = true,
+                items =
+                    listOf(
+                        "Eradicated Static Screen Queues: Clicking items in YouTube Cinema or Home sections plays the individual track without dumping static lists.",
+                        "Dynamic /next Recommendation Injection: Seamlessly retrieves true algorithmic 'Up Next' tracks directly from InnerTube /youtubei/v1/next.",
+                        "Zero-Latency Gapless ExoPlayer Queuing: Background pre-buffers next candidate into ExoPlayer before the current song finishes."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30093,
                 versionName = "3.0.1.83",
                 releaseDate = "October 2026",
