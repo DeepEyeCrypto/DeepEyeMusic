@@ -35,36 +35,38 @@ object AgslShaderEngine {
      * Transpiles standard GLSL ES 3.0 / WebGL Shadertoy source code to AGSL (SkSL).
      *
      * Critical fixes applied automatically:
-     * 1. Y-axis inversion: WebGL origin is bottom-left, Compose is top-left.
-     *    Injects `float2 correctCoord = float2(fragCoord.x, iResolution.y - fragCoord.y);`
-     *    before user shader logic runs.
-     * 2. mod() polyfill: WebGL's built-in mod() can behave inconsistently on Mali/Adreno.
-     *    Injects a reliable float2 variant at the top of the script.
-     * 3. Precision enforcement: Wraps intermediate coord math in explicit float casts
-     *    to prevent half-precision degradation on GPUs that downcast float2/float3.
+     * 1. WebGL Polyfill Header: Injects mod() overloads (float, float2, float3, float4),
+     *    safe coordinate helpers, and Y-axis inversion before user shader logic.
+     * 2. Precision enforcement: All vector types use float (not half) for intermediates.
+     * 3. mainImage→main conversion with Y-axis correction injection.
      */
     fun transpileGlslToAgsl(rawGlsl: String): String {
         var source = rawGlsl
 
-        // 0. Inject mod() polyfill and Y-axis correction helpers at top
-        val precisionFixes = """
-            // === VISUALIZER-PATTERN-OMEGA FIXES ===
-            // mod() polyfill for Mali/Adreno consistency
-            float2 mod(float2 x, float y) {
-                return x - y * floor(x / y);
+        // 0. Inject comprehensive WebGL polyfill header at top
+        val webglPolyfill = """
+            // === WEBGL POLYFILL HEADER (AGSL COMPATIBILITY) ===
+            // mod() overloads for Mali/Adreno consistency
+            float mod(float x, float y) { return x - y * floor(x / y); }
+            float2 mod(float2 x, float y) { return x - y * floor(x / y); }
+            float3 mod(float3 x, float y) { return x - y * floor(x / y); }
+            float4 mod(float4 x, float y) { return x - y * floor(x / y); }
+
+            // Safe coordinate normalization helper
+            float2 getNormalizedUv(float2 fragCoord) {
+                return fragCoord.xy / iResolution.xy;
             }
-            float mod(float x, float y) {
-                return x - y * floor(x / y);
+
+            // Y-axis flip helper: WebGL origin (bottom-left) → Compose origin (top-left)
+            float2 correctFragCoord(float2 fragCoord) {
+                return float2(fragCoord.x, iResolution.y - fragCoord.y);
             }
-            
-            // Y-axis inversion: WebGL origin (bottom-left) → Compose origin (top-left)
-            // Applied automatically before user shader logic
-            // Use: float2 uv = (correctCoord - 0.5 * iResolution) / iResolution.y;
         """.trimIndent()
-        
-        // Prepend precision fixes only if not already present
+
+        // Prepend polyfill only if neither the float nor float2 overload exists.
+        // A shader supplying its own float overload must not receive a duplicate.
         if (!source.contains("float2 mod(float2") && !source.contains("float mod(float x, float y)")) {
-            source = "$precisionFixes\n$source"
+            source = "$webglPolyfill\n$source"
         }
 
         // 1. Strip precision specifiers
@@ -102,10 +104,6 @@ object AgslShaderEngine {
         }
 
         // 5. Wrap mainImage → main conversion with Y-axis correction injection
-        // The transpiled main() function receives fragCoord in Compose space (top-left origin).
-        // If the original GLSL expected WebGL space (bottom-left), we need to invert Y.
-        // We detect this by checking if the shader uses iResolution in a way that suggests
-        // WebGL coordinate assumptions (e.g., fragCoord.xy / iResolution.xy for UV).
         val mainImageRegex = Regex("""void\s+mainImage\s*\(\s*out\s+float4\s+(\w+)\s*,\s*in\s+float2\s+(\w+)\s*\)\s*\{""")
         val match = mainImageRegex.find(source)
         if (match != null) {
@@ -119,7 +117,7 @@ object AgslShaderEngine {
                     "        float2 correctCoord = float2(${fragCoordVar}Input.x, iResolution.y - ${fragCoordVar}Input.y);\n" +
                     "        float2 $fragCoordVar = correctCoord;\n" +
                     "        float4 ${fragColorVar} = float4(0.0);")
-            
+
             // Replace trailing closing brace with return
             val lastBrace = source.lastIndexOf('}')
             if (lastBrace != -1) {
@@ -133,6 +131,7 @@ object AgslShaderEngine {
 
     /**
      * Compiles a GLSL/AGSL source string into an Android [RuntimeShader] on API 33+.
+     * Includes debug logging of source preview on failure.
      */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun compileShader(rawGlsl: String): Result<RuntimeShader> {
@@ -148,7 +147,7 @@ object AgslShaderEngine {
             }
             RuntimeShader(agslSource)
         }.onFailure { err ->
-            Log.e(TAG, "[AgslShaderEngine] Shader compilation failed: ${err.message}", err)
+            Log.e(TAG, "[AgslShaderEngine] Shader compilation failed: ${err.message}\nSource preview:\n${rawGlsl.take(500)}", err)
         }
     }
 }
