@@ -8,6 +8,20 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30101,
+                versionName = "3.0.1.91",
+                releaseDate = "October 2026",
+                title = "VVavy Multi-Topology Generative Visualizer Engine 📐✨",
+                highlight = true,
+                items =
+                    listOf(
+                        "Multi-Topology Procedural Engine: 5 generative geometric algorithms (Sierpinski Fractal, Sacred Merkaba, 3D Polyhedron, Orbital Vortex, Deconstructed Lattice).",
+                        "Audio-Reactive Pattern Morphing: Dynamic topology transitions and seed mutations on bass drops and energy transients.",
+                        "Kinetic Particle & Chromatic Aberration: Cyan/Magenta chromatic aberration with vertex spark particle bursts on transient peaks.",
+                        "Zero-Garbage Geometry Pool: 512 pre-allocated triangles for locked 60/120 FPS hardware VSYNC."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30100,
                 versionName = "3.0.1.90",
                 releaseDate = "October 2026",
