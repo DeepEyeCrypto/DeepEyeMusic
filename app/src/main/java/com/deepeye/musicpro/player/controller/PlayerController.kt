@@ -243,6 +243,17 @@ constructor(
                         lastSkippedSegment = null
                         prefetchedTrackId = null
 
+                        // AUTOPLAY-OMEGA: this is the single choke point that fires on EVERY
+                        // track change (gapless prefetch, manual skip, emergency autoplay).
+                        // Record the newly-started track into the recent session history so the
+                        // AutoplayRepository loop guard has an accurate window to exclude from
+                        // the next /next fetch — otherwise InnerTube's short up-next cycles
+                        // (A→B→A) repeat forever during prefetched-batch playback, where the
+                        // combine-flow/emergency history writers never run.
+                        _autoplayState.update { state ->
+                            state.copy(history = (state.history + newMediaId).takeLast(50))
+                        }
+
                         val queueItem = queueManager.jumpToId(newMediaId)
                         if (queueItem != null) {
                             updateState { cur ->
@@ -1092,6 +1103,11 @@ constructor(
 
                     // Gapless Auto-Play Proactive Pre-buffering (15s before track end)
                     if (playerState.value.autoplayEnabled && dur > 20_000L && currentPos >= dur - 15_000L) {
+                        android.util.Log.i(
+                            "AUTOPLAY_DEBUG",
+                            "event=prefetch_trigger pos=$currentPos dur=$dur " +
+                                "remaining=${dur - currentPos} mediaId=${currentTrackId}"
+                        )
                         checkAndPrefetchNextTrack()
                     }
 
@@ -1114,15 +1130,29 @@ constructor(
     }
 
     private fun checkAndPrefetchNextTrack() {
-        if (isPrefetchingNextTrack || !playerState.value.autoplayEnabled) return
+        if (isPrefetchingNextTrack || !playerState.value.autoplayEnabled) {
+            android.util.Log.d(
+                "AUTOPLAY_DEBUG",
+                "event=prefetch_guard_blocked isPrefetching=$isPrefetchingNextTrack " +
+                    "autoplayEnabled=${playerState.value.autoplayEnabled}"
+            )
+            return
+        }
         val currentItem = playerState.value.currentItem
         val currentTrack = currentItem as? MediaItem.Remote ?: return
-        
+
         // Only prefetch if ExoPlayer doesn't already have a next item queued,
         // and the in-app queue doesn't already have a resolved next item.
         // Change 5 — also check queueManager.peekNext() to prevent re-firing when
         // the queue has items that haven't yet been enqueued to ExoPlayer.
-        if (player.mediaItemCount > 1 || queueManager.peekNext() != null) return
+        if (player.mediaItemCount > 1 || queueManager.peekNext() != null) {
+            android.util.Log.d(
+                "AUTOPLAY_DEBUG",
+                "event=prefetch_already_queued mediaItemCount=${player.mediaItemCount} " +
+                    "peekNext=${queueManager.peekNext()?.id} videoId=${currentTrack.id}"
+            )
+            return
+        }
 
         isPrefetchingNextTrack = true
         scope.launch {
@@ -1142,6 +1172,11 @@ constructor(
                         it.videoId != currentTrack.id
                     }
                     if (validCandidates.isNotEmpty()) {
+                        android.util.Log.i(
+                            "AUTOPLAY_DEBUG",
+                            "event=prefetch_candidates_resolved count=${validCandidates.size} " +
+                                "firstId=${validCandidates.first().videoId} videoId=${currentTrack.id}"
+                        )
                         val mediaItems = validCandidates.map { c ->
                             MediaItem.Remote(
                                 id = c.videoId,
@@ -1184,8 +1219,24 @@ constructor(
                         if (media3Item.localConfiguration?.uri != null && media3Item.localConfiguration?.uri != Uri.EMPTY) {
                             player.addMediaItem(media3Item)
                             prefetchedTrackId = finalMediaItem.id
+                            android.util.Log.i(
+                                "AUTOPLAY_DEBUG",
+                                "event=prefetch_appended_to_exoplayer nextId=${finalMediaItem.id} " +
+                                    "title=\"${finalMediaItem.title}\" mediaItemCount=${player.mediaItemCount}"
+                            )
                             android.util.Log.i("PlayerController", "Gapless Radio: Pre-buffered next track -> ${finalMediaItem.title} (${finalMediaItem.id})")
+                        } else {
+                            android.util.Log.w(
+                                "AUTOPLAY_DEBUG",
+                                "event=prefetch_append_skipped reason=empty_stream_uri nextId=${finalMediaItem.id}"
+                            )
                         }
+                    } else {
+                        android.util.Log.d(
+                            "AUTOPLAY_DEBUG",
+                            "event=prefetch_append_skipped reason=state_changed mediaItemCount=${player.mediaItemCount} " +
+                                "currentTrackId=$currentTrackId expected=${currentTrack.id}"
+                        )
                     }
                 }
             } catch (e: Exception) {

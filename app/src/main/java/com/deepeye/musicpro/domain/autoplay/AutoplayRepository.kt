@@ -26,12 +26,28 @@ class AutoplayRepository @Inject constructor(
     private val networkConditionChecker: com.deepeye.musicpro.util.NetworkConditionChecker,
     private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
 ) {
+    companion object {
+        /**
+         * AUTOPLAY-OMEGA: how many recently-played tracks to exclude from the next queue.
+         * InnerTube up-next graphs frequently contain short cycles (A→B→A); excluding the
+         * recent session window breaks those loops without re-introducing taste/blacklist
+         * interference — InnerTube still dictates *what* plays.
+         */
+        private const val RECENT_HISTORY_GUARD_WINDOW = 15
+    }
+
     suspend fun generateNextQueue(
         currentTrack: MediaItem?,
         autoplayState: AutoplayState,
         activeQueueArtists: List<String> = emptyList(),
     ): List<QueueItem> = withContext(Dispatchers.IO) {
         if (currentTrack == null) return@withContext emptyList()
+
+        android.util.Log.i(
+            "AUTOPLAY_DEBUG",
+            "event=generate_next_queue_enter videoId=${currentTrack.id} " +
+                "type=${currentTrack::class.simpleName}"
+        )
 
         // Change 3 — Cellular / metered network guard.
         // Pre-fetch only fires on unmetered networks (Wi-Fi/ethernet) OR when the user
@@ -40,6 +56,11 @@ class AutoplayRepository @Inject constructor(
         val isMetered = networkConditionChecker.isNetworkMetered()
         val autoplayOnCellular = settingsDataStore.settings.first().autoplayOnCellular
         if (isMetered && !autoplayOnCellular) {
+            android.util.Log.w(
+                "AUTOPLAY_DEBUG",
+                "event=generate_next_queue_skip reason=metered_network videoId=${currentTrack.id} " +
+                    "metered=$isMetered cellularOptIn=$autoplayOnCellular"
+            )
             android.util.Log.i(
                 "AutoplayRepository",
                 "event=autoplay_prefetch_skipped reason=metered_network cellular_opt_in=false"
@@ -117,9 +138,27 @@ class AutoplayRepository @Inject constructor(
             val smartList = smartTubeDeferred.await()
             val relatedList = relatedDeferred.await()
 
-            // ISOLATION-OMEGA: pure InnerTube passthrough (distinct only, no local filtering).
-            (smartList + relatedList)
-                .distinctBy { it.videoId }
+            // AUTOPLAY-OMEGA loop guard. The Isolation refactor removed the local
+            // blacklist/sessionHistory filtering, leaving only a same-track guard at the
+            // call sites. That alone lets InnerTube's short up-next cycles (A→B→A) loop
+            // Infinite Radio forever. Here we exclude the recent session-history window
+            // (already maintained in AutoplayState.history) plus the current track. This is
+            // NOT taste/blacklist interference — it only prevents immediate repeats; if the
+            // guard would empty the pool we fall back to a same-track-only filter so the
+            // stream never halts.
+            val recentHistory = autoplayState.history.takeLast(RECENT_HISTORY_GUARD_WINDOW).toSet()
+            val merged = (smartList + relatedList).distinctBy { it.videoId }
+            val guarded = merged.filter { it.videoId != currentTrack.id && it.videoId !in recentHistory }
+            val effective = guarded.ifEmpty {
+                merged.filter { it.videoId != currentTrack.id }
+            }
+            android.util.Log.i(
+                "AutoplayRepository",
+                "event=autoplay_loop_guard videoId=${currentTrack.id} " +
+                    "merged=${merged.size} recentHistory=${recentHistory.size} " +
+                    "guarded=${guarded.size} effective=${effective.size}"
+            )
+            effective
         }
 
         candidates.take(20).mapIndexed { index, video ->
