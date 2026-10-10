@@ -68,6 +68,7 @@ fun SettingsScreen(
     windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass? = null,
     onNavigateBack: () -> Unit = {},
     onNavigateToAEOS: () -> Unit = {},
+    onNavigateToVisualizerStudio: () -> Unit = {},
     onYouTubeLoginClick: () -> Unit = {},
     onGoogleSignInClick: () -> Unit = {},
     onLaunchTvMode: () -> Unit = {},
@@ -294,21 +295,21 @@ fun SettingsScreen(
                         }
                     }
                 } else {
+                    // GHOST MODE: status chip is informational only — no sign-in affordance.
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = Color(0x22FF5252),
-                        border = BorderStroke(1.5.dp, Color(0xFFFF5252)),
+                        color = Color(0x2200E5FF),
+                        border = BorderStroke(1.5.dp, Color(0x3300E5FF)),
                         modifier = Modifier
                             .heightIn(min = 48.dp)
-                            .clickable(onClick = onYouTubeLoginClick)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.AccountCircle, null, tint = Color(0xFFFF5252), modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Lock, null, tint = Color(0xFF00E5FF), modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text("Connect YouTube", color = Color(0xFFFF5252), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text("Ghost Mode", color = Color(0xFF00E5FF), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -360,6 +361,7 @@ fun SettingsScreen(
                                 viewModel = viewModel,
                                 context = context,
                                 onNavigateToAEOS = onNavigateToAEOS,
+                                onNavigateToVisualizerStudio = onNavigateToVisualizerStudio,
                                 isSignedIn = isSignedIn,
                                 signedInEmail = signedInEmail,
                                 onRequestSignOut = { showSignOutConfirm = true },
@@ -440,6 +442,7 @@ private fun SettingsDetailPane(
     viewModel: SettingsViewModel,
     context: Context,
     onNavigateToAEOS: () -> Unit,
+    onNavigateToVisualizerStudio: () -> Unit = {},
     isSignedIn: Boolean,
     signedInEmail: String?,
     onRequestSignOut: () -> Unit,
@@ -574,6 +577,42 @@ private fun SettingsDetailPane(
                                 isChecked = settings.showVisualizer,
                                 onCheckedChange = { viewModel.setShowVisualizer(it) }
                             )
+
+                            SettingSwitchRow(
+                                label = "Autoplay on Cellular",
+                                description = "Allow infinite-radio pre-fetch on metered mobile data",
+                                isChecked = settings.autoplayOnCellular,
+                                onCheckedChange = { viewModel.setAutoplayOnCellular(it) }
+                            )
+
+                            Surface(
+                                onClick = onNavigateToVisualizerStudio,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 64.dp)
+                                    .clip(RoundedCornerShape(18.dp)),
+                                color = Color(0x28FF007F),
+                                border = BorderStroke(1.dp, neonCyan),
+                                shape = RoundedCornerShape(18.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "Open Visualizer Studio",
+                                        color = neonCyan,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowForward,
+                                        contentDescription = "Open Visualizer Studio",
+                                        tint = neonCyan
+                                    )
+                                }
+                            }
 
                             DSPDebugOverlay(viewModel = androidx.hilt.navigation.compose.hiltViewModel())
 
@@ -830,18 +869,26 @@ private fun SettingsDetailPane(
                                             Text("Sign Out Google Account", fontWeight = FontWeight.Bold)
                                         }
                                     } else {
-                                        Button(
-                                            onClick = onGoogleSignInClick,
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = neonCyan,
-                                                contentColor = Color.Black
-                                            ),
+                                        // GHOST MODE: authentication UI removed.
+                                        // DeepEyeMusicPro runs as a fully anonymous InnerTube client.
+                                        Surface(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            color = Color(0x14FFFFFF),
                                             shape = RoundedCornerShape(14.dp),
-                                            modifier = Modifier.fillMaxWidth().height(48.dp)
+                                            border = BorderStroke(1.dp, Color(0x22FFFFFF))
                                         ) {
-                                            Icon(Icons.AutoMirrored.Filled.Login, null, modifier = Modifier.size(18.dp))
-                                            Spacer(Modifier.width(8.dp))
-                                            Text("Sign In with Google", fontWeight = FontWeight.Black)
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(48.dp)
+                                                    .padding(horizontal = 16.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center
+                                            ) {
+                                                Icon(Icons.Default.Lock, null, tint = Color(0xFFFFD700), modifier = Modifier.size(18.dp))
+                                                Spacer(Modifier.width(8.dp))
+                                                Text("Ghost Mode · No account required", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                                            }
                                         }
                                     }
                                 }
@@ -913,18 +960,26 @@ private fun SettingsDetailPane(
                                             Text("Disconnect YouTube Account", fontWeight = FontWeight.Bold)
                                         }
                                     } else {
-                                        Button(
-                                            onClick = onYouTubeLoginClick,
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFFFF0033),
-                                                contentColor = Color.White
-                                            ),
+                                        // GHOST MODE: no YouTube sign-in. Recommendations come
+                                        // purely from seed-based, anonymous InnerTube payloads.
+                                        Surface(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            color = Color(0x14FFFFFF),
                                             shape = RoundedCornerShape(14.dp),
-                                            modifier = Modifier.fillMaxWidth().height(48.dp)
+                                            border = BorderStroke(1.dp, Color(0x22FFFFFF))
                                         ) {
-                                            Icon(Icons.Default.QrCode, null, modifier = Modifier.size(18.dp))
-                                            Spacer(Modifier.width(8.dp))
-                                            Text("Connect YouTube Account", fontWeight = FontWeight.Black)
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(48.dp)
+                                                    .padding(horizontal = 16.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center
+                                            ) {
+                                                Icon(Icons.Default.Lock, null, tint = Color(0xFFFFD700), modifier = Modifier.size(18.dp))
+                                                Spacer(Modifier.width(8.dp))
+                                                Text("Ghost Mode · Anonymous session", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                                            }
                                         }
                                     }
                                 }

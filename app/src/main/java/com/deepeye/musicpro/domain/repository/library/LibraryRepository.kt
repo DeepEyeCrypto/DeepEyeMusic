@@ -389,19 +389,27 @@ constructor(
         )
 
     // ── Subscribed Channels ──
-            suspend fun subscribeChannel(channelId: String, channelName: String) {
-        try { authClient.subscribeChannel(channelId) } catch(e: Exception) {}
-        dao.subscribeChannel(
-            com.deepeye.musicpro.data.library.entities.SubscribedChannelEntity(
-                channelId = channelId,
-                channelName = channelName
+            suspend fun subscribeChannel(channelId: String, channelName: String): Boolean {
+        val success = try { authClient.subscribeChannel(channelId) } catch (e: Exception) { false }
+        // Only persist locally if the server returned 200 OK.
+        if (success) {
+            dao.subscribeChannel(
+                com.deepeye.musicpro.data.library.entities.SubscribedChannelEntity(
+                    channelId = channelId,
+                    channelName = channelName
+                )
             )
-        )
+        }
+        return success
     }
 
-    suspend fun unsubscribeChannel(channelId: String) {
-        try { authClient.unsubscribeChannel(channelId) } catch(e: Exception) {}
-        dao.unsubscribeChannel(channelId)
+    suspend fun unsubscribeChannel(channelId: String): Boolean {
+        val success = try { authClient.unsubscribeChannel(channelId) } catch (e: Exception) { false }
+        // Only persist locally if the server returned 200 OK.
+        if (success) {
+            dao.unsubscribeChannel(channelId)
+        }
+        return success
     }
 
     fun isChannelSubscribed(channelId: String): Flow<Boolean> = dao.isChannelSubscribed(channelId)

@@ -31,6 +31,7 @@ data class AppSettings(
     val bitDepth: Int = 16,
     val autoScanOnLaunch: Boolean = true,
     val showVisualizer: Boolean = true,
+    val autoplayOnCellular: Boolean = false,
     val youtubeAccessToken: String? = null,
     val youtubeRefreshToken: String? = null,
     val youtubeUserName: String? = null,
@@ -53,6 +54,7 @@ constructor(
         private val KEY_BIT_DEPTH = intPreferencesKey("bit_depth")
         private val KEY_AUTO_SCAN = booleanPreferencesKey("auto_scan")
         private val KEY_SHOW_VISUALIZER = booleanPreferencesKey("show_visualizer")
+        private val KEY_AUTOPLAY_ON_CELLULAR = booleanPreferencesKey("is_cellular_autoplay_enabled")
         private val KEY_YT_ACCESS_TOKEN = stringPreferencesKey("yt_access_token")
         private val KEY_YT_REFRESH_TOKEN = stringPreferencesKey("yt_refresh_token")
         private val KEY_YT_USER_NAME = stringPreferencesKey("yt_user_name")
@@ -76,6 +78,7 @@ constructor(
                 bitDepth = prefs[KEY_BIT_DEPTH] ?: 16,
                 autoScanOnLaunch = prefs[KEY_AUTO_SCAN] ?: true,
                 showVisualizer = prefs[KEY_SHOW_VISUALIZER] ?: true,
+                autoplayOnCellular = prefs[KEY_AUTOPLAY_ON_CELLULAR] ?: false,
                 youtubeAccessToken = prefs[KEY_YT_ACCESS_TOKEN],
                 youtubeRefreshToken = prefs[KEY_YT_REFRESH_TOKEN],
                 youtubeUserName = prefs[KEY_YT_USER_NAME],
@@ -110,6 +113,10 @@ constructor(
 
     suspend fun setShowVisualizer(enabled: Boolean) {
         context.dataStore.edit { it[KEY_SHOW_VISUALIZER] = enabled }
+    }
+
+    suspend fun setAutoplayOnCellular(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_AUTOPLAY_ON_CELLULAR] = enabled }
     }
 
     suspend fun setAmoledMode(enabled: Boolean) {

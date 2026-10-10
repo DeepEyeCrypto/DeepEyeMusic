@@ -8,7 +8,8 @@ enum class VisualizerSceneId {
     PARTICLE_FIELD,
     LIQUID_PLASMA,
     CRYSTAL_TUNNEL,
-    CYBER_GRID
+    CYBER_GRID,
+    NEON_TRIANGLE_GRID
 }
 
 data class VisualizerSceneMetadata(
@@ -110,6 +111,15 @@ val AvailableVisualizerScenes = listOf(
         supportsAmplitude = true,
         supportsReducedMotion = true,
         tags = setOf("Spectrum", "Classic", "3D")
+    ),
+    VisualizerSceneMetadata(
+        id = VisualizerSceneId.NEON_TRIANGLE_GRID,
+        title = "Neon Triangle Grid (AGSL)",
+        description = "SDF-based equilateral triangle array driven by real-time audio FFT sampling.",
+        supportsFft = true,
+        supportsAmplitude = true,
+        supportsReducedMotion = true,
+        tags = setOf("Geometric", "3D", "Intense")
     )
 )
 

@@ -44,6 +44,12 @@ google-services.json
 
 testsprite_tests/tmp/config.json
 
+# Generated tooling output (Graphify AST/graph-analysis cache)
+graphify-out/
+# Agent scratch state
+.agents/
+
+
 # Debugging artifacts (screenshots, UI dumps, response captures) - root level only
 /*.png
 /*.jpg

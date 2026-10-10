@@ -63,7 +63,6 @@ import com.deepeye.musicpro.ui.theme.GlassBorder
 import com.deepeye.musicpro.ui.theme.sdp
 import com.deepeye.musicpro.ui.components.glassCard
 import com.deepeye.musicpro.ui.components.hoverable
-import com.deepeye.musicpro.ui.gamification.Top3LeaderboardCard
 
 
 @Composable
@@ -85,8 +84,6 @@ fun HomeHubScreen(
     val recs by recommendationViewModel.recommendations.collectAsStateWithLifecycle()
     val isRecsLoading by recommendationViewModel.isRefreshing.collectAsStateWithLifecycle()
     val dspEngineState by viewModel.isDspAttached.collectAsStateWithLifecycle()
-    val gamificationState by viewModel.gamificationState.collectAsStateWithLifecycle()
-    val top3Users by viewModel.top3Users.collectAsStateWithLifecycle()
 
     val isExpanded = windowSizeClass.widthSizeClass == androidx.compose.material3.windowsizeclass.WindowWidthSizeClass.Expanded
 
@@ -135,68 +132,12 @@ fun HomeHubScreen(
     // flight while the feed itself has settled, so it suppresses the hero too.
     val showFeedEmptyState = !hasFeedContent && !feedState.isLoading && !isRecsLoading
 
-    var showGamificationSheet by remember { mutableStateOf(false) }
-    var showRankingSheet by remember { mutableStateOf(false) }
-
-    if (showGamificationSheet) {
-        @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-        androidx.compose.material3.ModalBottomSheet(
-            onDismissRequest = { showGamificationSheet = false },
-            containerColor = Color(0xFF1E1E1E)
-        ) {
-            com.deepeye.musicpro.ui.gamification.GamificationBottomSheet(
-                streak = gamificationState.streak,
-                rewardPoints = gamificationState.rewardPoints,
-                unlockedBadges = gamificationState.unlockedBadges,
-                lockedBadges = gamificationState.lockedBadges,
-                onClaimReward = { showGamificationSheet = false }
-            )
-        }
-    }
-
-    if (showRankingSheet) {
-        com.deepeye.musicpro.ui.ranking.RankingBottomSheet(
-            rankingRepository = viewModel.rankingRepository,
-            rankingEngine = viewModel.rankingEngine,
-            onDismissRequest = { showRankingSheet = false }
-        )
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Transparent),
         contentAlignment = Alignment.TopCenter,
     ) {
-        var achievementToShow by remember { mutableStateOf<com.deepeye.musicpro.domain.gamification.UserAchievement?>(null) }
-        val context = androidx.compose.ui.platform.LocalContext.current
-        
-        LaunchedEffect(Unit) {
-            viewModel.achievementEvents.collect { event ->
-                // Find badge in state
-                val badge = gamificationState.unlockedBadges.find { it.requirement == event.requirement }
-                if (badge != null) {
-                    achievementToShow = badge
-                }
-            }
-        }
-
-        achievementToShow?.let { badge ->
-            com.deepeye.musicpro.ui.gamification.AchievementUnlockedPopup(
-                badge = badge,
-                onDismiss = { achievementToShow = null },
-                onShare = {
-                    achievementToShow = null
-                    // MOCK Instagram share
-                    android.widget.Toast.makeText(
-                        context,
-                        "Sharing to Instagram Stories...",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                }
-            )
-        }
-
         // ── Root-level branch: hero vs. feed ───────────────────────────────────
         // Evaluated *before* the feed container is composed so an empty feed
         // never lays out a LazyColumn at all. Composing it and then hiding it
@@ -267,9 +208,7 @@ fun HomeHubScreen(
                 HomeGreetingHeader(
                     btcPrice = btcPrice,
                     onNavigateToSettings = onNavigateToSettings,
-                    onNavigateToChat = onNavigateToChat,
-                    onOpenGamification = { showGamificationSheet = true },
-                    onOpenRanking = { showRankingSheet = true }
+                    onNavigateToChat = onNavigateToChat
                 )
             }
 
@@ -492,8 +431,6 @@ private fun HomeGreetingHeader(
     btcPrice: String,
     onNavigateToSettings: () -> Unit,
     onNavigateToChat: () -> Unit = {},
-    onOpenGamification: () -> Unit = {},
-    onOpenRanking: () -> Unit = {},
 ) {
     val greeting = remember { getDynamicGreeting() }
 
@@ -571,16 +508,6 @@ private fun HomeGreetingHeader(
                 // Chat Icon
                 IconButton(onClick = onNavigateToChat, modifier = Modifier.size(40.dp)) {
                     Icon(Icons.Default.Lock, contentDescription = "Chat", tint = Color(0xFF7B3FE4), modifier = Modifier.size(20.dp))
-                }
-
-                // Gamification Star
-                IconButton(onClick = onOpenGamification, modifier = Modifier.size(40.dp)) {
-                    Icon(Icons.Default.Star, contentDescription = "Gamification", tint = Color(0xFFFFD700), modifier = Modifier.size(20.dp))
-                }
-
-                // Ranking / Leaderboard
-                IconButton(onClick = onOpenRanking, modifier = Modifier.size(40.dp)) {
-                    Icon(Icons.Default.Person, contentDescription = "Leaderboard", tint = Color(0xFF00E5FF), modifier = Modifier.size(20.dp))
                 }
 
                 // Settings

@@ -27,165 +27,31 @@ class GamificationEngine @Inject constructor(
     private val _achievementEvents = MutableSharedFlow<AchievementUnlockedEvent>()
     val achievementEvents = _achievementEvents.asSharedFlow()
 
+    // GHOST-OMEGA (non-destructive): gamification disabled — no streak/XP/level writes.
+    // Playback pipeline (history/library) is preserved; only reward loops are silenced.
+    // All bodies below are intentional no-ops to keep DI/call sites compiling.
     suspend fun checkAndUpdateStreak() {
-        val today = LocalDate.now(java.time.ZoneOffset.UTC)
-        repository.updatePreferences { prefs ->
-            val lastDateMs = prefs[GamificationPreferences.LAST_LISTENING_DATE] ?: 0L
-            val currentStreak = prefs[GamificationPreferences.CURRENT_STREAK] ?: 0
-            val longestStreak = prefs[GamificationPreferences.LONGEST_STREAK] ?: 0
-            
-            if (lastDateMs == 0L) {
-                // First time
-                prefs[GamificationPreferences.CURRENT_STREAK] = 1
-                prefs[GamificationPreferences.LONGEST_STREAK] = maxOf(1, longestStreak)
-                prefs[GamificationPreferences.LAST_LISTENING_DATE] = Instant.now().toEpochMilli()
-                prefs[GamificationPreferences.REWARD_POINTS] = (prefs[GamificationPreferences.REWARD_POINTS] ?: 0) + 10
-                return@updatePreferences
-            }
-
-            val lastDate = Instant.ofEpochMilli(lastDateMs).atZone(java.time.ZoneOffset.UTC).toLocalDate()
-
-            when {
-                lastDate == today -> {
-                    // Already listened today, streak unchanged
-                }
-                lastDate == today.minusDays(1) -> {
-                    // Continues streak!
-                    val newStreak = currentStreak + 1
-                    prefs[GamificationPreferences.CURRENT_STREAK] = newStreak
-                    prefs[GamificationPreferences.LONGEST_STREAK] = maxOf(newStreak, longestStreak)
-                    prefs[GamificationPreferences.LAST_LISTENING_DATE] = Instant.now().toEpochMilli()
-                    prefs[GamificationPreferences.REWARD_POINTS] = (prefs[GamificationPreferences.REWARD_POINTS] ?: 0) + 10 // Streak bonus
-
-                    if (newStreak == 30) {
-                        unlockBadgeInternal(prefs, AchievementRequirement.STREAK_30_DAYS)
-                    }
-                }
-                else -> {
-                    // Streak broken
-                    prefs[GamificationPreferences.CURRENT_STREAK] = 1
-                    prefs[GamificationPreferences.LONGEST_STREAK] = maxOf(1, longestStreak)
-                    prefs[GamificationPreferences.LAST_LISTENING_DATE] = Instant.now().toEpochMilli()
-                    prefs[GamificationPreferences.DAILY_LISTENING_MINUTES] = 0
-                    prefs[GamificationPreferences.DAILY_GOAL_COMPLETED] = false
-                    prefs[GamificationPreferences.REWARD_POINTS] = (prefs[GamificationPreferences.REWARD_POINTS] ?: 0) + 10 // Start new streak
-                }
-            }
-        }
-        syncToFirestore()
+        return
     }
 
     suspend fun updateSongCompletion(durationMs: Long, completionRatio: Float) {
-        repository.updatePreferences { prefs ->
-            val listened = (prefs[GamificationPreferences.TOTAL_SONGS_LISTENED] ?: 0) + 1
-            prefs[GamificationPreferences.TOTAL_SONGS_LISTENED] = listened
-            prefs[GamificationPreferences.REWARD_POINTS] = (prefs[GamificationPreferences.REWARD_POINTS] ?: 0) + 1 // 1 pt per song
-
-            if (completionRatio >= 0.8) {
-                // Update listening hours approximately
-                val currentHours = prefs[GamificationPreferences.TOTAL_LISTENING_HOURS] ?: 0
-                // Simplified: assuming this is tracked elsewhere precisely, we just do a rough increment for the sake of the engine if needed
-                // Realistically, hours should be calculated from total ms.
-            }
-
-            if (listened == 100) {
-                unlockBadgeInternal(prefs, AchievementRequirement.SONGS_LISTENED_100)
-            }
-        }
-        syncToFirestore()
+        return
     }
 
     suspend fun updateDailyListeningMinutes(minutesAdded: Int) {
-        if (minutesAdded <= 0) return
-        repository.updatePreferences { prefs ->
-            val currentMinutes = (prefs[GamificationPreferences.DAILY_LISTENING_MINUTES] ?: 0) + minutesAdded
-            prefs[GamificationPreferences.DAILY_LISTENING_MINUTES] = currentMinutes
-            
-            val isCompleted = prefs[GamificationPreferences.DAILY_GOAL_COMPLETED] ?: false
-            if (currentMinutes >= 30 && !isCompleted) {
-                prefs[GamificationPreferences.DAILY_GOAL_COMPLETED] = true
-                prefs[GamificationPreferences.REWARD_POINTS] = (prefs[GamificationPreferences.REWARD_POINTS] ?: 0) + 25 // Daily goal bonus
-                
-                val completedCount = (prefs[GamificationPreferences.DAILY_GOAL_COMPLETED_COUNT] ?: 0) + 1
-                prefs[GamificationPreferences.DAILY_GOAL_COMPLETED_COUNT] = completedCount
-
-                if (completedCount == 7) {
-                    unlockBadgeInternal(prefs, AchievementRequirement.DAILY_GOAL_7_DAYS)
-                }
-            }
-        }
-        syncToFirestore()
-    }
-
-    private fun unlockBadgeInternal(prefs: androidx.datastore.preferences.core.MutablePreferences, requirement: AchievementRequirement) {
-        val unlocked = prefs[GamificationPreferences.UNLOCKED_BADGES] ?: emptySet()
-        if (!unlocked.contains(requirement.name)) {
-            prefs[GamificationPreferences.UNLOCKED_BADGES] = unlocked + requirement.name
-            prefs[GamificationPreferences.REWARD_POINTS] = (prefs[GamificationPreferences.REWARD_POINTS] ?: 0) + 100 // Badge bonus
-            
-            // Fire event globally so UI can show popup
-            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
-                _achievementEvents.emit(AchievementUnlockedEvent(requirement))
-            }
-        }
-    }
-
-    private suspend fun syncToFirestore() {
-        try {
-            val prefs = repository.getPreferencesSnapshot()
-            val songsListened = prefs[GamificationPreferences.TOTAL_SONGS_LISTENED] ?: 0
-            val points = prefs[GamificationPreferences.REWARD_POINTS] ?: 0
-            val streak = prefs[GamificationPreferences.CURRENT_STREAK] ?: 0
-            val completedCount = prefs[GamificationPreferences.DAILY_GOAL_COMPLETED_COUNT] ?: 0
-            val lastListeningDate = prefs[GamificationPreferences.LAST_LISTENING_DATE] ?: 0L
-
-            val currentScore = rankingEngine.calculateTotalScore(points, streak, songsListened, completedCount)
-
-            rankingRepository.syncGamificationState(
-                points = points,
-                streak = streak,
-                songsListened = songsListened,
-                activeDays = completedCount,
-                score = currentScore,
-                lastListeningDate = lastListeningDate
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        return
     }
 
     suspend fun restoreFromFirestore() {
-        try {
-            val data = rankingRepository.getUserGamificationData()
-            if (data != null) {
-                repository.updatePreferences { prefs ->
-                    val points = (data["points"] as? Number)?.toInt() ?: 0
-                    val streak = (data["streak"] as? Number)?.toInt() ?: 0
-                    val songsListened = (data["songsListened"] as? Number)?.toInt() ?: 0
-                    val activeDays = (data["dailyActiveDays"] as? Number)?.toInt() ?: 0
-                    val lastListeningDate = (data["lastListeningDate"] as? Number)?.toLong() ?: 0L
-
-                    prefs[GamificationPreferences.REWARD_POINTS] = points
-                    prefs[GamificationPreferences.CURRENT_STREAK] = streak
-                    prefs[GamificationPreferences.TOTAL_SONGS_LISTENED] = songsListened
-                    prefs[GamificationPreferences.DAILY_GOAL_COMPLETED_COUNT] = activeDays
-                    prefs[GamificationPreferences.LAST_LISTENING_DATE] = lastListeningDate
-
-                    // Update longest streak if current is greater
-                    val longestStreak = prefs[GamificationPreferences.LONGEST_STREAK] ?: 0
-                    if (streak > longestStreak) {
-                        prefs[GamificationPreferences.LONGEST_STREAK] = streak
-                    }
-                }
-            } else {
-                rankingRepository.initializeUserIfNew()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        return
     }
 
     suspend fun forceSyncToFirestore() {
-        syncToFirestore()
+        return
+    }
+
+    private fun unlockBadgeInternalNoOp() {
+        // GHOST-OMEGA: badge events disabled.
+        return
     }
 }

@@ -203,6 +203,10 @@ dependencies {
     implementation(libs.media3.ui)
     implementation("androidx.media:media:1.7.0")
 
+    // Chromecast
+    implementation("com.google.android.gms:play-services-cast-framework:21.4.0")
+    implementation("com.google.android.gms:play-services-cast:21.4.0")
+
     // Coroutines & Collections
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)

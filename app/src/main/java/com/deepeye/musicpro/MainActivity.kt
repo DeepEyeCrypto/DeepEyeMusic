@@ -5,6 +5,7 @@ package com.deepeye.musicpro
 
 import android.Manifest
 import android.content.pm.ActivityInfo
+
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Rect
@@ -64,6 +65,8 @@ class MainActivity : FragmentActivity() {
     private val themeViewModel: ThemeViewModel by viewModels()
 
     fun hideSystemBars() {
+        // WindowCompat.getInsetsController backports to all API levels (minSdk 24) —
+        // do not gate behind SDK_INT >= 30 or bars stay visible on Android 7–11.
         val windowInsetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
         windowInsetsController.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         windowInsetsController.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
@@ -71,6 +74,19 @@ class MainActivity : FragmentActivity() {
             window.attributes.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
         androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+    }
+
+    // Refresh rate override (API 30+)
+    private fun setMaxRefreshRate() {
+        if (Build.VERSION.SDK_INT >= 30) {
+            val display = windowManager.defaultDisplay
+            val maxMode = display.supportedModes.maxByOrNull { it.refreshRate }
+            maxMode?.let { mode ->
+                window.attributes = window.attributes.apply {
+                    preferredDisplayModeId = mode.modeId
+                }
+            }
+        }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -178,6 +194,9 @@ class MainActivity : FragmentActivity() {
         if (orientationEventListener?.canDetectOrientation() == true) {
             orientationEventListener?.enable()
         }
+
+        // Lock the window to the display's highest refresh rate (API 30+; no-op below).
+        setMaxRefreshRate()
 
         // Initialize Brave Shields Engine for 0-latency tracking protection and background auto-sync
         com.deepeye.musicpro.engine.BraveShieldsEngine.initialize(applicationContext)

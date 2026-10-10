@@ -34,6 +34,12 @@ constructor(
 ) : ViewModel() {
     val playerState: StateFlow<PlayerState> = playerController.playerState
     val autoplayState: StateFlow<com.deepeye.musicpro.domain.autoplay.AutoplayState> = playerController.autoplayState
+
+    // Change 6 — Expose prefetch loading state so the UI can show a shimmer on the "Up Next" card.
+    val isAutoplayPrefetching: StateFlow<Boolean> = playerController.autoplayState
+        .map { it.isGenerating }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     val player = playerController.player
 
     val currentSongFeedback: StateFlow<com.deepeye.musicpro.data.db.UserFeedback?> =
@@ -383,20 +389,25 @@ constructor(
         val currentItem = playerState.value.currentItem ?: return
         val currentId = currentItem.id
 
-        // 1. Optimistic UI update
-        playerController.updateLikeState(isLiked = liked, isDisliked = false)
-
         viewModelScope.launch(Dispatchers.IO) {
-            try {
+            val networkSuccess = try {
                 if (liked) {
                     authClient.likeVideo(currentId)
                 } else {
                     authClient.removeLike(currentId)
                 }
             } catch (e: Exception) {
-                android.util.Log.e("PlayerViewModel", "Like mutation failed", e)
+                android.util.Log.e("PlayerViewModel", "Like mutation failed for $currentId", e)
+                false
             }
 
+            // Only commit UI + local library state if the server returned 200 OK.
+            if (!networkSuccess) {
+                android.util.Log.w("PlayerViewModel", "Like mutation rejected (non-200) for $currentId; state unchanged")
+                return@launch
+            }
+
+            playerController.updateLikeState(isLiked = liked, isDisliked = false)
             kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
                 if (liked) {
                     libraryRepository.likeTrack(currentId, currentItem.title, currentItem.artist, "")
@@ -414,19 +425,25 @@ constructor(
         val currentlyDisliked = playerState.value.isDisliked
         val targetDisliked = !currentlyDisliked
 
-        // 1. Optimistic UI update
-        playerController.updateLikeState(isLiked = false, isDisliked = targetDisliked)
-
         viewModelScope.launch(Dispatchers.IO) {
-            try {
+            val networkSuccess = try {
                 if (currentlyDisliked) {
                     authClient.removeLike(currentId)
                 } else {
                     authClient.dislikeVideo(currentId)
                 }
             } catch (e: Exception) {
-                android.util.Log.e("PlayerViewModel", "Dislike mutation failed", e)
+                android.util.Log.e("PlayerViewModel", "Dislike mutation failed for $currentId", e)
+                false
             }
+
+            // Only commit UI state if the server returned 200 OK.
+            if (!networkSuccess) {
+                android.util.Log.w("PlayerViewModel", "Dislike mutation rejected (non-200) for $currentId; state unchanged")
+                return@launch
+            }
+
+            playerController.updateLikeState(isLiked = false, isDisliked = targetDisliked)
         }
     }
 

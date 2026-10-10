@@ -113,5 +113,15 @@ fun VisualizerHost(
             secondaryColor = secondaryColor,
             modifier = modifier
         )
+
+        VisualizerSceneId.NEON_TRIANGLE_GRID -> com.deepeye.musicpro.ui.player.visualizer.agsl.AgslVisualizer(
+            fftSpectrum = fftSpectrum,
+            frequencyBands = frequencyBands,
+            scene = com.deepeye.musicpro.ui.player.visualizer.agsl.AgslScene.NEON_TRIANGLE_GRID,
+            accentColor = accentColor,
+            primaryColor = primaryColor,
+            secondaryColor = secondaryColor,
+            modifier = modifier
+        )
     }
 }

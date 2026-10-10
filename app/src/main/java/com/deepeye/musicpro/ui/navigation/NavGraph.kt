@@ -265,6 +265,7 @@ fun NavGraph(
             SettingsScreen(
                 windowSizeClass = windowSizeClass,
                 onNavigateToAEOS = { navController.navigate(Routes.AEOS.route) },
+                onNavigateToVisualizerStudio = { navController.navigate(Routes.VisualizerStudio.route) },
                 onYouTubeLoginClick = { navController.navigate(Routes.YouTubeLogin.route) },
                 onGoogleSignInClick = { navController.navigate(Routes.Login.route) },
                 onLaunchTvMode = { navController.navigate(Routes.TvDashboard.route) },
@@ -284,6 +285,12 @@ fun NavGraph(
             DSPScreen(
                 windowSizeClass = windowSizeClass,
                 onNavigateBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(Routes.VisualizerStudio.route) {
+            com.deepeye.musicpro.features.visualizer.studio.VisualizerStudioScreen(
+                onBackClick = { navController.popBackStack() },
             )
         }
 

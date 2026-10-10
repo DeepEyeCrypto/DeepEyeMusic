@@ -27,6 +27,8 @@ sealed class Routes(val route: String) {
 
     data object DSP : Routes("dsp")
 
+    data object VisualizerStudio : Routes("visualizer_studio")
+
     data object Login : Routes("login")
 
     data object YouTubeLogin : Routes("youtube_login")

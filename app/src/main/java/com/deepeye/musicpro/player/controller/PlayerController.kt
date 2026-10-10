@@ -57,6 +57,7 @@ constructor(
     private val queueManager: QueueManager,
     private val sourceResolverManager: SourceResolverManager,
     private val audioSessionManager: com.deepeye.musicpro.dsp.session.AudioSessionManager,
+    private val audioVisualizerManager: com.deepeye.musicpro.ui.player.visualizer.agsl.AudioVisualizerManager,
     private val dspEngine: com.deepeye.musicpro.dsp.engine.DSPEngine,
     private val historyRepository: com.deepeye.musicpro.domain.repository.HistoryRepository,
     private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
@@ -108,6 +109,7 @@ constructor(
     private var positionUpdateJob: Job? = null
     private var playJob: Job? = null
     private var stablePlaybackResetJob: Job? = null
+    private var visualizerAttachJob: Job? = null
     private val playMutex = Mutex()
     private var lastSkippedSegment: com.deepeye.musicpro.domain.model.SponsorSegment? = null
 
@@ -115,7 +117,7 @@ constructor(
     private var currentTrackId: String? = null
     private var totalPlayTimeCurrentTrack: Long = 0L
     private var lastPlaybackStateTime: Long = 0L
-    private val recentAutoplayTrackIds = mutableListOf<String>()
+    // ISOLATION-OMEGA: local repeat guard removed; InnerTube dictates the queue.
     private var playRetryCount = 0
     private var prefetchedTrackId: String? = null
     private var isPrefetchingNextTrack: Boolean = false
@@ -312,9 +314,35 @@ constructor(
                             }
                             // Force DSP re-attach since the AudioTrack has been created
                             audioSessionManager.forceReattach()
+
+                            // ── SYNAPSE-OMEGA: bind the zero-alloc FFT engine to the live audio session ──
+                            // The audioSessionId is valid once STATE_READY is reached (AudioTrack
+                            // exists). Defer briefly so MediaTek HALs finish AudioTrack init — the
+                            // same 300ms guard AudioSessionManager uses — then attach.
+                            visualizerAttachJob?.cancel()
+                            visualizerAttachJob = scope.launch {
+                                delay(VISUALIZER_ATTACH_DELAY_MS)
+                                val sessionId = player.audioSessionId
+                                if (sessionId != androidx.media3.common.C.AUDIO_SESSION_ID_UNSET) {
+                                    val ok = audioVisualizerManager.attachToAudioSession(sessionId)
+                                    android.util.Log.i(
+                                        "PlayerController",
+                                        "event=visualizer_fft_attach sessionId=$sessionId result=$ok"
+                                    )
+                                } else {
+                                    android.util.Log.w(
+                                        "PlayerController",
+                                        "event=visualizer_fft_attach_skipped reason=unset_audio_session"
+                                    )
+                                }
+                            }
                         }
                         Player.STATE_ENDED -> {
                             stablePlaybackResetJob?.cancel()
+                            // Release the native Visualizer to prevent JNI leaks when playback ends.
+                            visualizerAttachJob?.cancel()
+                            audioVisualizerManager.detach()
+                            android.util.Log.d("PlayerController", "event=visualizer_fft_detach reason=state_ended")
                             onTrackEnded()
                         }
                     }
@@ -521,6 +549,12 @@ constructor(
         scope.launch {
             kotlinx.coroutines.flow.combine(queueManager.queue, queueManager.currentIndex) { q, idx -> Pair(q, idx) }
                 .collectLatest { (q, idx) ->
+                    // Change 4 — Do not append autoplay candidates when repeat mode will keep
+                    // cycling the existing queue indefinitely.
+                    val repeatMode = queueManager.repeatMode.value
+                    if (repeatMode == com.deepeye.musicpro.domain.model.RepeatMode.ONE ||
+                        repeatMode == com.deepeye.musicpro.domain.model.RepeatMode.ALL) return@collectLatest
+
                     if (q.isNotEmpty() && idx >= q.size - 2 && playerState.value.autoplayEnabled) {
                         val current = q.getOrNull(idx)
                         if (current != null && !_autoplayState.value.isGenerating) {
@@ -543,18 +577,11 @@ constructor(
                                         )
                                     }
                                     queueManager.addItems(mediaItems)
-                                    val newIds = candidates.map { it.videoId }
-                                    recentAutoplayTrackIds.addAll(newIds)
-                                    
-                                    // Ensure it doesn't grow indefinitely to prevent OOM
-                                    if (recentAutoplayTrackIds.size > 1000) {
-                                        recentAutoplayTrackIds.subList(0, recentAutoplayTrackIds.size - 500).clear()
-                                    }
-
+                                    // ISOLATION-OMEGA: InnerTube dictates repeats; keep
+                                    // only the display history (takeLast 50), no sessionHistory/blacklist shaping.
                                     _autoplayState.update { state ->
                                         state.copy(
                                             history = (state.history + (current.id)).takeLast(50),
-                                            sessionHistory = state.sessionHistory + newIds,
                                             lastGeneratedAt = System.currentTimeMillis()
                                         )
                                     }
@@ -948,8 +975,9 @@ constructor(
                         return@launch
                     }
 
+                    // ISOLATION-OMEGA: direct InnerTube passthrough (same-track guard only).
                     val validCandidates = candidates.filter {
-                        !recentAutoplayTrackIds.contains(it.videoId) && it.videoId != (current?.id ?: "")
+                        it.videoId != (current?.id ?: "")
                     }
 
                     if (validCandidates.isNotEmpty()) {
@@ -966,19 +994,12 @@ constructor(
                         }
                         
                         queueManager.addItems(mediaItems)
-                        val newIds = validCandidates.map { it.videoId }
-                        recentAutoplayTrackIds.addAll(newIds)
-                        
-                        if (recentAutoplayTrackIds.size > 1000) {
-                            recentAutoplayTrackIds.subList(0, recentAutoplayTrackIds.size - 500).clear()
-                        }
                         
                         val firstCandidate = validCandidates.first()
                         
                         _autoplayState.update { state ->
                             state.copy(
                                 history = (state.history + (current?.id ?: "")).takeLast(50),
-                                sessionHistory = state.sessionHistory + newIds,
                                 skipStreak = if (isTrackSkipped) state.skipStreak + 1 else 0,
                                 lastGeneratedAt = System.currentTimeMillis(),
                                 discoveryMode = firstCandidate.score < 0.4f,
@@ -1097,8 +1118,11 @@ constructor(
         val currentItem = playerState.value.currentItem
         val currentTrack = currentItem as? MediaItem.Remote ?: return
         
-        // Only prefetch if ExoPlayer doesn't already have a next item queued
-        if (player.mediaItemCount > 1) return
+        // Only prefetch if ExoPlayer doesn't already have a next item queued,
+        // and the in-app queue doesn't already have a resolved next item.
+        // Change 5 — also check queueManager.peekNext() to prevent re-firing when
+        // the queue has items that haven't yet been enqueued to ExoPlayer.
+        if (player.mediaItemCount > 1 || queueManager.peekNext() != null) return
 
         isPrefetchingNextTrack = true
         scope.launch {
@@ -1113,8 +1137,9 @@ constructor(
                     val candidates = withContext(Dispatchers.IO) {
                         autoplayRepository.generateNextQueue(currentTrack, _autoplayState.value, activeArtists)
                     }
+                    // ISOLATION-OMEGA: direct InnerTube passthrough (same-track guard only).
                     val validCandidates = candidates.filter {
-                        !recentAutoplayTrackIds.contains(it.videoId) && it.videoId != currentTrack.id
+                        it.videoId != currentTrack.id
                     }
                     if (validCandidates.isNotEmpty()) {
                         val mediaItems = validCandidates.map { c ->
@@ -1128,11 +1153,6 @@ constructor(
                             )
                         }
                         queueManager.addItems(mediaItems)
-                        val newIds = validCandidates.map { it.videoId }
-                        recentAutoplayTrackIds.addAll(newIds)
-                        if (recentAutoplayTrackIds.size > 1000) {
-                            recentAutoplayTrackIds.subList(0, recentAutoplayTrackIds.size - 500).clear()
-                        }
                         mediaItems.firstOrNull()
                     } else null
                 }
@@ -1610,5 +1630,14 @@ constructor(
             )
         }
         return true
+    }
+
+    companion object {
+        /**
+         * Deferred-attach guard for the AGSL FFT engine. MediaTek HALs need the AudioTrack
+         * to be fully initialized before android.media.audiofx.Visualizer can bind, or it
+         * fails with error -3. Mirrors the 300ms delay AudioSessionManager already uses.
+         */
+        private const val VISUALIZER_ATTACH_DELAY_MS = 300L
     }
 }

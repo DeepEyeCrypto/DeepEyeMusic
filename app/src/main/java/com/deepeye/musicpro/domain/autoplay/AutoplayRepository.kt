@@ -3,7 +3,8 @@
 
 package com.deepeye.musicpro.domain.autoplay
 
-import com.deepeye.musicpro.data.db.RecommendationDao
+import com.deepeye.musicpro.data.cache.CacheManager
+import com.deepeye.musicpro.data.source.remote.youtube.InnerTubeRemoteClient
 import com.deepeye.musicpro.data.source.remote.youtube.SmartTubeEngine
 import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.recommendation.ContentFetcher
@@ -11,15 +12,19 @@ import com.deepeye.musicpro.domain.recommendation.VideoItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AutoplayRepository @Inject constructor(
-    private val dao: RecommendationDao,
     private val contentFetcher: ContentFetcher,
     private val smartTubeEngine: SmartTubeEngine,
+    private val innerTubeClient: InnerTubeRemoteClient,
+    private val cacheManager: CacheManager,
+    private val networkConditionChecker: com.deepeye.musicpro.util.NetworkConditionChecker,
+    private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
 ) {
     suspend fun generateNextQueue(
         currentTrack: MediaItem?,
@@ -28,27 +33,68 @@ class AutoplayRepository @Inject constructor(
     ): List<QueueItem> = withContext(Dispatchers.IO) {
         if (currentTrack == null) return@withContext emptyList()
 
-        val blacklist = dao.getBlacklistedVideoIds().toSet() + autoplayState.blacklist
-        val recentHistory = autoplayState.sessionHistory.toSet()
+        // Change 3 — Cellular / metered network guard.
+        // Pre-fetch only fires on unmetered networks (Wi-Fi/ethernet) OR when the user
+        // has explicitly opted in via the "Autoplay on Cellular" setting. This prevents
+        // the 15s pre-fetch from silently draining the user's mobile data.
+        val isMetered = networkConditionChecker.isNetworkMetered()
+        val autoplayOnCellular = settingsDataStore.settings.first().autoplayOnCellular
+        if (isMetered && !autoplayOnCellular) {
+            android.util.Log.i(
+                "AutoplayRepository",
+                "event=autoplay_prefetch_skipped reason=metered_network cellular_opt_in=false"
+            )
+            return@withContext emptyList()
+        }
+
+        // ISOLATION-OMEGA (non-destructive bypass): return cached InnerTube queue as-is.
+        // No local blacklist/sessionHistory filtering — InnerTube is the sole authority.
+        if (currentTrack !is MediaItem.Local) {
+            val cachedQueue = cacheManager.loadAutoplayQueue(currentTrack.id)
+            if (!cachedQueue.isNullOrEmpty()) {
+                return@withContext cachedQueue
+            }
+        }
 
         val candidates = coroutineScope {
             val smartTubeDeferred = async {
                 if (currentTrack !is MediaItem.Local) {
                     try {
-                        val auto = smartTubeEngine.getAlgorithmicNext(currentTrack.id)
-                        if (auto != null && auto.videoId.isNotBlank()) {
-                            listOf(
-                                VideoItem(
-                                    videoId = auto.videoId,
-                                    title = auto.title,
-                                    artist = auto.artist,
-                                    channelId = "",
-                                    duration = auto.durationSeconds.toString(),
-                                    genre = "SmartTube-Algorithmic"
-                                )
+                        // Change 4 — AUTOPLAY-OMEGA wiring: SmartTubeEngine.fetchUpNext() is the
+                        // primary Up-Next extraction (TVHTML5 /next with the real
+                        // singleColumnWatchNextResults.autoplay sets parsing). The ANDROID_MUSIC
+                        // client (401-retry) remains the fallback. Both run on Dispatchers.IO.
+                        val upNextItem = smartTubeEngine.fetchUpNext(currentTrack.id) as? MediaItem.Remote
+                        val primary = if (upNextItem != null && upNextItem.id.isNotBlank()) {
+                            VideoItem(
+                                videoId = upNextItem.id,
+                                title = upNextItem.title,
+                                artist = upNextItem.artist,
+                                channelId = "",
+                                duration = (upNextItem.duration / 1000L).toString(),
+                                genre = "SmartTube-Algorithmic"
                             )
-                        } else emptyList()
-                    } catch (_: Exception) {
+                        } else {
+                            innerTubeClient.fetchNextAutoplay(currentTrack.id)?.let { track ->
+                                if (track.videoId.isNotBlank()) {
+                                    VideoItem(
+                                        videoId = track.videoId,
+                                        title = track.title,
+                                        artist = track.artist,
+                                        channelId = "",
+                                        duration = track.durationSeconds.toString(),
+                                        genre = "SmartTube-Algorithmic"
+                                    )
+                                } else null
+                            }
+                        }
+                        if (primary != null) listOf(primary) else emptyList()
+                    } catch (e: Exception) {
+                        android.util.Log.w(
+                            "AutoplayRepository",
+                            "event=autoplay_up_next_fetch_failed videoId=${currentTrack.id} reason=\"${e.message}\"",
+                            e
+                        )
                         emptyList()
                     }
                 } else emptyList()
@@ -71,9 +117,9 @@ class AutoplayRepository @Inject constructor(
             val smartList = smartTubeDeferred.await()
             val relatedList = relatedDeferred.await()
 
+            // ISOLATION-OMEGA: pure InnerTube passthrough (distinct only, no local filtering).
             (smartList + relatedList)
                 .distinctBy { it.videoId }
-                .filterNot { it.videoId in blacklist || it.videoId in recentHistory }
         }
 
         candidates.take(20).mapIndexed { index, video ->

@@ -25,6 +25,7 @@ object AgslShaderEngine {
         uniform shader iChannel0;
         uniform float4 iColorPrimary;
         uniform float4 iColorSecondary;
+        uniform float4 iAccentColor;
         uniform float iBass;
         uniform float iMid;
         uniform float iTreble;

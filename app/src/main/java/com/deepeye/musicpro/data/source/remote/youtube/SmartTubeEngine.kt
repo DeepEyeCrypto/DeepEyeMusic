@@ -4,8 +4,10 @@
 package com.deepeye.musicpro.data.source.remote.youtube
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import com.deepeye.musicpro.domain.auth.InnerTubeAuthManager
+import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.Song
 import com.deepeye.musicpro.domain.model.MusicTrack
 import com.deepeye.musicpro.domain.model.Lyrics
@@ -153,6 +155,205 @@ class SmartTubeEngine @Inject constructor(
 
         val json = postInnerTube("next", extraJson) ?: return@withContext null
         return@withContext extractAutoplayFromJson(json, currentVideoId = videoId)
+    }
+
+    /**
+     * AUTOPLAY-OMEGA — fetches YouTube's native "Up Next" autoplay recommendation for
+     * [currentVideoId] via the InnerTube `/youtubei/v1/next` endpoint and returns a fully
+     * constructed [MediaItem.Remote] (streamUri is left null — stream resolution is owned
+     * by the player layer via SourceResolverManager).
+     *
+     * Thread-safety contract (FPS-MAXIMA): the HTTP round-trip runs inside [postInnerTube]
+     * (Dispatchers.IO) and the JSON traversal below is pure CPU work executed inside
+     * withContext(Dispatchers.IO). The 144Hz Compose/AGSL render thread never touches
+     * this code path, so a fetch can never cause a dropped frame.
+     */
+    suspend fun fetchUpNext(currentVideoId: String): MediaItem? = withContext(Dispatchers.IO) {
+        if (currentVideoId.isBlank()) {
+            Log.w(TAG, "event=fetch_up_next result=rejected reason=\"blank_video_id\"")
+            return@withContext null
+        }
+
+        val startedAt = System.currentTimeMillis()
+        val json = postInnerTube("next", "\"videoId\": \"$currentVideoId\"")
+        if (json == null) {
+            Log.w(
+                TAG,
+                "event=fetch_up_next result=network_failure videoId=$currentVideoId " +
+                    "durationMs=${System.currentTimeMillis() - startedAt}"
+            )
+            return@withContext null
+        }
+
+        val track = try {
+            extractUpNextTrack(json, currentVideoId)
+        } catch (e: Exception) {
+            Log.e(
+                TAG,
+                "event=fetch_up_next result=parse_failure videoId=$currentVideoId " +
+                    "durationMs=${System.currentTimeMillis() - startedAt} reason=\"${e.message}\"",
+                e
+            )
+            return@withContext null
+        }
+
+        if (track == null || track.videoId.isBlank() || track.videoId == currentVideoId) {
+            Log.w(
+                TAG,
+                "event=fetch_up_next result=not_found videoId=$currentVideoId " +
+                    "durationMs=${System.currentTimeMillis() - startedAt}"
+            )
+            return@withContext null
+        }
+
+        Log.i(
+            TAG,
+            "event=fetch_up_next result=success videoId=$currentVideoId " +
+                "nextVideoId=${track.videoId} title=\"${track.title}\" " +
+                "durationMs=${System.currentTimeMillis() - startedAt}"
+        )
+
+        MediaItem.Remote(
+            id = track.videoId,
+            title = track.title,
+            artist = track.artist,
+            artworkUri = track.thumbnailUrl.takeIf { it.isNotBlank() }?.let(Uri::parse)
+                ?: Uri.parse("https://img.youtube.com/vi/${track.videoId}/hqdefault.jpg"),
+            duration = track.durationSeconds * 1000L,
+            streamUri = null,
+            isVideo = false,
+        )
+    }
+
+    /**
+     * Extracts the native "Up Next" recommendation from an InnerTube `/next` payload.
+     *
+     * Priority order (shapes verified against live payloads on 2026-10-10):
+     *  1. `contents -> singleColumnWatchNextResults -> autoplay -> autoplay -> sets[]`
+     *     (TVHTML5): `autoplayVideoRenderer.autonavEndpointRenderer.endpoint.watchEndpoint`
+     *     or `autoplayVideoRenderer.autoplayEndpointRenderer.endpoint.watchEndpoint`,
+     *     with title/artist/thumbnail harvested from the sibling
+     *     `nextVideoRenderer.maybeHistoryEndpointRenderer.item.previewButtonRenderer`.
+     *  2. `contents -> twoColumnWatchNextResults -> autoplay -> autoplay -> sets[]`
+     *     (WEB): bare `autoplayVideo.watchEndpoint` endpoint nodes.
+     *  3. Directive path `contents -> singleColumnWatchNextResults -> autoplay -> autoplayVideo`
+     *     as a direct node (client-shape drift tolerance).
+     *  4. Legacy strategies via [extractAutoplayFromJson] (playerOverlayAutoplayRenderer,
+     *     the music-client `watchNextTabbedResultsRenderer -> playlistPanelRenderer` queue,
+     *     and twoColumn secondaryResults).
+     */
+    private fun extractUpNextTrack(json: JSONObject, currentVideoId: String): AutoplayTrack? {
+        // Strategies 1 & 2 — autoplay SETS (real TVHTML5 / WEB shapes)
+        val autoplaySets = json.optJSONObject("contents")
+            ?.optJSONObject("singleColumnWatchNextResults")
+            ?.optJSONObject("autoplay")
+            ?.optJSONObject("autoplay")
+            ?.optJSONArray("sets")
+            ?: json.optJSONObject("contents")
+                ?.optJSONObject("twoColumnWatchNextResults")
+                ?.optJSONObject("autoplay")
+                ?.optJSONObject("autoplay")
+                ?.optJSONArray("sets")
+
+        if (autoplaySets != null) {
+            for (i in 0 until autoplaySets.length()) {
+                val autoplaySet = autoplaySets.optJSONObject(i) ?: continue
+                val autoplayRenderer = autoplaySet.optJSONObject("autoplayVideoRenderer")
+                    ?: autoplaySet.optJSONObject("autoplayVideo")
+
+                // LOOP_ONE / replay sets point back at the current video
+                // (watchEndpoint.replayIfSameVideo = true) — not real up-next candidates.
+                val isReplaySet = autoplayRenderer
+                    ?.optJSONObject("autoplayEndpointRenderer")
+                    ?.optJSONObject("endpoint")
+                    ?.optJSONObject("watchEndpoint")
+                    ?.optBoolean("replayIfSameVideo") == true
+                if (isReplaySet) continue
+
+                val nextId = extractWatchEndpointVideoId(autoplayRenderer)
+                if (nextId.isNullOrBlank() || nextId == currentVideoId) continue
+
+                val nextVideoEndpoint = autoplaySet.optJSONObject("nextVideoRenderer")
+                    ?.optJSONObject("maybeHistoryEndpointRenderer")
+                val previewEndpointVideoId = nextVideoEndpoint
+                    ?.optJSONObject("endpoint")
+                    ?.optJSONObject("watchEndpoint")
+                    ?.optString("videoId")
+                // Only trust the preview metadata when it describes the same video we
+                // extracted; otherwise fall back to neutral defaults.
+                val metadataMatches = previewEndpointVideoId == null || previewEndpointVideoId == nextId
+                val preview = nextVideoEndpoint
+                    ?.optJSONObject("item")
+                    ?.optJSONObject("previewButtonRenderer")
+
+                return AutoplayTrack(
+                    videoId = nextId,
+                    title = if (metadataMatches) {
+                        parseRunsText(preview?.optJSONObject("title")).ifBlank { "Next Recommendation" }
+                    } else {
+                        "Next Recommendation"
+                    },
+                    artist = if (metadataMatches) {
+                        parseRunsText(preview?.optJSONObject("byline")).ifBlank { "YouTube" }
+                    } else {
+                        "YouTube"
+                    },
+                    thumbnailUrl = if (metadataMatches) {
+                        extractThumbnailUrl(preview?.optJSONObject("thumbnail")) ?: ""
+                    } else {
+                        ""
+                    },
+                    durationSeconds = 0L,
+                )
+            }
+        }
+
+        // Strategy 3 — direct `autoplayVideo` node under singleColumnWatchNextResults.autoplay
+        val directNextId = extractWatchEndpointVideoId(
+            json.optJSONObject("contents")
+                ?.optJSONObject("singleColumnWatchNextResults")
+                ?.optJSONObject("autoplay")
+                ?.optJSONObject("autoplayVideo")
+        )
+        if (!directNextId.isNullOrBlank() && directNextId != currentVideoId) {
+            return AutoplayTrack(
+                videoId = directNextId,
+                title = "Next Recommendation",
+                artist = "YouTube",
+                thumbnailUrl = "",
+                durationSeconds = 0L,
+            )
+        }
+
+        // Strategy 4 — legacy paths (playerOverlay / music playlistPanel / secondaryResults)
+        return extractAutoplayFromJson(json, currentVideoId)
+    }
+
+    /**
+     * Pulls a videoId out of the many endpoint wrapper shapes InnerTube uses for
+     * autoplay nodes (autonavEndpointRenderer, autoplayEndpointRenderer, bare
+     * autoplayVideo endpoint objects, or a plain videoId field).
+     */
+    private fun extractWatchEndpointVideoId(renderer: JSONObject?): String? {
+        if (renderer == null) return null
+        return renderer.optJSONObject("autonavEndpointRenderer")
+            ?.optJSONObject("endpoint")
+            ?.optJSONObject("watchEndpoint")
+            ?.optString("videoId")
+            ?.takeIf { it.isNotBlank() }
+            ?: renderer.optJSONObject("autoplayEndpointRenderer")
+                ?.optJSONObject("endpoint")
+                ?.optJSONObject("watchEndpoint")
+                ?.optString("videoId")
+                ?.takeIf { it.isNotBlank() }
+            ?: renderer.optJSONObject("endpoint")
+                ?.optJSONObject("watchEndpoint")
+                ?.optString("videoId")
+                ?.takeIf { it.isNotBlank() }
+            ?: renderer.optJSONObject("watchEndpoint")
+                ?.optString("videoId")
+                ?.takeIf { it.isNotBlank() }
+            ?: renderer.optString("videoId").takeIf { it.isNotBlank() }
     }
 
     /**

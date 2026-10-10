@@ -25,7 +25,8 @@ enum class AgslScene {
     LIQUID_PLASMA,
     CRYSTAL_TUNNEL,
     AURA_ORB,
-    CYBER_GRID
+    CYBER_GRID,
+    NEON_TRIANGLE_GRID
 }
 
 @Composable
@@ -94,12 +95,14 @@ private fun AgslRuntimeShaderRenderer(
     val crystalShader = remember { RuntimeShader(AgslShaders.CRYSTAL_TUNNEL) }
     val auraShader = remember { RuntimeShader(AgslShaders.AURA_ORB) }
     val cyberGridShader = remember { RuntimeShader(AgslShaders.CYBER_GRID) }
+    val neonTriangleShader = remember { RuntimeShader(AgslShaders.NEON_TRIANGLE_GRID) }
 
     // Pre-instantiate ShaderBrushes
     val liquidBrush = remember(liquidShader) { ShaderBrush(liquidShader) }
     val crystalBrush = remember(crystalShader) { ShaderBrush(crystalShader) }
     val auraBrush = remember(auraShader) { ShaderBrush(auraShader) }
     val cyberGridBrush = remember(cyberGridShader) { ShaderBrush(cyberGridShader) }
+    val neonTriangleBrush = remember(neonTriangleShader) { ShaderBrush(neonTriangleShader) }
 
     Canvas(modifier = modifier.fillMaxSize()) {
         // ── ZERO-RECOMPOSITION DRAW PHASE UNIFORM DISPATCH ──
@@ -118,10 +121,13 @@ private fun AgslRuntimeShaderRenderer(
 
         if (currentTheme != null) {
             when (currentTheme) {
-                is VisualizerTheme.Triangle,
-                is VisualizerTheme.VvavyTriangle -> {
+                is VisualizerTheme.Triangle -> {
                     activeShader = crystalShader
                     activeBrush = crystalBrush
+                }
+                is VisualizerTheme.VvavyTriangle -> {
+                    activeShader = neonTriangleShader
+                    activeBrush = neonTriangleBrush
                 }
                 is VisualizerTheme.SpectrumBars,
                 is VisualizerTheme.CircularEQ -> {
@@ -143,31 +149,51 @@ private fun AgslRuntimeShaderRenderer(
                 AgslScene.LIQUID_PLASMA  -> { activeShader = liquidShader; activeBrush = liquidBrush }
                 AgslScene.CRYSTAL_TUNNEL -> { activeShader = crystalShader; activeBrush = crystalBrush }
                 AgslScene.AURA_ORB       -> { activeShader = auraShader; activeBrush = auraBrush }
-                AgslScene.CYBER_GRID     -> { activeShader = cyberGridShader; activeBrush = cyberGridBrush }
+                AgslScene.CYBER_GRID         -> { activeShader = cyberGridShader; activeBrush = cyberGridBrush }
+                AgslScene.NEON_TRIANGLE_GRID -> { activeShader = neonTriangleShader; activeBrush = neonTriangleBrush }
             }
         }
 
+        // ── Uniform contract guard ─────────────────────────────────────────────
+        // Only call setFloatUniform/setInputShader for uniforms the ACTIVE shader
+        // actually declares. Setting an undeclared uniform makes libhwui throw an
+        // IllegalArgumentException from native code while formatting the
+        // "unable to find uniform" message; on some ROMs (observed: Realme RMX3945,
+        // MT6835) that throw path reads a freed buffer, fails CheckJNI's Modified
+        // UTF-8 validation and SIGABRTs the process — an abort runCatching cannot
+        // intercept. Declared uniforms per AgslShaders.kt:
+        //   LIQUID_PLASMA / CRYSTAL_TUNNEL / AURA_ORB / CYBER_GRID:
+        //     iResolution, iTime, iBass, iMid, iTreble, iPeak,
+        //     iChannel0, iAccentColor, iColorPrimary, iColorSecondary
+        //   NEON_TRIANGLE_GRID: same minus iChannel0 and iAccentColor
+        //   (no shader declares iTimeDelta — that call was removed.)
+        val isNeonTriangle = activeShader === neonTriangleShader
+
         // 1. Update and bind Audio FFT 256x1 Bitmap Texture Bridge to iChannel0 safely
-        runCatching {
-            val audioShader = dataBridge.updateAudioTexture(spectrum, bands)
-            activeShader.setInputShader("iChannel0", audioShader)
+        if (!isNeonTriangle) {
+            runCatching {
+                val audioShader = dataBridge.updateAudioTexture(spectrum, bands)
+                activeShader.setInputShader("iChannel0", audioShader)
+            }
         }
 
-        // 2. Set float uniforms safely
+        // 2. Set float uniforms safely (all declared by every active shader)
         runCatching { activeShader.setFloatUniform("iResolution", size.width, size.height) }
         runCatching { activeShader.setFloatUniform("iTime", time) }
         runCatching { activeShader.setFloatUniform("iBass", bass) }
         runCatching { activeShader.setFloatUniform("iMid", mids) }
         runCatching { activeShader.setFloatUniform("iTreble", treble) }
         runCatching { activeShader.setFloatUniform("iPeak", peak) }
-        runCatching {
-            activeShader.setFloatUniform(
-                "iAccentColor",
-                accentColor.red,
-                accentColor.green,
-                accentColor.blue,
-                accentColor.alpha
-            )
+        if (!isNeonTriangle) {
+            runCatching {
+                activeShader.setFloatUniform(
+                    "iAccentColor",
+                    accentColor.red,
+                    accentColor.green,
+                    accentColor.blue,
+                    accentColor.alpha
+                )
+            }
         }
         runCatching {
             activeShader.setFloatUniform(

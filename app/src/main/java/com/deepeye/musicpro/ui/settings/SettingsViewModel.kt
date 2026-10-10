@@ -94,6 +94,10 @@ constructor(
         viewModelScope.launch { settingsDataStore.setShowVisualizer(enabled) }
     }
 
+    fun setAutoplayOnCellular(enabled: Boolean) {
+        viewModelScope.launch { settingsDataStore.setAutoplayOnCellular(enabled) }
+    }
+
     fun setPreferredLanguages(languages: Set<String>) {
         // No-op: handled by YouTube InnerTube
     }

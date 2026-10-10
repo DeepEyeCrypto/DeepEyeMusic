@@ -215,6 +215,86 @@ object AgslShaders {
     """
 
     /**
+     * Scene: FFT True-Reactive Triangle Grid (TRUE-FFT-OMEGA)
+     * Features: Per-cell FFT-driven geometry, no static time loops, chaotic beat-response.
+     */
+    @Language("AGSL")
+    const val NEON_TRIANGLE_GRID = """
+        uniform float2 iResolution;
+        uniform float iTime;
+        uniform float iBass;
+        uniform float iMid;
+        uniform float iTreble;
+        uniform float iPeak;
+        uniform float4 iColorPrimary;
+        uniform float4 iColorSecondary;
+
+        // Hash: cell id → [0,1)
+        float hash12(float2 p) {
+            float3 p3 = fract(float3(p.xyx) * 0.13);
+            p3 += dot(p3, p3.yzx + 3.33);
+            return fract((p3.x + p3.y) * p3.z);
+        }
+
+        // Rot2D
+        float2x2 rot2(float a) {
+            float c = cos(a); float s = sin(a);
+            return float2x2(c, -s, s, c);
+        }
+
+        // Triangle SDF
+        float sdEqTri(float2 p, float r) {
+            const float k = 1.73205081; // sqrt(3.0)
+            p.x = abs(p.x) - r;
+            p.y = p.y + r/k;
+            if(p.x + k*p.y > 0.0) p = float2(p.x - k*p.y, -k*p.x - p.y) / 2.0;
+            p.x -= clamp(p.x, -2.0*r, 0.0);
+            return -length(p) * sign(p.y);
+        }
+
+        half4 main(float2 fragCoord) {
+            float2 uv = (fragCoord * 2.0 - iResolution) / min(iResolution.x, iResolution.y);
+
+            // Grid setup
+            float scale = 6.0 + iMid * 5.0;
+            float2 gUv = uv * scale;
+            float2 cellId = floor(gUv);
+            float2 localUv = (fract(gUv) - 0.5);
+
+            // Audio sampling mapped geometrically to grid tiles via Spatial Hashing
+            float cellHash = hash12(cellId);
+            // Use band energies for per-cell reactivity instead of iChannel0 texture
+            float fft = mix(iBass, iTreble, cellHash) * (0.5 + iMid);
+            float cellBeat = mix(iPeak, iTreble, cellHash * 0.5 + iBass * 0.5);
+
+            // Dynamics: Entirely FFT-driven geometry
+            float beat = smoothstep(0.4, 0.8, fft * (1.0 + iBass));
+            float size = (fft * 0.4 + 0.15) * (1.0 + beat * 0.6);
+            float angle = iTime * (0.2 + fft * 2.0) + cellHash * 6.28;
+            
+            float2 triUv = rot2(angle) * localUv;
+            float d = sdEqTri(triUv, size);
+
+            // High-contrast neon
+            float3 primary = iColorPrimary.rgb;
+            float3 secondary = iColorSecondary.rgb;
+            float3 col = mix(primary, secondary, fft);
+
+            float edge = smoothstep(0.015, 0.0, abs(d) - 0.003);
+            float glow = exp(-max(d, 0.0) * 20.0);
+            
+            float3 finalCol = col * edge * (1.0 + fft * 3.0);
+            finalCol += col * glow * (0.5 + fft * 2.0 + iPeak);
+
+            // Fade edges
+            float vig = 1.0 - smoothstep(0.5, 1.2, length(uv * 0.8));
+            finalCol *= vig;
+
+            return half4(half3(finalCol), 1.0);
+        }
+    """
+
+    /**
      * Scene: Cyber Synthwave Grid (VVavy "the-infinite-grid" / "tron")
      * Features: Perspective infinite horizon grid, undulating terrain waves, neon Monet retro sun.
      */
