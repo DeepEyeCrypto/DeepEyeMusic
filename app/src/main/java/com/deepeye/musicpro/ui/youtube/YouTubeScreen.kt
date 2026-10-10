@@ -1305,15 +1305,14 @@ fun SmartTubeVideoCard(
                     modifier = Modifier.weight(1f),
                 )
 
-                val metaText = when {
-                    video.viewCount > 0 -> formatViews(video.viewCount)
-                    video.uploadDate.isNotBlank() -> video.uploadDate
-                    else -> ""
+                val metaParts = buildList {
+                    if (video.viewCount > 0) add(formatViews(video.viewCount))
+                    if (video.uploadDate.isNotBlank()) add(video.uploadDate)
                 }
-                if (metaText.isNotEmpty()) {
+                if (metaParts.isNotEmpty()) {
                     Text(" · ", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), fontSize = 11.sp)
                     Text(
-                        text = metaText,
+                        text = metaParts.joinToString(" · "),
                         color = neonCyan.copy(alpha = 0.9f),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
