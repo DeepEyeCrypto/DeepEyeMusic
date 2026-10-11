@@ -43,21 +43,27 @@ constructor(
                     }.filterNot { com.deepeye.musicpro.data.source.remote.youtube.MusicFilter.isShort(it.title, it.duration, it.isShort) }
                 } catch (e: Exception) { emptyList() }
 
-                if (authHome.isNotEmpty()) {
+                // OMNI-SYNC: an authenticated user is served EXCLUSIVELY by InnerTube.
+                // We return here whether or not authHome resolved — on an empty/transient
+                // API result we surface an empty feed (UI shows a retry) rather than falling
+                // back to anonymous search or the local RecommendationDao taste table.
+                // Only guests (hasAuth == false) reach the local/search seeding below.
+                if (hasAuth) {
                     return@coroutineScope buildList {
-                        add(
-                            VideoRailSection(
-                                category = VideoRailCategory.TRENDING_IN,
-                                title = "🌟 For You",
-                                subtitle = "Personalized Recommendations",
-                                items = authHome.take(20).map {
-                                    val viewStr = when {
-                                        it.viewCount >= 1_000_000 -> String.format("%.1fM views", it.viewCount / 1_000_000f)
-                                        it.viewCount >= 1_000 -> String.format("%.0fK views", it.viewCount / 1_000f)
-                                        it.viewCount > 0 -> "${it.viewCount} views"
-                                        it.uploadDate.isNotBlank() -> it.uploadDate
-                                        else -> ""
-                                    }
+                        if (authHome.isNotEmpty()) {
+                            add(
+                                VideoRailSection(
+                                    category = VideoRailCategory.TRENDING_IN,
+                                    title = "🌟 For You",
+                                    subtitle = "Personalized Recommendations",
+                                    items = authHome.take(20).map {
+                                        val viewStr = when {
+                                            it.viewCount >= 1_000_000 -> String.format("%.1fM views", it.viewCount / 1_000_000f)
+                                            it.viewCount >= 1_000 -> String.format("%.0fK views", it.viewCount / 1_000f)
+                                            it.viewCount > 0 -> "${it.viewCount} views"
+                                            it.uploadDate.isNotBlank() -> it.uploadDate
+                                            else -> ""
+                                        }
                                     com.deepeye.musicpro.domain.model.home.VideoRailItem(
                                         videoId = it.id,
                                         title = it.title,
@@ -104,6 +110,7 @@ constructor(
                                     accentColor = Color(0xFFE91E63),
                                 )
                             )
+                        }
                         }
                     }
                 }

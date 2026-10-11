@@ -98,6 +98,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
                     PersonalizedSectionType.NEW_FROM_SUBSCRIPTIONS -> buildSubscriptionsSection(session, forceRefresh = true)
                     PersonalizedSectionType.BASED_ON_LISTENING -> buildBasedOnListeningSection(forceRefresh = true)
                     PersonalizedSectionType.TRENDING_MUSIC -> buildTrendingSection(forceRefresh = true)
+                    PersonalizedSectionType.YOUTUBE_MUSIC_SHELF -> buildYouTubeMusicShelvesSection(session, forceRefresh = true)
                 }
 
                 val index = currentSections.indexOfFirst { it.type == sectionType }
@@ -190,6 +191,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
                     val subscriptionsDeferred = async { buildSubscriptionsSection(session, forceRefresh) }
                     val basedOnListeningDeferred = async { buildBasedOnListeningSection(forceRefresh) }
                     val trendingDeferred = async { buildTrendingSection(forceRefresh) }
+                    val ytMusicShelvesDeferred = async { buildYouTubeMusicShelves(session, forceRefresh) }
 
                     val continueListening = continueListeningDeferred.await()
                     val yourQueue = yourQueueDeferred.await()
@@ -199,6 +201,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
                     val subscriptions = subscriptionsDeferred.await()
                     val basedOnListening = basedOnListeningDeferred.await()
                     val trending = trendingDeferred.await()
+                    val ytMusicShelves = ytMusicShelvesDeferred.await()
 
                     if (forceRefresh) {
                         personalizationPrefs.update { it.copy(lastRefreshMillis = System.currentTimeMillis()) }
@@ -241,17 +244,28 @@ class PersonalizationRepositoryImpl @Inject constructor(
                         }
                     }
 
-                    // 1. Continue Listening
-                    if (prefs.enableLocalListeningSections) {
+                    // YT-MUSIC-OMEGA: when the authenticated YouTube Music home returns live
+                    // shelves, they replace the local "Continue Listening" / "Recently Played"
+                    // rails (the "Local" / "Local History" sources). If unauthenticated or the
+                    // API yields nothing, fall back to the local sections so the tab is never empty.
+                    val useYouTubeMusicShelves = ytMusicShelves.isNotEmpty()
+
+                    // 1. Continue Listening (local) — suppressed when live YT Music shelves exist
+                    if (!useYouTubeMusicShelves && prefs.enableLocalListeningSections) {
                         addSection(continueListening)
                     }
 
                     // 2. Your Queue (always shown – local playback, not filtered by local pref)
                     addSection(yourQueue)
 
-                    // 3. Recently Played
-                    if (prefs.enableLocalListeningSections) {
+                    // 3. Recently Played (local) — suppressed when live YT Music shelves exist
+                    if (!useYouTubeMusicShelves && prefs.enableLocalListeningSections) {
                         addSection(recentlyPlayed)
+                    }
+
+                    // 3b. Live YouTube Music home shelves (Listen again, Quick picks, …)
+                    if (useYouTubeMusicShelves) {
+                        ytMusicShelves.forEach { addSection(it) }
                     }
 
                     // 4. Liked Music
@@ -269,8 +283,9 @@ class PersonalizationRepositoryImpl @Inject constructor(
                         addSection(subscriptions)
                     }
 
-                    // 7. Based on Your Listening
-                    if (prefs.enableLocalListeningSections && prefs.enableLocalMix) {
+                    // 7. Based on Your Listening — suppressed when live YT Music shelves exist
+                    //    (avoids duplicating algorithmic rails that YT Music already provides).
+                    if (!useYouTubeMusicShelves && prefs.enableLocalListeningSections && prefs.enableLocalMix) {
                         addSection(basedOnListening)
                     }
 
@@ -730,6 +745,72 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 lastUpdatedMillis = System.currentTimeMillis(),
             )
         }
+    }
+
+    // ── 9. YouTube Music Home Shelves (Authenticated FEmusic_home) ───────────
+    /**
+     * YT-MUSIC-OMEGA: build one rail per authenticated YouTube Music home shelf
+     * ("Listen again", "Quick picks", …). Pure InnerTube — no local history/library.
+     * Returns an empty list when unauthenticated or when the API yields no shelves,
+     * so the caller can fall back to the local sections.
+     */
+    private suspend fun buildYouTubeMusicShelves(
+        session: AccountSession,
+        forceRefresh: Boolean,
+    ): List<PersonalizedSection> {
+        if (session !is AccountSession.Connected) return emptyList()
+        return try {
+            val shelves = authenticatedYouTubeClient.getMusicHomeShelves()
+            shelves.mapIndexedNotNull { index, shelf ->
+                val items = shelf.items
+                    .filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
+                    .distinctBy { it.id }
+                    .take(20)
+                    .map {
+                        it.toPersonalizedFeedItem(
+                            sourceBadge = "YOUTUBE MUSIC",
+                            explanation = "From your YouTube Music ${shelf.title} shelf.",
+                        )
+                    }
+                if (items.isEmpty()) {
+                    null
+                } else {
+                    PersonalizedSection(
+                        id = "sec_yt_music_${index}_${shelf.title.hashCode()}",
+                        type = PersonalizedSectionType.YOUTUBE_MUSIC_SHELF,
+                        title = shelf.title,
+                        subtitle = null,
+                        sourceLabel = "YouTube Music",
+                        explanation = "Live from your connected YouTube Music account.",
+                        items = items,
+                        isFromCache = false,
+                        lastUpdatedMillis = System.currentTimeMillis(),
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to build YouTube Music home shelves", e)
+            emptyList()
+        }
+    }
+
+    /** Single-shelf view used by [refreshSection] (returns the first live shelf). */
+    private suspend fun buildYouTubeMusicShelvesSection(
+        session: AccountSession,
+        forceRefresh: Boolean,
+    ): PersonalizedSection {
+        val shelves = buildYouTubeMusicShelves(session, forceRefresh)
+        return shelves.firstOrNull() ?: PersonalizedSection(
+            id = "sec_yt_music_empty",
+            type = PersonalizedSectionType.YOUTUBE_MUSIC_SHELF,
+            title = "YouTube Music",
+            subtitle = null,
+            sourceLabel = "YouTube Music",
+            explanation = "No shelves returned from your YouTube Music account.",
+            items = emptyList(),
+            isFromCache = false,
+            lastUpdatedMillis = System.currentTimeMillis(),
+        )
     }
 
     // ── Helper Mappers ───────────────────────────────────────────────────────

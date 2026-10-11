@@ -19,6 +19,8 @@ enum class PersonalizedSectionType {
     NEW_FROM_SUBSCRIPTIONS,
     BASED_ON_LISTENING,
     TRENDING_MUSIC,
+    /** YT-MUSIC-OMEGA: live authenticated YouTube Music home shelves (Listen again, Quick picks, …). */
+    YOUTUBE_MUSIC_SHELF,
 }
 
 /**

@@ -252,6 +252,15 @@ class AuthenticatedYouTubeClient @Inject constructor(
         search("latest hindi songs audio")
     }
 
+    /**
+     * YT-MUSIC-OMEGA: the authenticated YouTube Music home feed (`FEmusic_home`) as
+     * titled shelves (e.g. "Listen again", "Quick picks"). Uses the ANDROID_MUSIC client
+     * context + real OAuth Bearer token inside [InnerTubeRemoteClient]. No local data.
+     */
+    suspend fun getMusicHomeShelves(): List<MusicShelf> = withContext(Dispatchers.IO) {
+        innerTubeClient.fetchMusicHomeShelves()
+    }
+
     suspend fun getMoviesFeed(): List<HomeVideoItem> {
         val result = browse("FEmovies_home")
         return if (result.isNotEmpty()) result else search("full movie official")

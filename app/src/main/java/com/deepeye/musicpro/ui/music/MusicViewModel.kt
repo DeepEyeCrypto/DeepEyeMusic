@@ -9,37 +9,45 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deepeye.musicpro.account.AccountSession
 import com.deepeye.musicpro.account.AccountSessionManager
+import com.deepeye.musicpro.data.source.remote.youtube.InnerTubeRemoteClient
+import com.deepeye.musicpro.data.source.remote.youtube.MusicFilter
 import com.deepeye.musicpro.domain.model.MediaItem
-import com.deepeye.musicpro.domain.model.Song
+import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedItem
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedState
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedItemType
+import com.deepeye.musicpro.domain.model.personalization.PersonalizedSection
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedSectionType
-import com.deepeye.musicpro.domain.repository.MusicRepository
-import com.deepeye.musicpro.domain.repository.PersonalizationRepository
 import com.deepeye.musicpro.player.controller.PlayerController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class MusicUiState(
     val personalizedFeed: PersonalizedFeedState = PersonalizedFeedState(),
-    val localSongs: List<Song> = emptyList(),
     val hasAuth: Boolean = false,
 )
 
+/**
+ * YT-MUSIC-OMEGA: the Music tab is 100% account-driven. This ViewModel performs a
+ * single authenticated InnerTube request against `FEmusic_home` (ANDROID_MUSIC client
+ * + OAuth Bearer token) and maps each returned carousel into a renderable section.
+ *
+ * There is intentionally NO local data source here: no MediaStore scan, no Room
+ * history/queue DAOs, no `PersonalizationRepository`. When the account is missing or
+ * the API yields nothing, the UI shows a loading/empty state instead of falling back
+ * to on-device audio.
+ */
 @HiltViewModel
 class MusicViewModel
 @Inject
 constructor(
-    private val personalizationRepository: PersonalizationRepository,
+    private val innerTubeClient: InnerTubeRemoteClient,
     private val accountSessionManager: AccountSessionManager,
-    private val musicRepository: MusicRepository,
     private val playerController: PlayerController,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MusicUiState())
@@ -50,38 +58,93 @@ constructor(
     }
 
     init {
-        observePersonalizedFeed()
-        observeAuth()
-        observeLocalSongs()
-        viewModelScope.launch { musicRepository.syncFromMediaStore() }
+        observeAccount()
     }
 
-    private fun observePersonalizedFeed() {
-        viewModelScope.launch {
-            personalizationRepository.observePersonalizedFeed().collectLatest { feed ->
-                _uiState.update { it.copy(personalizedFeed = feed) }
-            }
-        }
-    }
-
-    private fun observeAuth() {
+    /**
+     * Reacts to account connect / switch / sign-out. Shelves are fetched only for a
+     * connected account, and cleared on sign-out so a previous account's shelves are
+     * never shown to the next session (account isolation).
+     */
+    private fun observeAccount() {
         viewModelScope.launch {
             accountSessionManager.accountSession.collect { session ->
                 val auth = session is AccountSession.Connected
                 _uiState.update { it.copy(hasAuth = auth) }
+                when {
+                    auth -> loadMusicHomeShelves()
+                    session is AccountSession.LoggedOut -> _uiState.update {
+                        it.copy(personalizedFeed = PersonalizedFeedState(accountSession = session))
+                    }
+                }
             }
         }
     }
 
-    private fun observeLocalSongs() {
+    /** Fetches `FEmusic_home` shelves and emits them as the sole feed source. */
+    private fun loadMusicHomeShelves() {
         viewModelScope.launch {
-            musicRepository.getAllSongs().collectLatest { songs ->
-                _uiState.update { it.copy(localSongs = songs) }
+            _uiState.update { current ->
+                current.copy(
+                    personalizedFeed = current.personalizedFeed.copy(
+                        isLoading = current.personalizedFeed.sections.isEmpty(),
+                        isRefreshing = current.personalizedFeed.sections.isNotEmpty(),
+                        globalError = null,
+                    ),
+                )
+            }
+            try {
+                val shelves = innerTubeClient.fetchMusicHomeShelves()
+                val sections = shelves.mapIndexedNotNull { index, shelf ->
+                    val items = shelf.items
+                        .filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
+                        .distinctBy { it.id }
+                        .take(20)
+                        .map { it.toFeedItem(shelf.title) }
+                    if (items.isEmpty()) {
+                        null
+                    } else {
+                        PersonalizedSection(
+                            id = "sec_yt_music_${index}_${shelf.title.hashCode()}",
+                            type = PersonalizedSectionType.YOUTUBE_MUSIC_SHELF,
+                            title = shelf.title,
+                            subtitle = null,
+                            sourceLabel = "YouTube Music",
+                            explanation = "From your YouTube Music ${shelf.title} shelf.",
+                            items = items,
+                            isFromCache = false,
+                            lastUpdatedMillis = System.currentTimeMillis(),
+                        )
+                    }
+                }
+                Log.i(TAG, "[YT-MUSIC] FEmusic_home shelves=${shelves.size} rendered=${sections.size}")
+                _uiState.update {
+                    it.copy(
+                        personalizedFeed = PersonalizedFeedState(
+                            sections = sections,
+                            isLoading = false,
+                            isRefreshing = false,
+                            globalError = null,
+                            lastUpdatedMillis = System.currentTimeMillis(),
+                        ),
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to load FEmusic_home shelves", e)
+                _uiState.update {
+                    it.copy(
+                        personalizedFeed = it.personalizedFeed.copy(
+                            isLoading = false,
+                            isRefreshing = false,
+                            globalError = "Unable to load your YouTube Music home. Pull to refresh.",
+                        ),
+                    )
+                }
             }
         }
     }
 
-    // ── Personalized Feed Actions ──────────────────────────────────────────
+    // ── Playback Actions ──────────────────────────────────────────────────
 
     fun playPersonalizedItem(item: PersonalizedFeedItem, itemsInSection: List<PersonalizedFeedItem>) {
         if (item.id.isBlank()) return
@@ -122,84 +185,17 @@ constructor(
         Log.d(TAG, "addToQueue key=${item.id}")
     }
 
+    /** Re-fetches the cloud shelves (pull-to-refresh / retry). */
     fun refreshPersonalizedFeed() {
-        viewModelScope.launch {
-            personalizationRepository.refreshFeed(forceRefresh = true)
-        }
+        loadMusicHomeShelves()
     }
 
+    /** Single cloud source: a per-section retry simply re-fetches the shelves. */
     fun refreshPersonalizedSection(sectionType: PersonalizedSectionType) {
-        viewModelScope.launch {
-            personalizationRepository.refreshSection(sectionType)
-        }
+        loadMusicHomeShelves()
     }
 
-    // ── Phase 5: Personalization quality and user control ───────────────────
-
-    fun hidePersonalizedItem(item: PersonalizedFeedItem, alsoHideArtist: Boolean) {
-        viewModelScope.launch {
-            personalizationRepository.hideItem(
-                itemId = item.id,
-                label = item.title,
-                alsoHideArtist = if (alsoHideArtist) item.artist else null,
-            )
-        }
-    }
-
-    fun undoHidePersonalizedItem(itemId: String) {
-        viewModelScope.launch {
-            personalizationRepository.undoHideItem(itemId)
-        }
-    }
-
-    fun resetAllHiddenContent() {
-        viewModelScope.launch {
-            personalizationRepository.resetAllHiddenContent()
-            personalizationRepository.refreshFeed(forceRefresh = true)
-        }
-    }
-
-    fun clearPersonalizationHistory() {
-        viewModelScope.launch {
-            personalizationRepository.clearLocalHistory()
-            personalizationRepository.refreshFeed(forceRefresh = true)
-        }
-    }
-
-    fun clearPersonalizationCache() {
-        viewModelScope.launch {
-            personalizationRepository.clearPersonalizationCache()
-            personalizationRepository.refreshFeed(forceRefresh = true)
-        }
-    }
-
-    // ── Local Library ──────────────────────────────────────────────────────
-
-    fun syncLibrary() {
-        viewModelScope.launch {
-            try { musicRepository.syncFromMediaStore() }
-            catch (e: Exception) { Log.e(TAG, "syncLibrary failed", e) }
-        }
-    }
-
-    fun playMusicLocal(song: Song) {
-        val mediaItems = _uiState.value.localSongs.map { MediaItem.Local(it) }
-        val index = _uiState.value.localSongs.indexOfFirst { it.id == song.id }
-        playerController.setQueue(mediaItems, if (index >= 0) index else 0)
-    }
-
-    fun playAllLocalSongs(shuffle: Boolean = false) {
-        val songs = _uiState.value.localSongs
-        if (songs.isEmpty()) return
-        val mediaItems = if (shuffle) {
-            songs.shuffled().map { MediaItem.Local(it) }
-        } else {
-            songs.map { MediaItem.Local(it) }
-        }
-        playerController.setQueue(mediaItems, 0)
-    }
-
-    // ── Helpers ────────────────────────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────
 
     private fun resolveMediaItem(item: PersonalizedFeedItem): MediaItem =
         item.mediaItem ?: MediaItem.Remote(
@@ -210,4 +206,26 @@ constructor(
             duration = item.durationMs,
             isVideo = false,
         )
+
+    private fun HomeVideoItem.toFeedItem(shelfTitle: String): PersonalizedFeedItem {
+        return PersonalizedFeedItem(
+            id = id,
+            title = title,
+            artist = channelName,
+            channelId = channelId,
+            artworkUrl = thumbnailUrl,
+            durationMs = duration * 1000L,
+            itemType = PersonalizedItemType.SONG,
+            sourceBadge = "YOUTUBE MUSIC",
+            explanation = "From your YouTube Music $shelfTitle shelf.",
+            mediaItem = MediaItem.Remote(
+                id = id,
+                title = title,
+                artist = channelName,
+                artworkUri = thumbnailUrl.takeIf { it.isNotBlank() }?.let { Uri.parse(it) },
+                duration = duration * 1000L,
+                isVideo = false,
+            ),
+        )
+    }
 }

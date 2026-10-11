@@ -8,7 +8,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,11 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.LibraryMusic
-import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.MoreVert
@@ -59,7 +55,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.data.source.remote.youtube.MusicFilter
-import com.deepeye.musicpro.domain.model.Song
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedItem
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedState
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedItemType
@@ -78,10 +73,6 @@ private val CyanAccent = Color(0xFF00E5FF)
 private val VioletAccent = Color(0xFF7C4DFF)
 private val GoldBadge = Color(0xFFFFD54F)
 private val EmeraldBadge = Color(0xFF00E676)
-private val HiResBadge = Color(0xFFFFB300)
-private val FlacBadge = Color(0xFF00E676)
-private val DspColor = Color(0xFF00D2FF)
-private val V4aColor = Color(0xFF7C4DFF)
 private val ShineWhite = Color.White
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,8 +84,6 @@ fun MusicScreen(
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Discover", "Local Songs")
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
@@ -187,49 +176,9 @@ fun MusicScreen(
                             }
                         }
 
-                        // Compact Tabs
-                        Row(
-                            modifier = Modifier.widthIn(max = 280.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            tabs.forEachIndexed { index, title ->
-                                val isSelected = selectedTab == index
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(36.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(
-                                            if (isSelected) Brush.horizontalGradient(
-                                                listOf(ElectricViolet.copy(alpha = 0.35f), NeonCyan.copy(alpha = 0.2f))
-                                            ) else Brush.horizontalGradient(
-                                                listOf(Color.White.copy(alpha = 0.04f), Color.White.copy(alpha = 0.02f))
-                                            )
-                                        )
-                                        .border(
-                                            width = if (isSelected) 1.dp else 0.5.dp,
-                                            color = if (isSelected) NeonCyan.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.06f),
-                                            shape = RoundedCornerShape(10.dp)
-                                        )
-                                        .clickable { selectedTab = index },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = title,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) TextPrimary else TextTertiary,
-                                    )
-                                }
-                            }
-                        }
-
-                        // Refresh button
+                        // Refresh button (single cloud-driven feed)
                         IconButton(
-                            onClick = {
-                                if (selectedTab == 0) viewModel.refreshPersonalizedFeed()
-                                else viewModel.syncLibrary()
-                            },
+                            onClick = { viewModel.refreshPersonalizedFeed() },
                             modifier = Modifier.size(36.dp)
                         ) {
                             Icon(Icons.Default.Refresh, "Refresh", tint = TextSecondary, modifier = Modifier.size(18.dp))
@@ -270,53 +219,14 @@ fun MusicScreen(
                             }
 
                             // Refresh button
-                            if (selectedTab == 0) {
-                                IconButton(onClick = { viewModel.refreshPersonalizedFeed() }) {
-                                    Icon(Icons.Default.Refresh, "Refresh", tint = TextSecondary)
-                                }
-                            } else {
-                                IconButton(onClick = { viewModel.syncLibrary() }) {
-                                    Icon(Icons.Default.Refresh, "Sync Library", tint = TextSecondary)
-                                }
+                            IconButton(onClick = { viewModel.refreshPersonalizedFeed() }) {
+                                Icon(Icons.Default.Refresh, "Refresh", tint = TextSecondary)
                             }
                         }
 
                         // Premium Search Bar (Clickable Entry Point)
                         PremiumSearchBar(onClick = onNavigateToSearch)
                         Spacer(Modifier.height(8.dp))
-
-                        if (selectedTab == 1 && uiState.localSongs.isNotEmpty()) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .boundedContent()
-                                    .padding(horizontal = 16.dp)
-                            ) {
-                                Button(
-                                    onClick = { viewModel.playAllLocalSongs(shuffle = true) },
-                                    modifier = Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(containerColor = ElectricViolet),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Icon(Icons.Default.Shuffle, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.width(8.dp))
-                                    Text("Shuffle All", fontWeight = FontWeight.Bold)
-                                }
-                                Spacer(Modifier.width(8.dp))
-                                Button(
-                                    onClick = { viewModel.playAllLocalSongs(shuffle = false) },
-                                    modifier = Modifier.weight(1f),
-                                    colors = ButtonDefaults.buttonColors(containerColor = CardSurfaceElevated),
-                                    shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
-                                ) {
-                                    Icon(Icons.Rounded.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp), tint = NeonCyan)
-                                    Spacer(Modifier.width(8.dp))
-                                    Text("Play All", fontWeight = FontWeight.Bold, color = TextPrimary)
-                                }
-                            }
-                            Spacer(Modifier.height(8.dp))
-                        }
                     }
 
                     // YouTube account connectivity prompt
@@ -325,29 +235,19 @@ fun MusicScreen(
                         Spacer(Modifier.height(4.dp))
                     }
 
-                    // Premium segmented tab bar
-                    PremiumTabBar(
-                        tabs = tabs,
-                        selectedTab = selectedTab,
-                        onTabSelected = { selectedTab = it }
-                    )
-
                     Spacer(Modifier.height(4.dp))
                 }
             }
         },
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
-            when (selectedTab) {
-                0 -> DiscoveryTab(
-                    uiState,
-                    viewModel,
-                    onNavigateToNowPlaying,
-                    onConnectAccount,
-                    paddingValues,
-                )
-                1 -> LibraryTab(uiState, viewModel, onNavigateToNowPlaying, paddingValues)
-            }
+            DiscoveryTab(
+                uiState,
+                viewModel,
+                onNavigateToNowPlaying,
+                onConnectAccount,
+                paddingValues,
+            )
         }
     }
 }
@@ -423,87 +323,6 @@ private fun MusicAccountBanner(onConnect: () -> Unit) {
             tint = TextTertiary,
             modifier = Modifier.size(20.dp)
         )
-    }
-}
-
-// ─── Premium Tab Bar ─────────────────────────────────────────────────────────
-@Composable
-private fun PremiumTabBar(
-    tabs: List<String>,
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        tabs.forEachIndexed { index, title ->
-            val isSelected = selectedTab == index
-            val animatedAlpha by animateFloatAsState(
-                targetValue = if (isSelected) 1f else 0f,
-                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                label = "tabAlpha"
-            )
-
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        if (isSelected) Brush.horizontalGradient(
-                            listOf(
-                                ElectricViolet.copy(alpha = 0.35f),
-                                NeonCyan.copy(alpha = 0.2f)
-                            )
-                        ) else Brush.horizontalGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.04f),
-                                Color.White.copy(alpha = 0.02f)
-                            )
-                        )
-                    )
-                    .then(
-                        if (isSelected) Modifier.border(
-                            width = 1.dp,
-                            brush = Brush.horizontalGradient(
-                                listOf(
-                                    ElectricViolet.copy(alpha = 0.6f),
-                                    NeonCyan.copy(alpha = 0.4f)
-                                )
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) else Modifier.border(
-                            width = 0.5.dp,
-                            color = Color.White.copy(alpha = 0.06f),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                    )
-                    .clickable { onTabSelected(index) },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(
-                        imageVector = if (index == 0) Icons.Rounded.MusicNote else Icons.Rounded.LibraryMusic,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = if (isSelected) NeonCyan else TextTertiary
-                    )
-                    Text(
-                        text = title,
-                        fontSize = 13.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isSelected) TextPrimary else TextTertiary,
-                        letterSpacing = 0.5.sp
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -1305,371 +1124,6 @@ private fun SectionEmptyCard(
         }
     }
 }
-// ─── Library Tab ─────────────────────────────────────────────────────────────
-@Composable
-private fun LibraryTab(
-    uiState: MusicUiState,
-    viewModel: MusicViewModel,
-    onNavigateToNowPlaying: (String) -> Unit,
-    paddingValues: PaddingValues,
-) {
-    if (uiState.localSongs.isEmpty()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    Icons.Rounded.LibraryMusic,
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp),
-                    tint = TextTertiary
-                )
-                Spacer(Modifier.height(12.dp))
-                Text("No local music found", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
-                Spacer(Modifier.height(16.dp))
-                Button(
-                    onClick = { viewModel.syncLibrary() },
-                    colors = ButtonDefaults.buttonColors(containerColor = ElectricViolet),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Scan for Music", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-    } else {
-        val listState = rememberLazyListState()
-        // Wrapper Box exists only to centre the bounded column below.
-        //
-        // `Modifier.align` is not used here because it is an extension on three
-        // different scopes (Box/Column/Row) with different parameter types; in a
-        // function that is itself a BoxScope receiver it resolves against the
-        // innermost scope and the intended overload is ambiguous. A wrapper Box
-        // states the intent directly and cannot be misread.
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-            LazyColumn(
-                state = listState,
-                // Bounded reading column: the local track list is a single column
-                // of artwork-beside-text rows, and at full landscape width each
-                // row stretched to ~800dp to hold a 40dp cover — the track name
-                // pinned to the far left with 600dp of nothing to its right.
-                // Centring a 600dp column keeps the album art and the elapsed
-                // time visually adjacent.
-                modifier = Modifier
-                    // boundedContent before the vertical fill: `fillMaxSize()`
-                    // would clamp width to the parent first, leaving nothing for
-                    // `widthIn` to bound. In this order the column caps at 600dp
-                    // and `fillMaxHeight()` supplies only the height.
-                    .boundedContent()
-                    .fillMaxHeight()
-                    .premiumScrollHaptics(listState),
-                contentPadding = PaddingValues(
-                    top = paddingValues.calculateTopPadding() + 4.dp,
-                    bottom = 180.dp
-                ),
-            ) {
-                // Song count header
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "${uiState.localSongs.size} tracks",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = TextTertiary,
-                            letterSpacing = 1.sp,
-                            fontFamily = FontFamily.Monospace
-                        )
-                        QualityPill("LOSSLESS READY")
-                    }
-                }
-
-                itemsIndexed(uiState.localSongs, key = { _, it -> it.id }) { index, song ->
-                    var visible by remember { mutableStateOf(false) }
-                    LaunchedEffect(Unit) { visible = true }
-
-                    AnimatedVisibility(
-                        visible = visible,
-                        enter = fadeIn(
-                            animationSpec = tween(300, delayMillis = (index % 10) * 30, easing = EaseOutCubic)
-                        ) + slideInVertically(
-                            animationSpec = tween(300, delayMillis = (index % 10) * 30, easing = EaseOutCubic),
-                            initialOffsetY = { it / 4 }
-                        )
-                    ) {
-                        PremiumSongListItem(song, onClick = {
-                            viewModel.playMusicLocal(song)
-                            onNavigateToNowPlaying(song.id.toString())
-                        })
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ─── Quality Pill ────────────────────────────────────────────────────────────
-@Composable
-private fun QualityPill(text: String) {
-    Box(
-        modifier = Modifier
-            .background(
-                Brush.horizontalGradient(
-                    listOf(NeonCyan.copy(alpha = 0.1f), ElectricViolet.copy(alpha = 0.1f))
-                ),
-                RoundedCornerShape(6.dp)
-            )
-            .border(
-                0.5.dp,
-                Brush.horizontalGradient(
-                    listOf(NeonCyan.copy(alpha = 0.3f), ElectricViolet.copy(alpha = 0.3f))
-                ),
-                RoundedCornerShape(6.dp)
-            )
-            .padding(horizontal = 8.dp, vertical = 3.dp)
-    ) {
-        Text(
-            text = text,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            color = NeonCyan,
-            letterSpacing = 1.sp,
-            fontFamily = FontFamily.Monospace
-        )
-    }
-}
-
-// ─── Premium Song List Item (Library Tab) ────────────────────────────────────
-@Composable
-fun PremiumSongListItem(
-    song: Song,
-    onClick: () -> Unit,
-) {
-    val isHiRes = remember(song.id) { (song.id.hashCode() % 3) == 0 }
-    val isFlac = remember(song.id) { (song.id.hashCode() % 2) == 0 }
-    val bitrate = remember(song.id) { if (isHiRes) "24bit · 96kHz" else "16bit · 44.1kHz" }
-
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
-        label = "pressScale"
-    )
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 5.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.horizontalGradient(
-                    listOf(
-                        CardSurface.copy(alpha = 0.6f),
-                        CardSurfaceElevated.copy(alpha = 0.4f)
-                    )
-                )
-            )
-            .border(
-                width = 0.5.dp,
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.1f),
-                        Color.White.copy(alpha = 0.03f)
-                    )
-                ),
-                shape = RoundedCornerShape(16.dp)
-            )
-            .clickable(interactionSource = interactionSource, indication = null) { onClick() }
-            .padding(14.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            // Album Art with badges
-            Box(
-                modifier = Modifier
-                    .size(58.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.04f))
-            ) {
-                AsyncImage(
-                    model = song.artUri,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-
-                // Play overlay on hover
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.radialGradient(
-                                listOf(Color.Black.copy(alpha = 0.3f), Color.Transparent)
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Rounded.PlayArrow,
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.7f),
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-
-                if (isHiRes) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .background(
-                                HiResBadge,
-                                RoundedCornerShape(bottomEnd = 6.dp, topStart = 12.dp)
-                            )
-                            .padding(horizontal = 4.dp, vertical = 2.dp)
-                    ) {
-                        Text("HR", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Black)
-                    }
-                }
-            }
-
-            Spacer(Modifier.width(14.dp))
-
-            // Metadata
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = song.title,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.3).sp
-                    ),
-                    color = TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.height(4.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        text = song.artist,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-
-                    // Format badge
-                    BadgePill(
-                        text = if (isFlac) "FLAC" else "AAC",
-                        color = if (isFlac) FlacBadge else TextTertiary
-                    )
-                }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = bitrate,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = TextTertiary,
-                    fontFamily = FontFamily.Monospace,
-                    letterSpacing = 0.5.sp
-                )
-            }
-
-            Spacer(Modifier.width(8.dp))
-
-            // Right column: duration + DSP badges
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Text(
-                    text = formatDuration(song.duration),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextSecondary,
-                    fontFamily = FontFamily.Monospace
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    GlowBadgePill("DSP", DspColor)
-                    GlowBadgePill("V4A", V4aColor)
-                }
-            }
-        }
-    }
-}
-
-// ─── Glowing Badge (for HI-RES, FLAC on thumbnails) ─────────────────────────
-@Composable
-private fun GlowingBadge(text: String, color: Color) {
-    Box(
-        modifier = Modifier
-            .shadow(4.dp, RoundedCornerShape(5.dp), ambientColor = color, spotColor = color)
-            .background(color.copy(alpha = 0.9f), RoundedCornerShape(5.dp))
-            .padding(horizontal = 5.dp, vertical = 2.dp)
-    ) {
-        Text(
-            text,
-            color = Color.Black,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = 0.5.sp
-        )
-    }
-}
-
-// ─── Badge Pill (inline text badges) ─────────────────────────────────────────
-@Composable
-private fun BadgePill(text: String, color: Color) {
-    Box(
-        modifier = Modifier
-            .background(color.copy(alpha = 0.12f), RoundedCornerShape(4.dp))
-            .border(0.5.dp, color.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
-            .padding(horizontal = 5.dp, vertical = 1.dp)
-    ) {
-        Text(
-            text,
-            color = color,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.3.sp
-        )
-    }
-}
-
-// ─── Glow Badge Pill (DSP/V4A with glow border) ─────────────────────────────
-@Composable
-private fun GlowBadgePill(text: String, color: Color) {
-    Box(
-        modifier = Modifier
-            .background(color.copy(alpha = 0.1f), RoundedCornerShape(5.dp))
-            .border(
-                0.5.dp,
-                color.copy(alpha = 0.35f),
-                RoundedCornerShape(5.dp)
-            )
-            .padding(horizontal = 6.dp, vertical = 2.dp)
-    ) {
-        Text(
-            text,
-            color = color,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.5.sp
-        )
-    }
-}
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 private fun formatDuration(ms: Long): String {
     val sec = (ms / 1000) % 60

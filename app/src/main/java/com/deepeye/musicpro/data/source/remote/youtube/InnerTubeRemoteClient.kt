@@ -37,6 +37,16 @@ data class AutoplayTrack(
 class InnerTubeAuthException(message: String) : Exception(message)
 
 /**
+ * YT-MUSIC-OMEGA: a single titled shelf from the authenticated YouTube Music home
+ * feed (`FEmusic_home`), e.g. "Listen again", "Quick picks", "Mixed for you". Preserves
+ * the carousel title so the Music tab can render one rail per shelf.
+ */
+data class MusicShelf(
+    val title: String,
+    val items: List<HomeVideoItem>,
+)
+
+/**
  * SmartTube-Omega Native InnerTube Remote Client.
  *
  * Communicates directly with YouTube's internal `youtubei/v1` API endpoints (/browse, /next, /search, /player)
@@ -428,53 +438,12 @@ class InnerTubeRemoteClient @Inject constructor(
      */
     suspend fun browseMusic(browseId: String = "FEmusic_home", params: String? = null): List<HomeVideoItem> = withContext(Dispatchers.IO) {
         val token = authManager.getAccessToken()
-        val paramsPart = if (params != null) ", \"params\": \"$params\"" else ""
-        val payload = "{$ANDROID_MUSIC_CONTEXT, \"browseId\": \"$browseId\"$paramsPart}"
-
         try {
-            val reqBuilder = Request.Builder()
-                .url("${YOUTUBE_MUSIC_INNERTUBE}browse")
-                .addHeader("Content-Type", "application/json")
-                .addHeader("User-Agent", "com.google.android.apps.youtube.music/$ANDROID_MUSIC_CLIENT_VERSION (Linux; U; Android 14)")
-                .addHeader("X-YouTube-Client-Name", "67")
-                .addHeader("X-YouTube-Client-Version", ANDROID_MUSIC_CLIENT_VERSION)
-                .post(payload.toRequestBody("application/json".toMediaType()))
-
-            if (!token.isNullOrBlank()) {
-                reqBuilder.addHeader("Authorization", "Bearer $token")
-            }
-
-            client.newCall(reqBuilder.build()).execute().use { response ->
-                if (response.code == 401 && !token.isNullOrBlank()) {
-                    Log.w(AUTH_TAG, "[InnerTube Auth-Rescue] 401 on /browse ($browseId), refreshing token...")
-                    val refreshedToken = authManager.refreshAccessToken()
-                    if (!refreshedToken.isNullOrBlank()) {
-                        val retryReq = reqBuilder.header("Authorization", "Bearer $refreshedToken").build()
-                        client.newCall(retryReq).execute().use { retryRes ->
-                            if (retryRes.isSuccessful) {
-                                val bodyStr = retryRes.body?.string() ?: return@withContext emptyList()
-                                val items = parseBrowseSections(JSONObject(bodyStr))
-                                auditBrowseTelemetry(browseId, refreshedToken, bodyStr, items)
-                                return@withContext items
-                            }
-                        }
-                    }
-                    throw InnerTubeAuthException("InnerTube authenticated browse failed (401 Unauthorized) for $browseId")
-                }
-
-                if (!response.isSuccessful) {
-                    Log.e(AUTH_TAG, "[InnerTube Auth-Rescue] /browse failed for $browseId with HTTP ${response.code}")
-                    if (!token.isNullOrBlank() && (response.code == 401 || response.code == 403)) {
-                        throw InnerTubeAuthException("InnerTube browse HTTP ${response.code} for $browseId")
-                    }
-                    return@withContext emptyList()
-                }
-
-                val bodyStr = response.body?.string() ?: return@withContext emptyList()
-                val items = parseBrowseSections(JSONObject(bodyStr))
-                auditBrowseTelemetry(browseId, token, bodyStr, items)
-                return@withContext items
-            }
+            val bodyStr = postMusicBrowse(browseId, params)
+            if (bodyStr.isBlank()) return@withContext emptyList()
+            val items = parseBrowseSections(JSONObject(bodyStr))
+            auditBrowseTelemetry(browseId, token, bodyStr, items)
+            return@withContext items
         } catch (e: InnerTubeAuthException) {
             throw e
         } catch (e: Exception) {
@@ -483,6 +452,58 @@ class InnerTubeRemoteClient @Inject constructor(
                 Log.w(AUTH_TAG, "Authenticated browse failure for $browseId: ${e.message}")
             }
             emptyList()
+        }
+    }
+
+    /**
+     * Shared ANDROID_MUSIC `/browse` POST with OAuth Bearer injection and a single
+     * 401 refresh-and-retry. Returns the raw JSON body, or "" on a non-auth failure.
+     * Throws [InnerTubeAuthException] when an authenticated request is rejected.
+     *
+     * Extracted so both [browseMusic] (flattened items) and [fetchMusicHomeShelves]
+     * (shelf-structured) drive the exact same authenticated request path.
+     */
+    private suspend fun postMusicBrowse(browseId: String, params: String?): String {
+        val token = authManager.getAccessToken()
+        val paramsPart = if (params != null) ", \"params\": \"$params\"" else ""
+        val payload = "{$ANDROID_MUSIC_CONTEXT, \"browseId\": \"$browseId\"$paramsPart}"
+
+        val reqBuilder = Request.Builder()
+            .url("${YOUTUBE_MUSIC_INNERTUBE}browse")
+            .addHeader("Content-Type", "application/json")
+            .addHeader("User-Agent", "com.google.android.apps.youtube.music/$ANDROID_MUSIC_CLIENT_VERSION (Linux; U; Android 14)")
+            .addHeader("X-YouTube-Client-Name", "67")
+            .addHeader("X-YouTube-Client-Version", ANDROID_MUSIC_CLIENT_VERSION)
+            .post(payload.toRequestBody("application/json".toMediaType()))
+
+        if (!token.isNullOrBlank()) {
+            reqBuilder.addHeader("Authorization", "Bearer $token")
+        }
+
+        client.newCall(reqBuilder.build()).execute().use { response ->
+            if (response.code == 401 && !token.isNullOrBlank()) {
+                Log.w(AUTH_TAG, "[InnerTube Auth-Rescue] 401 on /browse ($browseId), refreshing token...")
+                val refreshedToken = authManager.refreshAccessToken()
+                if (!refreshedToken.isNullOrBlank()) {
+                    val retryReq = reqBuilder.header("Authorization", "Bearer $refreshedToken").build()
+                    client.newCall(retryReq).execute().use { retryRes ->
+                        if (retryRes.isSuccessful) {
+                            return retryRes.body?.string() ?: ""
+                        }
+                    }
+                }
+                throw InnerTubeAuthException("InnerTube authenticated browse failed (401 Unauthorized) for $browseId")
+            }
+
+            if (!response.isSuccessful) {
+                Log.e(AUTH_TAG, "[InnerTube Auth-Rescue] /browse failed for $browseId with HTTP ${response.code}")
+                if (!token.isNullOrBlank() && (response.code == 401 || response.code == 403)) {
+                    throw InnerTubeAuthException("InnerTube browse HTTP ${response.code} for $browseId")
+                }
+                return ""
+            }
+
+            return response.body?.string() ?: ""
         }
     }
 
@@ -588,6 +609,87 @@ class InnerTubeRemoteClient @Inject constructor(
             val sampleTitles = items.take(3).joinToString(" | ") { "\"${it.title}\" by ${it.channelName}" }
             Log.i(AUTH_TAG, "[InnerTube-Personalized] Top 3 Tracks: $sampleTitles")
         }
+    }
+
+    /**
+     * YT-MUSIC-OMEGA: fetch the authenticated YouTube Music home feed (`FEmusic_home`)
+     * as titled shelves using the ANDROID_MUSIC client context and the real OAuth Bearer
+     * token. Each [MusicShelf] preserves its carousel title (e.g. "Listen again",
+     * "Quick picks", "Mixed for you") so the Music tab can render one rail per shelf
+     * instead of a single flattened list.
+     */
+    suspend fun fetchMusicHomeShelves(): List<MusicShelf> = withContext(Dispatchers.IO) {
+        val token = authManager.getAccessToken()
+        try {
+            val bodyStr = postMusicBrowse("FEmusic_home", null)
+            if (bodyStr.isBlank()) return@withContext emptyList()
+            val shelves = parseMusicCarouselShelves(JSONObject(bodyStr))
+            Log.i(
+                AUTH_TAG,
+                "[YT-MUSIC] FEmusic_home shelves=${shelves.size} " +
+                    "authTokenPresent=${!token.isNullOrBlank()} " +
+                    "titles=[${shelves.joinToString(", ") { it.title }}]"
+            )
+            shelves
+        } catch (e: InnerTubeAuthException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching FEmusic_home shelves", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * Walks a YouTube Music `/browse` payload and groups items into titled shelves.
+     * Handles both grid carousels (`musicCarouselShelfRenderer`) and list shelves
+     * (`musicShelfRenderer`), reusing [parseAnyItemRenderer] for each child so videoId,
+     * title, artist and thumbnail extraction stays identical to the flattened path.
+     */
+    private fun parseMusicCarouselShelves(json: JSONObject): List<MusicShelf> {
+        val shelves = mutableListOf<MusicShelf>()
+
+        fun collectShelf(title: String, contents: org.json.JSONArray?) {
+            if (title.isBlank() || contents == null) return
+            val items = mutableListOf<HomeVideoItem>()
+            val seen = mutableSetOf<String>()
+            for (i in 0 until contents.length()) {
+                val child = contents.optJSONObject(i) ?: continue
+                parseAnyItemRenderer(child)?.let { parsed ->
+                    if (seen.add(parsed.id)) items.add(parsed)
+                }
+            }
+            if (items.isNotEmpty()) shelves.add(MusicShelf(title = title, items = items))
+        }
+
+        fun walk(node: Any?) {
+            when (node) {
+                is JSONObject -> {
+                    node.optJSONObject("musicCarouselShelfRenderer")?.let { carousel ->
+                        val header = carousel.optJSONObject("header")
+                        val title = header?.optJSONObject("musicCarouselShelfBasicHeaderRenderer")
+                            ?.optJSONObject("title")?.let { runsText(it) }
+                            ?: header?.optJSONObject("musicResponsiveHeaderRenderer")
+                                ?.optJSONObject("title")?.let { runsText(it) }
+                            ?: ""
+                        // YT Music carousels nest items under contents.items (newer) or
+                        // expose contents directly as an array (older shapes).
+                        val contentsArray = carousel.optJSONObject("contents")?.optJSONArray("items")
+                            ?: carousel.optJSONArray("contents")
+                        collectShelf(title, contentsArray)
+                    }
+                    node.optJSONObject("musicShelfRenderer")?.let { shelf ->
+                        val title = shelf.optJSONObject("title")?.let { runsText(it) } ?: ""
+                        collectShelf(title, shelf.optJSONArray("contents"))
+                    }
+                    val keys = node.keys()
+                    while (keys.hasNext()) walk(node.opt(keys.next()))
+                }
+                is JSONArray -> for (i in 0 until node.length()) walk(node.opt(i))
+            }
+        }
+
+        walk(json.optJSONObject("contents") ?: json)
+        return shelves
     }
 
     private fun parseBrowseSections(json: JSONObject): List<HomeVideoItem> {
