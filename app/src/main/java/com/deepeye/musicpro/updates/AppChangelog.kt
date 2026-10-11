@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30104,
+                versionName = "3.0.1.94",
+                releaseDate = "October 2026",
+                title = "Visualizer Runtime Crash Hardening & FFT Smoothing 🛡️🎵",
+                highlight = true,
+                items =
+                    listOf(
+                        "Hardened the AGSL triangle visualizer audio-reactive path against runtime shader crashes.",
+                        "Added smoothed FFT band data for less jittery visualizer response.",
+                        "Improved visualizer rendering stability on supported Android devices."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30101,
                 versionName = "3.0.1.91",
                 releaseDate = "October 2026",
