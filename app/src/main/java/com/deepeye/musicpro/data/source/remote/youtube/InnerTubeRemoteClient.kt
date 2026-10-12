@@ -149,7 +149,12 @@ class InnerTubeRemoteClient @Inject constructor(
                 // Check direct autoplayEndpoint inside musicQueueRenderer or watchNextFeed
                 val track = parseAutoplayFromJson(json, currentVideoId = videoId)
                 if (track != null) {
-                    Log.i(TAG, "Successfully resolved InnerTube AutoPlay track: ${track.videoId} (${track.title} - ${track.artist})")
+                    // Autoplay tracks are algorithmic recommendations tied to the
+                    // account's history — title/artist are never logged. Diagnostic
+                    // builds may log the videoId only, gated off in release.
+                    if (com.deepeye.musicpro.diagnostics.network.NetworkDiagnostics.isEnabled) {
+                        Log.i(TAG, "Resolved AutoPlay track videoId=${track.videoId} (title/artist redacted)")
+                    }
                     return@withContext track
                 }
 
@@ -595,8 +600,17 @@ class InnerTubeRemoteClient @Inject constructor(
      * Mantis Reflect telemetry logger: verifies authenticated user personalization signatures.
      */
     private fun auditBrowseTelemetry(browseId: String, token: String?, bodyStr: String, items: List<HomeVideoItem>) {
-        val preview = bodyStr.take(500).replace("\n", " ").trim()
-        Log.i(AUTH_TAG, "[InnerTube Auth-Rescue] /browse ($browseId) | AuthTokenPresent: ${!token.isNullOrBlank()} | ItemsParsed: ${items.size} | BodyPreview: $preview")
+        // Mantis Reflect is a developer diagnostic, never a release metric. The
+        // personalized /browse body carries the signed-in user's private history
+        // (video titles, channels, IDs) which the secret-key redactor does NOT
+        // strip — so the whole logger is gated behind the diagnostic switch and
+        // emits nothing in release builds.
+        if (!com.deepeye.musicpro.diagnostics.network.NetworkDiagnostics.isEnabled) return
+
+        // Presence-only signals: never the token, and never the raw body (a
+        // personalized body is account history even after secret redaction).
+        // Body size only — no content.
+        Log.i(AUTH_TAG, "[InnerTube Auth-Rescue] /browse AuthTokenPresent=${!token.isNullOrBlank()} ItemsParsed=${items.size} BodyBytes=${bodyStr.length}")
 
         if (browseId == "FEmusic_home") {
             val personalSignatures = listOf(
@@ -604,10 +618,13 @@ class InnerTubeRemoteClient @Inject constructor(
                 "Similar to", "Your recap", "From your library", "Trending", "Recommended"
             )
             val detected = personalSignatures.filter { bodyStr.contains(it, ignoreCase = true) }
+            // Shelf *names* are static, non-account strings (e.g. "Quick picks")
+            // and are safe. Item titles/channels are account history — never logged.
             Log.i(AUTH_TAG, "[InnerTube-Personalized] Detected Shelves: ${if (detected.isNotEmpty()) detected.joinToString(", ") else "None (Guest feed or custom shelves)"}")
 
-            val sampleTitles = items.take(3).joinToString(" | ") { "\"${it.title}\" by ${it.channelName}" }
-            Log.i(AUTH_TAG, "[InnerTube-Personalized] Top 3 Tracks: $sampleTitles")
+            // Deliberately NOT logging track titles or channel names: they are
+            // tied to the signed-in user's private history. Count only.
+            Log.i(AUTH_TAG, "[InnerTube-Personalized] ItemsParsed: ${items.size} (titles redacted)")
         }
     }
 

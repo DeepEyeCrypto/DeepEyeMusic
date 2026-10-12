@@ -126,7 +126,13 @@ class YouTubeDeviceAuthManager @Inject constructor(private val client: OkHttpCli
 
                 client.newCall(request).execute().use { response ->
                     val responseString = response.body?.string() ?: ""
-                    Log.d("YTAuth", "Polling response: $responseString")
+                    // Never log the raw token-poll body: it can contain the live
+                    // access_token / refresh_token. Emit only a redacted line.
+                    Log.d(
+                        "YTAuth",
+                        "Polling response (redacted): " +
+                            com.deepeye.musicpro.diagnostics.network.NetworkLogRedactor.redact(responseString)
+                    )
                     val json = JSONObject(responseString)
                     
                     if (response.isSuccessful) {
@@ -212,6 +218,20 @@ class YouTubeDeviceAuthManager @Inject constructor(private val client: OkHttpCli
                         tokenType = json.getString("token_type")
                     )
                 }
+                // Definitive revoked/expired refresh token: surface a typed sentinel
+                // (blank access + blank refresh) so the caller can clear credentials
+                // and require re-auth. The error code is logged; the raw body never is.
+                val errorCode = json.optString("error", "")
+                if (response.code == 400 && errorCode == "invalid_grant") {
+                    android.util.Log.e("YTAuth", "event=token_refresh outcome=invalid_grant action=reauth_required")
+                    return@withContext TokenResponse(
+                        accessToken = "",
+                        refreshToken = null,
+                        expiresIn = 0,
+                        tokenType = ""
+                    )
+                }
+                android.util.Log.e("YTAuth", "event=token_refresh outcome=http_error status=${response.code}")
             }
         } catch (e: Exception) {
             android.util.Log.e("YTAuth", "Refresh failed", e)
@@ -236,8 +256,16 @@ class YouTubeDeviceAuthManager @Inject constructor(private val client: OkHttpCli
             val dataObj = JSONObject()
             data.forEach { (k, v) -> dataObj.put(k, v ?: JSONObject.NULL) }
             obj.put("data", dataObj)
-            val payload = obj.toString()
-            Log.i("DBG_B5FA56", payload)
+            // Redact before it touches logcat or the local ingest socket: even
+            // though the current call sites log non-secret fields, the data map
+            // may later include response bodies that carry tokens.
+            val payload = com.deepeye.musicpro.diagnostics.network.NetworkLogRedactor
+                .redact(obj.toString())
+            // Release-safe: temporary debug-session telemetry never emits in
+            // release builds (even though the payload is already redacted).
+            if (BuildConfig.DEBUG) {
+                Log.i("DBG_B5FA56", payload)
+            }
 
             if (BuildConfig.DEBUG) {
                 val req = Request.Builder()

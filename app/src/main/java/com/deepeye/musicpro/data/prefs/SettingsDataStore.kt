@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -34,6 +35,13 @@ data class AppSettings(
     val autoplayOnCellular: Boolean = false,
     val youtubeAccessToken: String? = null,
     val youtubeRefreshToken: String? = null,
+    /**
+     * Absolute access-token expiry as epoch seconds, derived from the provider's
+     * `expires_in` at token-save time. Null = unknown (legacy installs or a
+     * provider response that omitted expiry); unknown expiry never forces a
+     * proactive refresh on its own — the 401 rescue path still applies.
+     */
+    val youtubeTokenExpiresAtEpochSec: Long? = null,
     val youtubeUserName: String? = null,
     val youtubeUserAvatar: String? = null,
     val youtubeUserEmail: String? = null
@@ -57,6 +65,7 @@ constructor(
         private val KEY_AUTOPLAY_ON_CELLULAR = booleanPreferencesKey("is_cellular_autoplay_enabled")
         private val KEY_YT_ACCESS_TOKEN = stringPreferencesKey("yt_access_token")
         private val KEY_YT_REFRESH_TOKEN = stringPreferencesKey("yt_refresh_token")
+        private val KEY_YT_TOKEN_EXPIRES_AT = longPreferencesKey("yt_token_expires_at")
         private val KEY_YT_USER_NAME = stringPreferencesKey("yt_user_name")
         private val KEY_YT_USER_AVATAR = stringPreferencesKey("yt_user_avatar")
         private val KEY_YT_USER_EMAIL = stringPreferencesKey("yt_user_email")
@@ -81,6 +90,7 @@ constructor(
                 autoplayOnCellular = prefs[KEY_AUTOPLAY_ON_CELLULAR] ?: false,
                 youtubeAccessToken = prefs[KEY_YT_ACCESS_TOKEN],
                 youtubeRefreshToken = prefs[KEY_YT_REFRESH_TOKEN],
+                youtubeTokenExpiresAtEpochSec = prefs[KEY_YT_TOKEN_EXPIRES_AT],
                 youtubeUserName = prefs[KEY_YT_USER_NAME],
                 youtubeUserAvatar = prefs[KEY_YT_USER_AVATAR],
                 youtubeUserEmail = prefs[KEY_YT_USER_EMAIL],
@@ -127,7 +137,19 @@ constructor(
     suspend fun exportToJson(): String {
         val gson = com.google.gson.Gson()
         val currentSettings = settings.first()
-        return gson.toJson(currentSettings)
+        // Backup/restore covers UI preferences only. OAuth tokens, token expiry,
+        // and account profile fields are secrets or account-scoped state and must
+        // never be written to an exportable file.
+        val redacted =
+            currentSettings.copy(
+                youtubeAccessToken = null,
+                youtubeRefreshToken = null,
+                youtubeTokenExpiresAtEpochSec = null,
+                youtubeUserName = null,
+                youtubeUserAvatar = null,
+                youtubeUserEmail = null,
+            )
+        return gson.toJson(redacted)
     }
 
     suspend fun importFromJson(jsonString: String) {
@@ -150,11 +172,24 @@ constructor(
         }
     }
 
-    suspend fun setYouTubeTokens(accessToken: String, refreshToken: String?) {
+    /**
+     * Persists an OAuth token pair plus optional absolute expiry.
+     *
+     * @param expiresAtEpochSec absolute access-token expiry (epoch seconds), as
+     * computed by [com.deepeye.musicpro.domain.auth.TokenExpiry.computeExpiresAt].
+     * Null = unknown (legacy callers, or provider omitted `expires_in`).
+     * Defaults to null so existing call sites keep compiling unchanged.
+     */
+    suspend fun setYouTubeTokens(
+        accessToken: String,
+        refreshToken: String?,
+        expiresAtEpochSec: Long? = null,
+    ) {
         context.dataStore.edit { prefs ->
             if (accessToken.isEmpty()) {
                 prefs.remove(KEY_YT_ACCESS_TOKEN)
                 prefs.remove(KEY_YT_REFRESH_TOKEN)
+                prefs.remove(KEY_YT_TOKEN_EXPIRES_AT)
                 prefs.remove(KEY_YT_USER_NAME)
                 prefs.remove(KEY_YT_USER_AVATAR)
                 prefs.remove(KEY_YT_USER_EMAIL)
@@ -162,6 +197,11 @@ constructor(
                 prefs[KEY_YT_ACCESS_TOKEN] = accessToken
                 if (refreshToken != null) {
                     prefs[KEY_YT_REFRESH_TOKEN] = refreshToken
+                }
+                if (expiresAtEpochSec != null) {
+                    prefs[KEY_YT_TOKEN_EXPIRES_AT] = expiresAtEpochSec
+                } else {
+                    prefs.remove(KEY_YT_TOKEN_EXPIRES_AT)
                 }
             }
         }

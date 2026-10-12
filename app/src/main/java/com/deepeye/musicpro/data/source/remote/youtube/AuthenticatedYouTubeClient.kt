@@ -310,21 +310,24 @@ class AuthenticatedYouTubeClient @Inject constructor(
             val request = reqBuilder.build()
             val response = client.newCall(request).execute()
             if (response.code == 401 && token != null) {
-                Log.e("AuthYTClient", "401 Unauthorized for search $query, retrying...")
+                // Query text is user PII and is never logged (Phase 3 rule).
+                Log.w("AuthYTClient", "search 401 unauthorized, retrying after refresh")
                 return@withContext handle401AndRetry(request)
             }
             if (!response.isSuccessful) {
-                val errBody = try { response.body?.string()?.take(300) } catch (e: Exception) { null }
-                Log.e("AuthYTClient", "search '$query' HTTP Error: ${response.code} - $errBody")
+                // Never log query text or the raw error body (may echo account data).
+                Log.e("AuthYTClient", "search HTTP error: ${response.code}")
                 return@withContext emptyList()
             }
 
             val jsonStr = response.body?.string() ?: ""
             val items = parseInnerTubeVideos(jsonStr)
-            Log.d("AuthYTClient", "search '$query' returned ${items.size} items")
+            // Query text is user PII and is never logged (Phase 3 rule).
+            Log.d("AuthYTClient", "search returned ${items.size} items")
             items.distinctBy { it.id }
         } catch (e: Exception) {
-            Log.e("AuthYTClient", "search failed for $query", e)
+            // Query text is user PII and is never logged (Phase 3 rule).
+            Log.e("AuthYTClient", "search failed", e)
             emptyList()
         }
     }

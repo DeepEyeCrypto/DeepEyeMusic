@@ -21,8 +21,7 @@ object AppChangelog {
                     ),
             ),
             ChangelogEntry(
-                versionCode = 30101,
-                versionName = "3.0.1.91",
+                versionCode = 30101,                versionName = "3.0.1.91",
                 releaseDate = "October 2026",
                 title = "VVavy Multi-Topology Generative Visualizer Engine 📐✨",
                 highlight = true,

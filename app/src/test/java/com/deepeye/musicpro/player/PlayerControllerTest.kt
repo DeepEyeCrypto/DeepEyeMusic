@@ -37,6 +37,7 @@ class PlayerControllerTest {
     private val player = mockk<ExoPlayer>(relaxed = true)
     private val queueManager = QueueManager()
     private val sourceResolverManager = mockk<com.deepeye.musicpro.domain.resolver.SourceResolverManager>(relaxed = true)
+    private val audioVisualizerManager = mockk<com.deepeye.musicpro.ui.player.visualizer.agsl.AudioVisualizerManager>(relaxed = true)
     private val historyRepository = mockk<com.deepeye.musicpro.domain.repository.HistoryRepository>(relaxed = true)
     private val audioSessionManager = mockk<com.deepeye.musicpro.dsp.session.AudioSessionManager>(relaxed = true)
     private val dspEngine = mockk<DSPEngine>(relaxed = true)
@@ -72,6 +73,7 @@ class PlayerControllerTest {
             queueManager = queueManager,
             sourceResolverManager = sourceResolverManager,
             audioSessionManager = audioSessionManager,
+            audioVisualizerManager = audioVisualizerManager,
             dspEngine = dspEngine,
             historyRepository = historyRepository,
             musicRepository = musicRepository,
@@ -100,6 +102,7 @@ class PlayerControllerTest {
                     queueManager = queueManager,
                     sourceResolverManager = sourceResolverManager,
                     audioSessionManager = audioSessionManager,
+                    audioVisualizerManager = audioVisualizerManager,
                     dspEngine = dspEngine,
                     historyRepository = historyRepository,
                     musicRepository = musicRepository,

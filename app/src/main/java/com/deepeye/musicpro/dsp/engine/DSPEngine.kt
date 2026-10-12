@@ -178,6 +178,12 @@ constructor(
     fun reconnectAndRehydrate() {
         val currentSid = _currentSessionId.value
         if (currentSid <= 0) return
+        if (_isVerboseLoggingEnabled.value) {
+            Log.v(
+                TAG,
+                "[V4A DEBUG] RECONNECT reconnectAndRehydrate | Session=$currentSid"
+            )
+        }
         Log.w(TAG, "⚡ Daemon Death / Audio Effect Crash Detected! Reconnecting and rehydrating session: $currentSid")
         try {
             releaseSession()

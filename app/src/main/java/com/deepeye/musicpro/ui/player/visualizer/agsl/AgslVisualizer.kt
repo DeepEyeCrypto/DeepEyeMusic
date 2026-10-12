@@ -12,6 +12,9 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ShaderBrush
@@ -77,17 +80,66 @@ private fun AgslRuntimeShaderRenderer(
 ) {
     val dataBridge = remember { VisualizerDataBridge() }
 
-    // ── Continuous 60fps clock driven via withFrameNanos ──
-    val timeState = remember { mutableFloatStateOf(0f) }
+    // ── Thermal governor: hardware heat → frame-rate / post-FX policy ──
+    // rememberThermalTier() bridges PowerManager's OnThermalStatusChangedListener
+    // (API 29+) into Compose; on API < 29 it stays FULL (existing 144 Hz path).
+    val thermalTier by rememberThermalTier()
 
-    LaunchedEffect(Unit) {
+    // ── Background GPU kill-switch ──
+    // The GPU must drop to 0% the instant the app is backgrounded, while the DSP
+    // engine and ExoPlayer keep the audio stream alive. isRendering is read from
+    // the frame loop and from the Canvas draw below, so setting it false on
+    // ON_PAUSE stops both the clock and the shader redraw with zero GPU cost.
+    val isRendering = remember { mutableStateOf(true) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP) {
+                isRendering.value = false
+            } else if (event == Lifecycle.Event.ON_RESUME) {
+                isRendering.value = true
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // ── Adaptive clock driven via withFrameNanos ──
+    // The loop throttles itself to the thermal tier's target FPS by dropping
+    // frames whose deadline has not elapsed. When backgrounded (isRendering ==
+    // false) the loop still awaits frames but advances neither the clock nor the
+    // smoothing accumulator, and the Canvas returns early — so the compositor has
+    // nothing new to draw and GPU usage falls to 0%.
+    val timeState = remember { mutableFloatStateOf(0f) }
+    val smoothingState = remember { mutableFloatStateOf(thermalTier.smoothing) }
+    LaunchedEffect(thermalTier) {
+        smoothingState.floatValue = thermalTier.smoothing
         var startNanos = 0L
+        var lastDrawnNanos = 0L
+        val frameBudgetNanos = 1_000_000_000L / thermalTier.targetFps
         while (isActive) {
             withFrameNanos { frameNanos ->
                 if (startNanos == 0L) startNanos = frameNanos
-                timeState.floatValue = (frameNanos - startNanos) / 1_000_000_000f
+                // Backgrounded: hold the clock, spend zero GPU.
+                if (!isRendering.value) {
+                    lastDrawnNanos = frameNanos
+                    return@withFrameNanos
+                }
+                // Thermal frame cap: only advance on frames that land within the
+                // tier's budget. timeState drives the shader clock and the redraw.
+                if (frameNanos - lastDrawnNanos >= frameBudgetNanos) {
+                    lastDrawnNanos = frameNanos
+                    timeState.floatValue = (frameNanos - startNanos) / 1_000_000_000f
+                }
             }
         }
+    }
+
+    // Reactive draw trigger: fires on the throttled clock, on a thermal-tier
+    // change, and on background/foreground transitions so the kill-switch and
+    // any tier shift take effect immediately.
+    val renderTrigger by remember(thermalTier) {
+        androidx.compose.runtime.derivedStateOf { timeState.floatValue to thermalTier to isRendering.value }
     }
 
     // Pre-instantiate RuntimeShader per scene
@@ -106,6 +158,11 @@ private fun AgslRuntimeShaderRenderer(
 
     Canvas(modifier = modifier.fillMaxSize()) {
         // ── ZERO-RECOMPOSITION DRAW PHASE UNIFORM DISPATCH ──
+        // Background kill-switch: bail out before touching the GPU so the
+        // compositor has nothing to redraw and GPU usage is 0% while backgrounded.
+        renderTrigger
+        if (!isRendering.value) return@Canvas
+
         val time = timeState.floatValue
         val spectrum = fftSpectrum.value
         val bands = frequencyBands.value
@@ -169,8 +226,11 @@ private fun AgslRuntimeShaderRenderer(
         //   (no shader declares iTimeDelta — that call was removed.)
         val isNeonTriangle = activeShader === neonTriangleShader
 
-        // 1. Update and bind Audio FFT 256x1 Bitmap Texture Bridge to iChannel0 safely
-        if (!isNeonTriangle) {
+        // 1. Update and bind Audio FFT 256x1 Bitmap Texture Bridge to iChannel0 safely.
+        //    On THROTTLED (severe/critical heat) the tier disables audio post-processing
+        //    so we skip the per-frame texture upload — the biggest thermal saving once
+        //    the frame rate is already capped.
+        if (!isNeonTriangle && thermalTier.audioPostFx) {
             runCatching {
                 val audioShader = dataBridge.updateAudioTexture(spectrum, bands)
                 activeShader.setInputShader("iChannel0", audioShader)

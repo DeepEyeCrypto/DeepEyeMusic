@@ -116,7 +116,13 @@ android {
         ignoreTestSources = true
         disable += listOf(
             "FrequentlyChangingValue",
-            "NullSafeMutableLiveData"
+            "NullSafeMutableLiveData",
+            // AGP 8.7.3's bundled androidx.compose.runtime.lint detectors were compiled
+            // against an older Kotlin/UAST and crash with IncompatibleClassChangeError
+            // under Kotlin 2.1.10, aborting lintAnalyzeDebug regardless of abortOnError.
+            // Disable the known-crashing detectors until AGP/Kotlin are aligned.
+            "RememberInComposition",
+            "AutoboxingStateCreation"
         )
     }
 

@@ -2,6 +2,16 @@
 # By default, the flags in this file are appended to flags specified
 # in the Android SDK proguard file.
 
+# ── Kotlin & Coroutines Metadata Shield (R8-OMEGA) ──
+# Prevent R8 from stripping Kotlin metadata annotations and coroutines internals
+-keep class kotlin.Metadata { *; }
+-keep class kotlin.reflect.** { *; }
+-keepattributes RuntimeVisibleAnnotations,RuntimeVisibleParameterAnnotations,RuntimeVisibleTypeAnnotations
+-keep class kotlinx.coroutines.** { *; }
+-keepattributes EnclosingMethod
+-dontwarn kotlin.**
+-dontwarn kotlin.reflect.**
+
 # Keep DSP engine classes (reflection-based AudioEffect instantiation)
 -keep class com.deepeye.musicpro.dsp.engine.** { *; }
 
