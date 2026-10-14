@@ -8,6 +8,19 @@ object AppChangelog {
     val entries =
         listOf(
             ChangelogEntry(
+                versionCode = 30105,
+                versionName = "3.0.1.95",
+                releaseDate = "October 2026",
+                title = "Fresh Signed Builds & Release Pipeline Refresh 📦✅",
+                highlight = false,
+                items =
+                    listOf(
+                        "Version bumped to 3.0.1.95 (versionCode 30105) with fresh debug and release builds.",
+                        "No functional changes since v3.0.1.94 — parity rebuild for verified device testing.",
+                        "Regenerated SHA-256 checksums for all distributed artifacts."
+                    ),
+            ),
+            ChangelogEntry(
                 versionCode = 30104,
                 versionName = "3.0.1.94",
                 releaseDate = "October 2026",
