@@ -99,7 +99,7 @@ constructor(
             val shelves = innerTubeClient.fetchMusicHomeShelves()
                 val sections = shelves.mapIndexedNotNull { index, shelf ->
                     val items = shelf.items
-                        .filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
+                        .filter { MusicFilter.isMusicShelfItem(it.title, it.channelName, it.duration, it.isShort) }
                         .distinctBy { it.id }
                         .take(20)
                         .map { it.toFeedItem(shelf.title) }

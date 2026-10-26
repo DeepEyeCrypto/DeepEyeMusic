@@ -10,6 +10,8 @@ import com.deepeye.musicpro.data.source.remote.youtube.InnerTubeMusicUnavailable
 import com.deepeye.musicpro.data.source.remote.youtube.InnerTubeRemoteClient
 import com.deepeye.musicpro.data.source.remote.youtube.MusicShelf
 import com.deepeye.musicpro.data.source.remote.youtube.MusicShelfFailureReason
+import com.deepeye.musicpro.domain.model.home.HomeVideoItem
+import com.deepeye.musicpro.domain.model.personalization.PersonalizedSectionType
 import com.deepeye.musicpro.player.controller.PlayerController
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -25,6 +27,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -104,6 +107,30 @@ class MusicViewModelTest {
         assertTrue(m.uiState.value.personalizedFeed.sections.isEmpty())
     }
 
+    @Test
+    fun `trusted YouTube Music shelf renders items without generic music keyword filter`() = runTest {
+        coEvery { innerTubeClient.fetchMusicHomeShelves() } returns listOf(
+            MusicShelf(
+                title = "Quick picks",
+                items = listOf(
+                    HomeVideoItem(
+                        id = "music-item-01",
+                        title = "Artist - Official Music Video",
+                        channelName = "Artist Music",
+                        thumbnailUrl = "https://example.invalid/thumb.jpg",
+                        duration = 180L,
+                    ),
+                ),
+            ),
+        )
+        val m = vm()
+        sessionFlow.value = AccountSession.Connected(accountKey = "synthetic-key")
+        advanceUntilIdle()
+        val sections = m.uiState.value.personalizedFeed.sections
+        assertEquals(1, sections.size)
+        assertEquals(PersonalizedSectionType.YOUTUBE_MUSIC_SHELF, sections.single().type)
+        assertEquals(1, sections.single().items.size)
+    }
     @Test
     fun `valid empty shelves show honest empty state, not error`() = runTest {
         coEvery { innerTubeClient.fetchMusicHomeShelves() } returns

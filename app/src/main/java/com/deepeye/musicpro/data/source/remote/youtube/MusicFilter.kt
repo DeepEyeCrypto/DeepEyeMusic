@@ -62,10 +62,25 @@ object MusicFilter {
         return false
     }
 
+    /**
+     * YouTube Music's own shelves are already music-scoped, but their item
+     * metadata can omit duration/artist keywords. Keep only hard non-music
+     * exclusions here; do not require a title keyword or duration.
+     */
+    fun isMusicShelfItem(
+        title: String,
+        channelName: String,
+        durationSeconds: Long = 0L,
+        isShort: Boolean = false,
+    ): Boolean {
+        if (isShort(title, durationSeconds, isShort)) return false
+        return !EXCLUDE_PATTERN.containsMatchIn("$title $channelName")
+    }
+
     fun isMusicTrack(
         title: String,
         channelName: String,
-        durationSeconds: Long = 0,
+        durationSeconds: Long = 0L,
         isShort: Boolean = false,
     ): Boolean {
         // 1. Explicit shorts & duration validation
