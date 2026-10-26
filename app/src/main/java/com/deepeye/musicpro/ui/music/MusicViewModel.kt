@@ -9,6 +9,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deepeye.musicpro.account.AccountSession
 import com.deepeye.musicpro.account.AccountSessionManager
+import com.deepeye.musicpro.data.source.remote.youtube.InnerTubeAuthException
+import com.deepeye.musicpro.data.source.remote.youtube.InnerTubeMusicUnavailableException
 import com.deepeye.musicpro.data.source.remote.youtube.InnerTubeRemoteClient
 import com.deepeye.musicpro.data.source.remote.youtube.MusicFilter
 import com.deepeye.musicpro.domain.model.MediaItem
@@ -23,6 +25,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -68,11 +71,11 @@ constructor(
      */
     private fun observeAccount() {
         viewModelScope.launch {
-            accountSessionManager.accountSession.collect { session ->
+            accountSessionManager.accountSession.collectLatest { session ->
                 val auth = session is AccountSession.Connected
                 _uiState.update { it.copy(hasAuth = auth) }
                 when {
-                    auth -> loadMusicHomeShelves()
+                    auth -> loadMusicHomeShelvesSuspend()
                     session is AccountSession.LoggedOut -> _uiState.update {
                         it.copy(personalizedFeed = PersonalizedFeedState(accountSession = session))
                     }
@@ -82,19 +85,18 @@ constructor(
     }
 
     /** Fetches `FEmusic_home` shelves and emits them as the sole feed source. */
-    private fun loadMusicHomeShelves() {
-        viewModelScope.launch {
-            _uiState.update { current ->
-                current.copy(
-                    personalizedFeed = current.personalizedFeed.copy(
-                        isLoading = current.personalizedFeed.sections.isEmpty(),
-                        isRefreshing = current.personalizedFeed.sections.isNotEmpty(),
-                        globalError = null,
-                    ),
-                )
-            }
-            try {
-                val shelves = innerTubeClient.fetchMusicHomeShelves()
+    private suspend fun loadMusicHomeShelvesSuspend() {
+        _uiState.update { current ->
+            current.copy(
+                personalizedFeed = current.personalizedFeed.copy(
+                    isLoading = current.personalizedFeed.sections.isEmpty(),
+                    isRefreshing = current.personalizedFeed.sections.isNotEmpty(),
+                    globalError = null,
+                ),
+            )
+        }
+        try {
+            val shelves = innerTubeClient.fetchMusicHomeShelves()
                 val sections = shelves.mapIndexedNotNull { index, shelf ->
                     val items = shelf.items
                         .filter { MusicFilter.isMusicTrack(it.title, it.channelName, it.duration) }
@@ -129,6 +131,35 @@ constructor(
                         ),
                     )
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                // Req 1: account switch / screen exit cancels the load coroutine.
+                // Never convert cancellation into an unavailable/retry error.
+                throw e
+            } catch (e: InnerTubeAuthException) {
+                // ACCOUNT-MUSIC-OMEGA: reconnect state — never silent empty,
+                // never generic filler.
+                Log.w(TAG, "event=music_home result=reauth_required")
+                _uiState.update {
+                    it.copy(
+                        personalizedFeed = it.personalizedFeed.copy(
+                            isLoading = false,
+                            isRefreshing = false,
+                            globalError = "Sign in with your YouTube account to see your music. Pull to retry.",
+                        ),
+                    )
+                }
+            } catch (e: InnerTubeMusicUnavailableException) {
+                // ACCOUNT-MUSIC-OMEGA: honest provider-unavailable state.
+                Log.w(TAG, "event=music_home result=provider_unavailable")
+                _uiState.update {
+                    it.copy(
+                        personalizedFeed = it.personalizedFeed.copy(
+                            isLoading = false,
+                            isRefreshing = false,
+                            globalError = "YouTube Music is unavailable right now. Pull to refresh.",
+                        ),
+                    )
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load FEmusic_home shelves", e)
                 _uiState.update {
@@ -141,8 +172,10 @@ constructor(
                     )
                 }
             }
-        }
     }
+
+    /** Public launcher for pull-to-refresh / retry. */
+    fun loadMusicHomeShelves() = viewModelScope.launch { loadMusicHomeShelvesSuspend() }
 
     // ── Playback Actions ──────────────────────────────────────────────────
 

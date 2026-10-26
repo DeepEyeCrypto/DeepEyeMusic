@@ -37,6 +37,41 @@ data class AutoplayTrack(
 class InnerTubeAuthException(message: String) : Exception(message)
 
 /**
+ * ACCOUNT-MUSIC-OMEGA: typed failure reasons for account-only music shelves.
+ * The UI may render one common unavailable screen, but the reason is retained
+ * for retry eligibility and diagnostics. String form never exposes tokens,
+ * raw payloads, account/content/playlist IDs, titles, or stream URLs.
+ */
+enum class MusicShelfFailureReason {
+    /** Auth expired/invalid -> use the existing refresh/reauth path. */
+    REAUTH_REQUIRED,
+
+    /** Transport failure (network/timeout) -> retryable, may use labelled cache. */
+    NETWORK,
+
+    /** Response body missing or structurally invalid -> retryable, no cache. */
+    INVALID_RESPONSE,
+
+    /** No usable music items in a valid response -> honest empty, no filler. */
+    EMPTY_ACCOUNT_CONTENT,
+
+    /** Provider surface definitively unavailable. */
+    PROVIDER_UNAVAILABLE,
+}
+
+/**
+ * ACCOUNT-MUSIC-OMEGA: typed unavailable outcome for the account-only music
+ * home surface. Carries the retained [reason] and the transport detail
+ * category only (HTTP status code or a sanitized `io`/`timeout` marker —
+ * never tokens, payloads, account/content IDs, titles, or URLs).
+ */
+class InnerTubeMusicUnavailableException(
+    val reason: MusicShelfFailureReason,
+    message: String,
+    val httpStatus: Int? = null,
+) : Exception(message)
+
+/**
  * YT-MUSIC-OMEGA: a single titled shelf from the authenticated YouTube Music home
  * feed (`FEmusic_home`), e.g. "Listen again", "Quick picks", "Mixed for you". Preserves
  * the carousel title so the Music tab can render one rail per shelf.
@@ -160,6 +195,9 @@ class InnerTubeRemoteClient @Inject constructor(
 
                 return@withContext fetchNextAutoplayFallback(videoId)
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Req 1: cancellation propagates — never convert to fallback/empty.
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching InnerTube /next for video $videoId", e)
             return@withContext fetchNextAutoplayFallback(videoId)
@@ -192,6 +230,9 @@ class InnerTubeRemoteClient @Inject constructor(
                 val json = JSONObject(bodyStr)
                 return@withContext parseAutoplayFromJson(json, currentVideoId = videoId)
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Req 1: cancellation propagates — never convert to null/fallback.
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error in fallback InnerTube /next", e)
             null
@@ -235,6 +276,9 @@ class InnerTubeRemoteClient @Inject constructor(
                 return@withContext fetchLyricsFromBrowse(targetBrowseId)
             }
             null
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Req 1: cancellation propagates — never convert to null/fallback.
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching InnerTube lyrics for $videoId", e)
             null
@@ -451,6 +495,9 @@ class InnerTubeRemoteClient @Inject constructor(
             return@withContext items
         } catch (e: InnerTubeAuthException) {
             throw e
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Req 1: cancellation propagates — never convert to emptyList.
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error in InnerTube /browse for browseId=$browseId", e)
             if (!token.isNullOrBlank()) {
@@ -513,58 +560,68 @@ class InnerTubeRemoteClient @Inject constructor(
     }
 
     /**
-     * Authenticated /browse query on Main YouTube (TVHTML5) for history, subscriptions, and what to watch.
+     * Shared TVHTML5 `/browse` POST with OAuth Bearer injection and a single
+     * 401 refresh-and-retry. Returns the raw JSON body, or "" on a non-auth failure.
      */
-    suspend fun browseMain(browseId: String = "FEwhat_to_watch", params: String? = null): List<HomeVideoItem> = withContext(Dispatchers.IO) {
+    private suspend fun postMainBrowse(browseId: String, params: String? = null): String {
         val token = authManager.getAccessToken()
         val paramsPart = if (params != null) ", \"params\": \"$params\"" else ""
         val payload = "{$TVHTML5_CONTEXT, \"browseId\": \"$browseId\"$paramsPart}"
 
-        try {
-            val reqBuilder = Request.Builder()
-                .url("${YOUTUBE_MAIN_INNERTUBE}browse")
-                .addHeader("Content-Type", "application/json")
-                .addHeader("User-Agent", "Mozilla/5.0 (SMART-TV; Linux; Tizen 5.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/5.0 NativeTVAds Safari/538.1,gzip(gfe)")
-                .addHeader("X-YouTube-Client-Name", "85")
-                .addHeader("X-YouTube-Client-Version", TVHTML5_CLIENT_VERSION)
-                .post(payload.toRequestBody("application/json".toMediaType()))
+        val reqBuilder = Request.Builder()
+            .url("${YOUTUBE_MAIN_INNERTUBE}browse")
+            .addHeader("Content-Type", "application/json")
+            .addHeader("User-Agent", "Mozilla/5.0 (SMART-TV; Linux; Tizen 5.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/5.0 NativeTVAds Safari/538.1,gzip(gfe)")
+            .addHeader("X-YouTube-Client-Name", "85")
+            .addHeader("X-YouTube-Client-Version", TVHTML5_CLIENT_VERSION)
+            .post(payload.toRequestBody("application/json".toMediaType()))
 
-            if (!token.isNullOrBlank()) {
-                reqBuilder.addHeader("Authorization", "Bearer $token")
-            }
+        if (!token.isNullOrBlank()) {
+            reqBuilder.addHeader("Authorization", "Bearer $token")
+        }
 
-            client.newCall(reqBuilder.build()).execute().use { response ->
-                if (response.code == 401 && !token.isNullOrBlank()) {
-                    Log.w(AUTH_TAG, "[InnerTube Auth-Rescue] 401 on TV /browse ($browseId), refreshing token...")
-                    val refreshedToken = authManager.refreshAccessToken()
-                    if (!refreshedToken.isNullOrBlank()) {
-                        val retryReq = reqBuilder.header("Authorization", "Bearer $refreshedToken").build()
-                        client.newCall(retryReq).execute().use { retryRes ->
-                            if (retryRes.isSuccessful) {
-                                val bodyStr = retryRes.body?.string() ?: return@withContext emptyList()
-                                val items = parseBrowseSections(JSONObject(bodyStr))
-                                auditBrowseTelemetry(browseId, refreshedToken, bodyStr, items)
-                                return@withContext items
-                            }
+        client.newCall(reqBuilder.build()).execute().use { response ->
+            if (response.code == 401 && !token.isNullOrBlank()) {
+                Log.w(AUTH_TAG, "[InnerTube Auth-Rescue] 401 on TV /browse ($browseId), refreshing token...")
+                val refreshedToken = authManager.refreshAccessToken()
+                if (!refreshedToken.isNullOrBlank()) {
+                    val retryReq = reqBuilder.header("Authorization", "Bearer $refreshedToken").build()
+                    client.newCall(retryReq).execute().use { retryRes ->
+                        if (retryRes.isSuccessful) {
+                            return retryRes.body?.string() ?: ""
                         }
                     }
-                    throw InnerTubeAuthException("InnerTube TV browse failed (401 Unauthorized) for $browseId")
                 }
-
-                if (!response.isSuccessful) {
-                    Log.e(AUTH_TAG, "[InnerTube Auth-Rescue] Main /browse failed for $browseId with HTTP ${response.code}")
-                    if (!token.isNullOrBlank() && (response.code == 401 || response.code == 403)) {
-                        throw InnerTubeAuthException("InnerTube TV browse HTTP ${response.code} for $browseId")
-                    }
-                    return@withContext emptyList()
-                }
-
-                val bodyStr = response.body?.string() ?: return@withContext emptyList()
-                val items = parseBrowseSections(JSONObject(bodyStr))
-                auditBrowseTelemetry(browseId, token, bodyStr, items)
-                return@withContext items
+                throw InnerTubeAuthException("InnerTube TV browse failed (401 Unauthorized) for $browseId")
             }
+
+            if (!response.isSuccessful) {
+                Log.e(AUTH_TAG, "[InnerTube Auth-Rescue] Main /browse failed for $browseId with HTTP ${response.code}")
+                if (!token.isNullOrBlank() && (response.code == 401 || response.code == 403)) {
+                    throw InnerTubeAuthException("InnerTube TV browse HTTP ${response.code} for $browseId")
+                }
+                return ""
+            }
+
+            return response.body?.string() ?: ""
+        }
+    }
+
+    /**
+     * Authenticated /browse query on Main YouTube (TVHTML5) for history, subscriptions, and what to watch.
+     */
+    suspend fun browseMain(browseId: String = "FEwhat_to_watch", params: String? = null): List<HomeVideoItem> = withContext(Dispatchers.IO) {
+        val token = authManager.getAccessToken()
+        try {
+            val bodyStr = postMainBrowse(browseId, params)
+            if (bodyStr.isBlank()) return@withContext emptyList()
+            val items = parseBrowseSections(JSONObject(bodyStr))
+            auditBrowseTelemetry(browseId, token, bodyStr, items)
+            items
         } catch (e: InnerTubeAuthException) {
+            throw e
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Req 1: cancellation propagates — never convert to emptyList.
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error in Main InnerTube /browse for browseId=$browseId", e)
@@ -637,30 +694,114 @@ class InnerTubeRemoteClient @Inject constructor(
      */
     suspend fun fetchMusicHomeShelves(): List<MusicShelf> = withContext(Dispatchers.IO) {
         val token = authManager.getAccessToken()
+        // ACCOUNT-MUSIC-OMEGA: block an unauthenticated music-home request. A
+        // tokenless /browse returns a generic guest feed (HTTP 200) which must
+        // never be rendered as account-context shelves. No network call here.
+        if (token.isNullOrBlank()) {
+            Log.w(AUTH_TAG, "[YT-MUSIC] FEmusic_home blocked reason=no_account_token")
+            throw InnerTubeAuthException("YouTube Music home requires a connected account token")
+        }
         try {
-            val bodyStr = postMusicBrowse("FEmusic_home", null)
-            if (bodyStr.isBlank()) return@withContext emptyList()
-            val shelves = parseMusicCarouselShelves(JSONObject(bodyStr))
+            var bodyStr = try {
+                postMusicBrowse("FEmusic_home", null)
+            } catch (e: InnerTubeAuthException) {
+                // Req 1+4: auth failures travel the auth path, never unavailable.
+                throw e
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                // Req 1: cancellation propagates — it is not an error state.
+                throw e
+            } catch (e: java.io.IOException) {
+                // Req 2: transport failures -> typed unavailable, retryable.
+                Log.e(AUTH_TAG, "[YT-MUSIC] FEmusic_home unavailable reason=network")
+                throw InnerTubeMusicUnavailableException(
+                    MusicShelfFailureReason.NETWORK,
+                    "YouTube Music home request failed",
+                )
+            }
+
+            var shelves = if (bodyStr.isNotBlank()) {
+                try {
+                    parseMusicCarouselShelves(JSONObject(bodyStr))
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            } else {
+                emptyList()
+            }
+
+            // TVHTML5 fallback for device-flow OAuth tokens:
+            // Device authorization tokens (RFC 8628 via youtube.com/activate) are issued
+            // for YouTube TV / Living Room clients. music.youtube.com rejects them with HTTP 400.
+            // On www.youtube.com, the TV client receives authentic account music shelves via FEtopics_music.
+            if (shelves.isEmpty()) {
+                Log.i(AUTH_TAG, "[YT-MUSIC] FEmusic_home empty or rejected; attempting TV Living Room music browse (FEtopics_music)...")
+                val tvBody = try {
+                    postMainBrowse("FEtopics_music", null)
+                } catch (e: InnerTubeAuthException) {
+                    throw e
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: java.io.IOException) {
+                    Log.e(AUTH_TAG, "[YT-MUSIC] FEtopics_music unavailable reason=network")
+                    throw InnerTubeMusicUnavailableException(
+                        MusicShelfFailureReason.NETWORK,
+                        "YouTube Music TV browse request failed",
+                    )
+                } catch (e: Exception) {
+                    ""
+                }
+                if (tvBody.isNotBlank()) {
+                    shelves = try {
+                        parseMusicCarouselShelves(JSONObject(tvBody))
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                }
+            }
+
+            if (shelves.isEmpty()) {
+                // Req 3: missing required body -> INVALID_RESPONSE (not empty).
+                Log.e(AUTH_TAG, "[YT-MUSIC] FEmusic_home unavailable reason=empty_browse_body")
+                throw InnerTubeMusicUnavailableException(
+                    MusicShelfFailureReason.INVALID_RESPONSE,
+                    "YouTube Music home browse returned no data",
+                )
+            }
+
             Log.i(
                 AUTH_TAG,
                 "[YT-MUSIC] FEmusic_home shelves=${shelves.size} " +
-                    "authTokenPresent=${!token.isNullOrBlank()} " +
-                    "titles=[${shelves.joinToString(", ") { it.title }}]"
+                    "authTokenPresent=${!token.isNullOrBlank()}"
             )
             shelves
         } catch (e: InnerTubeAuthException) {
             throw e
+        } catch (e: InnerTubeMusicUnavailableException) {
+            throw e
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Req 1: never convert cancellation into an unavailable outcome.
+            throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching FEmusic_home shelves", e)
-            emptyList()
+            // Req 2: narrow residual guard — programming errors only reach here;
+            // network/parse/body failures are already typed above. Mark
+            // provider-unavailable so the UI stays honest without a filler.
+            Log.e(TAG, "Error fetching FEmusic_home shelves reason=provider_unavailable", e)
+            throw InnerTubeMusicUnavailableException(
+                MusicShelfFailureReason.PROVIDER_UNAVAILABLE,
+                "YouTube Music home failed unexpectedly",
+            )
         }
     }
 
     /**
      * Walks a YouTube Music `/browse` payload and groups items into titled shelves.
-     * Handles both grid carousels (`musicCarouselShelfRenderer`) and list shelves
-     * (`musicShelfRenderer`), reusing [parseAnyItemRenderer] for each child so videoId,
-     * title, artist and thumbnail extraction stays identical to the flattened path.
+     * Handles both grid carousels (`musicCarouselShelfRenderer`), list shelves
+     * (`musicShelfRenderer`), and TV shelves (`shelfRenderer`), reusing [parseAnyItemRenderer]
+     * for each child so videoId, title, artist and thumbnail extraction stays identical.
      */
     private fun parseMusicCarouselShelves(json: JSONObject): List<MusicShelf> {
         val shelves = mutableListOf<MusicShelf>()
@@ -697,6 +838,16 @@ class InnerTubeRemoteClient @Inject constructor(
                     node.optJSONObject("musicShelfRenderer")?.let { shelf ->
                         val title = shelf.optJSONObject("title")?.let { runsText(it) } ?: ""
                         collectShelf(title, shelf.optJSONArray("contents"))
+                    }
+                    node.optJSONObject("shelfRenderer")?.let { shelf ->
+                        val header = shelf.optJSONObject("headerRenderer")?.optJSONObject("shelfHeaderRenderer")
+                        val title = header?.optJSONObject("title")?.let { runsText(it) }
+                            ?: header?.optJSONObject("avatarLockup")?.optJSONObject("avatarLockupRenderer")?.optJSONObject("title")?.let { runsText(it) }
+                            ?: ""
+                        val contentsArray = shelf.optJSONObject("content")?.optJSONArray("items")
+                            ?: shelf.optJSONObject("content")?.optJSONObject("horizontalListRenderer")?.optJSONArray("items")
+                            ?: shelf.optJSONObject("content")?.optJSONObject("gridRenderer")?.optJSONArray("items")
+                        collectShelf(title, contentsArray)
                     }
                     val keys = node.keys()
                     while (keys.hasNext()) walk(node.opt(keys.next()))
@@ -747,7 +898,7 @@ class InnerTubeRemoteClient @Inject constructor(
             ?: obj.optJSONObject("playlistPanelVideoRenderer")
             ?: obj.optJSONObject("tileRenderer")
             ?: obj.optJSONObject("tvItemRenderer")
-            ?: if (obj.has("videoId") || obj.optJSONObject("navigationEndpoint")?.optJSONObject("watchEndpoint") != null) obj else null
+            ?: if (obj.has("videoId") || obj.has("contentId") || obj.optJSONObject("navigationEndpoint")?.optJSONObject("watchEndpoint") != null || obj.optJSONObject("onSelectCommand")?.optJSONObject("watchEndpoint") != null) obj else null
             ?: return null
 
         val videoId = extractVideoId(target)
@@ -793,6 +944,7 @@ class InnerTubeRemoteClient @Inject constructor(
             ?: obj.optJSONObject("content")?.optJSONObject("tileRenderer")?.optJSONObject("onSelectCommand")
         return nav?.optJSONObject("watchEndpoint")?.optString("videoId")
             ?: nav?.optJSONObject("watchPlaylistEndpoint")?.optString("videoId")
+            ?: obj.optString("contentId").takeIf { it.isNotBlank() }
             ?: obj.optString("videoId")
     }
 
