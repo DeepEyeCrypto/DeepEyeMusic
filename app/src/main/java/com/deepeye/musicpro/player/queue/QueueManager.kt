@@ -89,6 +89,12 @@ constructor() {
                 currentItem
             }
             RepeatMode.ALL -> {
+                // FEL same-song loop: a single-item queue wraps modulo to index 0,
+                // so natural completion / Next silently replays the SAME audio
+                // instead of reaching autoplay. Yield to autoplay resolution so a
+                // DIFFERENT track can be fetched; intentional single-track repeat
+                // remains available via Repeat ONE.
+                if (q.size <= 1) return null
                 val nextIndex = (_currentIndex.value + 1) % q.size
                 _currentIndex.value = nextIndex
                 q[nextIndex]

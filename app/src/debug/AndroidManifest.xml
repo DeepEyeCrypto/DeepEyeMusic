@@ -20,6 +20,18 @@
             </intent-filter>
         </receiver>
 
+        <!-- D7 FEmusic HTTP 400 status-only H1/H2 probe receiver (debug only).
+             Logs HTTP status/duration only — never tokens, keys or bodies. -->
+        <receiver
+            android:name=".debug.d7.D7StatusProbeReceiver"
+            android:enabled="true"
+            android:exported="true"
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="com.deepeye.musicpro.debug.action.D7_STATUS_PROBE" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

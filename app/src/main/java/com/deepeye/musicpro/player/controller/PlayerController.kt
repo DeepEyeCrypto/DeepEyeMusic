@@ -121,6 +121,8 @@ constructor(
     private var playRetryCount = 0
     private var prefetchedTrackId: String? = null
     private var isPrefetchingNextTrack: Boolean = false
+    // AUTOPLAY-DEBUG-OMEGA: atomic prefetch guard (100ms poller fibrillation fix).
+    private val prefetchGuard = java.util.concurrent.atomic.AtomicBoolean(false)
 
     var isBackgroundPlaybackEnabled = false
 
@@ -1130,16 +1132,34 @@ constructor(
     }
 
     private fun checkAndPrefetchNextTrack() {
-        if (isPrefetchingNextTrack || !playerState.value.autoplayEnabled) {
+        // AUTOPLAY-DEBUG-OMEGA: atomic guard — the 100ms position poller calls this
+        // every tick inside the 15s window; a plain Boolean races and fires duplicate
+        // /next fetches. compareAndSet makes exactly one prefetch in flight.
+        // Audited: network on Dispatchers.IO, player.addMediaItem on
+        // Dispatchers.Main — no cross-thread ExoPlayer violation.
+        if (!prefetchGuard.compareAndSet(false, true)) {
+            return
+        }
+        isPrefetchingNextTrack = true
+        if (!playerState.value.autoplayEnabled) {
             android.util.Log.d(
                 "AUTOPLAY_DEBUG",
                 "event=prefetch_guard_blocked isPrefetching=$isPrefetchingNextTrack " +
-                    "autoplayEnabled=${playerState.value.autoplayEnabled}"
+                    "autoplayEnabled=${playerState.value.autoplayEnabled}",
             )
+            isPrefetchingNextTrack = false
+            prefetchGuard.set(false)
             return
         }
         val currentItem = playerState.value.currentItem
-        val currentTrack = currentItem as? MediaItem.Remote ?: return
+        // OMEGA: Local tracks have no videoId-based radio graph — resolve a Remote
+        // seed via search instead of silently returning (previous early-return
+        // stalled Infinite Radio for on-device libraries).
+        val currentTrack: MediaItem = currentItem ?: run {
+            isPrefetchingNextTrack = false
+            prefetchGuard.set(false)
+            return
+        }
 
         // Only prefetch if ExoPlayer doesn't already have a next item queued,
         // and the in-app queue doesn't already have a resolved next item.
@@ -1151,10 +1171,11 @@ constructor(
                 "event=prefetch_already_queued mediaItemCount=${player.mediaItemCount} " +
                     "peekNext=${queueManager.peekNext()?.id} videoId=${currentTrack.id}"
             )
+            isPrefetchingNextTrack = false
+            prefetchGuard.set(false)
             return
         }
 
-        isPrefetchingNextTrack = true
         scope.launch {
             try {
                 // 1. Check if queue has a next track
@@ -1183,7 +1204,7 @@ constructor(
                                 title = c.title,
                                 artist = c.artist,
                                 artworkUri = Uri.parse("https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg"),
-                                isVideo = currentTrack.isVideo,
+                                isVideo = (currentTrack as? MediaItem.Remote)?.isVideo ?: false,
                                 duration = 0L,
                             )
                         }
@@ -1243,6 +1264,7 @@ constructor(
                 android.util.Log.w("PlayerController", "Gapless Radio prefetch failed: ${e.message}")
             } finally {
                 isPrefetchingNextTrack = false
+                prefetchGuard.set(false)
             }
         }
     }

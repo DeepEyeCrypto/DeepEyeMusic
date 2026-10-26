@@ -1,0 +1,8 @@
+# Defect Ledger — Account-Only YouTube Music Parity
+
+| ID | Area | Status | Blocker / Root Cause | Evidence | Fix | Tests | Residual risk |
+|---|---|---|---|---|---|---|---|
+| **D1** | SmartTubeEngine | VERIFIED | **Root cause (Resolved)**: Broad `catch (e: Exception)` swallowed `CancellationException` in InnerTube calls | Static code inspection + new unit tests | Added explicit `CancellationException` rethrow guards | `SmartTubeEngineCancellationTest` (6 tests, PASS) | None |
+| **D5** | PersonalizationRepository | VERIFIED | **Root cause (Resolved)**: `invalidateAccountCache()` was an empty no-op on account switch/sign-out | Reverted implementation produced non-cleared feed state in test | Implemented cache clearing (`_feedState.update { it.copy(sections = emptyList(), lastUpdatedMillis = 0L) }`) | `PersonalizationD5D6LogicTest` (PASS) | None |
+| **D6** | PersonalizationRepository | VERIFIED | **Root cause (Resolved)**: Missing generation guard allowed stale async feed fetches to overwrite newer state after account switch | Reverted implementation produced stale item retention in test | Added atomic `_feedGeneration` counter and `checkGen()` validation | `PersonalizationD5D6LogicTest` (PASS) | None |
+| **D7** | FEmusic HTTP 400 | BLOCKED — PROBE BLOCKED | **Blocker**: No authorized signed-in YouTube Music session token in app storage; credential injection prohibited.<br>**Root cause**: UNCONFIRMED — H1 and H2 remain unproven candidates; server-side restriction is not excluded. | Live `FEmusic_home` / `FEmusic_liked` returned HTTP 400; no authorized session was available for status-only probes. | None authorized. | None possible without an authorized session. | Server-side restriction or additional contract requirement. |

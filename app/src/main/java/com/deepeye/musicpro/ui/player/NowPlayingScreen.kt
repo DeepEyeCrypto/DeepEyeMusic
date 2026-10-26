@@ -1455,12 +1455,11 @@ fun PremiumActionPill(icon: androidx.compose.ui.graphics.vector.ImageVector, tex
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
             .background(color.copy(alpha = 0.1f))
             .border(1.dp, color.copy(alpha = 0.2f), androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
-            .clickable { }
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+        Icon(icon, contentDescription = text, tint = color, modifier = Modifier.size(20.dp))
         Text(text, color = color, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
     }
 }
@@ -1821,7 +1820,7 @@ fun SmartTubeSleepTimerDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Turn Off Sleep Timer (${activeRemainingMs / 60000}m left)", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
-                            Icon(Icons.Default.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Close, contentDescription = "Turn off sleep timer", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
                         }
                     }
                 }
@@ -1931,7 +1930,7 @@ fun SmartTubeOledScreenOffOverlay(
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Default.PowerSettingsNew, contentDescription = null, tint = Color.White.copy(alpha = 0.25f), modifier = Modifier.size(48.dp))
+            Icon(Icons.Default.PowerSettingsNew, contentDescription = "Wake screen", tint = Color.White.copy(alpha = 0.25f), modifier = Modifier.size(48.dp))
             Spacer(Modifier.height(12.dp))
             Text("OLED Battery Saver Active", color = Color.White.copy(alpha = 0.35f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
             Text("Audio playing in background • Tap anywhere to wake", color = Color.White.copy(alpha = 0.2f), fontSize = 11.sp)

@@ -68,12 +68,27 @@ class AutoplayRepository @Inject constructor(
             return@withContext emptyList()
         }
 
-        // ISOLATION-OMEGA (non-destructive bypass): return cached InnerTube queue as-is.
-        // No local blacklist/sessionHistory filtering — InnerTube is the sole authority.
+        // SAME-SONG-LOOP FIX: cached queues bypassed dedup and could re-append the
+        // current track forever. Scrub cache through the same current/history
+        // guard; drop the cache (fall through to live fetch) if nothing eligible.
         if (currentTrack !is MediaItem.Local) {
             val cachedQueue = cacheManager.loadAutoplayQueue(currentTrack.id)
             if (!cachedQueue.isNullOrEmpty()) {
-                return@withContext cachedQueue
+                val recentIds = autoplayState.history.takeLast(RECENT_HISTORY_GUARD_WINDOW).toSet()
+                val scrubbed = cachedQueue.filter {
+                    it.videoId != currentTrack.id && it.videoId !in recentIds
+                }
+                if (scrubbed.isNotEmpty()) {
+                    android.util.Log.i(
+                        "AutoplayRepository",
+                        "event=autoplay_cache_hit eligible=${scrubbed.size} cached=${cachedQueue.size}",
+                    )
+                    return@withContext scrubbed
+                }
+                android.util.Log.w(
+                    "AutoplayRepository",
+                    "event=autoplay_cache_exhausted cached=${cachedQueue.size} reason=all_duplicates",
+                )
             }
         }
 
@@ -81,10 +96,10 @@ class AutoplayRepository @Inject constructor(
             val smartTubeDeferred = async {
                 if (currentTrack !is MediaItem.Local) {
                     try {
-                        // Change 4 — AUTOPLAY-OMEGA wiring: SmartTubeEngine.fetchUpNext() is the
-                        // primary Up-Next extraction (TVHTML5 /next with the real
-                        // singleColumnWatchNextResults.autoplay sets parsing). The ANDROID_MUSIC
-                        // client (401-retry) remains the fallback. Both run on Dispatchers.IO.
+                        // FEL-400: send the bare provider contract (videoId only).
+                        // Evidence: fabricated playlistId=RDAMVM<videoId> is rejected
+                        // with HTTP 400 by the TVHTML5 /next endpoint. No credentials
+                        // or client-identity changes; no raw payload logging.
                         val upNextItem = smartTubeEngine.fetchUpNext(currentTrack.id) as? MediaItem.Remote
                         val primary = if (upNextItem != null && upNextItem.id.isNotBlank()) {
                             VideoItem(
@@ -110,6 +125,9 @@ class AutoplayRepository @Inject constructor(
                             }
                         }
                         if (primary != null) listOf(primary) else emptyList()
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        // Req 1: cancellation propagates — never convert to emptyList.
+                        throw e
                     } catch (e: Exception) {
                         android.util.Log.w(
                             "AutoplayRepository",
@@ -130,6 +148,9 @@ class AutoplayRepository @Inject constructor(
                         val isVideo = (currentTrack as? MediaItem.Remote)?.isVideo ?: false
                         contentFetcher.getRelatedVideos(currentTrack.id, 20, isVideo)
                     }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    // Req 1: cancellation propagates — never convert to emptyList.
+                    throw e
                 } catch (_: Exception) {
                     emptyList()
                 }
