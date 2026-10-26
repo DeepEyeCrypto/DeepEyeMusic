@@ -117,6 +117,8 @@ class SmartTubeEngine @Inject constructor(
                 val bodyStr = response.body?.string() ?: return@withContext null
                 return@withContext JSONObject(bodyStr)
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error posting to SmartTube InnerTube endpoint $endpoint", e)
             null
@@ -147,11 +149,11 @@ class SmartTubeEngine @Inject constructor(
     /**
      * Fetches YouTube's exact native AutoPlay next track for [videoId] via the /next endpoint.
      */
-    suspend fun getAlgorithmicNext(videoId: String, playlistId: String? = null): AutoplayTrack? = withContext(Dispatchers.IO) {
+    suspend fun getAlgorithmicNext(videoId: String): AutoplayTrack? = withContext(Dispatchers.IO) {
         if (videoId.isBlank()) return@withContext null
 
-        val playlistPart = if (!playlistId.isNullOrBlank()) "\"playlistId\": \"$playlistId\", " else ""
-        val extraJson = "$playlistPart\"videoId\": \"$videoId\""
+        // FEL-400: bare provider contract (videoId only).
+        val extraJson = "\"videoId\": \"$videoId\""
 
         val json = postInnerTube("next", extraJson) ?: return@withContext null
         return@withContext extractAutoplayFromJson(json, currentVideoId = videoId)
@@ -175,6 +177,8 @@ class SmartTubeEngine @Inject constructor(
         }
 
         val startedAt = System.currentTimeMillis()
+        // FEL-400: bare provider contract (videoId only). Fabricated playlistId
+        // values are rejected with HTTP 400 — see request-contract analysis.
         val json = postInnerTube("next", "\"videoId\": \"$currentVideoId\"")
         if (json == null) {
             Log.w(
@@ -187,6 +191,8 @@ class SmartTubeEngine @Inject constructor(
 
         val track = try {
             extractUpNextTrack(json, currentVideoId)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(
                 TAG,
@@ -593,6 +599,8 @@ class SmartTubeEngine @Inject constructor(
             parseSearchResultsRecursively(json, tracks)
             val distinctTracks = tracks.distinctBy { it.videoId ?: it.id }
             Result.success(distinctTracks)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing search results", e)
             Result.failure(e)
@@ -770,6 +778,8 @@ class SmartTubeEngine @Inject constructor(
             } else {
                 Result.failure(Exception("No lyrics found in browse response"))
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing lyrics payload for $browseId", e)
             Result.failure(e)

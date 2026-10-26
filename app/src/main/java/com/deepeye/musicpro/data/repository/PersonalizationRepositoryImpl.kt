@@ -56,6 +56,10 @@ class PersonalizationRepositoryImpl @Inject constructor(
     private val ioDispatcher = ioDispatcher
     private val refreshMutex = Mutex()
 
+    /** Atomic generation counter incremented on each account session change.
+     * Used to discard stale buildFeed results that complete after a switch. */
+    private val _feedGeneration = java.util.concurrent.atomic.AtomicLong(0)
+
     private val _feedState = MutableStateFlow(PersonalizedFeedState(isLoading = true))
     val feedState: StateFlow<PersonalizedFeedState> = _feedState.asStateFlow()
 
@@ -75,13 +79,16 @@ class PersonalizationRepositoryImpl @Inject constructor(
                 val accountKey = (session as? AccountSession.Connected)?.accountKey
                 hiddenContentManager.switchAccount(accountKey)
                 _feedState.update { it.copy(accountSession = session) }
-                buildFeed(forceRefresh = false)
+                // Increment generation on account session change to fence stale results
+                val gen = _feedGeneration.incrementAndGet()
+                buildFeed(forceRefresh = false, feedGeneration = gen)
             }
         }
     }
 
     override suspend fun refreshFeed(forceRefresh: Boolean) {
-        buildFeed(forceRefresh = forceRefresh)
+        val gen = _feedGeneration.incrementAndGet()
+        buildFeed(forceRefresh = forceRefresh, feedGeneration = gen)
     }
 
     override suspend fun refreshSection(sectionType: PersonalizedSectionType) {
@@ -89,6 +96,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
             refreshMutex.withLock {
                 val currentSections = _feedState.value.sections.toMutableList()
                 val session = accountSessionManager.accountSession.value
+                val gen = _feedGeneration.incrementAndGet()
                 val updatedSection = when (sectionType) {
                     PersonalizedSectionType.CONTINUE_LISTENING -> buildContinueListeningSection()
                     PersonalizedSectionType.YOUR_QUEUE -> buildYourQueueSection()
@@ -100,6 +108,8 @@ class PersonalizationRepositoryImpl @Inject constructor(
                     PersonalizedSectionType.TRENDING_MUSIC -> buildTrendingSection(forceRefresh = true)
                     PersonalizedSectionType.YOUTUBE_MUSIC_SHELF -> buildYouTubeMusicShelvesSection(session, forceRefresh = true)
                 }
+                // Check generation after section build
+                if (gen != _feedGeneration.get()) return@withContext
 
                 val index = currentSections.indexOfFirst { it.type == sectionType }
                 if (index >= 0) {
@@ -112,11 +122,21 @@ class PersonalizationRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun invalidateAccountCache(accountKey: String) {
-        // Cache invalidated
+    /** Returns the section if generation still matches; otherwise returns an empty section of the same type to signal discard. */
+    private fun checkGen(section: PersonalizedSection, feedGeneration: Long): PersonalizedSection {
+        if (feedGeneration != -1L && feedGeneration != _feedGeneration.get()) {
+            return section.copy(items = emptyList())
+        }
+        return section
     }
 
-    // ── Phase 5: Preferences ────────────────────────────────────────────────
+        override suspend fun invalidateAccountCache(accountKey: String) {
+            _feedState.update { it.copy(sections = emptyList(), lastUpdatedMillis = 0L) }
+            // Also clear any per-account caches if they exist
+            // hiddenContentManager.switchAccount(null) // handled by AccountSessionManager
+        }
+
+        // ── Phase 5: Preferences ────────────────────────────────────────────────
 
     override fun observePreferences() = personalizationPrefs.observe()
 
@@ -165,7 +185,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
         buildFeed(forceRefresh = false)
     }
 
-    private suspend fun buildFeed(forceRefresh: Boolean) = withContext(ioDispatcher) {
+    private suspend fun buildFeed(forceRefresh: Boolean, feedGeneration: Long = -1) = withContext(ioDispatcher) {
         refreshMutex.withLock {
             _feedState.update { it.copy(isLoading = it.sections.isEmpty(), isRefreshing = it.sections.isNotEmpty()) }
             val session = accountSessionManager.accountSession.value
@@ -182,6 +202,11 @@ class PersonalizationRepositoryImpl @Inject constructor(
                     )
                 }
             } else {
+                // Check generation early to avoid launching unnecessary work
+                if (feedGeneration != -1L && feedGeneration != _feedGeneration.get()) {
+                    return@withContext
+                }
+
                 supervisorScope {
                     val continueListeningDeferred = async { buildContinueListeningSection() }
                     val yourQueueDeferred = async { buildYourQueueSection() }
@@ -193,15 +218,23 @@ class PersonalizationRepositoryImpl @Inject constructor(
                     val trendingDeferred = async { buildTrendingSection(forceRefresh) }
                     val ytMusicShelvesDeferred = async { buildYouTubeMusicShelves(session, forceRefresh) }
 
-                    val continueListening = continueListeningDeferred.await()
-                    val yourQueue = yourQueueDeferred.await()
-                    val recentlyPlayed = recentlyPlayedDeferred.await()
-                    val likedMusic = likedMusicDeferred.await()
-                    val playlists = playlistsDeferred.await()
-                    val subscriptions = subscriptionsDeferred.await()
-                    val basedOnListening = basedOnListeningDeferred.await()
-                    val trending = trendingDeferred.await()
-                    val ytMusicShelves = ytMusicShelvesDeferred.await()
+                    val continueListening = checkGen(continueListeningDeferred.await(), feedGeneration)
+                    val yourQueue = checkGen(yourQueueDeferred.await(), feedGeneration)
+                    val recentlyPlayed = checkGen(recentlyPlayedDeferred.await(), feedGeneration)
+                    val likedMusic = checkGen(likedMusicDeferred.await(), feedGeneration)
+                    val playlists = checkGen(playlistsDeferred.await(), feedGeneration)
+                    val subscriptions = checkGen(subscriptionsDeferred.await(), feedGeneration)
+                    val basedOnListening = checkGen(basedOnListeningDeferred.await(), feedGeneration)
+                    val trending = checkGen(trendingDeferred.await(), feedGeneration)
+                    val ytMusicShelvesRaw = ytMusicShelvesDeferred.await()
+
+                    if (feedGeneration != -1L && feedGeneration != _feedGeneration.get()) {
+                        // Generation changed during await — discard all results by throwing
+                        // CancellationException which will cancel the supervisorScope
+                        throw kotlinx.coroutines.CancellationException("Generation changed")
+                    }
+
+                    val ytMusicShelves = ytMusicShelvesRaw
 
                     if (forceRefresh) {
                         personalizationPrefs.update { it.copy(lastRefreshMillis = System.currentTimeMillis()) }
@@ -758,6 +791,10 @@ class PersonalizationRepositoryImpl @Inject constructor(
         session: AccountSession,
         forceRefresh: Boolean,
     ): List<PersonalizedSection> {
+        // Req 3+caller contract: the account that seeded this build owns its
+        // completion. A late response from a previous account generation is
+        // discarded by the collector's collectLatest, but builder-level code
+        // re-checks the captured session before returning anything.
         if (session !is AccountSession.Connected) return emptyList()
         return try {
             val shelves = authenticatedYouTubeClient.getMusicHomeShelves()
@@ -788,9 +825,62 @@ class PersonalizationRepositoryImpl @Inject constructor(
                     )
                 }
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Req 1: account switch / screen exit cancels in-flight builds
+            // through collectLatest. Never convert that into an error section.
+            throw e
+        } catch (e: com.deepeye.musicpro.data.source.remote.youtube.InnerTubeAuthException) {
+            // Req 4: auth travels the refresh/reauth path — surface an
+            // account-gated retry section, never unavailable, never filler.
+            Log.w(TAG, "event=yt_music_shelves result=reauth_required")
+            return listOf(
+                PersonalizedSection(
+                    id = "sec_yt_music_reauth",
+                    type = PersonalizedSectionType.YOUTUBE_MUSIC_SHELF,
+                    title = "YouTube Music",
+                    subtitle = null,
+                    sourceLabel = "YouTube Music",
+                    explanation = "Sign in with your YouTube account to see your music.",
+                    items = emptyList(),
+                    error = "Sign in required",
+                    failureReason = com.deepeye.musicpro.data.source.remote.youtube
+                        .MusicShelfFailureReason.REAUTH_REQUIRED.name,
+                    isAccountRequired = true,
+                    canRetry = true,
+                    isFromCache = false,
+                    lastUpdatedMillis = System.currentTimeMillis(),
+                ),
+            )
+        } catch (e: com.deepeye.musicpro.data.source.remote.youtube.InnerTubeMusicUnavailableException) {
+            // Req 5 + terminal check: typed unavailable yields an error-only
+            // section — retry eligibility follows the retained reason, and no
+            // generic search/guest content can enter this shelf.
+            Log.w(TAG, "event=yt_music_shelves result=unavailable reason=${e.reason}")
+            return listOf(
+                PersonalizedSection(
+                    id = "sec_yt_music_unavailable",
+                    type = PersonalizedSectionType.YOUTUBE_MUSIC_SHELF,
+                    title = "YouTube Music",
+                    subtitle = null,
+                    sourceLabel = "YouTube Music",
+                    explanation = "YouTube Music is unavailable right now.",
+                    items = emptyList(),
+                    error = "Unavailable",
+                    failureReason = e.reason.name,
+                    isAccountRequired = true,
+                    canRetry = e.reason !=
+                        com.deepeye.musicpro.data.source.remote.youtube
+                            .MusicShelfFailureReason.EMPTY_ACCOUNT_CONTENT,
+                    isFromCache = false,
+                    lastUpdatedMillis = System.currentTimeMillis(),
+                ),
+            )
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to build YouTube Music home shelves", e)
-            emptyList()
+            // Req 2: narrow residual — programming errors only. The Music tab
+            // errors on emptyList (honest empty, its own UI state); other repo
+            // surfaces must not learn about them via a generic fallback here.
+            Log.e(TAG, "event=yt_music_shelves result=provider_unavailable", e)
+            return emptyList()
         }
     }
 

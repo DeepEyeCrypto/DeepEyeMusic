@@ -70,6 +70,11 @@ data class PersonalizedSection(
     val canRetry: Boolean = false,
     val isFromCache: Boolean = false,
     val lastUpdatedMillis: Long = 0L,
+    /**
+     * ACCOUNT-MUSIC-OMEGA: typed failure reason retained alongside [error].
+     * Null means no failure (healthy or still loading).
+     */
+    val failureReason: String? = null,
 )
 
 /**

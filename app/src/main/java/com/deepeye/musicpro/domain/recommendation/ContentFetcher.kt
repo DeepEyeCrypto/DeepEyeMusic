@@ -28,6 +28,7 @@ constructor(
         isVideo: Boolean = false
     ): List<VideoItem> = withContext(Dispatchers.IO) {
         try {
+            // FEL-400: same bare-videoId contract as the primary /next path.
             val auto = smartTubeEngine.getAlgorithmicNext(videoId)
             if (auto != null && auto.videoId.isNotBlank()) {
                 val primaryItem = VideoItem(
@@ -41,6 +42,9 @@ constructor(
                 val fallbackList = getRelatedVideosFallback(videoId, maxResults - 1)
                 return@withContext (listOf(primaryItem) + fallbackList).distinctBy { it.videoId }
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Req 1: cancellation propagates — never convert to fallback/empty.
+            throw e
         } catch (e: Exception) {
             android.util.Log.w("ContentFetcher", "SmartTube related fetch fallback: ${e.message}")
         }
@@ -60,6 +64,9 @@ constructor(
                     genre = ""
                 )
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Req 1: cancellation propagates — never convert to emptyList.
+            throw e
         } catch (e: Exception) {
             android.util.Log.e("ContentFetcher", "getRelatedVideosFallback failed for $videoId: ${e.message}")
             emptyList()
@@ -97,6 +104,9 @@ constructor(
                     }
                 }
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Req 1: cancellation propagates — never convert to fallback/empty.
+            throw e
         } catch (e: Exception) {
             android.util.Log.w("ContentFetcher", "SmartTube search fallback: ${e.message}")
         }
@@ -116,6 +126,9 @@ constructor(
                     genre = ""
                 )
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Req 1: cancellation propagates — never convert to emptyList.
+            throw e
         } catch (e: Exception) {
             android.util.Log.e("ContentFetcher", "searchByQueryFallback failed for $query: ${e.message}")
             emptyList()
@@ -143,6 +156,9 @@ constructor(
                     genre = ""
                 )
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // Req 1: cancellation propagates — never convert to emptyList.
+            throw e
         } catch (e: Exception) {
             android.util.Log.e("ContentFetcher", "getTrendingMusicFallback failed: ${e.message}")
             emptyList()
