@@ -29,6 +29,7 @@ import okhttp3.Request
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.deepeye.musicpro.ui.update.MarkdownLiteDecoder
 
 sealed class UpdateState {
     object Idle : UpdateState()
@@ -156,7 +157,7 @@ constructor(
                             UpdateState.UpdateAvailable(
                                 version = latestVersion,
                                 apkUrl = apkUrl,
-                                releaseNotes = body,
+                                releaseNotes = MarkdownLiteDecoder.decode(body),
                             )
                     } else {
                         _updateState.value = UpdateState.UpToDate
