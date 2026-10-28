@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     id("io.gitlab.arturbosch.detekt")
-    id("com.google.gms.google-services")
+    // google-services plugin removed with the Firebase dependencies.
     id("jacoco")
 }
 
@@ -136,17 +136,12 @@ android {
 }
 
 dependencies {
-    // Firebase BOM & Analytics & Auth & Firestore & Messaging
-    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-messaging")
-
-    // Credential Manager for Google Sign-In
-    implementation("androidx.credentials:credentials:1.3.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    // ACCOUNT-IDENTITY-ONLY: Firebase (auth/firestore/messaging/analytics) and
+    // Google Credential Manager / googleid were removed with the duplicate
+    // Google/Firebase login, Firebase-backed Chat/Ranking and Firebase-gated
+    // routing. All account-scoped behavior now runs on the primary YouTube
+    // device-code OAuth session (AccountSessionManager.accountKey).
+    // No Firebase or Credential Manager libraries remain.
 
     // Compose BOM
     val composeBom = platform(libs.compose.bom)

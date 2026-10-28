@@ -29,8 +29,6 @@ sealed class Routes(val route: String) {
 
     data object VisualizerStudio : Routes("visualizer_studio")
 
-    data object Login : Routes("login")
-
     data object YouTubeLogin : Routes("youtube_login")
 
     data object Onboarding : Routes("onboarding")
@@ -43,12 +41,19 @@ sealed class Routes(val route: String) {
 
     data object SavedItems : Routes("saved_items")
 
+    // Chat feature: Firebase-backed E2E chat was removed. The ChatAuth route
+    // is retained only as the typed-unavailable entry point
+    // (FeatureUnavailableScreen) — no silent broken Firebase calls.
     data object ChatAuth : Routes("chat_auth")
 
     data object Playlists : Routes("playlists")
 
-    data object Gamification : Routes("gamification")
     data object TvDashboard : Routes("tv_dashboard")
+
+    // Removed routes (no longer registered):
+    // - Login (duplicate Google/Firebase login UI; replaced by YouTubeLogin)
+    // - Gamification (Firebase-backed, removed; UI shows typed-unavailable)
+    // - ChatList / ChatRoom (Firebase-backed chat, removed)
 
     // Parameterized routes
     data object AlbumDetail : Routes("album/{albumId}") {
@@ -69,9 +74,6 @@ sealed class Routes(val route: String) {
 
     data object AEOS : Routes("aeos_dashboard")
 
-    data object ChatList : Routes("chat_list")
-    
-    data object ChatRoom : Routes("chat_room/{chatId}/{receiverId}") {
-        fun createRoute(chatId: String, receiverId: String) = "chat_room/$chatId/$receiverId"
-    }
+    // ChatList / ChatRoom route objects removed — Firebase-backed chat screens
+    // deleted; only the typed-unavailable ChatAuth entry point remains.
 }

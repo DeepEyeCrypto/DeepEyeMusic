@@ -42,27 +42,29 @@ import com.deepeye.musicpro.ui.youtube.YouTubeScreen
 import com.deepeye.musicpro.ui.library.LikedSongsScreen
 import com.deepeye.musicpro.ui.library.PlaylistsScreen
 import com.deepeye.musicpro.ui.library.SavedItemsScreen
-import com.deepeye.musicpro.ui.chat.ChatListScreen
-import com.deepeye.musicpro.ui.chat.ChatAuthScreen
-import com.deepeye.musicpro.ui.chat.ChatRoomScreen
-import com.deepeye.musicpro.ui.auth.AuthViewModel
-import com.deepeye.musicpro.ui.auth.LoginScreen
+import com.deepeye.musicpro.account.YouTubeAccountViewModel
+import com.deepeye.musicpro.ui.components.FeatureUnavailableScreen
+import com.deepeye.musicpro.ui.navigation.AccountSessionViewModel
+import com.deepeye.musicpro.ui.screens.YouTubeLoginScreen
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    authViewModel: AuthViewModel = hiltViewModel(),
+    accountSessionViewModel: AccountSessionViewModel = hiltViewModel(),
+    youtubeAccountViewModel: com.deepeye.musicpro.account.YouTubeAccountViewModel = hiltViewModel(),
     windowSizeClass: androidx.compose.material3.windowsizeclass.WindowSizeClass,
     onExpandPlayer: () -> Unit = {},
     onPlayFullscreenMusic: () -> Unit = onExpandPlayer,
 ) {
-    val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
+    val accountSession by accountSessionViewModel.session.collectAsStateWithLifecycle()
 
     val startDestination =
-        remember(currentUser) {
-            if (currentUser == null) Routes.Login.route
-            else Routes.Home.route
+        remember(accountSession) {
+            when (AccountRouteDecider.routeFor(accountSession)) {
+                AppRoute.YOUTUBE_LOGIN -> Routes.YouTubeLogin.route
+                AppRoute.HOME -> Routes.Home.route
+            }
         }
 
     val transitionEasing = androidx.compose.animation.core.CubicBezierEasing(0.16f, 1f, 0.3f, 1f)
@@ -78,8 +80,8 @@ fun NavGraph(
 
     // Sign-out routing.
     //
-    // Fires only after [AuthViewModel.signOut] has finished tearing down the
-    // session, so the login screen never renders against a still-valid user.
+    // Fires only after [AccountSessionManager] has torn down the YouTube session,
+    // so the login screen never renders against a still-valid user.
     //
     // `popUpTo(0) { inclusive = true }` empties the back stack rather than just
     // popping Settings. That is what stops the hardware Back button from
@@ -87,12 +89,14 @@ fun NavGraph(
     // no prior entry, Back exits the activity instead of re-entering the app
     // as a logged-in user. `launchSingleTop` guards against a duplicate Login
     // entry if the graph is re-entered.
-    LaunchedEffect(navController, authViewModel) {
-        authViewModel.signOutCompleted.collect {
-            android.util.Log.i("NavGraph", "event=sign_out_nav stage=purge_backstack result=success")
-            navController.navigate(Routes.Login.route) {
-                popUpTo(0) { inclusive = true }
-                launchSingleTop = true
+    LaunchedEffect(navController, accountSessionViewModel) {
+        accountSessionViewModel.session.collect { session ->
+            if (session is com.deepeye.musicpro.account.AccountSession.LoggedOut) {
+                android.util.Log.i("NavGraph", "event=sign_out_nav stage=purge_backstack result=success")
+                navController.navigate(Routes.YouTubeLogin.route) {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                }
             }
         }
     }
@@ -126,28 +130,18 @@ fun NavGraph(
             ) + androidx.compose.animation.fadeOut(animationSpec = fadeSpec)
         }
     ) {
-        // Login Screen
         composable(Routes.YouTubeLogin.route) {
-            com.deepeye.musicpro.ui.screens.YouTubeLoginScreen(
-                onLoginSuccess = { _, _ -> navController.popBackStack() },
+            YouTubeLoginScreen(
+                onLoginSuccess = { _, _ ->
+                    navController.navigate(Routes.Home.route) {
+                        popUpTo(Routes.YouTubeLogin.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
                 onCancel = { navController.popBackStack() }
             )
         }
-        composable(Routes.Login.route) {
-            LoginScreen(
-                onYouTubeLoginClick = { navController.navigate(Routes.YouTubeLogin.route) },
-                onBackClick = {
-                    if (navController.previousBackStackEntry != null) {
-                        navController.popBackStack()
-                    }
-                },
-                onLoginSuccess = {
-                    navController.navigate(Routes.Home.route) {
-                        popUpTo(Routes.Login.route) { inclusive = true }
-                    }
-                }
-            )
-        }
+
 
         // ── Bottom Nav Destinations ──
         composable(Routes.Home.route) {
@@ -267,11 +261,10 @@ fun NavGraph(
                 onNavigateToAEOS = { navController.navigate(Routes.AEOS.route) },
                 onNavigateToVisualizerStudio = { navController.navigate(Routes.VisualizerStudio.route) },
                 onYouTubeLoginClick = { navController.navigate(Routes.YouTubeLogin.route) },
-                onGoogleSignInClick = { navController.navigate(Routes.Login.route) },
                 onLaunchTvMode = { navController.navigate(Routes.TvDashboard.route) },
-                onSignOut = { authViewModel.signOut() },
-                isSignedIn = currentUser != null,
-                signedInEmail = currentUser?.email,
+                onSignOut = { youtubeAccountViewModel.signOut() },
+                isSignedIn = accountSession is com.deepeye.musicpro.account.AccountSession.Connected,
+                signedInEmail = (accountSession as? com.deepeye.musicpro.account.AccountSession.Connected)?.channelKey,
             )
         }
         
@@ -374,37 +367,14 @@ fun NavGraph(
             )
         }
 
+        // CHAT-UNAVAILABLE: Firebase-backed E2E chat was removed. The chat
+        // entry point now lands on a typed unavailable state instead of
+        // calling Firebase auth/Firestore (no silent broken calls).
         composable(Routes.ChatAuth.route) {
-            ChatAuthScreen(
-                onAuthenticated = {
-                    navController.navigate(Routes.ChatList.route) {
-                        popUpTo(Routes.ChatAuth.route) { inclusive = true }
-                    }
-                }
-            )
-        }
-
-        composable(Routes.ChatList.route) {
-            ChatListScreen(
-                onNavigateToChat = { chatId, receiverId ->
-                    navController.navigate(Routes.ChatRoom.createRoute(chatId, receiverId))
-                },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable(
-            route = Routes.ChatRoom.route,
-            arguments = listOf(
-                navArgument("chatId") { type = NavType.StringType },
-                navArgument("receiverId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val chatId = backStackEntry.arguments?.getString("chatId") ?: return@composable
-            val receiverId = backStackEntry.arguments?.getString("receiverId") ?: return@composable
-            ChatRoomScreen(
-                chatId = chatId,
-                receiverId = receiverId,
+            FeatureUnavailableScreen(
+                title = "Chat Unavailable",
+                detail = "Chat required a Firebase account service that has been " +
+                    "removed. This feature is disabled in this build.",
                 onBack = { navController.popBackStack() }
             )
         }

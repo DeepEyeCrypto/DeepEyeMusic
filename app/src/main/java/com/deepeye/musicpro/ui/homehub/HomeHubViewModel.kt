@@ -39,8 +39,6 @@ constructor(
     private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
     private val gamificationRepository: com.deepeye.musicpro.domain.repository.GamificationRepository,
     private val aiRadioEngine: com.deepeye.musicpro.domain.ai.AIRadioEngine,
-    val rankingRepository: com.deepeye.musicpro.domain.ranking.RankingRepository,
-    val rankingEngine: com.deepeye.musicpro.domain.ranking.RankingEngine,
 ) : ViewModel() {
     private val _feedState = MutableStateFlow(HomeFeedState(isLoading = true))
     val feedState: StateFlow<HomeFeedState> = _feedState.asStateFlow()
@@ -58,18 +56,17 @@ constructor(
 
     val isDspAttached = dspEngine.engineState
 
-    val top3Users = rankingRepository.getTopUsers(3).stateIn(
-        scope = viewModelScope,
-        started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    // RANKING-UNAVAILABLE: global leaderboard was Firebase-backed and removed.
+    // Typed empty value (not a fake leaderboard) so UI never renders stale ranks.
+    val top3Users: kotlinx.coroutines.flow.StateFlow<List<com.deepeye.musicpro.domain.ranking.UserRank>> =
+        kotlinx.coroutines.flow.MutableStateFlow(emptyList())
 
     init {
         loadFeed()
-        viewModelScope.launch { 
-            gamificationEngine.restoreFromFirestore()
-            gamificationEngine.checkAndUpdateStreak() 
-            gamificationEngine.forceSyncToFirestore()
+        // Gamification engine is now a local no-op GHOST-OMEGA service; no
+        // Firestore restore/sync. Local streak state reads still apply.
+        viewModelScope.launch {
+            gamificationEngine.checkAndUpdateStreak()
         }
         fetchBtcPrice()
     }

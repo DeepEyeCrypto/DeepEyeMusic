@@ -37,17 +37,19 @@ constructor(
             .build()
     }
 
-    private val extractor by lazy {
+    // ⚡ PRIMARY: NewPipeExtractor (rock-solid, official NewPipe v0.26.5 engine)
+    // SmartTube is kept as FALLBACK only for edge cases where NewPipe fails.
+    private val newPipeExtractor by lazy {
+        com.deepeye.musicpro.extractor.newpipe.NewPipeExtractorBridge(extractorClient)
+    }
+
+    private val smartTubeExtractor by lazy {
         com.deepeye.musicpro.extractor.SmartTubeInnertubeExtractor(
             client = extractorClient,
             formatAdapter = formatAdapter
         ) {
             settingsDataStore.settings.first().youtubeAccessToken?.takeIf { it.isNotBlank() }
         }
-    }
-
-    private val newPipeExtractor by lazy {
-        com.deepeye.musicpro.extractor.newpipe.NewPipeExtractorBridge(extractorClient)
     }
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
@@ -152,13 +154,21 @@ constructor(
     suspend fun searchVideosFirstPage(query: String): SearchResultPage =
         withContext(ioDispatcher) {
             try {
-                val page = extractor.searchVideosFirstPage(query)
+                val page = newPipeExtractor.searchVideosFirstPage(query)
                 val filtered = page.videos.map { it.toHomeVideoItem() }
                     .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
                 SearchResultPage(filtered, page.nextPageUrl)
             } catch (e: Exception) {
-                Log.e("YoutubeDS", "searchVideosFirstPage failed: ${e.message}")
-                SearchResultPage(emptyList(), null)
+                Log.w("YoutubeDS", "NewPipe searchVideosFirstPage failed: ${e.message}, falling back to SmartTube")
+                try {
+                    val page = smartTubeExtractor.searchVideosFirstPage(query)
+                    val filtered = page.videos.map { it.toHomeVideoItem() }
+                        .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                    SearchResultPage(filtered, page.nextPageUrl)
+                } catch (e2: Exception) {
+                    Log.e("YoutubeDS", "searchVideosFirstPage failed: ${e2.message}")
+                    SearchResultPage(emptyList(), null)
+                }
             }
         }
 
@@ -168,13 +178,21 @@ constructor(
     ): SearchResultPage =
         withContext(ioDispatcher) {
             try {
-                val page = extractor.searchVideosNextPage(query, nextPageUrl)
+                val page = newPipeExtractor.searchVideosNextPage(query, nextPageUrl)
                 val filtered = page.videos.map { it.toHomeVideoItem() }
                     .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
                 SearchResultPage(filtered, page.nextPageUrl)
             } catch (e: Exception) {
-                Log.e("YoutubeDS", "searchVideosNextPage failed: ${e.message}")
-                SearchResultPage(emptyList(), null)
+                Log.w("YoutubeDS", "NewPipe searchVideosNextPage failed: ${e.message}, falling back to SmartTube")
+                try {
+                    val page = smartTubeExtractor.searchVideosNextPage(query, nextPageUrl)
+                    val filtered = page.videos.map { it.toHomeVideoItem() }
+                        .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                    SearchResultPage(filtered, page.nextPageUrl)
+                } catch (e2: Exception) {
+                    Log.e("YoutubeDS", "searchVideosNextPage failed: ${e2.message}")
+                    SearchResultPage(emptyList(), null)
+                }
             }
         }
 
@@ -182,11 +200,21 @@ constructor(
     suspend fun getTrending(): List<HomeVideoItem> =
         withContext(ioDispatcher) {
             try {
-                extractor.getTrending().map { it.toHomeVideoItem() }
+                val result = newPipeExtractor.getTrending().map { it.toHomeVideoItem() }
+                    .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                if (result.isNotEmpty()) return@withContext result
+                // Fallback to SmartTube
+                smartTubeExtractor.getTrending().map { it.toHomeVideoItem() }
                     .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
             } catch (e: Exception) {
-                Log.e("YoutubeDS", "getTrending failed: ${e.message}")
-                emptyList()
+                Log.w("YoutubeDS", "NewPipe getTrending failed: ${e.message}, falling back to SmartTube")
+                try {
+                    smartTubeExtractor.getTrending().map { it.toHomeVideoItem() }
+                        .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                } catch (e2: Exception) {
+                    Log.e("YoutubeDS", "getTrending failed: ${e2.message}")
+                    emptyList()
+                }
             }
         }
 
@@ -194,10 +222,18 @@ constructor(
     suspend fun searchMusic(query: String): List<HomeMusicItem> =
         withContext(ioDispatcher) {
             try {
-                extractor.searchMusic(query).map { it.toHomeMusicItem() }
+                val result = newPipeExtractor.searchMusic(query).map { it.toHomeMusicItem() }
+                if (result.isNotEmpty()) return@withContext result
+                // Fallback to SmartTube
+                smartTubeExtractor.searchMusic(query).map { it.toHomeMusicItem() }
             } catch (e: Exception) {
-                Log.e("YoutubeDS", "searchMusic failed: ${e.message}", e)
-                throw e
+                Log.w("YoutubeDS", "NewPipe searchMusic failed: ${e.message}, falling back to SmartTube")
+                try {
+                    smartTubeExtractor.searchMusic(query).map { it.toHomeMusicItem() }
+                } catch (e2: Exception) {
+                    Log.e("YoutubeDS", "searchMusic failed: ${e2.message}", e2)
+                    throw e2
+                }
             }
         }
 
@@ -305,7 +341,7 @@ constructor(
 
     private suspend fun extractSmartTube(videoId: String, preferVideo: Boolean): StreamResult? {
         return try {
-            extractor.extractStream(videoId, preferVideo)?.let {
+            smartTubeExtractor.extractStream(videoId, preferVideo)?.let {
                 val res = StreamResult(
                     url = it.url,
                     isVideo = it.container != "audio",
@@ -553,7 +589,19 @@ constructor(
     ): List<com.deepeye.musicpro.domain.model.MediaItem.Remote> =
         withContext(ioDispatcher) {
             try {
-                extractor.getRelatedMusic("$title $artist").map { item ->
+                val result = newPipeExtractor.getRelatedMusic("$title $artist").map { item ->
+                    com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                        id = item.id,
+                        title = item.title,
+                        artist = item.artist,
+                        artworkUri = android.net.Uri.parse(item.thumbnailUrl.upgradeResolution()),
+                        duration = item.duration * 1000L,
+                        isVideo = isVideo,
+                    )
+                }
+                if (result.isNotEmpty()) return@withContext result
+                // Fallback to SmartTube
+                smartTubeExtractor.getRelatedMusic("$title $artist").map { item ->
                     com.deepeye.musicpro.domain.model.MediaItem.Remote(
                         id = item.id,
                         title = item.title,
@@ -564,8 +612,22 @@ constructor(
                     )
                 }
             } catch (e: Exception) {
-                Log.e("YoutubeDS", "getRelatedMusic failed: ${e.message}")
-                emptyList()
+                Log.w("YoutubeDS", "NewPipe getRelatedMusic failed: ${e.message}, falling back to SmartTube")
+                try {
+                    smartTubeExtractor.getRelatedMusic("$title $artist").map { item ->
+                        com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                            id = item.id,
+                            title = item.title,
+                            artist = item.artist,
+                            artworkUri = android.net.Uri.parse(item.thumbnailUrl.upgradeResolution()),
+                            duration = item.duration * 1000L,
+                            isVideo = isVideo,
+                        )
+                    }
+                } catch (e2: Exception) {
+                    Log.e("YoutubeDS", "getRelatedMusic failed: ${e2.message}")
+                    emptyList()
+                }
             }
         }
 
@@ -573,11 +635,21 @@ constructor(
     suspend fun getRelatedVideos(videoId: String): List<HomeVideoItem> =
         withContext(ioDispatcher) {
             try {
-                extractor.getRelatedVideos(videoId).map { it.toHomeVideoItem() }
+                val result = newPipeExtractor.getRelatedVideos(videoId).map { it.toHomeVideoItem() }
+                    .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                if (result.isNotEmpty()) return@withContext result
+                // Fallback to SmartTube
+                smartTubeExtractor.getRelatedVideos(videoId).map { it.toHomeVideoItem() }
                     .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
             } catch (e: Exception) {
-                Log.e("YoutubeDS", "getRelatedVideos failed: ${e.message}")
-                emptyList()
+                Log.w("YoutubeDS", "NewPipe getRelatedVideos failed: ${e.message}, falling back to SmartTube")
+                try {
+                    smartTubeExtractor.getRelatedVideos(videoId).map { it.toHomeVideoItem() }
+                        .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                } catch (e2: Exception) {
+                    Log.e("YoutubeDS", "getRelatedVideos failed: ${e2.message}")
+                    emptyList()
+                }
             }
         }
 
@@ -588,10 +660,18 @@ constructor(
     suspend fun getSearchSuggestions(query: String): List<String> =
         withContext(ioDispatcher) {
             try {
-                extractor.getSearchSuggestions(query)
+                val result = newPipeExtractor.getSearchSuggestions(query)
+                if (result.isNotEmpty()) return@withContext result
+                // Fallback to SmartTube
+                smartTubeExtractor.getSearchSuggestions(query)
             } catch (e: Exception) {
-                Log.e("YoutubeDS", "getSearchSuggestions failed: ${e.message}")
-                emptyList()
+                Log.w("YoutubeDS", "NewPipe getSearchSuggestions failed: ${e.message}, falling back to SmartTube")
+                try {
+                    smartTubeExtractor.getSearchSuggestions(query)
+                } catch (e2: Exception) {
+                    Log.e("YoutubeDS", "getSearchSuggestions failed: ${e2.message}")
+                    emptyList()
+                }
             }
         }
 

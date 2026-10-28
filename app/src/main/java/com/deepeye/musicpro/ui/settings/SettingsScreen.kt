@@ -70,7 +70,6 @@ fun SettingsScreen(
     onNavigateToAEOS: () -> Unit = {},
     onNavigateToVisualizerStudio: () -> Unit = {},
     onYouTubeLoginClick: () -> Unit = {},
-    onGoogleSignInClick: () -> Unit = {},
     onLaunchTvMode: () -> Unit = {},
     onSignOut: () -> Unit = {},
     isSignedIn: Boolean = false,
@@ -365,7 +364,6 @@ fun SettingsScreen(
                                 isSignedIn = isSignedIn,
                                 signedInEmail = signedInEmail,
                                 onRequestSignOut = { showSignOutConfirm = true },
-                                onGoogleSignInClick = onGoogleSignInClick,
                                 onYouTubeLoginClick = onYouTubeLoginClick,
                             )
                         }
@@ -446,7 +444,6 @@ private fun SettingsDetailPane(
     isSignedIn: Boolean,
     signedInEmail: String?,
     onRequestSignOut: () -> Unit,
-    onGoogleSignInClick: () -> Unit = {},
     onYouTubeLoginClick: () -> Unit = {},
 ) {
     val settings = uiState.settings
@@ -803,9 +800,9 @@ private fun SettingsDetailPane(
                 SettingCategory.ACCOUNT -> {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                            // 1. Google Cloud / DeepEye Account Section
+                            // 1. DeepEye / YouTube Account Section
                             Text(
-                                "Google Account",
+                                "Account",
                                 color = neonCyan,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
@@ -840,7 +837,7 @@ private fun SettingsDetailPane(
                                         Spacer(Modifier.width(16.dp))
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
-                                                if (isSignedIn) (signedInEmail ?: "Google Account Active") else "Guest Mode (Not Signed In)",
+                                                if (isSignedIn) (signedInEmail ?: "Account Active") else "Not Signed In",
                                                 color = Color.White,
                                                 fontSize = 16.sp,
                                                 fontWeight = FontWeight.Bold
@@ -866,7 +863,7 @@ private fun SettingsDetailPane(
                                         ) {
                                             Icon(Icons.AutoMirrored.Filled.Logout, null, modifier = Modifier.size(18.dp))
                                             Spacer(Modifier.width(8.dp))
-                                            Text("Sign Out Google Account", fontWeight = FontWeight.Bold)
+                                            Text("Sign Out", fontWeight = FontWeight.Bold)
                                         }
                                     } else {
                                         // GHOST MODE: authentication UI removed.

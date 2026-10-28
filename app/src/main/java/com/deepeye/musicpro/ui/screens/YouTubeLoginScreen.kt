@@ -54,7 +54,7 @@ fun YouTubeLoginScreen(
     
     var userCode by remember { mutableStateOf("") }
     var verificationUrl by remember { mutableStateOf("") }
-    var statusMessage by remember { mutableStateOf("Connecting to Google OAuth...") }
+    var statusMessage by remember { mutableStateOf("Connecting to YouTube OAuth...") }
     var isLoading by remember { mutableStateOf(true) }
 
     val fullActivationUrl = remember(verificationUrl, userCode) {
@@ -64,7 +64,7 @@ fun YouTubeLoginScreen(
     }
 
     LaunchedEffect(Unit) {
-        statusMessage = "Connecting with Google OAuth Server..."
+        statusMessage = "Connecting with YouTube OAuth Server..."
         isLoading = true
         val response = authManager.requestDeviceCode()
         
@@ -89,7 +89,7 @@ fun YouTubeLoginScreen(
                 }
             }
         } else {
-            statusMessage = "Failed to connect to Google OAuth. Please check internet."
+            statusMessage = "Failed to connect to YouTube OAuth. Please check internet."
             isLoading = false
         }
     }

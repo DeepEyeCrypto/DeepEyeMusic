@@ -1,7 +1,5 @@
 package com.deepeye.musicpro.domain.gamification
 
-import com.deepeye.musicpro.domain.ranking.RankingEngine
-import com.deepeye.musicpro.domain.ranking.RankingRepository
 import com.deepeye.musicpro.domain.repository.GamificationRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,8 +23,6 @@ class GamificationEngineTest {
 
     private lateinit var engine: GamificationEngine
     private lateinit var repo: GamificationRepository
-    private lateinit var rankingRepo: RankingRepository
-    private lateinit var rankingEngine: RankingEngine
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
@@ -34,10 +30,10 @@ class GamificationEngineTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         repo = mock()
-        rankingRepo = mock()
-        rankingEngine = mock()
-        
-        engine = GamificationEngine(repo, rankingRepo, rankingEngine)
+
+        // GamificationEngine is decoupled from the removed Firebase-backed
+        // ranking layer; it now takes only the local GamificationRepository.
+        engine = GamificationEngine(repo)
     }
 
     @After

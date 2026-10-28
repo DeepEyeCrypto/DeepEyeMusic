@@ -15,14 +15,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-import com.deepeye.musicpro.domain.ranking.RankingRepository
-import com.deepeye.musicpro.domain.ranking.RankingEngine
-
 @Singleton
 class GamificationEngine @Inject constructor(
-    private val repository: GamificationRepository,
-    private val rankingRepository: RankingRepository,
-    private val rankingEngine: RankingEngine
+    private val repository: GamificationRepository
 ) {
     private val _achievementEvents = MutableSharedFlow<AchievementUnlockedEvent>()
     val achievementEvents = _achievementEvents.asSharedFlow()

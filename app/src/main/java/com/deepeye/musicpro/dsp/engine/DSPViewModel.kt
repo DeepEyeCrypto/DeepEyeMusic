@@ -47,24 +47,20 @@ constructor(
     private val visualizerEngine: VisualizerEngine,
     private val gson: Gson,
     private val dspProfileManager: com.deepeye.musicpro.dsp.profile.DspProfileManager,
-    private val playerController: com.deepeye.musicpro.player.controller.PlayerController,
-    private val rankingRepository: com.deepeye.musicpro.domain.ranking.RankingRepository
+    private val playerController: com.deepeye.musicpro.player.controller.PlayerController
 ) : ViewModel() {
     private val dataStore = application.dspDataStore
 
     private val _uiState = MutableStateFlow(V4AUiState())
     val uiState: StateFlow<V4AUiState> = _uiState.asStateFlow()
 
+    // RANKING-UNAVAILABLE: leaderboard/rank was Firebase-backed and has been
+    // removed. Preset rank-gates are therefore always in the unlocked state
+    // (rank = max sentinel so no requiredRank check can lock a preset).
+    // Typed unavailable value — not a silent fake ranking.
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val userRankFlow = kotlinx.coroutines.flow.flow {
-        val currentUserId = rankingRepository.getCurrentUserId()
-        if (currentUserId != null) {
-            rankingRepository.observeUserRank(currentUserId).collect { rank ->
-                emit(rank?.rank ?: 999999)
-            }
-        } else {
-            emit(999999)
-        }
+        emit(999999)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 999999)
 
     val fftData =
