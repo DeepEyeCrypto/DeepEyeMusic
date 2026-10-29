@@ -8,6 +8,7 @@ import com.deepeye.musicpro.data.source.remote.youtube.InnerTubeRemoteClient
 import com.deepeye.musicpro.data.source.remote.youtube.SmartTubeEngine
 import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.recommendation.ContentFetcher
+import com.deepeye.musicpro.domain.recommendation.TasteModelEngine
 import com.deepeye.musicpro.domain.recommendation.VideoItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -25,6 +26,7 @@ class AutoplayRepository @Inject constructor(
     private val cacheManager: CacheManager,
     private val networkConditionChecker: com.deepeye.musicpro.util.NetworkConditionChecker,
     private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
+    private val tasteModelEngine: TasteModelEngine,
 ) {
     companion object {
         /**
@@ -92,6 +94,7 @@ class AutoplayRepository @Inject constructor(
             }
         }
 
+        // ── Fetch candidates from SmartTube + InnerTube via coroutineScope ──────────────
         val candidates = coroutineScope {
             val smartTubeDeferred = async {
                 if (currentTrack !is MediaItem.Local) {
@@ -182,7 +185,64 @@ class AutoplayRepository @Inject constructor(
             effective
         }
 
-        candidates.take(20).mapIndexed { index, video ->
+        // ── Plan Task 5 — Mode-aware reordering via TasteModelEngine ───────────────────
+        // FAMILIAR / FAMILIAR_PLUS → highest-affinity artists first
+        // DISCOVERY                → lowest-affinity (novelty) first
+        // BALANCED                 → interleaved high + low affinity
+        val mode = when {
+            autoplayState.familiarMode -> AutoplayMode.FAMILIAR
+            autoplayState.discoveryMode -> AutoplayMode.DISCOVERY
+            else -> AutoplayMode.BALANCED
+        }
+
+        val now = System.currentTimeMillis()
+        val sinceMs = now - 30L * 24 * 3600 * 1000L
+
+        // Bulk-compute affinity scores for all candidate artists (one DAO query).
+        val affinityScores = if (candidates.isNotEmpty()) {
+            tasteModelEngine.affinityScoresForArtists(
+                artists = candidates.map { it.artist },
+                sinceMs = sinceMs,
+                now = now,
+            )
+        } else emptyMap<String, Double>()
+
+        // Tag each candidate with its affinity score.
+        val scored = candidates.map { video ->
+            video to (affinityScores[video.artist.lowercase()] ?: 0.0)
+        }
+
+        // Reorder per mode. Note: `mode` is reconstructed above from the
+        // familiarMode/discoveryMode booleans, so it is only ever FAMILIAR,
+        // DISCOVERY or BALANCED; the `else` covers BALANCED (and any future
+        // FAMILAR_PLUS that collapses to it in the reconstruction when-block).
+        val ordered = when (mode) {
+            AutoplayMode.FAMILIAR -> scored.sortedByDescending { it.second }
+            AutoplayMode.DISCOVERY -> scored.sortedBy { it.second }
+            else -> {
+                // BALANCED: interleave high-affinity (>0.1) and low-affinity (<=0.1) items.
+                val byDesc = scored.sortedByDescending { it.second }
+                val high = byDesc.filter { it.second > 0.1 }
+                val low = byDesc.filter { it.second <= 0.1 }
+                buildList {
+                    var i = 0
+                    while (i < high.size || i < low.size) {
+                        if (i < high.size) add(high[i])
+                        if (i < low.size) add(low[i])
+                        i++
+                    }
+                }
+            }
+        }
+
+        android.util.Log.i(
+            "AutoplayRepository",
+            "event=autoplay_mode_sort videoId=${currentTrack.id} mode=$mode ordered=${ordered.size}"
+        )
+
+        // Build final QueueItem list (dedup via distinctBy is already done above;
+        // take(20) caps the result to the queue ceiling).
+        ordered.take(20).mapIndexed { index, (video, affinity) ->
             QueueItem(
                 videoId = video.videoId,
                 title = video.title,
@@ -190,7 +250,8 @@ class AutoplayRepository @Inject constructor(
                 channelId = video.channelId,
                 reason = if (video.genre == "SmartTube-Algorithmic") "Up Next on YouTube" else "Similar Track",
                 rank = index + 1,
-                score = 1.0f - (index * 0.04f),
+                // Normalize affinity to [0,1] float for score. Use clamp to avoid >1 from heavy listeners.
+                score = affinity.coerceAtLeast(0.0).toFloat().coerceIn(0f, 1f),
             )
         }
     }

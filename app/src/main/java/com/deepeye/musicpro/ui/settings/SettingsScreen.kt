@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.musicpro.data.prefs.AppSettings
 import com.deepeye.musicpro.data.prefs.ThemeMode
 import com.deepeye.musicpro.data.source.remote.update.UpdateState
+import com.deepeye.musicpro.diagnostics.research.YtResearchDebugCard
 import com.deepeye.musicpro.ui.theme.AppAlertDialog
 import com.deepeye.musicpro.ui.theme.boundedContent
 
@@ -612,6 +613,10 @@ private fun SettingsDetailPane(
                             }
 
                             DSPDebugOverlay(viewModel = androidx.hilt.navigation.compose.hiltViewModel())
+
+                            // Debug-only YT research probe trigger (plan Task 4).
+                            // Renders nothing in release builds.
+                            YtResearchDebugCard(viewModel = androidx.hilt.navigation.compose.hiltViewModel())
 
                             Surface(
                                 onClick = onNavigateToAEOS,

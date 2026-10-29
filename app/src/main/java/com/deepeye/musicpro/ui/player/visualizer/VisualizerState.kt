@@ -9,7 +9,11 @@ enum class VisualizerSceneId {
     LIQUID_PLASMA,
     CRYSTAL_TUNNEL,
     CYBER_GRID,
-    NEON_TRIANGLE_GRID
+    NEON_TRIANGLE_GRID,
+    FLUID_PULSE,
+    AUDIO_FRACTAL,
+    NEON_GRID,
+    AURA_ORB
 }
 
 data class VisualizerSceneMetadata(
@@ -120,6 +124,33 @@ val AvailableVisualizerScenes = listOf(
         supportsAmplitude = true,
         supportsReducedMotion = true,
         tags = setOf("Geometric", "3D", "Intense")
+    ),
+    VisualizerSceneMetadata(
+        id = VisualizerSceneId.FLUID_PULSE,
+        title = "Fluid Pulse (Studio)",
+        description = "Original domain-warped FBM noise field — bass drives scale, mids turbulence, treble shimmer.",
+        supportsFft = true,
+        supportsAmplitude = true,
+        supportsReducedMotion = true,
+        tags = setOf("Ambient", "3D", "Intense")
+    ),
+    VisualizerSceneMetadata(
+        id = VisualizerSceneId.AUDIO_FRACTAL,
+        title = "Audio Fractal (Studio)",
+        description = "Raymarch-inspired Mandelbrot set — bass depth, mids drift, treble boundary sparkle.",
+        supportsFft = true,
+        supportsAmplitude = true,
+        supportsReducedMotion = true,
+        tags = setOf("Geometric", "3D", "Intense")
+    ),
+    VisualizerSceneMetadata(
+        id = VisualizerSceneId.NEON_GRID,
+        title = "Neon Grid (Studio)",
+        description = "Perspective tunnel grid with waveform displacement — bass advance, mids line width, treble accents.",
+        supportsFft = true,
+        supportsAmplitude = true,
+        supportsReducedMotion = true,
+        tags = setOf("Spectrum", "Classic", "3D")
     )
 )
 
