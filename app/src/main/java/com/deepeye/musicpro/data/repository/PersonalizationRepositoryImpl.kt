@@ -21,6 +21,7 @@ import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.domain.model.personalization.*
 import com.deepeye.musicpro.domain.personalization.SectionDiagnostics
+import com.deepeye.musicpro.domain.recommendation.TasteModelEngine
 import com.deepeye.musicpro.domain.repository.PersonalizationRepository
 import com.deepeye.musicpro.domain.repository.library.LibraryRepository
 import com.deepeye.musicpro.player.queue.QueueManager
@@ -49,6 +50,7 @@ class PersonalizationRepositoryImpl @Inject constructor(
     private val recommendationDao: RecommendationDao,
     private val authenticatedYouTubeClient: AuthenticatedYouTubeClient,
     private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
+    private val tasteModelEngine: TasteModelEngine,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : PersonalizationRepository {
 
@@ -680,13 +682,17 @@ class PersonalizationRepositoryImpl @Inject constructor(
         return try {
             val now = System.currentTimeMillis()
             val last30Days = now - 30L * 24 * 3600 * 1000
-            val topArtists = recommendationDao.getTopArtistsSince(last30Days, 3)
-            val topArtistSeed = topArtists.firstOrNull()?.artistName
 
-            val query = if (!topArtistSeed.isNullOrBlank()) {
-                "$topArtistSeed hits official songs"
-            } else {
-                "top trending songs official audio"
+            // TASTE-OMEGA: seed comes from the on-device taste model (decayed
+            // artist affinity over real listen_events), not a raw keyword guess.
+            val affinityArtists = tasteModelEngine.affinityTopArtists(sinceMs = last30Days, limit = 2, now = now)
+            val topArtistSeed = affinityArtists.firstOrNull()
+
+            val query = when {
+                !topArtistSeed.isNullOrBlank() && affinityArtists.size > 1 ->
+                    "$topArtistSeed ${affinityArtists[1]} hits official songs"
+                !topArtistSeed.isNullOrBlank() -> "$topArtistSeed hits official songs"
+                else -> "top trending songs official audio"
             }
 
             val rawResults = youtubeRemoteDataSource.searchMusic(query)
