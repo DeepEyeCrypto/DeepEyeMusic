@@ -10,27 +10,47 @@ import android.graphics.RuntimeShader
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.deepeye.musicpro.ui.player.visualizer.VisualizerCanvas
 import com.deepeye.musicpro.ui.player.visualizer.VisualizerTheme
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
+import kotlin.math.sqrt
 
 enum class AgslScene {
     LIQUID_PLASMA,
     CRYSTAL_TUNNEL,
     AURA_ORB,
     CYBER_GRID,
-    NEON_TRIANGLE_GRID
+    NEON_TRIANGLE_GRID,
+    FLUID_PULSE,
+    AUDIO_FRACTAL,
+    NEON_GRID
 }
+
+/**
+ * Scenes whose AGSL source declares `iMouse`. Binding iMouse to a shader that
+ * does NOT declare it makes libhwui throw (observed SIGABRT on some MT6835
+ * ROMs), so the dispatcher only sets iMouse for this set.
+ */
+val AgslScene.declaresMouse: Boolean
+    get() = when (this) {
+        AgslScene.FLUID_PULSE, AgslScene.AUDIO_FRACTAL, AgslScene.NEON_GRID -> true
+        else -> false
+    }
 
 @Composable
 fun AgslVisualizer(
@@ -148,6 +168,10 @@ private fun AgslRuntimeShaderRenderer(
     val auraShader = remember { RuntimeShader(AgslShaders.AURA_ORB) }
     val cyberGridShader = remember { RuntimeShader(AgslShaders.CYBER_GRID) }
     val neonTriangleShader = remember { RuntimeShader(AgslShaders.NEON_TRIANGLE_GRID) }
+    // Studio catalog scenes (Task 2) — full uniform contract incl. iMouse.
+    val fluidPulseShader = remember { RuntimeShader(ShaderCatalog.FLUID_PULSE) }
+    val audioFractalShader = remember { RuntimeShader(ShaderCatalog.AUDIO_FRACTAL) }
+    val neonGridShader = remember { RuntimeShader(ShaderCatalog.NEON_GRID) }
 
     // Pre-instantiate ShaderBrushes
     val liquidBrush = remember(liquidShader) { ShaderBrush(liquidShader) }
@@ -155,8 +179,50 @@ private fun AgslRuntimeShaderRenderer(
     val auraBrush = remember(auraShader) { ShaderBrush(auraShader) }
     val cyberGridBrush = remember(cyberGridShader) { ShaderBrush(cyberGridShader) }
     val neonTriangleBrush = remember(neonTriangleShader) { ShaderBrush(neonTriangleShader) }
+    val fluidPulseBrush = remember(fluidPulseShader) { ShaderBrush(fluidPulseShader) }
+    val audioFractalBrush = remember(audioFractalShader) { ShaderBrush(audioFractalShader) }
+    val neonGridBrush = remember(neonGridShader) { ShaderBrush(neonGridShader) }
 
-    Canvas(modifier = modifier.fillMaxSize()) {
+    // ── Safe touch → iMouse mapping ─────────────────────────────────────
+    // Normalized (0..1, y-down Compose convention) with pressed-state in
+    // the zw components. Reused float/int state holders: no allocation in
+    // the draw loop. `size` is captured by onGloballyPositioned so the
+    // gesture handler (which runs outside the Canvas draw scope) can
+    // normalize pointer coordinates without a division by zero.
+    val mouseX = remember { mutableFloatStateOf(0.5f) }
+    val mouseY = remember { mutableFloatStateOf(0.5f) }
+    val mousePressed = remember { mutableFloatStateOf(0f) }
+    val viewWidth = remember { mutableFloatStateOf(1f) }
+    val viewHeight = remember { mutableFloatStateOf(1f) }
+
+    Canvas(
+        modifier = modifier
+            .fillMaxSize()
+            .onGloballyPositioned { coords ->
+                viewWidth.floatValue = coords.size.width.toFloat().coerceAtLeast(1f)
+                viewHeight.floatValue = coords.size.height.toFloat().coerceAtLeast(1f)
+            }
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = { offset: Offset ->
+                        mousePressed.floatValue = 1f
+                        mouseX.floatValue = (offset.x / viewWidth.floatValue).coerceIn(0f, 1f)
+                        mouseY.floatValue = (offset.y / viewHeight.floatValue).coerceIn(0f, 1f)
+                    },
+                    onDrag = { change: PointerInputChange, _ ->
+                        change.consume()
+                        mouseX.floatValue = (change.position.x / viewWidth.floatValue).coerceIn(0f, 1f)
+                        mouseY.floatValue = (change.position.y / viewHeight.floatValue).coerceIn(0f, 1f)
+                    },
+                    onDragEnd = {
+                        mousePressed.floatValue = 0f
+                    },
+                    onDragCancel = {
+                        mousePressed.floatValue = 0f
+                    }
+                )
+            }
+    ) {
         // ── ZERO-RECOMPOSITION DRAW PHASE UNIFORM DISPATCH ──
         // Background kill-switch: bail out before touching the GPU so the
         // compositor has nothing to redraw and GPU usage is 0% while backgrounded.
@@ -172,6 +238,10 @@ private fun AgslRuntimeShaderRenderer(
         val mids   = if (bands.size > 2) bands[2].coerceIn(0f, 2f) else 0f
         val treble = if (bands.size > 4) bands[4].coerceIn(0f, 2f) else 0f
         val peak   = if (bands.size > 5) bands[5].coerceIn(0f, 2.5f) else 0f
+        // Studio catalog contract (Task 3): derived, zero-allocation.
+        val energy = sqrt((bass * bass + mids * mids + treble * treble) / 3f).coerceIn(0f, 1f)
+        val beatPulse = ((peak - treble).coerceAtLeast(0f) * 0.5f).coerceIn(0f, 1f)
+        val intensity = 1f
 
         val activeShader: RuntimeShader
         val activeBrush: ShaderBrush
@@ -208,6 +278,51 @@ private fun AgslRuntimeShaderRenderer(
                 AgslScene.AURA_ORB       -> { activeShader = auraShader; activeBrush = auraBrush }
                 AgslScene.CYBER_GRID         -> { activeShader = cyberGridShader; activeBrush = cyberGridBrush }
                 AgslScene.NEON_TRIANGLE_GRID -> { activeShader = neonTriangleShader; activeBrush = neonTriangleBrush }
+                AgslScene.FLUID_PULSE    -> { activeShader = fluidPulseShader; activeBrush = fluidPulseBrush }
+                AgslScene.AUDIO_FRACTAL  -> { activeShader = audioFractalShader; activeBrush = audioFractalBrush }
+                AgslScene.NEON_GRID      -> { activeShader = neonGridShader; activeBrush = neonGridBrush }
+            }
+        }
+
+        // ── Studio catalog uniform dispatch (Task 3) ─────────────────────
+        // The three ShaderCatalog scenes use the full uniform contract
+        // (iAudioBass/iAudioMids/iAudioTreble/iAudioEnergy/iBeatPulse/
+        //  iSceneTransition/iIntensity/iAspect, plus iMouse where declared)
+        // instead of the legacy iBass/iMid/iTreble/iPeak set.
+        val isCatalogScene = currentTheme == null && (
+            scene == AgslScene.FLUID_PULSE ||
+                scene == AgslScene.AUDIO_FRACTAL ||
+                scene == AgslScene.NEON_GRID
+            )
+
+        if (isCatalogScene && currentTheme == null) {
+            runCatching { activeShader.setFloatUniform("iResolution", size.width, size.height) }
+            runCatching { activeShader.setFloatUniform("iTime", time) }
+            runCatching { activeShader.setFloatUniform("iTimeDelta", 1f / 60f) }
+            runCatching { activeShader.setFloatUniform("iAudioBass", bass) }
+            runCatching { activeShader.setFloatUniform("iAudioMids", mids) }
+            runCatching { activeShader.setFloatUniform("iAudioTreble", treble) }
+            runCatching { activeShader.setFloatUniform("iAudioEnergy", energy.coerceIn(0f, 1f)) }
+            runCatching { activeShader.setFloatUniform("iBeatPulse", beatPulse) }
+            runCatching { activeShader.setFloatUniform("iSceneTransition", 1f) }
+            runCatching { activeShader.setFloatUniform("iIntensity", intensity) }
+            runCatching {
+                activeShader.setFloatUniform(
+                    "iAspect",
+                    if (size.height > 0f) size.width / size.height else 1f
+                )
+            }
+            // iMouse only for scenes that declare it (see AgslScene.declaresMouse).
+            if (scene.declaresMouse) {
+                runCatching {
+                    activeShader.setFloatUniform(
+                        "iMouse",
+                        mouseX.floatValue,
+                        mouseY.floatValue,
+                        if (mousePressed.floatValue >= 0.5f) 1f else 0f,
+                        if (mousePressed.floatValue >= 0.5f) 0f else 1f
+                    )
+                }
             }
         }
 
@@ -226,52 +341,60 @@ private fun AgslRuntimeShaderRenderer(
         //   (no shader declares iTimeDelta — that call was removed.)
         val isNeonTriangle = activeShader === neonTriangleShader
 
-        // 1. Update and bind Audio FFT 256x1 Bitmap Texture Bridge to iChannel0 safely.
-        //    On THROTTLED (severe/critical heat) the tier disables audio post-processing
-        //    so we skip the per-frame texture upload — the biggest thermal saving once
-        //    the frame rate is already capped.
-        if (!isNeonTriangle && thermalTier.audioPostFx) {
-            runCatching {
-                val audioShader = dataBridge.updateAudioTexture(spectrum, bands)
-                activeShader.setInputShader("iChannel0", audioShader)
+        // ── Legacy AgslShaders uniform dispatch ───────────────────────────
+        // Catalog scenes (FLUID_PULSE / AUDIO_FRACTAL / NEON_GRID) use the
+        // full Studio contract above and do NOT declare iBass/iMid/iTreble/
+        // iPeak/iChannel0/iColorPrimary — binding any of those on MT6835
+        // SIGABRTs via the "unable to find uniform" native path. Skip the
+        // whole legacy block for them; only draw the brush.
+        if (!isCatalogScene) {
+            // 1. Update and bind Audio FFT 256x1 Bitmap Texture Bridge to iChannel0 safely.
+            //    On THROTTLED (severe/critical heat) the tier disables audio post-processing
+            //    so we skip the per-frame texture upload — the biggest thermal saving once
+            //    the frame rate is already capped.
+            if (!isNeonTriangle && thermalTier.audioPostFx) {
+                runCatching {
+                    val audioShader = dataBridge.updateAudioTexture(spectrum, bands)
+                    activeShader.setInputShader("iChannel0", audioShader)
+                }
             }
-        }
 
-        // 2. Set float uniforms safely (all declared by every active shader)
-        runCatching { activeShader.setFloatUniform("iResolution", size.width, size.height) }
-        runCatching { activeShader.setFloatUniform("iTime", time) }
-        runCatching { activeShader.setFloatUniform("iBass", bass) }
-        runCatching { activeShader.setFloatUniform("iMid", mids) }
-        runCatching { activeShader.setFloatUniform("iTreble", treble) }
-        runCatching { activeShader.setFloatUniform("iPeak", peak) }
-        if (!isNeonTriangle) {
+            // 2. Set float uniforms safely (all declared by every active legacy shader)
+            runCatching { activeShader.setFloatUniform("iResolution", size.width, size.height) }
+            runCatching { activeShader.setFloatUniform("iTime", time) }
+            runCatching { activeShader.setFloatUniform("iBass", bass) }
+            runCatching { activeShader.setFloatUniform("iMid", mids) }
+            runCatching { activeShader.setFloatUniform("iTreble", treble) }
+            runCatching { activeShader.setFloatUniform("iPeak", peak) }
+            if (!isNeonTriangle) {
+                runCatching {
+                    activeShader.setFloatUniform(
+                        "iAccentColor",
+                        accentColor.red,
+                        accentColor.green,
+                        accentColor.blue,
+                        accentColor.alpha
+                    )
+                }
+            }
             runCatching {
                 activeShader.setFloatUniform(
-                    "iAccentColor",
-                    accentColor.red,
-                    accentColor.green,
-                    accentColor.blue,
-                    accentColor.alpha
+                    "iColorPrimary",
+                    primaryColor.red,
+                    primaryColor.green,
+                    primaryColor.blue,
+                    primaryColor.alpha
                 )
             }
-        }
-        runCatching {
-            activeShader.setFloatUniform(
-                "iColorPrimary",
-                primaryColor.red,
-                primaryColor.green,
-                primaryColor.blue,
-                primaryColor.alpha
-            )
-        }
-        runCatching {
-            activeShader.setFloatUniform(
-                "iColorSecondary",
-                secondaryColor.red,
-                secondaryColor.green,
-                secondaryColor.blue,
-                secondaryColor.alpha
-            )
+            runCatching {
+                activeShader.setFloatUniform(
+                    "iColorSecondary",
+                    secondaryColor.red,
+                    secondaryColor.green,
+                    secondaryColor.blue,
+                    secondaryColor.alpha
+                )
+            }
         }
 
         // Draw shader directly onto GPU surface
