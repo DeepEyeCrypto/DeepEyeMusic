@@ -11,8 +11,8 @@ import com.deepeye.musicpro.domain.model.Playlist
 import com.deepeye.musicpro.domain.model.Song
 import com.deepeye.musicpro.domain.repository.PlaylistRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,118 +21,120 @@ import javax.inject.Singleton
  */
 @Singleton
 class PlaylistRepositoryImpl
-@Inject
-constructor(
-    private val playlistDao: PlaylistDao,
-) : PlaylistRepository {
-    override fun getAllPlaylists(): Flow<List<Playlist>> =
-        playlistDao.getAllPlaylists().map { entities ->
-            entities.map { it.toDomain() }
+    @Inject
+    constructor(
+        private val playlistDao: PlaylistDao,
+    ) : PlaylistRepository {
+        override fun getAllPlaylists(): Flow<List<Playlist>> =
+            playlistDao.getAllPlaylists().map { entities ->
+                entities.map { it.toDomain() }
+            }
+
+        override fun getPlaylistById(id: Long): Flow<Playlist?> = playlistDao.getPlaylistById(id).map { it?.toDomain() }
+
+        override fun getPlaylistSongs(playlistId: Long): Flow<List<Song>> =
+            playlistDao.getPlaylistSongs(playlistId).map { entities ->
+                entities.map { it.toDomain() }
+            }
+
+        override suspend fun createPlaylist(name: String): Long =
+            playlistDao.insertPlaylist(
+                LocalPlaylistEntity(name = name)
+            )
+
+        override suspend fun renamePlaylist(
+            playlistId: Long,
+            newName: String,
+        ) = playlistDao.renamePlaylist(playlistId, newName)
+
+        override suspend fun deletePlaylist(playlistId: Long) {
+            playlistDao.deletePlaylistSongs(playlistId)
+            playlistDao.deletePlaylist(playlistId)
         }
 
-    override fun getPlaylistById(id: Long): Flow<Playlist?> = playlistDao.getPlaylistById(id).map { it?.toDomain() }
+        override suspend fun addSongToPlaylist(
+            playlistId: Long,
+            songId: Long,
+        ) = playlistDao.addSongToPlaylistEnd(playlistId, songId)
 
-    override fun getPlaylistSongs(playlistId: Long): Flow<List<Song>> =
-        playlistDao.getPlaylistSongs(playlistId).map { entities ->
-            entities.map { it.toDomain() }
+        override suspend fun removeSongFromPlaylist(
+            playlistId: Long,
+            songId: Long,
+        ) = playlistDao.removeSongFromPlaylist(playlistId, songId)
+
+        override suspend fun reorderPlaylistSong(
+            playlistId: Long,
+            fromIndex: Int,
+            toIndex: Int,
+        ) {
+            playlistDao.reorderPlaylistSongs(playlistId, fromIndex, toIndex)
         }
 
-    override suspend fun createPlaylist(name: String): Long = playlistDao.insertPlaylist(
-        LocalPlaylistEntity(name = name)
-    )
+        // ── Mappers ──
 
-    override suspend fun renamePlaylist(
-        playlistId: Long,
-        newName: String,
-    ) = playlistDao.renamePlaylist(playlistId, newName)
+        private fun LocalPlaylistEntity.toDomain(): Playlist =
+            Playlist(
+                id = id,
+                name = name,
+                songCount = 0, // Populated reactively via separate query
+                totalDuration = 0,
+                createdAt = createdAt,
+                modifiedAt = modifiedAt,
+            )
 
-    override suspend fun deletePlaylist(playlistId: Long) {
-        playlistDao.deletePlaylistSongs(playlistId)
-        playlistDao.deletePlaylist(playlistId)
-    }
+        private fun SongEntity.toDomain(): Song =
+            Song(
+                id = id,
+                title = title,
+                artist = artist,
+                album = album,
+                albumId = albumId,
+                artistId = artistId,
+                uri = Uri.parse(uri),
+                duration = duration,
+                size = size,
+                path = path,
+                artUri = artUri?.let { Uri.parse(it) },
+                trackNumber = trackNumber,
+                year = year,
+                genre = genre,
+                dateAdded = dateAdded,
+                dateModified = dateModified,
+            )
 
-    override suspend fun addSongToPlaylist(
-        playlistId: Long,
-        songId: Long,
-    ) = playlistDao.addSongToPlaylistEnd(playlistId, songId)
-
-    override suspend fun removeSongFromPlaylist(
-        playlistId: Long,
-        songId: Long,
-    ) = playlistDao.removeSongFromPlaylist(playlistId, songId)
-
-    override suspend fun reorderPlaylistSong(
-        playlistId: Long,
-        fromIndex: Int,
-        toIndex: Int,
-    ) {
-        playlistDao.reorderPlaylistSongs(playlistId, fromIndex, toIndex)
-    }
-
-    // ── Mappers ──
-
-    private fun LocalPlaylistEntity.toDomain(): Playlist =
-        Playlist(
-            id = id,
-            name = name,
-            songCount = 0, // Populated reactively via separate query
-            totalDuration = 0,
-            createdAt = createdAt,
-            modifiedAt = modifiedAt,
-        )
-
-    private fun SongEntity.toDomain(): Song =
-        Song(
-            id = id,
-            title = title,
-            artist = artist,
-            album = album,
-            albumId = albumId,
-            artistId = artistId,
-            uri = Uri.parse(uri),
-            duration = duration,
-            size = size,
-            path = path,
-            artUri = artUri?.let { Uri.parse(it) },
-            trackNumber = trackNumber,
-            year = year,
-            genre = genre,
-            dateAdded = dateAdded,
-            dateModified = dateModified,
-        )
-
-    // ── Backup & Restore ──
-    override suspend fun exportToJson(): String {
-        val gson = com.google.gson.Gson()
-        val playlists = playlistDao.getAllPlaylists().first()
-        val crossRefs = mutableListOf<com.deepeye.musicpro.data.db.PlaylistSongCrossRef>()
-        
-        for (playlist in playlists) {
-            val refs = playlistDao.getPlaylistCrossRefs(playlist.id)
-            crossRefs.addAll(refs)
-        }
-
-        val backup = PlaylistBackupData(
-            playlists = playlists,
-            crossRefs = crossRefs
-        )
-        return gson.toJson(backup)
-    }
-
-    override suspend fun importFromJson(jsonString: String) {
-        try {
+        // ── Backup & Restore ──
+        override suspend fun exportToJson(): String {
             val gson = com.google.gson.Gson()
-            val backup = gson.fromJson(jsonString, PlaylistBackupData::class.java)
+            val playlists = playlistDao.getAllPlaylists().first()
+            val crossRefs = mutableListOf<com.deepeye.musicpro.data.db.PlaylistSongCrossRef>()
 
-            for (playlist in backup.playlists) {
-                playlistDao.insertPlaylist(playlist)
+            for (playlist in playlists) {
+                val refs = playlistDao.getPlaylistCrossRefs(playlist.id)
+                crossRefs.addAll(refs)
             }
 
-            for (crossRef in backup.crossRefs) {
-                playlistDao.addSongToPlaylist(crossRef)
+            val backup =
+                PlaylistBackupData(
+                    playlists = playlists,
+                    crossRefs = crossRefs
+                )
+            return gson.toJson(backup)
+        }
+
+        override suspend fun importFromJson(jsonString: String) {
+            try {
+                val gson = com.google.gson.Gson()
+                val backup = gson.fromJson(jsonString, PlaylistBackupData::class.java)
+
+                for (playlist in backup.playlists) {
+                    playlistDao.insertPlaylist(playlist)
+                }
+
+                for (crossRef in backup.crossRefs) {
+                    playlistDao.addSongToPlaylist(crossRef)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PlaylistRepositoryImpl", "Failed to restore playlists", e)
             }
-        } catch (e: Exception) {
-            android.util.Log.e("PlaylistRepositoryImpl", "Failed to restore playlists", e)
         }
     }
-}

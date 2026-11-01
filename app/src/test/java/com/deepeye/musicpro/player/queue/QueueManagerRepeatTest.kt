@@ -27,16 +27,19 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class QueueManagerRepeatTest {
-
-    private fun localItem(id: Long, title: String) = MediaItem.Local(
-        song = Song(
-            id = id, title = title, artist = "Synthetic",
-            album = "", albumId = 0L, artistId = 0L,
-            uri = android.net.Uri.parse("content://media/external/audio/media/$id"),
-            duration = 180_000L, size = 4_000_000L,
-            path = "/storage/emulated/0/Music/$title.mp3",
-            artUri = null,
-        ),
+    private fun localItem(
+        id: Long,
+        title: String
+    ) = MediaItem.Local(
+        song =
+            Song(
+                id = id, title = title, artist = "Synthetic",
+                album = "", albumId = 0L, artistId = 0L,
+                uri = android.net.Uri.parse("content://media/external/audio/media/$id"),
+                duration = 180_000L, size = 4_000_000L,
+                path = "/storage/emulated/0/Music/$title.mp3",
+                artUri = null,
+            ),
     )
 
     @Test

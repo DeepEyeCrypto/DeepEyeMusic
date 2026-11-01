@@ -10,10 +10,10 @@ import kotlin.math.*
 import kotlin.random.Random
 
 enum class VvavyTopologyMode {
-    SIERPINSKI_FRACTAL,   // Classic recursive 4-way fractal quadtree
-    SACRED_MERKABA,       // Interlocking dual-triangle star with radial expansion
-    POLYHEDRON_3D,        // 3D wireframe octahedron with depth projection
-    ORBITAL_VORTEX,       // Concentric spiraling logarithmic triangles
+    SIERPINSKI_FRACTAL, // Classic recursive 4-way fractal quadtree
+    SACRED_MERKABA, // Interlocking dual-triangle star with radial expansion
+    POLYHEDRON_3D, // 3D wireframe octahedron with depth projection
+    ORBITAL_VORTEX, // Concentric spiraling logarithmic triangles
     DECONSTRUCTED_LATTICE // Displaced floating vertices reforming on transients
 }
 
@@ -25,7 +25,11 @@ data class VvavyVertex(
     var targetY: Float = 0f,
     var targetZ: Float = 0f
 ) {
-    fun set(nx: Float, ny: Float, nz: Float = 0f) {
+    fun set(
+        nx: Float,
+        ny: Float,
+        nz: Float = 0f
+    ) {
         x = nx
         y = ny
         z = nz
@@ -34,7 +38,11 @@ data class VvavyVertex(
         targetZ = nz
     }
 
-    fun setTarget(tx: Float, ty: Float, tz: Float = 0f) {
+    fun setTarget(
+        tx: Float,
+        ty: Float,
+        tz: Float = 0f
+    ) {
         targetX = tx
         targetY = ty
         targetZ = tz
@@ -92,10 +100,10 @@ class VvavyGeometryEngine(
     fun mutateTopology(newMode: VvavyTopologyMode? = null) {
         randomSeed = rng.nextLong()
         currentMode = newMode ?: when (currentMode) {
-            VvavyTopologyMode.SIERPINSKI_FRACTAL   -> VvavyTopologyMode.SACRED_MERKABA
-            VvavyTopologyMode.SACRED_MERKABA       -> VvavyTopologyMode.POLYHEDRON_3D
-            VvavyTopologyMode.POLYHEDRON_3D        -> VvavyTopologyMode.ORBITAL_VORTEX
-            VvavyTopologyMode.ORBITAL_VORTEX       -> VvavyTopologyMode.DECONSTRUCTED_LATTICE
+            VvavyTopologyMode.SIERPINSKI_FRACTAL -> VvavyTopologyMode.SACRED_MERKABA
+            VvavyTopologyMode.SACRED_MERKABA -> VvavyTopologyMode.POLYHEDRON_3D
+            VvavyTopologyMode.POLYHEDRON_3D -> VvavyTopologyMode.ORBITAL_VORTEX
+            VvavyTopologyMode.ORBITAL_VORTEX -> VvavyTopologyMode.DECONSTRUCTED_LATTICE
             VvavyTopologyMode.DECONSTRUCTED_LATTICE -> VvavyTopologyMode.SIERPINSKI_FRACTAL
         }
     }
@@ -144,17 +152,23 @@ class VvavyGeometryEngine(
             // Drift displacement
             val driftDx = cos(t.driftAngle) * t.driftSpeed * bass * dt
             val driftDy = sin(t.driftAngle) * t.driftSpeed * bass * dt
-            t.a.x += driftDx; t.a.y += driftDy
-            t.b.x += driftDx; t.b.y += driftDy
-            t.c.x += driftDx; t.c.y += driftDy
+            t.a.x += driftDx
+            t.a.y += driftDy
+            t.b.x += driftDx
+            t.b.y += driftDy
+            t.c.x += driftDx
+            t.c.y += driftDy
 
             // Beat kick impulse decay
             if (t.kickPhase > 0.01f) {
                 val kx = t.kickVx * t.kickPhase
                 val ky = t.kickVy * t.kickPhase
-                t.a.x += kx; t.a.y += ky
-                t.b.x += kx; t.b.y += ky
-                t.c.x += kx; t.c.y += ky
+                t.a.x += kx
+                t.a.y += ky
+                t.b.x += kx
+                t.b.y += ky
+                t.c.x += kx
+                t.c.y += ky
                 t.kickPhase *= KICK_DECAY
             }
 
@@ -173,8 +187,13 @@ class VvavyGeometryEngine(
 
     // ── Topology 1: Sierpinski Fractal ──────────────────────────────────────
     private fun buildSierpinski(
-        cx: Float, cy: Float, radius: Float,
-        maxDepth: Int, time: Float, spectrum: FloatArray, bass: Float
+        cx: Float,
+        cy: Float,
+        radius: Float,
+        maxDepth: Int,
+        time: Float,
+        spectrum: FloatArray,
+        bass: Float
     ) {
         for (seed in 0 until 3) {
             val globalAngle = (seed * 2f * PI.toFloat() / 3f) + time * 0.12f
@@ -192,11 +211,20 @@ class VvavyGeometryEngine(
     }
 
     private fun subdivideSierpinski(
-        ax: Float, ay: Float, az: Float,
-        bx: Float, by: Float, bz: Float,
-        cx: Float, cy: Float, cz: Float,
-        depth: Int, maxDepth: Int, seed: Int,
-        spectrum: FloatArray, bass: Float
+        ax: Float,
+        ay: Float,
+        az: Float,
+        bx: Float,
+        by: Float,
+        bz: Float,
+        cx: Float,
+        cy: Float,
+        cz: Float,
+        depth: Int,
+        maxDepth: Int,
+        seed: Int,
+        spectrum: FloatArray,
+        bass: Float
     ) {
         if (count >= maxTriangles) return
         val t = pool[count++]
@@ -207,13 +235,22 @@ class VvavyGeometryEngine(
         t.driftAngle = ((seed * 1.618f + depth * 0.9f) % (2f * PI.toFloat()))
         t.driftSpeed = (80f + seed * 30f + depth * 15f)
         t.energyBin = ((seed * 11 + depth * 7) % spectrum.size.coerceAtLeast(1))
-        if (t.kickPhase == 0f) { t.kickVx = 0f; t.kickVy = 0f }
+        if (t.kickPhase == 0f) {
+            t.kickVx = 0f
+            t.kickVy = 0f
+        }
 
         if (depth >= maxDepth) return
 
-        val mabx = (ax + bx) * 0.5f; val maby = (ay + by) * 0.5f; val mabz = (az + bz) * 0.5f
-        val mbcx = (bx + cx) * 0.5f; val mbcy = (by + cy) * 0.5f; val mbcz = (bz + cz) * 0.5f
-        val mcax = (cx + ax) * 0.5f; val mcay = (cy + ay) * 0.5f; val mcaz = (cz + az) * 0.5f
+        val mabx = (ax + bx) * 0.5f
+        val maby = (ay + by) * 0.5f
+        val mabz = (az + bz) * 0.5f
+        val mbcx = (bx + cx) * 0.5f
+        val mbcy = (by + cy) * 0.5f
+        val mbcz = (bz + cz) * 0.5f
+        val mcax = (cx + ax) * 0.5f
+        val mcay = (cy + ay) * 0.5f
+        val mcaz = (cz + az) * 0.5f
 
         subdivideSierpinski(ax, ay, az, mabx, maby, mabz, mcax, mcay, mcaz, depth + 1, maxDepth, seed, spectrum, bass)
         subdivideSierpinski(mabx, maby, mabz, bx, by, bz, mbcx, mbcy, mbcz, depth + 1, maxDepth, seed, spectrum, bass)
@@ -223,8 +260,14 @@ class VvavyGeometryEngine(
 
     // ── Topology 2: Sacred Merkaba (Dual Interlocking Star) ────────────────
     private fun buildMerkaba(
-        cx: Float, cy: Float, radius: Float,
-        maxDepth: Int, time: Float, spectrum: FloatArray, bass: Float, mids: Float
+        cx: Float,
+        cy: Float,
+        radius: Float,
+        maxDepth: Int,
+        time: Float,
+        spectrum: FloatArray,
+        bass: Float,
+        mids: Float
     ) {
         val countStars = 4
         for (s in 0 until countStars) {
@@ -252,8 +295,14 @@ class VvavyGeometryEngine(
 
     // ── Topology 3: 3D Wireframe Polyhedron ────────────────────────────────
     private fun buildPolyhedron3D(
-        cx: Float, cy: Float, radius: Float,
-        time: Float, spectrum: FloatArray, bass: Float, mids: Float, treble: Float
+        cx: Float,
+        cy: Float,
+        radius: Float,
+        time: Float,
+        spectrum: FloatArray,
+        bass: Float,
+        mids: Float,
+        treble: Float
     ) {
         val rotX = time * 0.35f + bass * 0.5f
         val rotY = time * 0.45f + mids * 0.4f
@@ -261,14 +310,15 @@ class VvavyGeometryEngine(
 
         // Octahedron 6 vertices
         val r = radius * 0.85f
-        val rawVerts = arrayOf(
-            floatArrayOf(0f, -r, 0f),  // 0 Top
-            floatArrayOf(0f, r, 0f),   // 1 Bottom
-            floatArrayOf(-r, 0f, 0f),  // 2 Left
-            floatArrayOf(r, 0f, 0f),   // 3 Right
-            floatArrayOf(0f, 0f, -r),  // 4 Front
-            floatArrayOf(0f, 0f, r)    // 5 Back
-        )
+        val rawVerts =
+            arrayOf(
+                floatArrayOf(0f, -r, 0f), // 0 Top
+                floatArrayOf(0f, r, 0f), // 1 Bottom
+                floatArrayOf(-r, 0f, 0f), // 2 Left
+                floatArrayOf(r, 0f, 0f), // 3 Right
+                floatArrayOf(0f, 0f, -r), // 4 Front
+                floatArrayOf(0f, 0f, r) // 5 Back
+            )
 
         // Rotate vertices in 3D
         val rotVerts = Array(6) { FloatArray(3) }
@@ -290,10 +340,17 @@ class VvavyGeometryEngine(
         }
 
         // 8 Faces
-        val faces = arrayOf(
-            intArrayOf(0, 2, 4), intArrayOf(0, 4, 3), intArrayOf(0, 3, 5), intArrayOf(0, 5, 2),
-            intArrayOf(1, 4, 2), intArrayOf(1, 3, 4), intArrayOf(1, 5, 3), intArrayOf(1, 2, 5)
-        )
+        val faces =
+            arrayOf(
+                intArrayOf(0, 2, 4),
+                intArrayOf(0, 4, 3),
+                intArrayOf(0, 3, 5),
+                intArrayOf(0, 5, 2),
+                intArrayOf(1, 4, 2),
+                intArrayOf(1, 3, 4),
+                intArrayOf(1, 5, 3),
+                intArrayOf(1, 2, 5)
+            )
 
         for (fIdx in faces.indices) {
             val f = faces[fIdx]
@@ -311,8 +368,13 @@ class VvavyGeometryEngine(
 
     // ── Topology 4: Orbital Vortex ──────────────────────────────────────────
     private fun buildOrbitalVortex(
-        cx: Float, cy: Float, radius: Float,
-        time: Float, spectrum: FloatArray, bass: Float, mids: Float
+        cx: Float,
+        cy: Float,
+        radius: Float,
+        time: Float,
+        spectrum: FloatArray,
+        bass: Float,
+        mids: Float
     ) {
         val rings = 12
         for (ring in 0 until rings) {
@@ -344,8 +406,14 @@ class VvavyGeometryEngine(
 
     // ── Topology 5: Deconstructed Lattice ───────────────────────────────────
     private fun buildDeconstructedLattice(
-        cx: Float, cy: Float, radius: Float,
-        time: Float, spectrum: FloatArray, bass: Float, mids: Float, treble: Float
+        cx: Float,
+        cy: Float,
+        radius: Float,
+        time: Float,
+        spectrum: FloatArray,
+        bass: Float,
+        mids: Float,
+        treble: Float
     ) {
         val gridDim = 5
         val spacing = (radius * 1.8f) / gridDim
@@ -375,10 +443,17 @@ class VvavyGeometryEngine(
     }
 
     private fun addSingleTri(
-        ax: Float, ay: Float, az: Float,
-        bx: Float, by: Float, bz: Float,
-        cx: Float, cy: Float, cz: Float,
-        depth: Int, energyBin: Int
+        ax: Float,
+        ay: Float,
+        az: Float,
+        bx: Float,
+        by: Float,
+        bz: Float,
+        cx: Float,
+        cy: Float,
+        cz: Float,
+        depth: Int,
+        energyBin: Int
     ) {
         if (count >= maxTriangles) return
         val t = pool[count++]
@@ -397,7 +472,12 @@ class VvavyGeometryEngine(
     /**
      * Projects 3D geometry into 2D screen coordinate buffers.
      */
-    fun project(cx: Float, cy: Float, focalLength: Float, bassZ: Float) {
+    fun project(
+        cx: Float,
+        cy: Float,
+        focalLength: Float,
+        bassZ: Float
+    ) {
         for (i in 0 until count) {
             val t = pool[i]
             val zA = t.a.z * bassZ

@@ -8,7 +8,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class MusicPlayerServiceTest {
-
     @Test
     fun verifyRootConstants() {
         val rootId = "DEEPEYE_MEDIA_ROOT"

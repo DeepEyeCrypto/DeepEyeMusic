@@ -5,7 +5,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AudioFrameInterpolatorTest {
-
     /** Quiet-but-nonzero floor, so "no change" and "changed" are distinguishable. */
     private companion object {
         const val IDLE = 0.1f
@@ -109,7 +108,11 @@ class AudioFrameInterpolatorTest {
         // capture-size change. That must not throw inside the draw loop.
         val interp = AudioFrameInterpolator()
         interp.update(
-            FloatArray(2), FloatArray(4), 1f, false, 1_000_000_000L
+            FloatArray(2),
+            FloatArray(4),
+            1f,
+            false,
+            1_000_000_000L
         )
         assertTrue(!interp.bands[0].isNaN())
         assertTrue(!interp.spectrum[0].isNaN())

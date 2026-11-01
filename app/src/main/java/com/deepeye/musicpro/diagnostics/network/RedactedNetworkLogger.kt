@@ -20,7 +20,6 @@ import okhttp3.Response
  * already-redacted line) so they are trivially unit-testable without Android.
  */
 object NetworkLogRedactor {
-
     /** Canonical log tag for every redacted network diagnostic line. */
     const val TAG = "NetDiag"
 
@@ -32,14 +31,15 @@ object NetworkLogRedactor {
     // so it is redacted independently of the key/value pattern below.
     private val BEARER_SCHEME_REGEX = Regex("(?i)\\bBearer\\s+\\S+")
 
-    private val SECRET_KEY_VALUE_REGEX = Regex(
-        "(?i)\\b(Authorization|Cookie|Set-Cookie|refresh_token|access_token|" +
-            "id_token|SAPISID|__Secure-1PAPISID|__Secure-3PAPISID|HSID|SSID|SID|" +
-            "APISID|SAPISIDHASH|__Secure-1PAPISIDHASH|__Secure-3PAPISIDHASH|" +
-            "SIDCC|__Secure-3PSID|LOGIN_INFO|VISITOR_INFO1_LIVE)\\b" +
-            "(\\s*\"?\\s*[:=]\\s*)" +
-            "(\"[^\"]*\"|[^\\s,;\"}]+)"
-    )
+    private val SECRET_KEY_VALUE_REGEX =
+        Regex(
+            "(?i)\\b(Authorization|Cookie|Set-Cookie|refresh_token|access_token|" +
+                "id_token|SAPISID|__Secure-1PAPISID|__Secure-3PAPISID|HSID|SSID|SID|" +
+                "APISID|SAPISIDHASH|__Secure-1PAPISIDHASH|__Secure-3PAPISIDHASH|" +
+                "SIDCC|__Secure-3PSID|LOGIN_INFO|VISITOR_INFO1_LIVE)\\b" +
+                "(\\s*\"?\\s*[:=]\\s*)" +
+                "(\"[^\"]*\"|[^\\s,;\"}]+)"
+        )
 
     /**
      * Strips the value of any known-sensitive key/value pair from [input],
@@ -50,9 +50,10 @@ object NetworkLogRedactor {
     fun redact(input: String?): String {
         if (input.isNullOrEmpty()) return ""
         var out = BEARER_SCHEME_REGEX.replace(input) { "Bearer <REDACTED>" }
-        out = SECRET_KEY_VALUE_REGEX.replace(out) { m ->
-            "${m.groupValues[1]}${m.groupValues[2]}<REDACTED>"
-        }
+        out =
+            SECRET_KEY_VALUE_REGEX.replace(out) { m ->
+                "${m.groupValues[1]}${m.groupValues[2]}<REDACTED>"
+            }
         return out
     }
 
@@ -60,10 +61,10 @@ object NetworkLogRedactor {
      * Returns only the *names* of headers present on [request], never their
      * values. Used for low-level debugging where even presence is useful.
      */
-    fun headerNames(request: Request): String =
-        request.headers.names().sorted().joinToString(",")
+    fun headerNames(request: Request): String = request.headers.names().sorted().joinToString(",")
 
     // ── Endpoint classification ─────────────────────────────────────────────
+
     /**
      * Classifies a request path into a coarse [EndpointCategory]. Only the
      * category (never the full URL, browseId, or playlistId) is ever logged.
@@ -89,6 +90,7 @@ object NetworkLogRedactor {
             url.startsWith("https://music.youtube.com")
 
     // ── Presence-only signals ───────────────────────────────────────────────
+
     /** True if an Authorization header exists (value never read/logged). */
     fun hasAuthHeader(request: Request): Boolean = request.header("Authorization") != null
 
@@ -106,12 +108,10 @@ object NetworkLogRedactor {
     }
 
     /** True if the X-YouTube-Client-Version header is present (value not logged). */
-    fun hasClientVersion(request: Request): Boolean =
-        request.header("X-YouTube-Client-Version") != null
+    fun hasClientVersion(request: Request): Boolean = request.header("X-YouTube-Client-Version") != null
 
     /** True if the request body carries a non-zero payload (size only). */
-    fun hasBody(request: Request): Boolean =
-        (request.body?.contentLength() ?: 0L) > 0L
+    fun hasBody(request: Request): Boolean = (request.body?.contentLength() ?: 0L) > 0L
 
     /**
      * Emits a single fully-redacted network diagnostic line. Only the fields on
@@ -142,23 +142,24 @@ object NetworkLogRedactor {
         playlistIdType: PlaylistIdType,
         clientName: KnownClientName,
         responseBodyBytes: Long
-    ): NetworkEvent = NetworkEvent(
-        correlationId = NetworkDiagnostics.nextCorrelationId(),
-        endpointCategory = endpointCategory(request.url.toString()),
-        hostExpected = hostMatchesExpected(request.url.toString()),
-        method = request.method,
-        statusCode = response?.code ?: -1,
-        elapsedMs = elapsedMs,
-        requestBodyBytes = request.body?.contentLength() ?: -1L,
-        responseBodyBytes = responseBodyBytes,
-        authMode = authMode(request),
-        authHeaderPresent = hasAuthHeader(request),
-        cookieHeaderPresent = hasCookieHeader(request),
-        clientName = clientName,
-        clientVersionPresent = hasClientVersion(request),
-        playlistIdType = playlistIdType,
-        parserResultCount = parserResultCount,
-        fallbackReason = fallbackReason,
-        retryCount = retryCount
-    )
+    ): NetworkEvent =
+        NetworkEvent(
+            correlationId = NetworkDiagnostics.nextCorrelationId(),
+            endpointCategory = endpointCategory(request.url.toString()),
+            hostExpected = hostMatchesExpected(request.url.toString()),
+            method = request.method,
+            statusCode = response?.code ?: -1,
+            elapsedMs = elapsedMs,
+            requestBodyBytes = request.body?.contentLength() ?: -1L,
+            responseBodyBytes = responseBodyBytes,
+            authMode = authMode(request),
+            authHeaderPresent = hasAuthHeader(request),
+            cookieHeaderPresent = hasCookieHeader(request),
+            clientName = clientName,
+            clientVersionPresent = hasClientVersion(request),
+            playlistIdType = playlistIdType,
+            parserResultCount = parserResultCount,
+            fallbackReason = fallbackReason,
+            retryCount = retryCount
+        )
 }

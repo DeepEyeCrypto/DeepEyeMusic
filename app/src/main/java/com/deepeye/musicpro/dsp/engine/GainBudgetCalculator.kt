@@ -62,7 +62,10 @@ object GainBudgetCalculator {
      *   recomputing the whole budget on every drag frame. Defaults to computing
      *   it, so existing single-argument callers are unaffected.
      */
-    fun autoCorrect(params: DspParams, budget: GainBudget = calculate(params)): DspParams {
+    fun autoCorrect(
+        params: DspParams,
+        budget: GainBudget = calculate(params)
+    ): DspParams {
         return if (budget.risk == RiskLevel.DANGER) {
             params.copy(
                 pgcGain = minOf(params.pgcGain, -8f),

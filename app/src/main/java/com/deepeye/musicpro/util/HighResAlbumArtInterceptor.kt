@@ -2,15 +2,14 @@ package com.deepeye.musicpro.util
 
 import android.content.ContentUris
 import android.content.Context
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Size
+import coil3.asImage
 import coil3.intercept.Interceptor
 import coil3.request.ImageResult
 import coil3.request.SuccessResult
-import coil3.asImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -27,9 +26,10 @@ class HighResAlbumArtInterceptor(private val context: Context) : Interceptor {
                     try {
                         val albumUri = ContentUris.withAppendedId(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, albumId)
                         // Request high quality thumbnail (1024x1024)
-                        val bitmap = withContext(Dispatchers.IO) {
-                            context.contentResolver.loadThumbnail(albumUri, Size(1024, 1024), null)
-                        }
+                        val bitmap =
+                            withContext(Dispatchers.IO) {
+                                context.contentResolver.loadThumbnail(albumUri, Size(1024, 1024), null)
+                            }
                         return SuccessResult(
                             image = bitmap.asImage(),
                             request = request,
@@ -41,7 +41,7 @@ class HighResAlbumArtInterceptor(private val context: Context) : Interceptor {
                 }
             }
         }
-        
+
         return chain.proceed()
     }
 }

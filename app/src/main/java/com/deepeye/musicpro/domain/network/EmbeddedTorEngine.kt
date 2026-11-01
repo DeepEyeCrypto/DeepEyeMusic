@@ -2,20 +2,14 @@ package com.deepeye.musicpro.domain.network
 
 import android.content.Context
 import android.util.Log
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.Socket
-import java.net.URI
-import java.net.URL
-import javax.net.ssl.HttpsURLConnection
-import javax.net.ssl.SSLSocketFactory
 
 /**
  * Embedded Tor / SOCKS5 Anonymity Proxy Engine for DeepEye Music Pro.
@@ -33,7 +27,10 @@ object EmbeddedTorEngine {
     val engineStatus: StateFlow<String> = _engineStatus.asStateFlow()
 
     @Synchronized
-    fun startEngine(context: Context, port: Int = DEFAULT_PORT) {
+    fun startEngine(
+        context: Context,
+        port: Int = DEFAULT_PORT
+    ) {
         if (isRunning) {
             Log.d(TAG, "Embedded Tor Engine is already running on port $port")
             return
@@ -57,7 +54,6 @@ object EmbeddedTorEngine {
                     }
                 }
             }.start()
-
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start Embedded Tor SOCKS5 Engine", e)
             _engineStatus.value = "Failed: ${e.localizedMessage}"
@@ -129,11 +125,12 @@ object EmbeddedTorEngine {
             val targetPort = (portMsb shl 8) or (portLsb and 0xFF)
 
             // Respond success to client (0x05, 0x00, 0x00, 0x01, 0,0,0,0, 0,0)
-            val successResponse = byteArrayOf(
-                0x05, 0x00, 0x00, 0x01,
-                0x00, 0x00, 0x00, 0x00,
-                (targetPort shr 8).toByte(), (targetPort and 0xFF).toByte()
-            )
+            val successResponse =
+                byteArrayOf(
+                    0x05, 0x00, 0x00, 0x01,
+                    0x00, 0x00, 0x00, 0x00,
+                    (targetPort shr 8).toByte(), (targetPort and 0xFF).toByte()
+                )
             output.write(successResponse)
             output.flush()
 
@@ -145,13 +142,18 @@ object EmbeddedTorEngine {
             val t2 = Thread { pipeStream(remoteSocket.getInputStream(), output) }
             t1.start()
             t2.start()
-
         } catch (e: Exception) {
-            try { clientSocket.close() } catch (_: Exception) {}
+            try {
+                clientSocket.close()
+            } catch (_: Exception) {
+            }
         }
     }
 
-    private fun pipeStream(input: InputStream, output: OutputStream) {
+    private fun pipeStream(
+        input: InputStream,
+        output: OutputStream
+    ) {
         val buffer = ByteArray(8192)
         try {
             var bytesRead: Int
@@ -159,6 +161,7 @@ object EmbeddedTorEngine {
                 output.write(buffer, 0, bytesRead)
                 output.flush()
             }
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+        }
     }
 }

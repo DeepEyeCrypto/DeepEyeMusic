@@ -25,7 +25,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
-import com.deepeye.musicpro.ui.theme.GlassBorder
 
 /**
  * Local Library Resume Rail — shows recently played/added local songs
@@ -58,7 +57,11 @@ fun LocalResumeRail(
             modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
         ) {
             items.take(4).forEach { music ->
-                LocalResumeCard(music = music, onClick = { onItemClick(music) }, modifier = Modifier.weight(1f, fill = false))
+                LocalResumeCard(
+                    music = music,
+                    onClick = { onItemClick(music) },
+                    modifier = Modifier.weight(1f, fill = false)
+                )
             }
         }
     }
@@ -71,22 +74,24 @@ private fun LocalResumeCard(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
-            .width(180.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(10.dp),
+        modifier =
+            modifier
+                .width(180.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                .clickable(onClick = onClick)
+                .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         // Album art (small square)
         Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant),
+            modifier =
+                Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center,
         ) {
             if (music.thumbnailUrl.isNotEmpty()) {

@@ -26,48 +26,48 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel
-@Inject
-constructor(
-    private val getRecentlyAddedUseCase: GetRecentlyAddedUseCase,
-    private val getAllAlbumsUseCase: GetAllAlbumsUseCase,
-    private val syncLibraryUseCase: SyncLibraryUseCase,
-) : ViewModel() {
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    @Inject
+    constructor(
+        private val getRecentlyAddedUseCase: GetRecentlyAddedUseCase,
+        private val getAllAlbumsUseCase: GetAllAlbumsUseCase,
+        private val syncLibraryUseCase: SyncLibraryUseCase,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(HomeUiState())
+        val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    init {
-        loadData()
+        init {
+            loadData()
+        }
+
+        private fun loadData() {
+            viewModelScope.launch {
+                _uiState.value = _uiState.value.copy(isLoading = true)
+                try {
+                    syncLibraryUseCase()
+                } catch (e: Exception) {
+                    // Non-fatal — library may already be synced
+                }
+            }
+
+            viewModelScope.launch {
+                getRecentlyAddedUseCase(20).collect { songs ->
+                    _uiState.value =
+                        _uiState.value.copy(
+                            recentlyAdded = songs,
+                            isLoading = false,
+                        )
+                }
+            }
+
+            viewModelScope.launch {
+                getAllAlbumsUseCase().collect { albums ->
+                    _uiState.value =
+                        _uiState.value.copy(
+                            featuredAlbums = albums.take(10),
+                        )
+                }
+            }
+        }
+
+        fun refresh() = loadData()
     }
-
-    private fun loadData() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                syncLibraryUseCase()
-            } catch (e: Exception) {
-                // Non-fatal — library may already be synced
-            }
-        }
-
-        viewModelScope.launch {
-            getRecentlyAddedUseCase(20).collect { songs ->
-                _uiState.value =
-                    _uiState.value.copy(
-                        recentlyAdded = songs,
-                        isLoading = false,
-                    )
-            }
-        }
-
-        viewModelScope.launch {
-            getAllAlbumsUseCase().collect { albums ->
-                _uiState.value =
-                    _uiState.value.copy(
-                        featuredAlbums = albums.take(10),
-                    )
-            }
-        }
-    }
-
-    fun refresh() = loadData()
-}

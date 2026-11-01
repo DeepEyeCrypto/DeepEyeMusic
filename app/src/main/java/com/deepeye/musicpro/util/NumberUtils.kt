@@ -15,15 +15,16 @@ fun formatUploadDate(dateStr: String): String {
     }
     return try {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            val parsedInstant = try {
-                java.time.OffsetDateTime.parse(dateStr).toInstant()
-            } catch (e: Exception) {
+            val parsedInstant =
                 try {
-                    java.time.LocalDate.parse(dateStr).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
-                } catch (e2: Exception) {
-                    null
+                    java.time.OffsetDateTime.parse(dateStr).toInstant()
+                } catch (e: Exception) {
+                    try {
+                        java.time.LocalDate.parse(dateStr).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
+                    } catch (e2: Exception) {
+                        null
+                    }
                 }
-            }
             if (parsedInstant != null) {
                 val now = java.time.Instant.now()
                 val durationSeconds = java.time.Duration.between(parsedInstant, now).seconds

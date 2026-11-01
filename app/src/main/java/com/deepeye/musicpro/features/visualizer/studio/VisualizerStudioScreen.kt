@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -21,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.IntSize
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.deepeye.musicpro.features.visualizer.studio.components.EffectsTunerPanel
 import com.deepeye.musicpro.features.visualizer.studio.components.VisualSelectorPanel
@@ -48,17 +46,18 @@ fun VisualizerStudioScreen(
     // Map domain scene IDs to AGSL scenes (new catalog scenes default to
     // NEON_TRIANGLE_GRID so existing visualizer library screen behavior
     // remains unchanged until the selector is expanded).
-    val agslScene = when (activeScene) {
-        VisualizerSceneId.NEON_TRIANGLE_GRID -> AgslScene.NEON_TRIANGLE_GRID
-        VisualizerSceneId.LIQUID_PLASMA -> AgslScene.LIQUID_PLASMA
-        VisualizerSceneId.CRYSTAL_TUNNEL -> AgslScene.CRYSTAL_TUNNEL
-        VisualizerSceneId.CYBER_GRID -> AgslScene.CYBER_GRID
-        VisualizerSceneId.AURA_ORB -> AgslScene.AURA_ORB
-        VisualizerSceneId.FLUID_PULSE,
-        VisualizerSceneId.AUDIO_FRACTAL,
-        VisualizerSceneId.NEON_GRID -> AgslScene.NEON_GRID
-        else -> AgslScene.NEON_TRIANGLE_GRID
-    }
+    val agslScene =
+        when (activeScene) {
+            VisualizerSceneId.NEON_TRIANGLE_GRID -> AgslScene.NEON_TRIANGLE_GRID
+            VisualizerSceneId.LIQUID_PLASMA -> AgslScene.LIQUID_PLASMA
+            VisualizerSceneId.CRYSTAL_TUNNEL -> AgslScene.CRYSTAL_TUNNEL
+            VisualizerSceneId.CYBER_GRID -> AgslScene.CYBER_GRID
+            VisualizerSceneId.AURA_ORB -> AgslScene.AURA_ORB
+            VisualizerSceneId.FLUID_PULSE,
+            VisualizerSceneId.AUDIO_FRACTAL,
+            VisualizerSceneId.NEON_GRID -> AgslScene.NEON_GRID
+            else -> AgslScene.NEON_TRIANGLE_GRID
+        }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -66,9 +65,10 @@ fun VisualizerStudioScreen(
         topBar = { VisualizerTopBar(onBackClick) }
     ) { paddingValues ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
             contentAlignment = Alignment.Center
         ) {
             // ── Layer 1 + 2: Base + Transition (crossfade) ────────────────
@@ -77,13 +77,15 @@ fun VisualizerStudioScreen(
                 transitionSpec = {
                     // Slide in from right for forward, left for backward.
                     val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
-                    val spec = slideInHorizontally(
-                        initialOffsetX = { it * direction },
-                        animationSpec = tween(durationMillis = 500)
-                    ) togetherWith slideOutHorizontally(
-                        targetOffsetX = { it * direction },
-                        animationSpec = tween(durationMillis = 500)
-                    )
+                    val spec =
+                        slideInHorizontally(
+                            initialOffsetX = { it * direction },
+                            animationSpec = tween(durationMillis = 500)
+                        ) togetherWith
+                            slideOutHorizontally(
+                                targetOffsetX = { it * direction },
+                                animationSpec = tween(durationMillis = 500)
+                            )
                     spec
                 },
                 label = "visualizerSceneCrossfade"
@@ -101,16 +103,23 @@ fun VisualizerStudioScreen(
             // TODO (Task 4): integrate RenderEffect bloom/vignette chain here.
             // Currently a no-op dark-tint overlay to preserve the canvas.
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0f)),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0f)),
             ) {}
         }
 
-        // ── Interaction Overlay ─────────────────────────────────────────
-        Column(modifier = Modifier.align(Alignment.BottomStart)) {
-            EffectsTunerPanel(viewModel)
-            VisualSelectorPanel(viewModel)
+        // ── Interaction Overlay ─────────────────────────────────────────────────
+        // Interaction overlay panel aligned to bottom-start
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomStart
+        ) {
+            Column {
+                EffectsTunerPanel(viewModel)
+                VisualSelectorPanel(viewModel)
+            }
         }
     }
 }

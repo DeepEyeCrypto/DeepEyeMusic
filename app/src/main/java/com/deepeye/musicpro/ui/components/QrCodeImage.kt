@@ -28,17 +28,19 @@ fun QrCodeView(
     size: Dp = 190.dp,
     backgroundColor: Color = Color.White
 ) {
-    val bitmap = remember(content) {
-        generateQrBitmap(content, 512, 512)
-    }
+    val bitmap =
+        remember(content) {
+            generateQrBitmap(content, 512, 512)
+        }
 
     if (bitmap != null) {
         Box(
-            modifier = modifier
-                .size(size)
-                .clip(RoundedCornerShape(16.dp))
-                .background(backgroundColor)
-                .padding(10.dp),
+            modifier =
+                modifier
+                    .size(size)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(backgroundColor)
+                    .padding(10.dp),
             contentAlignment = Alignment.Center
         ) {
             Image(
@@ -57,10 +59,11 @@ fun generateQrBitmap(
 ): Bitmap? {
     if (text.isBlank()) return null
     return try {
-        val hints = mapOf(
-            EncodeHintType.MARGIN to 1,
-            EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M
-        )
+        val hints =
+            mapOf(
+                EncodeHintType.MARGIN to 1,
+                EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M
+            )
         val bitMatrix = QRCodeWriter().encode(text, BarcodeFormat.QR_CODE, width, height, hints)
         val matrixWidth = bitMatrix.width
         val matrixHeight = bitMatrix.height

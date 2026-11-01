@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Adaptive Fluid Design System (AFDS) Breakpoints.
- * 
+ *
  * Compact: 0-599dp (Phones)
  * Medium: 600-839dp (Tablets, small foldables)
  * Expanded: 840-1199dp (Large foldables, small desktops)

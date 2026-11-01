@@ -3,43 +3,37 @@
 
 package com.deepeye.musicpro.ui.player.overlay
 
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.deepeye.musicpro.domain.model.PlayerState
 import com.deepeye.musicpro.domain.model.RepeatMode
-import com.deepeye.musicpro.player.format.QualityPreset
 import kotlinx.collections.immutable.persistentListOf
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class DeepEyeVideoPlayerOverlayTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private val playerState = PlayerState(
-        isPlaying = true,
-        position = 120000L,
-        duration = 300000L,
-        bufferedDurationMs = 280000L,
-        isVideo = true,
-        isLoading = false,
-        repeatMode = RepeatMode.NONE,
-        playbackSpeed = 1.0f,
-        isLiked = false,
-        isDisliked = false,
-        isCaptionEnabled = false
-    )
+    private val playerState =
+        PlayerState(
+            isPlaying = true,
+            position = 120000L,
+            duration = 300000L,
+            bufferedDurationMs = 280000L,
+            isVideo = true,
+            isLoading = false,
+            repeatMode = RepeatMode.NONE,
+            playbackSpeed = 1.0f,
+            isLiked = false,
+            isDisliked = false,
+            isCaptionEnabled = false
+        )
 
     private val actions = VideoPlayerOverlayActions.fromLambdas()
 
@@ -77,9 +71,10 @@ class DeepEyeVideoPlayerOverlayTest {
     @Test
     fun seekBackward_updatesPosition() {
         var seekTarget: Long = 0
-        val testActions = VideoPlayerOverlayActions.fromLambdas(
-            seekChanged = { target -> seekTarget = target }
-        )
+        val testActions =
+            VideoPlayerOverlayActions.fromLambdas(
+                seekChanged = { target -> seekTarget = target }
+            )
 
         composeTestRule.setContent {
             DeepEyeVideoPlayerOverlay(playerState = playerState, actions = testActions)
@@ -90,10 +85,11 @@ class DeepEyeVideoPlayerOverlayTest {
 
     @Test
     fun qualityButton_visible_whenFormatsAvailable() {
-        val stateWithQuality = playerState.copy(
-            availableVideoFormats = persistentListOf(),
-            availableAudioFormats = persistentListOf()
-        )
+        val stateWithQuality =
+            playerState.copy(
+                availableVideoFormats = persistentListOf(),
+                availableAudioFormats = persistentListOf()
+            )
         val testActions = VideoPlayerOverlayActions.fromLambdas(openQuality = { })
 
         composeTestRule.setContent {
@@ -196,17 +192,20 @@ class DeepEyeVideoPlayerOverlayTest {
 
     @Test
     fun overlay_shows_4K_badge_whenFormatIs2160p() {
-        val state4K = PlayerState(
-            isPlaying = true, position = 120000L, duration = 300000L,
-            isVideo = true, isLoading = false, isLiked = false, isDisliked = false,
-            isCaptionEnabled = false, selectedVideoFormat = com.deepeye.musicpro.player.format.DeepEyeFormat(
-                id = "v_4k", groupIndex = 0, trackIndex = 0, type = com.deepeye.musicpro.player.format.FormatType.VIDEO,
-                mimeType = "video/mp4", codecName = "H264", rawCodecs = "avc1",
-                width = 3840, height = 2160, frameRate = 60f, bitrate = 30_000_000,
-                qualityLabel = "2160p", isHdr = true, isHardwareAccelerated = true,
-                isSupported = true, isSelected = true
+        val state4K =
+            PlayerState(
+                isPlaying = true, position = 120000L, duration = 300000L,
+                isVideo = true, isLoading = false, isLiked = false, isDisliked = false,
+                isCaptionEnabled = false,
+                selectedVideoFormat =
+                    com.deepeye.musicpro.player.format.DeepEyeFormat(
+                        id = "v_4k", groupIndex = 0, trackIndex = 0, type = com.deepeye.musicpro.player.format.FormatType.VIDEO,
+                        mimeType = "video/mp4", codecName = "H264", rawCodecs = "avc1",
+                        width = 3840, height = 2160, frameRate = 60f, bitrate = 30_000_000,
+                        qualityLabel = "2160p", isHdr = true, isHardwareAccelerated = true,
+                        isSupported = true, isSelected = true
+                    )
             )
-        )
         composeTestRule.setContent {
             DeepEyeVideoPlayerOverlay(playerState = state4K, actions = actions)
         }
@@ -218,17 +217,20 @@ class DeepEyeVideoPlayerOverlayTest {
 
     @Test
     fun overlay_shows_HDR_badge_whenFormatIsHdr() {
-        val stateHDR = PlayerState(
-            isPlaying = true, position = 45000L, duration = 600000L,
-            isVideo = true, isLoading = false, isLiked = false, isDisliked = false,
-            isCaptionEnabled = true, selectedVideoFormat = com.deepeye.musicpro.player.format.DeepEyeFormat(
-                id = "v_4k_hdr", groupIndex = 0, trackIndex = 0, type = com.deepeye.musicpro.player.format.FormatType.VIDEO,
-                mimeType = "video/mp4", codecName = "HEVC", rawCodecs = "hev1",
-                width = 3840, height = 2160, frameRate = 60f, bitrate = 45_000_000,
-                qualityLabel = "2160p60", isHdr = true, isHardwareAccelerated = true,
-                isSupported = true, isSelected = true
+        val stateHDR =
+            PlayerState(
+                isPlaying = true, position = 45000L, duration = 600000L,
+                isVideo = true, isLoading = false, isLiked = false, isDisliked = false,
+                isCaptionEnabled = true,
+                selectedVideoFormat =
+                    com.deepeye.musicpro.player.format.DeepEyeFormat(
+                        id = "v_4k_hdr", groupIndex = 0, trackIndex = 0, type = com.deepeye.musicpro.player.format.FormatType.VIDEO,
+                        mimeType = "video/mp4", codecName = "HEVC", rawCodecs = "hev1",
+                        width = 3840, height = 2160, frameRate = 60f, bitrate = 45_000_000,
+                        qualityLabel = "2160p60", isHdr = true, isHardwareAccelerated = true,
+                        isSupported = true, isSelected = true
+                    )
             )
-        )
         composeTestRule.setContent {
             DeepEyeVideoPlayerOverlay(playerState = stateHDR, actions = actions)
         }
@@ -239,17 +241,20 @@ class DeepEyeVideoPlayerOverlayTest {
 
     @Test
     fun overlay_shows_1080p_without_4K_badge() {
-        val state1080 = PlayerState(
-            isPlaying = true, position = 60000L, duration = 300000L,
-            isVideo = true, isLoading = false, isLiked = false, isDisliked = false,
-            isCaptionEnabled = false, selectedVideoFormat = com.deepeye.musicpro.player.format.DeepEyeFormat(
-                id = "v_1080", groupIndex = 0, trackIndex = 0, type = com.deepeye.musicpro.player.format.FormatType.VIDEO,
-                mimeType = "video/mp4", codecName = "H264", rawCodecs = "avc1",
-                width = 1920, height = 1080, frameRate = 30f, bitrate = 8_000_000,
-                qualityLabel = "1080p", isHdr = false, isHardwareAccelerated = true,
-                isSupported = true, isSelected = true
+        val state1080 =
+            PlayerState(
+                isPlaying = true, position = 60000L, duration = 300000L,
+                isVideo = true, isLoading = false, isLiked = false, isDisliked = false,
+                isCaptionEnabled = false,
+                selectedVideoFormat =
+                    com.deepeye.musicpro.player.format.DeepEyeFormat(
+                        id = "v_1080", groupIndex = 0, trackIndex = 0, type = com.deepeye.musicpro.player.format.FormatType.VIDEO,
+                        mimeType = "video/mp4", codecName = "H264", rawCodecs = "avc1",
+                        width = 1920, height = 1080, frameRate = 30f, bitrate = 8_000_000,
+                        qualityLabel = "1080p", isHdr = false, isHardwareAccelerated = true,
+                        isSupported = true, isSelected = true
+                    )
             )
-        )
         composeTestRule.setContent {
             DeepEyeVideoPlayerOverlay(playerState = state1080, actions = actions)
         }
@@ -260,10 +265,14 @@ class DeepEyeVideoPlayerOverlayTest {
 
     @Test
     fun overlay_handles_zeroDuration_withoutCrash() {
-        val stateZero = PlayerState(
-            isPlaying = true, position = 0L, duration = 0L,
-            isVideo = true, isLoading = false
-        )
+        val stateZero =
+            PlayerState(
+                isPlaying = true,
+                position = 0L,
+                duration = 0L,
+                isVideo = true,
+                isLoading = false
+            )
         composeTestRule.setContent {
             DeepEyeVideoPlayerOverlay(playerState = stateZero, actions = actions)
         }
@@ -274,19 +283,24 @@ class DeepEyeVideoPlayerOverlayTest {
 
     @Test
     fun overlay_shows_quality_button_for_video_content() {
-        val stateVideo = PlayerState(
-            isPlaying = true, position = 120000L, duration = 300000L,
-            isVideo = true, isLoading = false,
-            availableVideoFormats = persistentListOf(
-                com.deepeye.musicpro.player.format.DeepEyeFormat(
-                    id = "v_4k", groupIndex = 0, trackIndex = 0, type = com.deepeye.musicpro.player.format.FormatType.VIDEO,
-                    mimeType = "video/mp4", codecName = "H264", rawCodecs = "avc1",
-                    width = 3840, height = 2160, frameRate = 60f, bitrate = 30_000_000,
-                    qualityLabel = "2160p", isHdr = true, isHardwareAccelerated = true,
-                    isSupported = true, isSelected = true
-                )
+        val stateVideo =
+            PlayerState(
+                isPlaying = true,
+                position = 120000L,
+                duration = 300000L,
+                isVideo = true,
+                isLoading = false,
+                availableVideoFormats =
+                    persistentListOf(
+                        com.deepeye.musicpro.player.format.DeepEyeFormat(
+                            id = "v_4k", groupIndex = 0, trackIndex = 0, type = com.deepeye.musicpro.player.format.FormatType.VIDEO,
+                            mimeType = "video/mp4", codecName = "H264", rawCodecs = "avc1",
+                            width = 3840, height = 2160, frameRate = 60f, bitrate = 30_000_000,
+                            qualityLabel = "2160p", isHdr = true, isHardwareAccelerated = true,
+                            isSupported = true, isSelected = true
+                        )
+                    )
             )
-        )
         val testActions = VideoPlayerOverlayActions.fromLambdas(openQuality = { })
 
         composeTestRule.setContent {

@@ -46,9 +46,10 @@ class DeepEyeApp : Application(), Configuration.Provider, SingletonImageLoader.F
 
         // Request battery optimization ignore
         if (com.deepeye.musicpro.util.DeviceCompat.isVivo) {
-            val intent = android.content.Intent(
-                android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-            ).setData(android.net.Uri.parse("package:$packageName"))
+            val intent =
+                android.content.Intent(
+                    android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                ).setData(android.net.Uri.parse("package:$packageName"))
             intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             try {
                 startActivity(intent)

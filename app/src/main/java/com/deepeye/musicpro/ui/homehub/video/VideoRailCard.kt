@@ -4,9 +4,6 @@
 package com.deepeye.musicpro.ui.homehub.video
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -49,20 +46,20 @@ fun VideoRailCard(
         // Thumbnail / Inline Player
         Box(
             modifier =
-            Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .border(
-                    1.dp,
-                    Color(0x22FFFFFF),
-                    RoundedCornerShape(14.dp)
-                )
-                .clip(RoundedCornerShape(14.dp))
-                .clickable {
-                    // Bypass inline iframe expansion to avoid Error 152
-                    // Directly open the native full player
-                    onExpandedTap()
-                },
+                Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+                    .border(
+                        1.dp,
+                        Color(0x22FFFFFF),
+                        RoundedCornerShape(14.dp)
+                    )
+                    .clip(RoundedCornerShape(14.dp))
+                    .clickable {
+                        // Bypass inline iframe expansion to avoid Error 152
+                        // Directly open the native full player
+                        onExpandedTap()
+                    },
         ) {
             if (isExpanded) {
                 // Inline WebView removed due to YouTube iframe restrictions (Error 152)
@@ -173,10 +170,11 @@ fun VideoRailCard(
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = 16.sp,
                 )
-                val meta = listOfNotNull(
-                    item.channelName.takeIf { it.isNotBlank() },
-                    item.viewCount.takeIf { it.isNotBlank() && it != "0" && it != "0 views" }
-                ).joinToString(" · ")
+                val meta =
+                    listOfNotNull(
+                        item.channelName.takeIf { it.isNotBlank() },
+                        item.viewCount.takeIf { it.isNotBlank() && it != "0" && it != "0 views" }
+                    ).joinToString(" · ")
                 if (meta.isNotBlank()) {
                     Spacer(Modifier.height(2.dp))
                     Text(

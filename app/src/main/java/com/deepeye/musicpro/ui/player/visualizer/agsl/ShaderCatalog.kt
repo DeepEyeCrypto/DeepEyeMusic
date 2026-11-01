@@ -31,7 +31,6 @@ package com.deepeye.musicpro.ui.player.visualizer.agsl
 import org.intellij.lang.annotations.Language
 
 object ShaderCatalog {
-
     /**
      * Scene: FLUID PULSE — original domain-warped value-noise flow field.
      *
@@ -161,6 +160,11 @@ object ShaderCatalog {
         uniform float iIntensity;
         uniform float iAspect;
 
+        // AGSL has no complex type; use float2 as (re, im) with a helper.
+        float2 complexSqr(float2 z) {
+            return float2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y);
+        }
+
         half4 main(float2 fragCoord) {
             float aspect = iAspect > 0.0 ? iAspect : 1.0;
             float2 uv = (fragCoord - 0.5 * iResolution) / iResolution.y;
@@ -208,11 +212,6 @@ object ShaderCatalog {
             col *= vig;
 
             return half4(half3(clamp(col, 0.0, 1.0)), 1.0);
-        }
-
-        // AGSL has no complex type; use float2 as (re, im) with a helper.
-        float2 complexSqr(float2 z) {
-            return float2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y);
         }
     """
 
@@ -299,11 +298,12 @@ object ShaderCatalog {
      * Static list of catalog scenes. The dispatcher uses this to enumerate
      * available studio scenes for the transition layer.
      */
-    val SCENES = listOf(
-        SceneInfo(FLUID_PULSE, "Fluid Pulse"),
-        SceneInfo(AUDIO_FRACTAL, "Audio Fractal"),
-        SceneInfo(NEON_GRID, "Neon Grid"),
-    )
+    val SCENES =
+        listOf(
+            SceneInfo(FLUID_PULSE, "Fluid Pulse"),
+            SceneInfo(AUDIO_FRACTAL, "Audio Fractal"),
+            SceneInfo(NEON_GRID, "Neon Grid"),
+        )
 
     /**
      * Metadata for one catalog scene.

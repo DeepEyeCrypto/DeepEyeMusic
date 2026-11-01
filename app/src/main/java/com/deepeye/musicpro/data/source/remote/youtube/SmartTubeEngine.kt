@@ -7,11 +7,10 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.deepeye.musicpro.domain.auth.InnerTubeAuthManager
-import com.deepeye.musicpro.domain.model.MediaItem
-import com.deepeye.musicpro.domain.model.Song
-import com.deepeye.musicpro.domain.model.MusicTrack
 import com.deepeye.musicpro.domain.model.Lyrics
 import com.deepeye.musicpro.domain.model.LyricsLine
+import com.deepeye.musicpro.domain.model.MediaItem
+import com.deepeye.musicpro.domain.model.MusicTrack
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedItem
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedItemType
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedSection
@@ -27,7 +26,6 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -41,800 +39,897 @@ import javax.inject.Singleton
  * and gapless algorithmic autoplay without YouTube Data API v3 rate limits.
  */
 @Singleton
-class SmartTubeEngine @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val authManager: InnerTubeAuthManager,
-    private val client: OkHttpClient
-) {
-    companion object {
-        private const val TAG = "SmartTubeEngine"
-        private const val INNERTUBE_BASE_URL = "https://www.youtube.com/youtubei/v1/"
-        private const val TVHTML5_CLIENT_VERSION = "7.20210614.03.00"
-        private const val TVHTML5_USER_AGENT =
-            "Mozilla/5.0 (SMART-TV; Linux; Tizen 5.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/5.0 NativeTVAds Safari/538.1,gzip(gfe)"
+class SmartTubeEngine
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+        private val authManager: InnerTubeAuthManager,
+        private val client: OkHttpClient
+    ) {
+        companion object {
+            private const val TAG = "SmartTubeEngine"
+            private const val INNERTUBE_BASE_URL = "https://www.youtube.com/youtubei/v1/"
+            private const val TVHTML5_CLIENT_VERSION = "7.20210614.03.00"
+            private const val TVHTML5_USER_AGENT =
+                "Mozilla/5.0 (SMART-TV; Linux; Tizen 5.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/5.0 NativeTVAds Safari/538.1,gzip(gfe)"
 
-        val TVHTML5_CONTEXT = """
-            "context": {
-              "client": {
-                "clientName": "TVHTML5",
-                "clientVersion": "$TVHTML5_CLIENT_VERSION",
-                "userAgent": "$TVHTML5_USER_AGENT",
-                "hl": "en",
-                "gl": "IN"
-              },
-              "user": {
-                "enableSafetyMode": false,
-                "lockedSafetyMode": false
-              }
-            }
-        """.trimIndent()
-    }
-
-    /**
-     * Executes an authenticated or spoofed POST request to a given youtubei/v1 endpoint.
-     */
-    suspend fun postInnerTube(endpoint: String, extraJson: String = ""): JSONObject? = withContext(Dispatchers.IO) {
-        val token = authManager.getAccessToken()
-        val payload = if (extraJson.isBlank()) {
-            "{$TVHTML5_CONTEXT}"
-        } else {
-            "{$TVHTML5_CONTEXT, $extraJson}"
+            val TVHTML5_CONTEXT =
+                """
+                "context": {
+                  "client": {
+                    "clientName": "TVHTML5",
+                    "clientVersion": "$TVHTML5_CLIENT_VERSION",
+                    "userAgent": "$TVHTML5_USER_AGENT",
+                    "hl": "en",
+                    "gl": "IN"
+                  },
+                  "user": {
+                    "enableSafetyMode": false,
+                    "lockedSafetyMode": false
+                  }
+                }
+                """.trimIndent()
         }
 
-        try {
-            val reqBuilder = Request.Builder()
-                .url("$INNERTUBE_BASE_URL$endpoint")
-                .addHeader("Content-Type", "application/json")
-                .addHeader("User-Agent", TVHTML5_USER_AGENT)
-                .addHeader("X-YouTube-Client-Name", "85") // 85 = TVHTML5
-                .addHeader("X-YouTube-Client-Version", TVHTML5_CLIENT_VERSION)
-                .post(payload.toRequestBody("application/json; charset=utf-8".toMediaType()))
+        /**
+         * Executes an authenticated or spoofed POST request to a given youtubei/v1 endpoint.
+         */
+        suspend fun postInnerTube(
+            endpoint: String,
+            extraJson: String = ""
+        ): JSONObject? =
+            withContext(Dispatchers.IO) {
+                val token = authManager.getAccessToken()
+                val payload =
+                    if (extraJson.isBlank()) {
+                        "{$TVHTML5_CONTEXT}"
+                    } else {
+                        "{$TVHTML5_CONTEXT, $extraJson}"
+                    }
 
-            if (!token.isNullOrBlank()) {
-                reqBuilder.addHeader("Authorization", "Bearer $token")
-            }
+                try {
+                    val reqBuilder =
+                        Request.Builder()
+                            .url("$INNERTUBE_BASE_URL$endpoint")
+                            .addHeader("Content-Type", "application/json")
+                            .addHeader("User-Agent", TVHTML5_USER_AGENT)
+                            .addHeader("X-YouTube-Client-Name", "85") // 85 = TVHTML5
+                            .addHeader("X-YouTube-Client-Version", TVHTML5_CLIENT_VERSION)
+                            .post(payload.toRequestBody("application/json; charset=utf-8".toMediaType()))
 
-            client.newCall(reqBuilder.build()).execute().use { response ->
-                if (response.code == 401 && !token.isNullOrBlank()) {
-                    Log.w(TAG, "Received 401 on /$endpoint, refreshing OAuth token...")
-                    val refreshedToken = authManager.refreshAccessToken()
-                    if (!refreshedToken.isNullOrBlank()) {
-                        val retryReq = reqBuilder.header("Authorization", "Bearer $refreshedToken").build()
-                        client.newCall(retryReq).execute().use { retryRes ->
-                            if (retryRes.isSuccessful) {
-                                val bodyStr = retryRes.body?.string() ?: return@withContext null
-                                return@withContext JSONObject(bodyStr)
+                    if (!token.isNullOrBlank()) {
+                        reqBuilder.addHeader("Authorization", "Bearer $token")
+                    }
+
+                    client.newCall(reqBuilder.build()).execute().use { response ->
+                        if (response.code == 401 && !token.isNullOrBlank()) {
+                            Log.w(TAG, "Received 401 on /$endpoint, refreshing OAuth token...")
+                            val refreshedToken = authManager.refreshAccessToken()
+                            if (!refreshedToken.isNullOrBlank()) {
+                                val retryReq = reqBuilder.header("Authorization", "Bearer $refreshedToken").build()
+                                client.newCall(retryReq).execute().use { retryRes ->
+                                    if (retryRes.isSuccessful) {
+                                        val bodyStr = retryRes.body?.string() ?: return@withContext null
+                                        return@withContext JSONObject(bodyStr)
+                                    }
+                                }
                             }
                         }
-                    }
-                }
 
-                if (!response.isSuccessful) {
-                    Log.w(TAG, "SmartTube InnerTube POST /$endpoint returned HTTP ${response.code}")
+                        if (!response.isSuccessful) {
+                            Log.w(TAG, "SmartTube InnerTube POST /$endpoint returned HTTP ${response.code}")
+                            return@withContext null
+                        }
+
+                        val bodyStr = response.body?.string() ?: return@withContext null
+                        return@withContext JSONObject(bodyStr)
+                    }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error posting to SmartTube InnerTube endpoint $endpoint", e)
+                    null
+                }
+            }
+
+        enum class LikeStatus {
+            LIKED,
+            DISLIKED,
+            INDIFFERENT
+        }
+
+        /**
+         * Executes a Like, Dislike or RemoveLike mutation on the user's YouTube account.
+         */
+        suspend fun setLikeStatus(
+            videoId: String,
+            status: LikeStatus
+        ): Boolean =
+            withContext(Dispatchers.IO) {
+                if (videoId.isBlank()) return@withContext false
+                val endpoint =
+                    when (status) {
+                        LikeStatus.LIKED -> "like/like"
+                        LikeStatus.DISLIKED -> "like/dislike"
+                        LikeStatus.INDIFFERENT -> "like/removelike"
+                    }
+                val extraJson = "\"target\": {\"videoId\": \"$videoId\"}"
+                val res = postInnerTube(endpoint, extraJson)
+                return@withContext res != null
+            }
+
+        /**
+         * Fetches YouTube's exact native AutoPlay next track for [videoId] via the /next endpoint.
+         */
+        suspend fun getAlgorithmicNext(videoId: String): AutoplayTrack? =
+            withContext(Dispatchers.IO) {
+                if (videoId.isBlank()) return@withContext null
+
+                // FEL-400: bare provider contract (videoId only).
+                val extraJson = "\"videoId\": \"$videoId\""
+
+                val json = postInnerTube("next", extraJson) ?: return@withContext null
+                return@withContext extractAutoplayFromJson(json, currentVideoId = videoId)
+            }
+
+        /**
+         * AUTOPLAY-OMEGA — fetches YouTube's native "Up Next" autoplay recommendation for
+         * [currentVideoId] via the InnerTube `/youtubei/v1/next` endpoint and returns a fully
+         * constructed [MediaItem.Remote] (streamUri is left null — stream resolution is owned
+         * by the player layer via SourceResolverManager).
+         *
+         * Thread-safety contract (FPS-MAXIMA): the HTTP round-trip runs inside [postInnerTube]
+         * (Dispatchers.IO) and the JSON traversal below is pure CPU work executed inside
+         * withContext(Dispatchers.IO). The 144Hz Compose/AGSL render thread never touches
+         * this code path, so a fetch can never cause a dropped frame.
+         */
+        suspend fun fetchUpNext(currentVideoId: String): MediaItem? =
+            withContext(Dispatchers.IO) {
+                if (currentVideoId.isBlank()) {
+                    Log.w(TAG, "event=fetch_up_next result=rejected reason=\"blank_video_id\"")
                     return@withContext null
                 }
 
-                val bodyStr = response.body?.string() ?: return@withContext null
-                return@withContext JSONObject(bodyStr)
+                val startedAt = System.currentTimeMillis()
+                // FEL-400: bare provider contract (videoId only). Fabricated playlistId
+                // values are rejected with HTTP 400 — see request-contract analysis.
+                val json = postInnerTube("next", "\"videoId\": \"$currentVideoId\"")
+                if (json == null) {
+                    Log.w(
+                        TAG,
+                        "event=fetch_up_next result=network_failure videoId=$currentVideoId " +
+                            "durationMs=${System.currentTimeMillis() - startedAt}"
+                    )
+                    return@withContext null
+                }
+
+                val track =
+                    try {
+                        extractUpNextTrack(json, currentVideoId)
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.e(
+                            TAG,
+                            "event=fetch_up_next result=parse_failure videoId=$currentVideoId " +
+                                "durationMs=${System.currentTimeMillis() - startedAt} reason=\"${e.message}\"",
+                            e
+                        )
+                        return@withContext null
+                    }
+
+                if (track == null || track.videoId.isBlank() || track.videoId == currentVideoId) {
+                    Log.w(
+                        TAG,
+                        "event=fetch_up_next result=not_found videoId=$currentVideoId " +
+                            "durationMs=${System.currentTimeMillis() - startedAt}"
+                    )
+                    return@withContext null
+                }
+
+                Log.i(
+                    TAG,
+                    "event=fetch_up_next result=success videoId=$currentVideoId " +
+                        "nextVideoId=${track.videoId} title=\"${track.title}\" " +
+                        "durationMs=${System.currentTimeMillis() - startedAt}"
+                )
+
+                MediaItem.Remote(
+                    id = track.videoId,
+                    title = track.title,
+                    artist = track.artist,
+                    artworkUri =
+                        track.thumbnailUrl.takeIf { it.isNotBlank() }?.let(Uri::parse)
+                            ?: Uri.parse("https://img.youtube.com/vi/${track.videoId}/hqdefault.jpg"),
+                    duration = track.durationSeconds * 1000L,
+                    streamUri = null,
+                    isVideo = false,
+                )
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Log.e(TAG, "Error posting to SmartTube InnerTube endpoint $endpoint", e)
-            null
-        }
-    }
 
-    enum class LikeStatus {
-        LIKED,
-        DISLIKED,
-        INDIFFERENT
-    }
+        /**
+         * Extracts the native "Up Next" recommendation from an InnerTube `/next` payload.
+         *
+         * Priority order (shapes verified against live payloads on 2026-10-10):
+         *  1. `contents -> singleColumnWatchNextResults -> autoplay -> autoplay -> sets[]`
+         *     (TVHTML5): `autoplayVideoRenderer.autonavEndpointRenderer.endpoint.watchEndpoint`
+         *     or `autoplayVideoRenderer.autoplayEndpointRenderer.endpoint.watchEndpoint`,
+         *     with title/artist/thumbnail harvested from the sibling
+         *     `nextVideoRenderer.maybeHistoryEndpointRenderer.item.previewButtonRenderer`.
+         *  2. `contents -> twoColumnWatchNextResults -> autoplay -> autoplay -> sets[]`
+         *     (WEB): bare `autoplayVideo.watchEndpoint` endpoint nodes.
+         *  3. Directive path `contents -> singleColumnWatchNextResults -> autoplay -> autoplayVideo`
+         *     as a direct node (client-shape drift tolerance).
+         *  4. Legacy strategies via [extractAutoplayFromJson] (playerOverlayAutoplayRenderer,
+         *     the music-client `watchNextTabbedResultsRenderer -> playlistPanelRenderer` queue,
+         *     and twoColumn secondaryResults).
+         */
+        private fun extractUpNextTrack(
+            json: JSONObject,
+            currentVideoId: String
+        ): AutoplayTrack? {
+            // Strategies 1 & 2 — autoplay SETS (real TVHTML5 / WEB shapes)
+            val autoplaySets =
+                json.optJSONObject("contents")
+                    ?.optJSONObject("singleColumnWatchNextResults")
+                    ?.optJSONObject("autoplay")
+                    ?.optJSONObject("autoplay")
+                    ?.optJSONArray("sets")
+                    ?: json.optJSONObject("contents")
+                        ?.optJSONObject("twoColumnWatchNextResults")
+                        ?.optJSONObject("autoplay")
+                        ?.optJSONObject("autoplay")
+                        ?.optJSONArray("sets")
 
-    /**
-     * Executes a Like, Dislike or RemoveLike mutation on the user's YouTube account.
-     */
-    suspend fun setLikeStatus(videoId: String, status: LikeStatus): Boolean = withContext(Dispatchers.IO) {
-        if (videoId.isBlank()) return@withContext false
-        val endpoint = when (status) {
-            LikeStatus.LIKED -> "like/like"
-            LikeStatus.DISLIKED -> "like/dislike"
-            LikeStatus.INDIFFERENT -> "like/removelike"
-        }
-        val extraJson = "\"target\": {\"videoId\": \"$videoId\"}"
-        val res = postInnerTube(endpoint, extraJson)
-        return@withContext res != null
-    }
+            if (autoplaySets != null) {
+                for (i in 0 until autoplaySets.length()) {
+                    val autoplaySet = autoplaySets.optJSONObject(i) ?: continue
+                    val autoplayRenderer =
+                        autoplaySet.optJSONObject("autoplayVideoRenderer")
+                            ?: autoplaySet.optJSONObject("autoplayVideo")
 
-    /**
-     * Fetches YouTube's exact native AutoPlay next track for [videoId] via the /next endpoint.
-     */
-    suspend fun getAlgorithmicNext(videoId: String): AutoplayTrack? = withContext(Dispatchers.IO) {
-        if (videoId.isBlank()) return@withContext null
+                    // LOOP_ONE / replay sets point back at the current video
+                    // (watchEndpoint.replayIfSameVideo = true) — not real up-next candidates.
+                    val isReplaySet =
+                        autoplayRenderer
+                            ?.optJSONObject("autoplayEndpointRenderer")
+                            ?.optJSONObject("endpoint")
+                            ?.optJSONObject("watchEndpoint")
+                            ?.optBoolean("replayIfSameVideo") == true
+                    if (isReplaySet) continue
 
-        // FEL-400: bare provider contract (videoId only).
-        val extraJson = "\"videoId\": \"$videoId\""
+                    val nextId = extractWatchEndpointVideoId(autoplayRenderer)
+                    if (nextId.isNullOrBlank() || nextId == currentVideoId) continue
 
-        val json = postInnerTube("next", extraJson) ?: return@withContext null
-        return@withContext extractAutoplayFromJson(json, currentVideoId = videoId)
-    }
+                    val nextVideoEndpoint =
+                        autoplaySet.optJSONObject("nextVideoRenderer")
+                            ?.optJSONObject("maybeHistoryEndpointRenderer")
+                    val previewEndpointVideoId =
+                        nextVideoEndpoint
+                            ?.optJSONObject("endpoint")
+                            ?.optJSONObject("watchEndpoint")
+                            ?.optString("videoId")
+                    // Only trust the preview metadata when it describes the same video we
+                    // extracted; otherwise fall back to neutral defaults.
+                    val metadataMatches = previewEndpointVideoId == null || previewEndpointVideoId == nextId
+                    val preview =
+                        nextVideoEndpoint
+                            ?.optJSONObject("item")
+                            ?.optJSONObject("previewButtonRenderer")
 
-    /**
-     * AUTOPLAY-OMEGA — fetches YouTube's native "Up Next" autoplay recommendation for
-     * [currentVideoId] via the InnerTube `/youtubei/v1/next` endpoint and returns a fully
-     * constructed [MediaItem.Remote] (streamUri is left null — stream resolution is owned
-     * by the player layer via SourceResolverManager).
-     *
-     * Thread-safety contract (FPS-MAXIMA): the HTTP round-trip runs inside [postInnerTube]
-     * (Dispatchers.IO) and the JSON traversal below is pure CPU work executed inside
-     * withContext(Dispatchers.IO). The 144Hz Compose/AGSL render thread never touches
-     * this code path, so a fetch can never cause a dropped frame.
-     */
-    suspend fun fetchUpNext(currentVideoId: String): MediaItem? = withContext(Dispatchers.IO) {
-        if (currentVideoId.isBlank()) {
-            Log.w(TAG, "event=fetch_up_next result=rejected reason=\"blank_video_id\"")
-            return@withContext null
-        }
+                    return AutoplayTrack(
+                        videoId = nextId,
+                        title =
+                            if (metadataMatches) {
+                                parseRunsText(preview?.optJSONObject("title")).ifBlank { "Next Recommendation" }
+                            } else {
+                                "Next Recommendation"
+                            },
+                        artist =
+                            if (metadataMatches) {
+                                parseRunsText(preview?.optJSONObject("byline")).ifBlank { "YouTube" }
+                            } else {
+                                "YouTube"
+                            },
+                        thumbnailUrl =
+                            if (metadataMatches) {
+                                extractThumbnailUrl(preview?.optJSONObject("thumbnail")) ?: ""
+                            } else {
+                                ""
+                            },
+                        durationSeconds = 0L,
+                    )
+                }
+            }
 
-        val startedAt = System.currentTimeMillis()
-        // FEL-400: bare provider contract (videoId only). Fabricated playlistId
-        // values are rejected with HTTP 400 — see request-contract analysis.
-        val json = postInnerTube("next", "\"videoId\": \"$currentVideoId\"")
-        if (json == null) {
-            Log.w(
-                TAG,
-                "event=fetch_up_next result=network_failure videoId=$currentVideoId " +
-                    "durationMs=${System.currentTimeMillis() - startedAt}"
-            )
-            return@withContext null
-        }
-
-        val track = try {
-            extractUpNextTrack(json, currentVideoId)
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Log.e(
-                TAG,
-                "event=fetch_up_next result=parse_failure videoId=$currentVideoId " +
-                    "durationMs=${System.currentTimeMillis() - startedAt} reason=\"${e.message}\"",
-                e
-            )
-            return@withContext null
-        }
-
-        if (track == null || track.videoId.isBlank() || track.videoId == currentVideoId) {
-            Log.w(
-                TAG,
-                "event=fetch_up_next result=not_found videoId=$currentVideoId " +
-                    "durationMs=${System.currentTimeMillis() - startedAt}"
-            )
-            return@withContext null
-        }
-
-        Log.i(
-            TAG,
-            "event=fetch_up_next result=success videoId=$currentVideoId " +
-                "nextVideoId=${track.videoId} title=\"${track.title}\" " +
-                "durationMs=${System.currentTimeMillis() - startedAt}"
-        )
-
-        MediaItem.Remote(
-            id = track.videoId,
-            title = track.title,
-            artist = track.artist,
-            artworkUri = track.thumbnailUrl.takeIf { it.isNotBlank() }?.let(Uri::parse)
-                ?: Uri.parse("https://img.youtube.com/vi/${track.videoId}/hqdefault.jpg"),
-            duration = track.durationSeconds * 1000L,
-            streamUri = null,
-            isVideo = false,
-        )
-    }
-
-    /**
-     * Extracts the native "Up Next" recommendation from an InnerTube `/next` payload.
-     *
-     * Priority order (shapes verified against live payloads on 2026-10-10):
-     *  1. `contents -> singleColumnWatchNextResults -> autoplay -> autoplay -> sets[]`
-     *     (TVHTML5): `autoplayVideoRenderer.autonavEndpointRenderer.endpoint.watchEndpoint`
-     *     or `autoplayVideoRenderer.autoplayEndpointRenderer.endpoint.watchEndpoint`,
-     *     with title/artist/thumbnail harvested from the sibling
-     *     `nextVideoRenderer.maybeHistoryEndpointRenderer.item.previewButtonRenderer`.
-     *  2. `contents -> twoColumnWatchNextResults -> autoplay -> autoplay -> sets[]`
-     *     (WEB): bare `autoplayVideo.watchEndpoint` endpoint nodes.
-     *  3. Directive path `contents -> singleColumnWatchNextResults -> autoplay -> autoplayVideo`
-     *     as a direct node (client-shape drift tolerance).
-     *  4. Legacy strategies via [extractAutoplayFromJson] (playerOverlayAutoplayRenderer,
-     *     the music-client `watchNextTabbedResultsRenderer -> playlistPanelRenderer` queue,
-     *     and twoColumn secondaryResults).
-     */
-    private fun extractUpNextTrack(json: JSONObject, currentVideoId: String): AutoplayTrack? {
-        // Strategies 1 & 2 — autoplay SETS (real TVHTML5 / WEB shapes)
-        val autoplaySets = json.optJSONObject("contents")
-            ?.optJSONObject("singleColumnWatchNextResults")
-            ?.optJSONObject("autoplay")
-            ?.optJSONObject("autoplay")
-            ?.optJSONArray("sets")
-            ?: json.optJSONObject("contents")
-                ?.optJSONObject("twoColumnWatchNextResults")
-                ?.optJSONObject("autoplay")
-                ?.optJSONObject("autoplay")
-                ?.optJSONArray("sets")
-
-        if (autoplaySets != null) {
-            for (i in 0 until autoplaySets.length()) {
-                val autoplaySet = autoplaySets.optJSONObject(i) ?: continue
-                val autoplayRenderer = autoplaySet.optJSONObject("autoplayVideoRenderer")
-                    ?: autoplaySet.optJSONObject("autoplayVideo")
-
-                // LOOP_ONE / replay sets point back at the current video
-                // (watchEndpoint.replayIfSameVideo = true) — not real up-next candidates.
-                val isReplaySet = autoplayRenderer
-                    ?.optJSONObject("autoplayEndpointRenderer")
-                    ?.optJSONObject("endpoint")
-                    ?.optJSONObject("watchEndpoint")
-                    ?.optBoolean("replayIfSameVideo") == true
-                if (isReplaySet) continue
-
-                val nextId = extractWatchEndpointVideoId(autoplayRenderer)
-                if (nextId.isNullOrBlank() || nextId == currentVideoId) continue
-
-                val nextVideoEndpoint = autoplaySet.optJSONObject("nextVideoRenderer")
-                    ?.optJSONObject("maybeHistoryEndpointRenderer")
-                val previewEndpointVideoId = nextVideoEndpoint
-                    ?.optJSONObject("endpoint")
-                    ?.optJSONObject("watchEndpoint")
-                    ?.optString("videoId")
-                // Only trust the preview metadata when it describes the same video we
-                // extracted; otherwise fall back to neutral defaults.
-                val metadataMatches = previewEndpointVideoId == null || previewEndpointVideoId == nextId
-                val preview = nextVideoEndpoint
-                    ?.optJSONObject("item")
-                    ?.optJSONObject("previewButtonRenderer")
-
+            // Strategy 3 — direct `autoplayVideo` node under singleColumnWatchNextResults.autoplay
+            val directNextId =
+                extractWatchEndpointVideoId(
+                    json.optJSONObject("contents")
+                        ?.optJSONObject("singleColumnWatchNextResults")
+                        ?.optJSONObject("autoplay")
+                        ?.optJSONObject("autoplayVideo")
+                )
+            if (!directNextId.isNullOrBlank() && directNextId != currentVideoId) {
                 return AutoplayTrack(
-                    videoId = nextId,
-                    title = if (metadataMatches) {
-                        parseRunsText(preview?.optJSONObject("title")).ifBlank { "Next Recommendation" }
-                    } else {
-                        "Next Recommendation"
-                    },
-                    artist = if (metadataMatches) {
-                        parseRunsText(preview?.optJSONObject("byline")).ifBlank { "YouTube" }
-                    } else {
-                        "YouTube"
-                    },
-                    thumbnailUrl = if (metadataMatches) {
-                        extractThumbnailUrl(preview?.optJSONObject("thumbnail")) ?: ""
-                    } else {
-                        ""
-                    },
+                    videoId = directNextId,
+                    title = "Next Recommendation",
+                    artist = "YouTube",
+                    thumbnailUrl = "",
                     durationSeconds = 0L,
                 )
             }
+
+            // Strategy 4 — legacy paths (playerOverlay / music playlistPanel / secondaryResults)
+            return extractAutoplayFromJson(json, currentVideoId)
         }
 
-        // Strategy 3 — direct `autoplayVideo` node under singleColumnWatchNextResults.autoplay
-        val directNextId = extractWatchEndpointVideoId(
-            json.optJSONObject("contents")
-                ?.optJSONObject("singleColumnWatchNextResults")
-                ?.optJSONObject("autoplay")
-                ?.optJSONObject("autoplayVideo")
-        )
-        if (!directNextId.isNullOrBlank() && directNextId != currentVideoId) {
-            return AutoplayTrack(
-                videoId = directNextId,
-                title = "Next Recommendation",
-                artist = "YouTube",
-                thumbnailUrl = "",
-                durationSeconds = 0L,
-            )
-        }
-
-        // Strategy 4 — legacy paths (playerOverlay / music playlistPanel / secondaryResults)
-        return extractAutoplayFromJson(json, currentVideoId)
-    }
-
-    /**
-     * Pulls a videoId out of the many endpoint wrapper shapes InnerTube uses for
-     * autoplay nodes (autonavEndpointRenderer, autoplayEndpointRenderer, bare
-     * autoplayVideo endpoint objects, or a plain videoId field).
-     */
-    private fun extractWatchEndpointVideoId(renderer: JSONObject?): String? {
-        if (renderer == null) return null
-        return renderer.optJSONObject("autonavEndpointRenderer")
-            ?.optJSONObject("endpoint")
-            ?.optJSONObject("watchEndpoint")
-            ?.optString("videoId")
-            ?.takeIf { it.isNotBlank() }
-            ?: renderer.optJSONObject("autoplayEndpointRenderer")
+        /**
+         * Pulls a videoId out of the many endpoint wrapper shapes InnerTube uses for
+         * autoplay nodes (autonavEndpointRenderer, autoplayEndpointRenderer, bare
+         * autoplayVideo endpoint objects, or a plain videoId field).
+         */
+        private fun extractWatchEndpointVideoId(renderer: JSONObject?): String? {
+            if (renderer == null) return null
+            return renderer.optJSONObject("autonavEndpointRenderer")
                 ?.optJSONObject("endpoint")
                 ?.optJSONObject("watchEndpoint")
                 ?.optString("videoId")
                 ?.takeIf { it.isNotBlank() }
-            ?: renderer.optJSONObject("endpoint")
-                ?.optJSONObject("watchEndpoint")
-                ?.optString("videoId")
-                ?.takeIf { it.isNotBlank() }
-            ?: renderer.optJSONObject("watchEndpoint")
-                ?.optString("videoId")
-                ?.takeIf { it.isNotBlank() }
-            ?: renderer.optString("videoId").takeIf { it.isNotBlank() }
-    }
-
-    /**
-     * Extracts next track recursively from SmartTube /next InnerTube response JSON.
-     */
-    private fun extractAutoplayFromJson(json: JSONObject, currentVideoId: String): AutoplayTrack? {
-        // Priority 1: autoplayEndpointRenderer (Smart Mix / Playlist next)
-        val autoplayNav = json.optJSONObject("playerOverlays")
-            ?.optJSONObject("playerOverlayRenderer")
-            ?.optJSONObject("autoplay")
-            ?.optJSONObject("playerOverlayAutoplayRenderer")
-
-        if (autoplayNav != null) {
-            val nextId = autoplayNav.optJSONObject("videoEndpoint")
-                ?.optJSONObject("watchEndpoint")
-                ?.optString("videoId")
-
-            if (!nextId.isNullOrBlank() && nextId != currentVideoId) {
-                val title = parseRunsText(autoplayNav.optJSONObject("videoTitle"))
-                val artist = parseRunsText(autoplayNav.optJSONObject("byline"))
-                val thumb = extractThumbnailUrl(autoplayNav.optJSONObject("thumbnailRenderer")) ?: ""
-                return AutoplayTrack(
-                    videoId = nextId,
-                    title = title.ifBlank { "Next Recommendation" },
-                    artist = artist.ifBlank { "YouTube" },
-                    thumbnailUrl = thumb,
-                    durationSeconds = 0L
-                )
-            }
+                ?: renderer.optJSONObject("autoplayEndpointRenderer")
+                    ?.optJSONObject("endpoint")
+                    ?.optJSONObject("watchEndpoint")
+                    ?.optString("videoId")
+                    ?.takeIf { it.isNotBlank() }
+                ?: renderer.optJSONObject("endpoint")
+                    ?.optJSONObject("watchEndpoint")
+                    ?.optString("videoId")
+                    ?.takeIf { it.isNotBlank() }
+                ?: renderer.optJSONObject("watchEndpoint")
+                    ?.optString("videoId")
+                    ?.takeIf { it.isNotBlank() }
+                ?: renderer.optString("videoId").takeIf { it.isNotBlank() }
         }
 
-        // Priority 2: maybeHistoryEndpointRenderer or nextVideoRenderer inside watchNextTabbedResults
-        val tabs = json.optJSONObject("contents")
-            ?.optJSONObject("singleColumnMusicWatchNextResultsRenderer")
-            ?.optJSONObject("tabbedRenderer")
-            ?.optJSONObject("watchNextTabbedResultsRenderer")
-            ?.optJSONArray("tabs")
+        /**
+         * Extracts next track recursively from SmartTube /next InnerTube response JSON.
+         */
+        private fun extractAutoplayFromJson(
+            json: JSONObject,
+            currentVideoId: String
+        ): AutoplayTrack? {
+            // Priority 1: autoplayEndpointRenderer (Smart Mix / Playlist next)
+            val autoplayNav =
+                json.optJSONObject("playerOverlays")
+                    ?.optJSONObject("playerOverlayRenderer")
+                    ?.optJSONObject("autoplay")
+                    ?.optJSONObject("playerOverlayAutoplayRenderer")
 
-        if (tabs != null && tabs.length() > 0) {
-            val tab0 = tabs.optJSONObject(0)?.optJSONObject("tabRenderer")
-            val contents = tab0?.optJSONObject("content")
-                ?.optJSONObject("musicQueueRenderer")
-                ?.optJSONObject("content")
-                ?.optJSONObject("playlistPanelRenderer")
-                ?.optJSONArray("contents")
+            if (autoplayNav != null) {
+                val nextId =
+                    autoplayNav.optJSONObject("videoEndpoint")
+                        ?.optJSONObject("watchEndpoint")
+                        ?.optString("videoId")
 
-            if (contents != null && contents.length() > 0) {
-                for (i in 0 until contents.length()) {
-                    val panelItem = contents.optJSONObject(i)?.optJSONObject("playlistPanelVideoRenderer") ?: continue
-                    val nextId = panelItem.optString("videoId")
+                if (!nextId.isNullOrBlank() && nextId != currentVideoId) {
+                    val title = parseRunsText(autoplayNav.optJSONObject("videoTitle"))
+                    val artist = parseRunsText(autoplayNav.optJSONObject("byline"))
+                    val thumb = extractThumbnailUrl(autoplayNav.optJSONObject("thumbnailRenderer")) ?: ""
+                    return AutoplayTrack(
+                        videoId = nextId,
+                        title = title.ifBlank { "Next Recommendation" },
+                        artist = artist.ifBlank { "YouTube" },
+                        thumbnailUrl = thumb,
+                        durationSeconds = 0L
+                    )
+                }
+            }
+
+            // Priority 2: maybeHistoryEndpointRenderer or nextVideoRenderer inside watchNextTabbedResults
+            val tabs =
+                json.optJSONObject("contents")
+                    ?.optJSONObject("singleColumnMusicWatchNextResultsRenderer")
+                    ?.optJSONObject("tabbedRenderer")
+                    ?.optJSONObject("watchNextTabbedResultsRenderer")
+                    ?.optJSONArray("tabs")
+
+            if (tabs != null && tabs.length() > 0) {
+                val tab0 = tabs.optJSONObject(0)?.optJSONObject("tabRenderer")
+                val contents =
+                    tab0?.optJSONObject("content")
+                        ?.optJSONObject("musicQueueRenderer")
+                        ?.optJSONObject("content")
+                        ?.optJSONObject("playlistPanelRenderer")
+                        ?.optJSONArray("contents")
+
+                if (contents != null && contents.length() > 0) {
+                    for (i in 0 until contents.length()) {
+                        val panelItem = contents.optJSONObject(i)?.optJSONObject("playlistPanelVideoRenderer") ?: continue
+                        val nextId = panelItem.optString("videoId")
+                        if (nextId.isNotBlank() && nextId != currentVideoId) {
+                            val title = parseRunsText(panelItem.optJSONObject("title"))
+                            val artist =
+                                parseRunsText(
+                                    panelItem.optJSONObject("longBylineText") ?: panelItem.optJSONObject("shortBylineText")
+                                )
+                            val thumb = extractThumbnailUrl(panelItem.optJSONObject("thumbnail")) ?: ""
+                            val durationStr = parseRunsText(panelItem.optJSONObject("lengthText"))
+                            return AutoplayTrack(
+                                videoId = nextId,
+                                title = title.ifBlank { "Next Track" },
+                                artist = artist.ifBlank { "YouTube Music" },
+                                thumbnailUrl = thumb,
+                                durationSeconds = parseDurationSec(durationStr)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Priority 3: Two-Column Watch Next Secondary Results
+            val secondaryItems =
+                json.optJSONObject("contents")
+                    ?.optJSONObject("twoColumnWatchNextResults")
+                    ?.optJSONObject("secondaryResults")
+                    ?.optJSONObject("secondaryResults")
+                    ?.optJSONArray("results")
+
+            if (secondaryItems != null && secondaryItems.length() > 0) {
+                for (i in 0 until secondaryItems.length()) {
+                    val compactVideo = secondaryItems.optJSONObject(i)?.optJSONObject("compactVideoRenderer") ?: continue
+                    val nextId = compactVideo.optString("videoId")
                     if (nextId.isNotBlank() && nextId != currentVideoId) {
-                        val title = parseRunsText(panelItem.optJSONObject("title"))
-                        val artist = parseRunsText(panelItem.optJSONObject("longBylineText") ?: panelItem.optJSONObject("shortBylineText"))
-                        val thumb = extractThumbnailUrl(panelItem.optJSONObject("thumbnail")) ?: ""
-                        val durationStr = parseRunsText(panelItem.optJSONObject("lengthText"))
+                        val title = parseRunsText(compactVideo.optJSONObject("title"))
+                        val artist = parseRunsText(compactVideo.optJSONObject("shortBylineText"))
+                        val thumb = extractThumbnailUrl(compactVideo.optJSONObject("thumbnail")) ?: ""
+                        val durationStr = parseRunsText(compactVideo.optJSONObject("lengthText"))
                         return AutoplayTrack(
                             videoId = nextId,
-                            title = title.ifBlank { "Next Track" },
-                            artist = artist.ifBlank { "YouTube Music" },
+                            title = title.ifBlank { "Next Recommendation" },
+                            artist = artist.ifBlank { "YouTube" },
                             thumbnailUrl = thumb,
                             durationSeconds = parseDurationSec(durationStr)
                         )
                     }
                 }
             }
+
+            return null
         }
 
-        // Priority 3: Two-Column Watch Next Secondary Results
-        val secondaryItems = json.optJSONObject("contents")
-            ?.optJSONObject("twoColumnWatchNextResults")
-            ?.optJSONObject("secondaryResults")
-            ?.optJSONObject("secondaryResults")
-            ?.optJSONArray("results")
+        /**
+         * Fetches 1:1 personalized Home Feed using SmartTube TVHTML5 /browse endpoint.
+         */
+        suspend fun getPersonalizedHome(browseId: String = "FEwhat_to_watch"): List<PersonalizedSection> =
+            withContext(Dispatchers.IO) {
+                val extraJson = "\"browseId\": \"$browseId\""
+                val json = postInnerTube("browse", extraJson) ?: return@withContext emptyList()
 
-        if (secondaryItems != null && secondaryItems.length() > 0) {
-            for (i in 0 until secondaryItems.length()) {
-                val compactVideo = secondaryItems.optJSONObject(i)?.optJSONObject("compactVideoRenderer") ?: continue
-                val nextId = compactVideo.optString("videoId")
-                if (nextId.isNotBlank() && nextId != currentVideoId) {
-                    val title = parseRunsText(compactVideo.optJSONObject("title"))
-                    val artist = parseRunsText(compactVideo.optJSONObject("shortBylineText"))
-                    val thumb = extractThumbnailUrl(compactVideo.optJSONObject("thumbnail")) ?: ""
-                    val durationStr = parseRunsText(compactVideo.optJSONObject("lengthText"))
-                    return AutoplayTrack(
-                        videoId = nextId,
-                        title = title.ifBlank { "Next Recommendation" },
-                        artist = artist.ifBlank { "YouTube" },
-                        thumbnailUrl = thumb,
-                        durationSeconds = parseDurationSec(durationStr)
-                    )
-                }
-            }
-        }
+                val sections = mutableListOf<PersonalizedSection>()
 
-        return null
-    }
+                val tabs =
+                    json.optJSONObject("contents")
+                        ?.optJSONObject("twoColumnBrowseResultsRenderer")
+                        ?.optJSONArray("tabs")
 
-    /**
-     * Fetches 1:1 personalized Home Feed using SmartTube TVHTML5 /browse endpoint.
-     */
-    suspend fun getPersonalizedHome(browseId: String = "FEwhat_to_watch"): List<PersonalizedSection> = withContext(Dispatchers.IO) {
-        val extraJson = "\"browseId\": \"$browseId\""
-        val json = postInnerTube("browse", extraJson) ?: return@withContext emptyList()
+                if (tabs != null && tabs.length() > 0) {
+                    for (t in 0 until tabs.length()) {
+                        val tab = tabs.optJSONObject(t)?.optJSONObject("tabRenderer") ?: continue
+                        val sectionList =
+                            tab.optJSONObject("content")
+                                ?.optJSONObject("sectionListRenderer")
+                                ?.optJSONArray("contents") ?: continue
 
-        val sections = mutableListOf<PersonalizedSection>()
+                        for (s in 0 until sectionList.length()) {
+                            val itemSection = sectionList.optJSONObject(s)?.optJSONObject("itemSectionRenderer") ?: continue
+                            val shelf =
+                                itemSection.optJSONArray(
+                                    "contents"
+                                )?.optJSONObject(0)?.optJSONObject("shelfRenderer")
+                            if (shelf != null) {
+                                val sectionTitle =
+                                    parseRunsText(
+                                        shelf.optJSONObject("title")
+                                    ).ifBlank { "Recommended For You" }
+                                val items = mutableListOf<PersonalizedFeedItem>()
 
-        val tabs = json.optJSONObject("contents")
-            ?.optJSONObject("twoColumnBrowseResultsRenderer")
-            ?.optJSONArray("tabs")
+                                val gridItems =
+                                    shelf.optJSONObject("content")
+                                        ?.optJSONObject("gridRenderer")
+                                        ?.optJSONArray("items")
+                                        ?: shelf.optJSONObject("content")
+                                            ?.optJSONObject("horizontalListRenderer")
+                                            ?.optJSONArray("items")
 
-        if (tabs != null && tabs.length() > 0) {
-            for (t in 0 until tabs.length()) {
-                val tab = tabs.optJSONObject(t)?.optJSONObject("tabRenderer") ?: continue
-                val sectionList = tab.optJSONObject("content")
-                    ?.optJSONObject("sectionListRenderer")
-                    ?.optJSONArray("contents") ?: continue
+                                if (gridItems != null) {
+                                    for (i in 0 until gridItems.length()) {
+                                        val gridObj = gridItems.optJSONObject(i) ?: continue
+                                        val videoObj =
+                                            gridObj.optJSONObject("gridVideoRenderer")
+                                                ?: gridObj.optJSONObject("compactVideoRenderer")
+                                                ?: gridObj.optJSONObject("videoRenderer")
+                                                ?: continue
 
-                for (s in 0 until sectionList.length()) {
-                    val itemSection = sectionList.optJSONObject(s)?.optJSONObject("itemSectionRenderer") ?: continue
-                    val shelf = itemSection.optJSONArray("contents")?.optJSONObject(0)?.optJSONObject("shelfRenderer")
-                    if (shelf != null) {
-                        val sectionTitle = parseRunsText(shelf.optJSONObject("title")).ifBlank { "Recommended For You" }
-                        val items = mutableListOf<PersonalizedFeedItem>()
+                                        val vId = videoObj.optString("videoId")
+                                        if (vId.isNotBlank()) {
+                                            val vTitle = parseRunsText(videoObj.optJSONObject("title"))
+                                            val vArtist = parseRunsText(videoObj.optJSONObject("shortBylineText"))
+                                            val vThumb = extractThumbnailUrl(videoObj.optJSONObject("thumbnail"))
+                                            val vDuration = parseRunsText(videoObj.optJSONObject("thumbnailOverlays"))
+                                            items.add(
+                                                PersonalizedFeedItem(
+                                                    id = vId,
+                                                    title = vTitle.ifBlank { "Track" },
+                                                    artist = vArtist.ifBlank { "YouTube" },
+                                                    artworkUrl = vThumb,
+                                                    itemType = PersonalizedItemType.VIDEO,
+                                                    durationMs = parseDurationSec(vDuration) * 1000L
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
 
-                        val gridItems = shelf.optJSONObject("content")
-                            ?.optJSONObject("gridRenderer")
-                            ?.optJSONArray("items")
-                            ?: shelf.optJSONObject("content")
-                                ?.optJSONObject("horizontalListRenderer")
-                                ?.optJSONArray("items")
-
-                        if (gridItems != null) {
-                            for (i in 0 until gridItems.length()) {
-                                val gridObj = gridItems.optJSONObject(i) ?: continue
-                                val videoObj = gridObj.optJSONObject("gridVideoRenderer")
-                                    ?: gridObj.optJSONObject("compactVideoRenderer")
-                                    ?: gridObj.optJSONObject("videoRenderer")
-                                    ?: continue
-
-                                val vId = videoObj.optString("videoId")
-                                if (vId.isNotBlank()) {
-                                    val vTitle = parseRunsText(videoObj.optJSONObject("title"))
-                                    val vArtist = parseRunsText(videoObj.optJSONObject("shortBylineText"))
-                                    val vThumb = extractThumbnailUrl(videoObj.optJSONObject("thumbnail"))
-                                    val vDuration = parseRunsText(videoObj.optJSONObject("thumbnailOverlays"))
-                                    items.add(
-                                        PersonalizedFeedItem(
-                                            id = vId,
-                                            title = vTitle.ifBlank { "Track" },
-                                            artist = vArtist.ifBlank { "YouTube" },
-                                            artworkUrl = vThumb,
-                                            itemType = PersonalizedItemType.VIDEO,
-                                            durationMs = parseDurationSec(vDuration) * 1000L
+                                if (items.isNotEmpty()) {
+                                    sections.add(
+                                        PersonalizedSection(
+                                            id = "smarttube_sec_$s",
+                                            title = sectionTitle,
+                                            type = PersonalizedSectionType.BASED_ON_LISTENING,
+                                            sourceLabel = "SmartTube TVHTML5",
+                                            items = items
                                         )
                                     )
                                 }
                             }
                         }
+                    }
+                }
 
-                        if (items.isNotEmpty()) {
-                            sections.add(
-                                PersonalizedSection(
-                                    id = "smarttube_sec_$s",
-                                    title = sectionTitle,
-                                    type = PersonalizedSectionType.BASED_ON_LISTENING,
-                                    sourceLabel = "SmartTube TVHTML5",
-                                    items = items
-                                )
+                return@withContext sections
+            }
+
+        private fun parseRunsText(json: JSONObject?): String {
+            if (json == null) return ""
+            val simple = json.optString("simpleText", "")
+            if (simple.isNotBlank()) return simple
+            val runs = json.optJSONArray("runs") ?: return ""
+            val sb = StringBuilder()
+            for (i in 0 until runs.length()) {
+                val r = runs.optJSONObject(i) ?: continue
+                sb.append(r.optString("text", ""))
+            }
+            return sb.toString().trim()
+        }
+
+        private fun extractThumbnailUrl(json: JSONObject?): String? {
+            if (json == null) return null
+            val thumbs =
+                json.optJSONArray("thumbnails")
+                    ?: json.optJSONObject("musicThumbnailRenderer")
+                        ?.optJSONObject("thumbnail")
+                        ?.optJSONArray("thumbnails")
+                    ?: return null
+
+            if (thumbs.length() == 0) return null
+            val best = thumbs.optJSONObject(thumbs.length() - 1) ?: thumbs.optJSONObject(0)
+            var url = best?.optString("url", "") ?: return null
+            if (url.startsWith("//")) {
+                url = "https:$url"
+            }
+            return url
+        }
+
+        private fun parseDurationSec(durationStr: String): Long {
+            if (durationStr.isBlank()) return 0L
+            val parts = durationStr.split(":")
+            return try {
+                when (parts.size) {
+                    2 -> parts[0].toLong() * 60 + parts[1].toLong()
+                    3 -> parts[0].toLong() * 3600 + parts[1].toLong() * 60 + parts[2].toLong()
+                    else -> 0L
+                }
+            } catch (_: Exception) {
+                0L
+            }
+        }
+
+        /**
+         * Executes universal search using SmartTube TVHTML5 /youtubei/v1/search endpoint.
+         */
+        suspend fun searchTracks(query: String): Result<List<SearchResultItem>> =
+            withContext(Dispatchers.IO) {
+                if (query.isBlank()) return@withContext Result.success(emptyList())
+
+                val escapedQuery = JSONObject.quote(query)
+                val extraJson = "\"query\": $escapedQuery"
+
+                val json =
+                    postInnerTube("search", extraJson)
+                        ?: return@withContext Result.failure(Exception("SmartTube search network or parse error"))
+
+                try {
+                    val tracks = mutableListOf<SearchResultItem>()
+                    parseSearchResultsRecursively(json, tracks)
+                    val distinctTracks = tracks.distinctBy { it.videoId ?: it.id }
+                    Result.success(distinctTracks)
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing search results", e)
+                    Result.failure(e)
+                }
+            }
+
+        /**
+         * Executes universal search returning [MusicTrack] domain items.
+         */
+        suspend fun searchMusicTracks(query: String): Result<List<MusicTrack>> =
+            withContext(Dispatchers.IO) {
+                val result = searchTracks(query)
+                if (result.isSuccess) {
+                    val tracks =
+                        result.getOrNull().orEmpty().map { item ->
+                            MusicTrack(
+                                videoId = item.videoId ?: item.id,
+                                title = item.title,
+                                artist = item.artist ?: item.subtitle,
+                                thumbnailUrl = item.thumbnailUrl,
+                                durationSeconds = 0L,
                             )
                         }
-                    }
-                }
-            }
-        }
-
-        return@withContext sections
-    }
-
-    private fun parseRunsText(json: JSONObject?): String {
-        if (json == null) return ""
-        val simple = json.optString("simpleText", "")
-        if (simple.isNotBlank()) return simple
-        val runs = json.optJSONArray("runs") ?: return ""
-        val sb = StringBuilder()
-        for (i in 0 until runs.length()) {
-            val r = runs.optJSONObject(i) ?: continue
-            sb.append(r.optString("text", ""))
-        }
-        return sb.toString().trim()
-    }
-
-    private fun extractThumbnailUrl(json: JSONObject?): String? {
-        if (json == null) return null
-        val thumbs = json.optJSONArray("thumbnails")
-            ?: json.optJSONObject("musicThumbnailRenderer")
-                ?.optJSONObject("thumbnail")
-                ?.optJSONArray("thumbnails")
-            ?: return null
-
-        if (thumbs.length() == 0) return null
-        val best = thumbs.optJSONObject(thumbs.length() - 1) ?: thumbs.optJSONObject(0)
-        var url = best?.optString("url", "") ?: return null
-        if (url.startsWith("//")) {
-            url = "https:$url"
-        }
-        return url
-    }
-
-    private fun parseDurationSec(durationStr: String): Long {
-        if (durationStr.isBlank()) return 0L
-        val parts = durationStr.split(":")
-        return try {
-            when (parts.size) {
-                2 -> parts[0].toLong() * 60 + parts[1].toLong()
-                3 -> parts[0].toLong() * 3600 + parts[1].toLong() * 60 + parts[2].toLong()
-                else -> 0L
-            }
-        } catch (_: Exception) {
-            0L
-        }
-    }
-
-    /**
-     * Executes universal search using SmartTube TVHTML5 /youtubei/v1/search endpoint.
-     */
-    suspend fun searchTracks(query: String): Result<List<SearchResultItem>> = withContext(Dispatchers.IO) {
-        if (query.isBlank()) return@withContext Result.success(emptyList())
-
-        val escapedQuery = JSONObject.quote(query)
-        val extraJson = "\"query\": $escapedQuery"
-
-        val json = postInnerTube("search", extraJson)
-            ?: return@withContext Result.failure(Exception("SmartTube search network or parse error"))
-
-        try {
-            val tracks = mutableListOf<SearchResultItem>()
-            parseSearchResultsRecursively(json, tracks)
-            val distinctTracks = tracks.distinctBy { it.videoId ?: it.id }
-            Result.success(distinctTracks)
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Log.e(TAG, "Error parsing search results", e)
-            Result.failure(e)
-        }
-    }
-
-    /**
-     * Executes universal search returning [MusicTrack] domain items.
-     */
-    suspend fun searchMusicTracks(query: String): Result<List<MusicTrack>> = withContext(Dispatchers.IO) {
-        val result = searchTracks(query)
-        if (result.isSuccess) {
-            val tracks = result.getOrNull().orEmpty().map { item ->
-                MusicTrack(
-                    videoId = item.videoId ?: item.id,
-                    title = item.title,
-                    artist = item.artist ?: item.subtitle,
-                    thumbnailUrl = item.thumbnailUrl,
-                    durationSeconds = 0L,
-                )
-            }
-            Result.success(tracks)
-        } else {
-            Result.failure(result.exceptionOrNull() ?: Exception("Unknown search error"))
-        }
-    }
-
-    private fun parseSearchResultsRecursively(node: Any?, results: MutableList<SearchResultItem>) {
-        if (node == null) return
-        when (node) {
-            is JSONObject -> {
-                if (node.has("videoRenderer")) {
-                    extractVideoRenderer(node.optJSONObject("videoRenderer"), results)
-                } else if (node.has("compactVideoRenderer")) {
-                    extractVideoRenderer(node.optJSONObject("compactVideoRenderer"), results)
-                } else if (node.has("gridVideoRenderer")) {
-                    extractVideoRenderer(node.optJSONObject("gridVideoRenderer"), results)
-                } else if (node.has("musicResponsiveListItemRenderer")) {
-                    extractMusicResponsiveItem(node.optJSONObject("musicResponsiveListItemRenderer"), results)
-                } else if (node.has("musicTwoRowItemRenderer")) {
-                    extractMusicTwoRowItem(node.optJSONObject("musicTwoRowItemRenderer"), results)
+                    Result.success(tracks)
                 } else {
-                    val keys = node.keys()
-                    while (keys.hasNext()) {
-                        val key = keys.next()
-                        parseSearchResultsRecursively(node.opt(key), results)
-                    }
+                    Result.failure(result.exceptionOrNull() ?: Exception("Unknown search error"))
                 }
             }
-            is JSONArray -> {
-                for (i in 0 until node.length()) {
-                    parseSearchResultsRecursively(node.opt(i), results)
-                }
-            }
-        }
-    }
 
-    private fun extractVideoRenderer(json: JSONObject?, results: MutableList<SearchResultItem>) {
-        if (json == null) return
-        var videoId = json.optString("videoId", "")
-        if (videoId.isBlank()) {
-            videoId = json.optJSONObject("navigationEndpoint")
-                ?.optJSONObject("watchEndpoint")
-                ?.optString("videoId", "") ?: ""
-        }
-        if (videoId.isBlank()) return
-
-        val title = parseRunsText(json.optJSONObject("title"))
-        val artist = parseRunsText(json.optJSONObject("ownerText") ?: json.optJSONObject("shortBylineText") ?: json.optJSONObject("longBylineText"))
-        val thumb = extractThumbnailUrl(json.optJSONObject("thumbnail")) ?: "https://img.youtube.com/vi/$videoId/hqdefault.jpg"
-
-        if (title.isNotBlank()) {
-            results.add(
-                SearchResultItem(
-                    id = videoId,
-                    title = title,
-                    subtitle = artist.ifBlank { "YouTube" },
-                    type = SearchFilter.VIDEOS,
-                    thumbnailUrl = thumb,
-                    artist = artist.ifBlank { "YouTube" },
-                    channelId = json.optJSONObject("ownerText")?.optJSONArray("runs")?.optJSONObject(0)?.optJSONObject("navigationEndpoint")?.optJSONObject("browseEndpoint")?.optString("browseId"),
-                    videoId = videoId,
-                )
-            )
-        }
-    }
-
-    private fun extractMusicResponsiveItem(json: JSONObject?, results: MutableList<SearchResultItem>) {
-        if (json == null) return
-        var videoId = json.optJSONObject("playlistItemData")?.optString("videoId", "") ?: ""
-        if (videoId.isBlank()) {
-            videoId = json.optJSONObject("overlay")
-                ?.optJSONObject("musicItemThumbnailOverlayRenderer")
-                ?.optJSONObject("content")
-                ?.optJSONObject("musicPlayButtonRenderer")
-                ?.optJSONObject("playNavigationEndpoint")
-                ?.optJSONObject("watchEndpoint")
-                ?.optString("videoId", "") ?: ""
-        }
-        if (videoId.isBlank()) {
-            videoId = json.optJSONObject("doubleTapCommand")
-                ?.optJSONObject("watchEndpoint")
-                ?.optString("videoId", "") ?: ""
-        }
-        if (videoId.isBlank()) return
-
-        val flexColumns = json.optJSONArray("flexColumns")
-        var title = ""
-        var artist = ""
-        if (flexColumns != null && flexColumns.length() > 0) {
-            val col0 = flexColumns.optJSONObject(0)?.optJSONObject("musicResponsiveListItemFlexColumnRenderer")?.optJSONObject("text")
-            title = parseRunsText(col0)
-            if (flexColumns.length() > 1) {
-                val col1 = flexColumns.optJSONObject(1)?.optJSONObject("musicResponsiveListItemFlexColumnRenderer")?.optJSONObject("text")
-                artist = parseRunsText(col1)
-            }
-        }
-
-        val thumb = extractThumbnailUrl(json.optJSONObject("thumbnail")) ?: "https://img.youtube.com/vi/$videoId/hqdefault.jpg"
-
-        if (title.isNotBlank()) {
-            results.add(
-                SearchResultItem(
-                    id = videoId,
-                    title = title,
-                    subtitle = artist.ifBlank { "YouTube Music" },
-                    type = SearchFilter.SONGS,
-                    thumbnailUrl = thumb,
-                    artist = artist.ifBlank { "YouTube Music" },
-                    videoId = videoId,
-                )
-            )
-        }
-    }
-
-    private fun extractMusicTwoRowItem(json: JSONObject?, results: MutableList<SearchResultItem>) {
-        if (json == null) return
-        val videoId = json.optJSONObject("navigationEndpoint")
-            ?.optJSONObject("watchEndpoint")
-            ?.optString("videoId", "") ?: ""
-        if (videoId.isBlank()) return
-
-        val title = parseRunsText(json.optJSONObject("title"))
-        val artist = parseRunsText(json.optJSONObject("subtitle"))
-        val thumb = extractThumbnailUrl(json.optJSONObject("thumbnailRenderer")) ?: "https://img.youtube.com/vi/$videoId/hqdefault.jpg"
-
-        if (title.isNotBlank()) {
-            results.add(
-                SearchResultItem(
-                    id = videoId,
-                    title = title,
-                    subtitle = artist.ifBlank { "YouTube" },
-                    type = SearchFilter.SONGS,
-                    thumbnailUrl = thumb,
-                    artist = artist.ifBlank { "YouTube" },
-                    videoId = videoId,
-                )
-            )
-        }
-    }
-
-    /**
-     * Fetches timed/synchronized or plain lyrics from YouTube InnerTube /browse endpoint.
-     */
-    suspend fun fetchLyrics(browseId: String): Result<List<LyricsLine>> = withContext(Dispatchers.IO) {
-        if (browseId.isBlank()) return@withContext Result.failure(IllegalArgumentException("browseId cannot be blank"))
-        val extraJson = "\"browseId\": \"$browseId\""
-        val json = postInnerTube("browse", extraJson)
-            ?: return@withContext Result.failure(Exception("SmartTube browse network failure for lyrics"))
-
-        try {
-            val lyrics = parseLyricsBrowseResponse(json)
-            if (lyrics != null && lyrics.lines.isNotEmpty()) {
-                Result.success(lyrics.lines)
-            } else {
-                Result.failure(Exception("No lyrics found in browse response"))
-            }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Log.e(TAG, "Error parsing lyrics payload for $browseId", e)
-            Result.failure(e)
-        }
-    }
-
-    private fun parseLyricsBrowseResponse(json: JSONObject): Lyrics? {
-        val sectionList = json.optJSONObject("contents")
-            ?.optJSONObject("sectionListRenderer")
-            ?.optJSONArray("contents") ?: return null
-
-        for (i in 0 until sectionList.length()) {
-            val section = sectionList.optJSONObject(i) ?: continue
-
-            // Strategy 1: musicTimedLyricsRenderer (Karaoke Synchronized)
-            val musicTimedLyricsRenderer = section.optJSONObject("musicTimedLyricsRenderer")
-            if (musicTimedLyricsRenderer != null) {
-                val timedLyricsData = musicTimedLyricsRenderer.optJSONArray("timedLyricsData")
-                if (timedLyricsData != null && timedLyricsData.length() > 0) {
-                    val lines = mutableListOf<LyricsLine>()
-                    for (j in 0 until timedLyricsData.length()) {
-                        val lineObj = timedLyricsData.optJSONObject(j) ?: continue
-                        val lyricLine = lineObj.optString("lyricLine", "").trim()
-                        val cueRange = lineObj.optJSONObject("cueRange")
-                        val startMs = cueRange?.optLong("startTimeMilliseconds") ?: 0L
-                        if (lyricLine.isNotEmpty()) {
-                            lines.add(LyricsLine(startMs, lyricLine))
+        private fun parseSearchResultsRecursively(
+            node: Any?,
+            results: MutableList<SearchResultItem>
+        ) {
+            if (node == null) return
+            when (node) {
+                is JSONObject -> {
+                    if (node.has("videoRenderer")) {
+                        extractVideoRenderer(node.optJSONObject("videoRenderer"), results)
+                    } else if (node.has("compactVideoRenderer")) {
+                        extractVideoRenderer(node.optJSONObject("compactVideoRenderer"), results)
+                    } else if (node.has("gridVideoRenderer")) {
+                        extractVideoRenderer(node.optJSONObject("gridVideoRenderer"), results)
+                    } else if (node.has("musicResponsiveListItemRenderer")) {
+                        extractMusicResponsiveItem(node.optJSONObject("musicResponsiveListItemRenderer"), results)
+                    } else if (node.has("musicTwoRowItemRenderer")) {
+                        extractMusicTwoRowItem(node.optJSONObject("musicTwoRowItemRenderer"), results)
+                    } else {
+                        val keys = node.keys()
+                        while (keys.hasNext()) {
+                            val key = keys.next()
+                            parseSearchResultsRecursively(node.opt(key), results)
                         }
                     }
-                    if (lines.isNotEmpty()) {
-                        return Lyrics(lines = lines.sortedBy { it.timestampMs }, isSynced = true)
-                    }
                 }
-            }
-
-            // Strategy 2: musicDescriptionShelfRenderer (Plain Text Lyrics)
-            val shelfRenderer = section.optJSONObject("musicDescriptionShelfRenderer")
-            if (shelfRenderer != null) {
-                val runs = shelfRenderer.optJSONObject("description")?.optJSONArray("runs")
-                if (runs != null && runs.length() > 0) {
-                    val fullText = StringBuilder()
-                    for (j in 0 until runs.length()) {
-                        fullText.append(runs.optJSONObject(j)?.optString("text", "") ?: "")
-                    }
-                    val plain = fullText.toString().trim()
-                    if (plain.isNotEmpty()) {
-                        val lines = plain.lines()
-                            .map { it.trim() }
-                            .filter { it.isNotEmpty() }
-                            .mapIndexed { idx, text -> LyricsLine(idx * 4000L, text) }
-                        return Lyrics(lines = lines, isSynced = false)
+                is JSONArray -> {
+                    for (i in 0 until node.length()) {
+                        parseSearchResultsRecursively(node.opt(i), results)
                     }
                 }
             }
         }
-        return null
+
+        private fun extractVideoRenderer(
+            json: JSONObject?,
+            results: MutableList<SearchResultItem>
+        ) {
+            if (json == null) return
+            var videoId = json.optString("videoId", "")
+            if (videoId.isBlank()) {
+                videoId = json.optJSONObject("navigationEndpoint")
+                    ?.optJSONObject("watchEndpoint")
+                    ?.optString("videoId", "") ?: ""
+            }
+            if (videoId.isBlank()) return
+
+            val title = parseRunsText(json.optJSONObject("title"))
+            val artist =
+                parseRunsText(
+                    json.optJSONObject("ownerText") ?: json.optJSONObject("shortBylineText") ?: json.optJSONObject("longBylineText")
+                )
+            val thumb = extractThumbnailUrl(json.optJSONObject("thumbnail")) ?: "https://img.youtube.com/vi/$videoId/hqdefault.jpg"
+
+            if (title.isNotBlank()) {
+                results.add(
+                    SearchResultItem(
+                        id = videoId,
+                        title = title,
+                        subtitle = artist.ifBlank { "YouTube" },
+                        type = SearchFilter.VIDEOS,
+                        thumbnailUrl = thumb,
+                        artist = artist.ifBlank { "YouTube" },
+                        channelId =
+                            json.optJSONObject(
+                                "ownerText"
+                            )?.optJSONArray(
+                                "runs"
+                            )?.optJSONObject(
+                                0
+                            )?.optJSONObject(
+                                "navigationEndpoint"
+                            )?.optJSONObject("browseEndpoint")?.optString("browseId"),
+                        videoId = videoId,
+                    )
+                )
+            }
+        }
+
+        private fun extractMusicResponsiveItem(
+            json: JSONObject?,
+            results: MutableList<SearchResultItem>
+        ) {
+            if (json == null) return
+            var videoId = json.optJSONObject("playlistItemData")?.optString("videoId", "") ?: ""
+            if (videoId.isBlank()) {
+                videoId = json.optJSONObject("overlay")
+                    ?.optJSONObject("musicItemThumbnailOverlayRenderer")
+                    ?.optJSONObject("content")
+                    ?.optJSONObject("musicPlayButtonRenderer")
+                    ?.optJSONObject("playNavigationEndpoint")
+                    ?.optJSONObject("watchEndpoint")
+                    ?.optString("videoId", "") ?: ""
+            }
+            if (videoId.isBlank()) {
+                videoId = json.optJSONObject("doubleTapCommand")
+                    ?.optJSONObject("watchEndpoint")
+                    ?.optString("videoId", "") ?: ""
+            }
+            if (videoId.isBlank()) return
+
+            val flexColumns = json.optJSONArray("flexColumns")
+            var title = ""
+            var artist = ""
+            if (flexColumns != null && flexColumns.length() > 0) {
+                val col0 =
+                    flexColumns.optJSONObject(
+                        0
+                    )?.optJSONObject("musicResponsiveListItemFlexColumnRenderer")?.optJSONObject("text")
+                title = parseRunsText(col0)
+                if (flexColumns.length() > 1) {
+                    val col1 =
+                        flexColumns.optJSONObject(
+                            1
+                        )?.optJSONObject("musicResponsiveListItemFlexColumnRenderer")?.optJSONObject("text")
+                    artist = parseRunsText(col1)
+                }
+            }
+
+            val thumb = extractThumbnailUrl(json.optJSONObject("thumbnail")) ?: "https://img.youtube.com/vi/$videoId/hqdefault.jpg"
+
+            if (title.isNotBlank()) {
+                results.add(
+                    SearchResultItem(
+                        id = videoId,
+                        title = title,
+                        subtitle = artist.ifBlank { "YouTube Music" },
+                        type = SearchFilter.SONGS,
+                        thumbnailUrl = thumb,
+                        artist = artist.ifBlank { "YouTube Music" },
+                        videoId = videoId,
+                    )
+                )
+            }
+        }
+
+        private fun extractMusicTwoRowItem(
+            json: JSONObject?,
+            results: MutableList<SearchResultItem>
+        ) {
+            if (json == null) return
+            val videoId =
+                json.optJSONObject("navigationEndpoint")
+                    ?.optJSONObject("watchEndpoint")
+                    ?.optString("videoId", "") ?: ""
+            if (videoId.isBlank()) return
+
+            val title = parseRunsText(json.optJSONObject("title"))
+            val artist = parseRunsText(json.optJSONObject("subtitle"))
+            val thumb = extractThumbnailUrl(json.optJSONObject("thumbnailRenderer")) ?: "https://img.youtube.com/vi/$videoId/hqdefault.jpg"
+
+            if (title.isNotBlank()) {
+                results.add(
+                    SearchResultItem(
+                        id = videoId,
+                        title = title,
+                        subtitle = artist.ifBlank { "YouTube" },
+                        type = SearchFilter.SONGS,
+                        thumbnailUrl = thumb,
+                        artist = artist.ifBlank { "YouTube" },
+                        videoId = videoId,
+                    )
+                )
+            }
+        }
+
+        /**
+         * Fetches timed/synchronized or plain lyrics from YouTube InnerTube /browse endpoint.
+         */
+        suspend fun fetchLyrics(browseId: String): Result<List<LyricsLine>> =
+            withContext(Dispatchers.IO) {
+                if (browseId.isBlank()) {
+                    return@withContext Result.failure(
+                        IllegalArgumentException("browseId cannot be blank")
+                    )
+                }
+                val extraJson = "\"browseId\": \"$browseId\""
+                val json =
+                    postInnerTube("browse", extraJson)
+                        ?: return@withContext Result.failure(Exception("SmartTube browse network failure for lyrics"))
+
+                try {
+                    val lyrics = parseLyricsBrowseResponse(json)
+                    if (lyrics != null && lyrics.lines.isNotEmpty()) {
+                        Result.success(lyrics.lines)
+                    } else {
+                        Result.failure(Exception("No lyrics found in browse response"))
+                    }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error parsing lyrics payload for $browseId", e)
+                    Result.failure(e)
+                }
+            }
+
+        private fun parseLyricsBrowseResponse(json: JSONObject): Lyrics? {
+            val sectionList =
+                json.optJSONObject("contents")
+                    ?.optJSONObject("sectionListRenderer")
+                    ?.optJSONArray("contents") ?: return null
+
+            for (i in 0 until sectionList.length()) {
+                val section = sectionList.optJSONObject(i) ?: continue
+
+                // Strategy 1: musicTimedLyricsRenderer (Karaoke Synchronized)
+                val musicTimedLyricsRenderer = section.optJSONObject("musicTimedLyricsRenderer")
+                if (musicTimedLyricsRenderer != null) {
+                    val timedLyricsData = musicTimedLyricsRenderer.optJSONArray("timedLyricsData")
+                    if (timedLyricsData != null && timedLyricsData.length() > 0) {
+                        val lines = mutableListOf<LyricsLine>()
+                        for (j in 0 until timedLyricsData.length()) {
+                            val lineObj = timedLyricsData.optJSONObject(j) ?: continue
+                            val lyricLine = lineObj.optString("lyricLine", "").trim()
+                            val cueRange = lineObj.optJSONObject("cueRange")
+                            val startMs = cueRange?.optLong("startTimeMilliseconds") ?: 0L
+                            if (lyricLine.isNotEmpty()) {
+                                lines.add(LyricsLine(startMs, lyricLine))
+                            }
+                        }
+                        if (lines.isNotEmpty()) {
+                            return Lyrics(lines = lines.sortedBy { it.timestampMs }, isSynced = true)
+                        }
+                    }
+                }
+
+                // Strategy 2: musicDescriptionShelfRenderer (Plain Text Lyrics)
+                val shelfRenderer = section.optJSONObject("musicDescriptionShelfRenderer")
+                if (shelfRenderer != null) {
+                    val runs = shelfRenderer.optJSONObject("description")?.optJSONArray("runs")
+                    if (runs != null && runs.length() > 0) {
+                        val fullText = StringBuilder()
+                        for (j in 0 until runs.length()) {
+                            fullText.append(runs.optJSONObject(j)?.optString("text", "") ?: "")
+                        }
+                        val plain = fullText.toString().trim()
+                        if (plain.isNotEmpty()) {
+                            val lines =
+                                plain.lines()
+                                    .map { it.trim() }
+                                    .filter { it.isNotEmpty() }
+                                    .mapIndexed { idx, text -> LyricsLine(idx * 4000L, text) }
+                            return Lyrics(lines = lines, isSynced = false)
+                        }
+                    }
+                }
+            }
+            return null
+        }
     }
-}

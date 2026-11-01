@@ -9,7 +9,6 @@ import org.junit.Before
 import org.junit.Test
 
 class VvavyTopologyTest {
-
     private lateinit var engine: VvavyGeometryEngine
     private val dummySpectrum = FloatArray(256) { 0.5f }
 

@@ -39,46 +39,47 @@ fun InlineVideoPlayer(
                     builtInZoomControls = false
                     displayZoomControls = false
                 }
-                webViewClient = object : android.webkit.WebViewClient() {
-                    override fun shouldInterceptRequest(
-                        view: WebView?,
-                        request: android.webkit.WebResourceRequest?
-                    ): android.webkit.WebResourceResponse? {
-                        val uri = request?.url ?: return super.shouldInterceptRequest(view, request)
-                        val url = uri.toString()
-                        val host = uri.host ?: ""
-                        val path = uri.path ?: ""
+                webViewClient =
+                    object : android.webkit.WebViewClient() {
+                        override fun shouldInterceptRequest(
+                            view: WebView?,
+                            request: android.webkit.WebResourceRequest?
+                        ): android.webkit.WebResourceResponse? {
+                            val uri = request?.url ?: return super.shouldInterceptRequest(view, request)
+                            val url = uri.toString()
+                            val host = uri.host ?: ""
+                            val path = uri.path ?: ""
 
-                        if (url.contains("ad_status.js")) {
+                            if (url.contains("ad_status.js")) {
+                                return super.shouldInterceptRequest(view, request)
+                            }
+
+                            if (host.contains("doubleclick.net") ||
+                                host.contains("googleads") ||
+                                host.contains("pagead") ||
+                                host.contains("googlesyndication.com") ||
+                                host.contains("adservice.google") ||
+                                host.contains("google-analytics.com") ||
+                                host.contains("analytics") ||
+                                host.contains("telemetry") ||
+                                path.contains("/log") ||
+                                path.contains("log_event") ||
+                                path.contains("generate_204") ||
+                                path.contains("error_204") ||
+                                path.contains("ptracking") ||
+                                url.contains("s.youtube.com") ||
+                                url.contains("googlevideo.com/api/stats")
+                            ) {
+                                android.util.Log.d("InlineVideoPlayer", "🚫 Blocked Ad/Telemetry Request: $url")
+                                return android.webkit.WebResourceResponse(
+                                    "text/plain",
+                                    "UTF-8",
+                                    java.io.ByteArrayInputStream(ByteArray(0))
+                                )
+                            }
                             return super.shouldInterceptRequest(view, request)
                         }
-
-                        if (host.contains("doubleclick.net") ||
-                            host.contains("googleads") ||
-                            host.contains("pagead") ||
-                            host.contains("googlesyndication.com") ||
-                            host.contains("adservice.google") ||
-                            host.contains("google-analytics.com") ||
-                            host.contains("analytics") ||
-                            host.contains("telemetry") ||
-                            path.contains("/log") ||
-                            path.contains("log_event") ||
-                            path.contains("generate_204") ||
-                            path.contains("error_204") ||
-                            path.contains("ptracking") ||
-                            url.contains("s.youtube.com") ||
-                            url.contains("googlevideo.com/api/stats")
-                        ) {
-                            android.util.Log.d("InlineVideoPlayer", "🚫 Blocked Ad/Telemetry Request: $url")
-                            return android.webkit.WebResourceResponse(
-                                "text/plain",
-                                "UTF-8",
-                                java.io.ByteArrayInputStream(ByteArray(0))
-                            )
-                        }
-                        return super.shouldInterceptRequest(view, request)
                     }
-                }
                 webChromeClient = WebChromeClient()
                 setBackgroundColor(android.graphics.Color.BLACK)
 

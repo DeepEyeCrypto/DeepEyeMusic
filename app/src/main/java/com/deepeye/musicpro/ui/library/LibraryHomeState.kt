@@ -10,6 +10,7 @@ data class LibraryHomeState(
     val likedCount: Int = 0,
     val playlistCount: Int = 0,
     val downloadCount: Int = 0,
+    val subscribedCount: Int = 0,
     val recentCount: Int = 0,
     val likedTracks: List<LibraryItem> = emptyList(),
     val playlists: List<LibraryItem> = emptyList(),

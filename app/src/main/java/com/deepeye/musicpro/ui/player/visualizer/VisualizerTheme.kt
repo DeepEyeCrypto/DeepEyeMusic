@@ -9,7 +9,6 @@ package com.deepeye.musicpro.ui.player.visualizer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Biotech
-import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.GridView
@@ -89,21 +88,21 @@ sealed class VisualizerTheme(
 
     companion object {
         /** All available themes in display order */
-        val all: List<VisualizerTheme> = listOf(
-            Triangle,
-            VvavyTriangle,
-            SpectrumBars,
-            Waveform,
-            AuraOrb,
-            BeatDropGrid,
-            FrequencyWaves,
-            CircularEQ
-        )
+        val all: List<VisualizerTheme> =
+            listOf(
+                Triangle,
+                VvavyTriangle,
+                SpectrumBars,
+                Waveform,
+                AuraOrb,
+                BeatDropGrid,
+                FrequencyWaves,
+                CircularEQ
+            )
 
         /** Default theme */
         val default: VisualizerTheme = VvavyTriangle
 
-        fun fromId(id: String): VisualizerTheme =
-            all.firstOrNull { it.id == id } ?: default
+        fun fromId(id: String): VisualizerTheme = all.firstOrNull { it.id == id } ?: default
     }
 }

@@ -37,11 +37,12 @@ fun MiniPlayer(
     val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
 
     GlassCard(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp)
-            .height(64.dp)
-            .clickable(onClick = onClick),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .height(64.dp)
+                .clickable(onClick = onClick),
         tintColor = dominantColor.copy(alpha = 0.12f),
         cornerRadius = 18.dp,
         refractionHeight = 0.25f
@@ -64,9 +65,9 @@ fun MiniPlayer(
 
             Row(
                 modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 12.dp),
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Artwork
@@ -75,9 +76,9 @@ fun MiniPlayer(
                         model = currentItem.artworkUri,
                         contentDescription = null,
                         modifier =
-                        Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(8.dp)),
+                            Modifier
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(8.dp)),
                         contentScale = ContentScale.Crop,
                     )
 

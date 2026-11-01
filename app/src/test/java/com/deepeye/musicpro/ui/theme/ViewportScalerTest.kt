@@ -33,7 +33,6 @@ import org.junit.Test
  * these tests leak into each other and fail depending on execution order.
  */
 class ViewportScalerTest {
-
     @After
     fun tearDown() {
         ViewportScaler.reset()
@@ -60,7 +59,9 @@ class ViewportScalerTest {
             assertEquals(
                 "dp must not be scaled per call site at ${width}dp -- the root " +
                     "zoom owns all dp scaling",
-                1f, ViewportScaler.scaleFactor, 1e-6f
+                1f,
+                ViewportScaler.scaleFactor,
+                1e-6f
             )
         }
     }
@@ -79,7 +80,9 @@ class ViewportScalerTest {
         assertEquals(
             "geometry objects are read from plain JUnit with no composition, so " +
                 "the default zoom must be 1f",
-            1f, ZoomState.zoom, 1e-6f
+            1f,
+            ZoomState.zoom,
+            1e-6f
         )
         assertEquals(1f, ViewportScaler.scaleFactor, 1e-6f)
     }
@@ -91,7 +94,9 @@ class ViewportScalerTest {
     fun `portrait is not zoomed`() {
         assertEquals(
             "portrait layouts were already correct and must not be re-scaled",
-            1f, UiScale.zoomFor(isLandscape = false), 1e-6f
+            1f,
+            UiScale.zoomFor(isLandscape = false),
+            1e-6f
         )
     }
 
@@ -104,7 +109,9 @@ class ViewportScalerTest {
     fun `landscape zoom is the pinned flat zoom-out`() {
         assertEquals(
             "the landscape zoom must stay at the flat 25% zoom-out",
-            0.75f, UiScale.zoomFor(isLandscape = true), 1e-6f
+            0.75f,
+            UiScale.zoomFor(isLandscape = true),
+            1e-6f
         )
     }
 
@@ -156,7 +163,9 @@ class ViewportScalerTest {
             assertEquals(
                 "${authoredSp}sp must render back at exactly itself after " +
                     "compensation, got $rendered",
-                authoredSp, rendered, 0.01f
+                authoredSp,
+                rendered,
+                0.01f
             )
         }
     }
@@ -178,7 +187,8 @@ class ViewportScalerTest {
         assertEquals(
             "at unity the authored floor is the rendered floor",
             UiScale.MinReadableFontSize,
-            UiScale.authoredFloorFor(1f), 1e-4f
+            UiScale.authoredFloorFor(1f),
+            1e-4f
         )
         assertTrue(
             "a shrinking zoom must raise the authored floor above the rendered " +
@@ -204,7 +214,9 @@ class ViewportScalerTest {
             assertEquals(
                 "TouchTargets.Min must render at exactly 48dp at zoom $z, " +
                     "authored ${TouchTargets.Min.value}dp",
-                48f, TouchTargets.Min.value * z, 0.01f
+                48f,
+                TouchTargets.Min.value * z,
+                0.01f
             )
             assertTrue(
                 "TouchTargets.Large must stay above Min at zoom $z",

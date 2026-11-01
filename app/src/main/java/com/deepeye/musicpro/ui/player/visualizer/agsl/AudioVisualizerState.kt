@@ -47,9 +47,9 @@ data class AudioVisualizerState(
     /** True when all values are finite and in-range. Used by the shader dispatcher as a final safety net. */
     fun isValid(): Boolean =
         bass.isFinite() && mids.isFinite() && treble.isFinite() &&
-        energy.isFinite() && beatPulse.isFinite() && intensity.isFinite() &&
-        bass in 0f..MAX_BAND && mids in 0f..MAX_BAND && treble in 0f..MAX_BAND &&
-        energy in 0f..1f && beatPulse in 0f..1f && intensity in 0.5f..1.5f
+            energy.isFinite() && beatPulse.isFinite() && intensity.isFinite() &&
+            bass in 0f..MAX_BAND && mids in 0f..MAX_BAND && treble in 0f..MAX_BAND &&
+            energy in 0f..1f && beatPulse in 0f..1f && intensity in 0.5f..1.5f
 
     companion object {
         const val MAX_BAND = 2f
@@ -57,9 +57,15 @@ data class AudioVisualizerState(
         const val MAX_INTENSITY = 1.5f
 
         /** Default idle state used when no audio is playing or when a capture stalls. */
-        val IDLE = AudioVisualizerState(
-            bass = 0f, mids = 0f, treble = 0f, energy = 0f, beatPulse = 0f, intensity = 1f
-        )
+        val IDLE =
+            AudioVisualizerState(
+                bass = 0f,
+                mids = 0f,
+                treble = 0f,
+                energy = 0f,
+                beatPulse = 0f,
+                intensity = 1f
+            )
     }
 }
 
@@ -121,9 +127,12 @@ class AudioVisualizerStateSmoother(
         lastNanos = nowNanos
 
         // ── NaN/Infinity guard on input ─────────────────────────────────
-        val safeIntensity = if (intensity.isFinite()) {
-            intensity.coerceIn(AudioVisualizerState.MIN_INTENSITY, AudioVisualizerState.MAX_INTENSITY)
-        } else 1f
+        val safeIntensity =
+            if (intensity.isFinite()) {
+                intensity.coerceIn(AudioVisualizerState.MIN_INTENSITY, AudioVisualizerState.MAX_INTENSITY)
+            } else {
+                1f
+            }
 
         // ── Target computation (allocate nothing) ───────────────────────
         // Sanitize raw band values: NaN → 0 (no signal), +Inf → MAX_BAND, -Inf → 0.
@@ -135,9 +144,10 @@ class AudioVisualizerStateSmoother(
 
         // Overall energy: RMS of the first 3 bands (bass/mids/treble) — cheap
         // and stable. Clamped to [0,1] so the shader never sees >1.0.
-        val energyRms = sqrt(
-            (targetBass * targetBass + targetMids * targetMids + targetTreble * targetTreble) / 3f
-        ).coerceIn(0f, 1f)
+        val energyRms =
+            sqrt(
+                (targetBass * targetBass + targetMids * targetMids + targetTreble * targetTreble) / 3f
+            ).coerceIn(0f, 1f)
 
         // ── Smoothing step (asymmetric attack/release) ─────────────────
         if (!primed) {
@@ -188,7 +198,12 @@ class AudioVisualizerStateSmoother(
         beatEnergy = 0f
     }
 
-    private fun approach(current: Float, target: Float, dt: Float, releaseTau: Float = TAU_RELEASE): Float {
+    private fun approach(
+        current: Float,
+        target: Float,
+        dt: Float,
+        releaseTau: Float = TAU_RELEASE
+    ): Float {
         val tau = if (target > current) minOf(TAU_ATTACK, releaseTau) else releaseTau
         val alpha = 1f - exp(-dt / tau)
         val next = current + (target - current) * alpha
@@ -202,12 +217,13 @@ class AudioVisualizerStateSmoother(
      * uniforms; the [approach] helper already guards against overflow, but
      * the first-frame snap path bypasses it.
      */
-    private fun sanitize(raw: Float): Float = when {
-        raw.isNaN() -> 0f
-        raw == Float.POSITIVE_INFINITY -> AudioVisualizerState.MAX_BAND
-        raw == Float.NEGATIVE_INFINITY -> 0f
-        else -> raw.coerceIn(0f, AudioVisualizerState.MAX_BAND)
-    }
+    private fun sanitize(raw: Float): Float =
+        when {
+            raw.isNaN() -> 0f
+            raw == Float.POSITIVE_INFINITY -> AudioVisualizerState.MAX_BAND
+            raw == Float.NEGATIVE_INFINITY -> 0f
+            else -> raw.coerceIn(0f, AudioVisualizerState.MAX_BAND)
+        }
 
     companion object {
         const val DEFAULT_DT_SECONDS = 1f / 60f
@@ -215,13 +231,16 @@ class AudioVisualizerStateSmoother(
 
         /** Attack τ: fast, so beats still read as sharp. */
         const val TAU_ATTACK = 0.016f
+
         /** Release τ: smooth tail. */
         const val TAU_RELEASE = 0.050f
+
         /** Beat-release τ: decays the beat pulse a little faster than a band. */
         const val TAU_BEAT_RELEASE = 0.12f
 
         /** Bass transient threshold for a beat pulse to fire. */
         const val BEAT_THRESHOLD = 0.04f
+
         /** Gain applied to the transient when a beat fires. */
         const val BEAT_GAIN = 6f
     }

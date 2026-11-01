@@ -44,7 +44,6 @@ private const val TAG = "D7StatusProbe"
  * logs; the receiver logs status/duration only.
  */
 internal object D7ProbeRequests {
-
     const val BROWSE_HOME = "FEmusic_home"
     const val BROWSE_LIKED = "FEmusic_liked"
 
@@ -58,7 +57,10 @@ internal object D7ProbeRequests {
      *
      * @return pair of (probes to fire, true when H1 was skipped for blank key).
      */
-    fun selectProbes(token: String, apiKey: String): Pair<List<Pair<String, Request>>, Boolean> {
+    fun selectProbes(
+        token: String,
+        apiKey: String
+    ): Pair<List<Pair<String, Request>>, Boolean> {
         val probes = mutableListOf<Pair<String, Request>>()
         var h1Skipped = false
         if (apiKey.isNotBlank()) {
@@ -73,11 +75,17 @@ internal object D7ProbeRequests {
         return probes to h1Skipped
     }
 
-    private fun browseBody(contextJson: String, browseId: String): String =
-        "{$contextJson, \"browseId\": \"$browseId\"}"
+    private fun browseBody(
+        contextJson: String,
+        browseId: String
+    ): String = "{$contextJson, \"browseId\": \"$browseId\"}"
 
     /** H1: ANDROID_MUSIC + Bearer + API-key query param on the music host. */
-    fun h1(browseId: String, token: String, apiKey: String): Request {
+    fun h1(
+        browseId: String,
+        token: String,
+        apiKey: String
+    ): Request {
         require(token.isNotBlank()) { "D7 probe requires an authorized session token" }
         require(apiKey.isNotBlank()) { "D7 H1 probe requires the InnerTube API key" }
         return Request.Builder()
@@ -99,7 +107,10 @@ internal object D7ProbeRequests {
     }
 
     /** H2: TVHTML5 + Bearer on the music host (no API-key param). */
-    fun h2(browseId: String, token: String): Request {
+    fun h2(
+        browseId: String,
+        token: String
+    ): Request {
         require(token.isNotBlank()) { "D7 probe requires an authorized session token" }
         return Request.Builder()
             .url("${InnerTubeRemoteClient.YOUTUBE_MUSIC_INNERTUBE}browse")
@@ -161,7 +172,6 @@ internal object D7ProbeRequests {
  */
 @AndroidEntryPoint
 class D7StatusProbeReceiver : BroadcastReceiver() {
-
     @Inject
     lateinit var authManager: InnerTubeAuthManager
 
@@ -175,7 +185,10 @@ class D7StatusProbeReceiver : BroadcastReceiver() {
         const val PROBE_TIMEOUT_MS = 15_000L
     }
 
-    override fun onReceive(context: Context?, intent: Intent?) {
+    override fun onReceive(
+        context: Context?,
+        intent: Intent?
+    ) {
         if (intent?.action != ACTION_D7_STATUS_PROBE) return
         Log.i(TAG, "event=d7_probe action=triggered")
         // Fire-and-forget on a private scope, matching RecoveryProbeReceiver:
@@ -199,36 +212,39 @@ class D7StatusProbeReceiver : BroadcastReceiver() {
         // FATAL IllegalArgumentException "D7 H1 probe requires the InnerTube
         // API key" on DefaultDispatcher-worker).
         val apiKey = BuildConfig.YOUTUBE_API_KEY
-        val (probes, h1Skipped) = try {
-            D7ProbeRequests.selectProbes(bearer, apiKey)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            // Residual guard: log class only (message may embed URL+key).
-            Log.w(TAG, "event=d7_probe result=aborted reason=error_${e.javaClass.simpleName}")
-            return
-        }
+        val (probes, h1Skipped) =
+            try {
+                D7ProbeRequests.selectProbes(bearer, apiKey)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Residual guard: log class only (message may embed URL+key).
+                Log.w(TAG, "event=d7_probe result=aborted reason=error_${e.javaClass.simpleName}")
+                return
+            }
         if (h1Skipped) {
             Log.w(TAG, "event=d7_probe result=skipped reason=no_api_key detail=h1_pair tokenPresent=true")
         }
-        val client = httpClient.newBuilder()
-            .callTimeout(PROBE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
-            .build()
+        val client =
+            httpClient.newBuilder()
+                .callTimeout(PROBE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                .build()
         Log.i(TAG, "event=d7_probe action=start probes=${probes.size} tokenPresent=true")
         for ((name, request) in probes) {
             val startedAt = SystemClock.elapsedRealtime()
             val family = if (request.url.host == "music.youtube.com") "music_browse" else "main_browse"
-            val status: String = try {
-                client.newCall(request).execute().use { response -> response.code.toString() }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: IOException) {
-                // Class name only — message/stack may embed the URL (key param).
-                if (e is SocketTimeoutException) "timeout" else "io_${e.javaClass.simpleName}"
-            } catch (e: Exception) {
-                // Residual programming errors: class only, never message/cause.
-                "error_${e.javaClass.simpleName}"
-            }
+            val status: String =
+                try {
+                    client.newCall(request).execute().use { response -> response.code.toString() }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: IOException) {
+                    // Class name only — message/stack may embed the URL (key param).
+                    if (e is SocketTimeoutException) "timeout" else "io_${e.javaClass.simpleName}"
+                } catch (e: Exception) {
+                    // Residual programming errors: class only, never message/cause.
+                    "error_${e.javaClass.simpleName}"
+                }
             val durationMs = SystemClock.elapsedRealtime() - startedAt
             Log.i(
                 TAG,
@@ -240,5 +256,3 @@ class D7StatusProbeReceiver : BroadcastReceiver() {
         Log.i(TAG, "event=d7_probe action=done result=complete")
     }
 }
-
-

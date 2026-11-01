@@ -13,88 +13,94 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AIRadioEngine @Inject constructor(
-    private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
-    private val playerController: PlayerController,
-    private val queueManager: QueueManager,
-) {
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+class AIRadioEngine
+    @Inject
+    constructor(
+        private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
+        private val playerController: PlayerController,
+        private val queueManager: QueueManager,
+    ) {
+        private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
-    private val _isGenerating = MutableStateFlow(false)
-    val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
+        private val _isGenerating = MutableStateFlow(false)
+        val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
 
-    /**
-     * Parses a natural language prompt, fetches relevant songs, and starts playback.
-     */
-    suspend fun generateRadioFromPrompt(prompt: String) {
-        if (prompt.isBlank()) return
-        
-        _isGenerating.value = true
-        
-        try {
-            withContext(ioDispatcher) {
-                val personalSuffix = "hindi punjabi english"
-                
-                // Mock NLP parser: We extract core keywords to feed to YouTube Music
-                val query = parseIntentToSearchQuery(prompt, personalSuffix)
-                
-                // Fetch tracks from YouTube Music
-                val tracks = youtubeRemoteDataSource.searchMusic(query).take(15)
-                
-                if (tracks.isNotEmpty()) {
-                    withContext(Dispatchers.Main) {
-                        // Replace the queue and start playing
-                        val mediaItems = tracks.map { track ->
-                            MediaItem.Remote(
-                                id = track.id,
-                                title = track.title,
-                                artist = track.artist,
-                                artworkUri = Uri.parse(track.thumbnailUrl),
-                                duration = track.duration * 1000L,
-                                isVideo = false
-                            )
+        /**
+         * Parses a natural language prompt, fetches relevant songs, and starts playback.
+         */
+        suspend fun generateRadioFromPrompt(prompt: String) {
+            if (prompt.isBlank()) return
+
+            _isGenerating.value = true
+
+            try {
+                withContext(ioDispatcher) {
+                    val personalSuffix = "hindi punjabi english"
+
+                    // Mock NLP parser: We extract core keywords to feed to YouTube Music
+                    val query = parseIntentToSearchQuery(prompt, personalSuffix)
+
+                    // Fetch tracks from YouTube Music
+                    val tracks = youtubeRemoteDataSource.searchMusic(query).take(15)
+
+                    if (tracks.isNotEmpty()) {
+                        withContext(Dispatchers.Main) {
+                            // Replace the queue and start playing
+                            val mediaItems =
+                                tracks.map { track ->
+                                    MediaItem.Remote(
+                                        id = track.id,
+                                        title = track.title,
+                                        artist = track.artist,
+                                        artworkUri = Uri.parse(track.thumbnailUrl),
+                                        duration = track.duration * 1000L,
+                                        isVideo = false
+                                    )
+                                }
+
+                            queueManager.setQueue(mediaItems, 0)
+                            playerController.playMedia(mediaItems.first())
                         }
-                        
-                        queueManager.setQueue(mediaItems, 0)
-                        playerController.playMedia(mediaItems.first())
                     }
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                _isGenerating.value = false
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            _isGenerating.value = false
         }
-    }
 
-    private fun parseIntentToSearchQuery(prompt: String, personalSuffix: String): String {
-        val lowerPrompt = prompt.lowercase().trim()
-        
-        // Remove conversational filler words
-        val fillerWords = listOf("play", "some", "music", "songs", "i want to listen to", "show me", "give me")
-        var coreQuery = lowerPrompt
-        for (filler in fillerWords) {
-            coreQuery = coreQuery.replace(filler, "")
+        private fun parseIntentToSearchQuery(
+            prompt: String,
+            personalSuffix: String
+        ): String {
+            val lowerPrompt = prompt.lowercase().trim()
+
+            // Remove conversational filler words
+            val fillerWords = listOf("play", "some", "music", "songs", "i want to listen to", "show me", "give me")
+            var coreQuery = lowerPrompt
+            for (filler in fillerWords) {
+                coreQuery = coreQuery.replace(filler, "")
+            }
+
+            // Add specific genre boosts if detected
+            if (coreQuery.contains("romantic") || coreQuery.contains("love")) {
+                coreQuery += " romantic"
+            }
+            if (coreQuery.contains("party") || coreQuery.contains("dance")) {
+                coreQuery += " party anthems"
+            }
+            if (coreQuery.contains("sad") || coreQuery.contains("cry")) {
+                coreQuery += " sad lofi emotional"
+            }
+
+            val finalQuery = "${coreQuery.trim()} $personalSuffix".trim()
+            return finalQuery.ifBlank { "top hits $personalSuffix".trim() }
         }
-        
-        // Add specific genre boosts if detected
-        if (coreQuery.contains("romantic") || coreQuery.contains("love")) {
-            coreQuery += " romantic"
-        }
-        if (coreQuery.contains("party") || coreQuery.contains("dance")) {
-            coreQuery += " party anthems"
-        }
-        if (coreQuery.contains("sad") || coreQuery.contains("cry")) {
-            coreQuery += " sad lofi emotional"
-        }
-        
-        val finalQuery = "${coreQuery.trim()} $personalSuffix".trim()
-        return finalQuery.ifBlank { "top hits $personalSuffix".trim() }
     }
-}

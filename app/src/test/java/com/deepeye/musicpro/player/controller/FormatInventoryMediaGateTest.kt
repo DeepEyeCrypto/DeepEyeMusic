@@ -26,21 +26,30 @@ class FormatInventoryMediaGateTest {
         val keyA = gate.materializeMediaKey(mediaId = "media_A", positionMs = 0L)
         val keyB = gate.materializeMediaKey(mediaId = "media_B", positionMs = 0L)
         assertNotEquals(keyA, keyB)
-        assertTrue("item A -> item B runtime transition must force a stale-inventory reset", gate.shouldReset(keyA, keyB))
+        assertTrue(
+            "item A -> item B runtime transition must force a stale-inventory reset",
+            gate.shouldReset(keyA, keyB)
+        )
     }
 
     @Test fun test2_sameMediaContinuationDoesNotReset() {
         val near = gate.materializeMediaKey(mediaId = "media_A", positionMs = 8_000L)
         val continued = gate.materializeMediaKey(mediaId = "media_A", positionMs = 27_000L) // same 30s bucket
         assertEquals(near, continued)
-        assertFalse("same-media continuation (same 30s position bucket) must never reset", gate.shouldReset(near, continued))
+        assertFalse(
+            "same-media continuation (same 30s position bucket) must never reset",
+            gate.shouldReset(near, continued)
+        )
     }
 
     @Test fun test3_recoveryRestoreOfSameMediaDoesNotReset() {
         // Recovery restores position within a 30s tolerance window; media ID is unchanged.
         val stored = gate.materializeMediaKey(mediaId = "media_A", positionMs = 61_000L)
         val restored = gate.materializeMediaKey(mediaId = "media_A", positionMs = 74_000L)
-        assertFalse("same-media recovery restore must not reset the restored catalog", gate.shouldReset(stored, restored))
+        assertFalse(
+            "same-media recovery restore must not reset the restored catalog",
+            gate.shouldReset(stored, restored)
+        )
     }
 
     @Test fun test4_nullOrBlankKeysAreFailSafe() {
@@ -63,26 +72,40 @@ class FormatInventoryMediaGateTest {
         val emptyV: ImmutableList<com.deepeye.musicpro.player.format.DeepEyeFormat> = persistentListOf()
         val emptyA: ImmutableList<com.deepeye.musicpro.player.format.DeepEyeFormat> = persistentListOf()
 
-        val r = policy.merge(
-            existingVideo = emptyV,
-            existingAudio = emptyA,
-            incomingVideo = sparseVideoList(),
-            incomingAudio = sparseAudioList(),
-        )
+        val r =
+            policy.merge(
+                existingVideo = emptyV,
+                existingAudio = emptyA,
+                incomingVideo = sparseVideoList(),
+                incomingAudio = sparseAudioList(),
+            )
 
-        assertTrue("item A video rows (v*) must never leak into item B",
-            r.videoFormats.none { !it.isAuto && it.id.startsWith("v") })
-        assertTrue("item A audio rows (a*) must never leak into item B",
-            r.audioFormats.none { !it.isAuto && it.id.startsWith("a") })
+        assertTrue(
+            "item A video rows (v*) must never leak into item B",
+            r.videoFormats.none { !it.isAuto && it.id.startsWith("v") }
+        )
+        assertTrue(
+            "item A audio rows (a*) must never leak into item B",
+            r.audioFormats.none { !it.isAuto && it.id.startsWith("a") }
+        )
         // After a genuine transition reset, the catalog is a clean/loading state: the policy
         // keeps the (empty) existing list when incoming is still sparse (<=1 real), so item B
         // shows NO formats until its resolver catalog arrives — never item A's stale rows.
-        assertEquals("item B shows a clean/loading catalog, not item A's 20/13 rows",
-            0, r.videoFormats.size)
-        assertEquals("item B shows a clean/loading catalog, not item A's 20/13 rows",
-            0, r.audioFormats.size)
-        assertEquals("stale-reset must surface as existingReal=0 for observability",
-            0, r.existingRealVideo + r.existingRealAudio)
+        assertEquals(
+            "item B shows a clean/loading catalog, not item A's 20/13 rows",
+            0,
+            r.videoFormats.size
+        )
+        assertEquals(
+            "item B shows a clean/loading catalog, not item A's 20/13 rows",
+            0,
+            r.audioFormats.size
+        )
+        assertEquals(
+            "stale-reset must surface as existingReal=0 for observability",
+            0,
+            r.existingRealVideo + r.existingRealAudio
+        )
     }
 
     @Test fun test6_sameMediaTransitionKeepsRichCatalog() {
@@ -91,7 +114,8 @@ class FormatInventoryMediaGateTest {
         assertFalse("same-media re-prepare must keep the rich catalog", gate.shouldReset(key, key))
 
         val r = policy.merge(richVideoList(20), richAudioList(13), sparseVideoList(), sparseAudioList())
-        assertTrue(r.preserveExistingVideoInventory); assertTrue(r.preserveExistingAudioInventory)
+        assertTrue(r.preserveExistingVideoInventory)
+        assertTrue(r.preserveExistingAudioInventory)
         assertEquals(21, r.videoFormats.size)
         assertEquals(14, r.audioFormats.size)
     }

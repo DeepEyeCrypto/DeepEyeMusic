@@ -258,10 +258,10 @@ data class DspParams(
                 eqEnabled = true,
                 // Harman-inspired curve: warm sub-bass shelf, recessed upper-mids, airy treble
                 eqBands =
-                floatArrayOf(
-                    2.5f, 3.0f, 2.0f, 0.5f, -0.5f,
-                    -1.0f, -0.5f, 1.5f, 2.5f, 3.0f,
-                ),
+                    floatArrayOf(
+                        2.5f, 3.0f, 2.0f, 0.5f, -0.5f,
+                        -1.0f, -0.5f, 1.5f, 2.5f, 3.0f,
+                    ),
                 viperBassEnabled = true,
                 viperBassMode = ViperBassMode.PURE, // Cleanest harmonic extension
                 viperBassFreq = 35, // Deep sub-bass reach for DAC headphones
@@ -290,10 +290,10 @@ data class DspParams(
                 pgcGain = -8f,
                 eqEnabled = true,
                 eqBands =
-                floatArrayOf(
-                    2.5f, 3.5f, 2.5f, 1.0f, -1.0f,
-                    0.0f, -1.5f, 1.0f, 1.5f, 2.0f,
-                ),
+                    floatArrayOf(
+                        2.5f, 3.5f, 2.5f, 1.0f, -1.0f,
+                        0.0f, -1.5f, 1.0f, 1.5f, 2.0f,
+                    ),
                 viperBassEnabled = true,
                 viperBassMode = ViperBassMode.NATURAL,
                 viperBassFreq = 60,
@@ -324,10 +324,10 @@ data class DspParams(
                 pgcGain = -6f,
                 eqEnabled = true,
                 eqBands =
-                floatArrayOf(
-                    2.0f, 2.5f, 2.0f, 1.5f, 1.0f,
-                    2.0f, 1.5f, 1.0f, 1.5f, 1.0f,
-                ),
+                    floatArrayOf(
+                        2.0f, 2.5f, 2.0f, 1.5f, 1.0f,
+                        2.0f, 1.5f, 1.0f, 1.5f, 1.0f,
+                    ),
                 viperBassEnabled = true,
                 viperBassMode = ViperBassMode.NATURAL,
                 viperBassFreq = 80,
@@ -351,10 +351,10 @@ data class DspParams(
                 pgcGain = -5f,
                 eqEnabled = true,
                 eqBands =
-                floatArrayOf(
-                    1.5f, 2.0f, 2.0f, 1.0f, 0.0f,
-                    0.5f, 0.0f, 0.5f, 1.0f, 1.0f,
-                ),
+                    floatArrayOf(
+                        1.5f, 2.0f, 2.0f, 1.0f, 0.0f,
+                        0.5f, 0.0f, 0.5f, 1.0f, 1.0f,
+                    ),
                 loudnessEnabled = true,
                 loudnessTargetGainMb = 800,
                 bassBoostEnabled = true,
@@ -371,10 +371,10 @@ data class DspParams(
                 pgcGain = -10f, // Extra headroom for high bass
                 eqEnabled = true,
                 eqBands =
-                floatArrayOf(
-                    4.0f, 4.5f, 3.5f, 1.5f, -2.0f,
-                    -1.5f, -1.0f, 1.5f, 2.0f, 2.5f,
-                ),
+                    floatArrayOf(
+                        4.0f, 4.5f, 3.5f, 1.5f, -2.0f,
+                        -1.5f, -1.0f, 1.5f, 2.0f, 2.5f,
+                    ),
                 viperBassEnabled = true,
                 viperBassMode = ViperBassMode.DYNAMIC,
                 viperBassFreq = 40,
@@ -397,10 +397,10 @@ data class DspParams(
                 pgcGain = -4f,
                 eqEnabled = true,
                 eqBands =
-                floatArrayOf(
-                    -2.0f, 0.0f, 1.0f, 1.5f, 1.0f,
-                    1.0f, 0.5f, 1.0f, 1.5f, 1.0f,
-                ),
+                    floatArrayOf(
+                        -2.0f, 0.0f, 1.0f, 1.5f, 1.0f,
+                        1.0f, 0.5f, 1.0f, 1.5f, 1.0f,
+                    ),
                 loudnessEnabled = true,
                 loudnessTargetGainMb = 300,
                 limiterEnabled = true,
@@ -412,10 +412,10 @@ data class DspParams(
                 pgcGain = -6f,
                 eqEnabled = true,
                 eqBands =
-                floatArrayOf(
-                    2.0f, 3.0f, 2.5f, 1.5f, 0.0f,
-                    0.5f, 0.0f, 1.0f, 1.5f, 1.5f,
-                ),
+                    floatArrayOf(
+                        2.0f, 3.0f, 2.5f, 1.5f, 0.0f,
+                        0.5f, 0.0f, 1.0f, 1.5f, 1.5f,
+                    ),
                 viperBassEnabled = true,
                 viperBassMode = ViperBassMode.NATURAL,
                 viperBassFreq = 80,

@@ -3,7 +3,6 @@
 
 package com.deepeye.musicpro.ui.settings
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -68,8 +67,9 @@ fun DSPDebugOverlay(
             ) {
                 Column {
                     Text("Verbose Logging", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                    Text("Reroutes buffer telemetry to Logcat under [V4A DEBUG]", 
-                        style = MaterialTheme.typography.labelSmall, 
+                    Text(
+                        "Reroutes buffer telemetry to Logcat under [V4A DEBUG]",
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -83,7 +83,10 @@ fun DSPDebugOverlay(
 }
 
 @Composable
-private fun TelemetryPoint(label: String, value: String) {
+private fun TelemetryPoint(
+    label: String,
+    value: String
+) {
     Column {
         Text(text = label, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(text = value, fontSize = 12.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Medium)

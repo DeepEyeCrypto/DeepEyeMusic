@@ -14,62 +14,82 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AutoRegressionShield @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val player: ExoPlayer,
-    private val dspEngine: DSPEngine
-) {
-    companion object {
-        private const val TAG = "AutoRegressionShield"
-    }
-
-    data class CheckResult(
-        val name: String,
-        val passed: Boolean,
-        val details: String
-    )
-
-    /**
-     * Executes self-diagnostics checks to prevent regression failures.
-     */
-    fun runValidation(): List<CheckResult> {
-        val results = mutableListOf<CheckResult>()
-
-        // 1. Playback Engine Validation
-        try {
-            val isPlaying = player.isPlaying
-            results.add(CheckResult("Playback Engine", true, "ExoPlayer instance resolved. Current play state: isPlaying=$isPlaying"))
-        } catch (e: Exception) {
-            results.add(CheckResult("Playback Engine", false, "ExoPlayer failed: ${e.message}"))
+class AutoRegressionShield
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+        private val player: ExoPlayer,
+        private val dspEngine: DSPEngine
+    ) {
+        companion object {
+            private const val TAG = "AutoRegressionShield"
         }
 
-        // 2. DSP Engine Validation
-        try {
-            val dspSessionId = dspEngine.getCurrentSessionId()
-            val state = dspEngine.engineState.value
-            results.add(CheckResult("DSP Engine", true, "DSPEngine state: $state, active session: $dspSessionId"))
-        } catch (e: Exception) {
-            results.add(CheckResult("DSP Engine", false, "DSPEngine check failed: ${e.message}"))
-        }
+        data class CheckResult(
+            val name: String,
+            val passed: Boolean,
+            val details: String
+        )
 
-        // 3. Notification Validation
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                val channel = manager.getNotificationChannel("deepeye_music_playback")
-                if (channel != null) {
-                    results.add(CheckResult("Notifications", true, "Notification channel 'deepeye_music_playback' exists, importance=${channel.importance}"))
-                } else {
-                    results.add(CheckResult("Notifications", false, "Notification channel 'deepeye_music_playback' is missing!"))
-                }
-            } else {
-                results.add(CheckResult("Notifications", true, "Notifications checked (Oreo SDK check skipped)."))
+        /**
+         * Executes self-diagnostics checks to prevent regression failures.
+         */
+        fun runValidation(): List<CheckResult> {
+            val results = mutableListOf<CheckResult>()
+
+            // 1. Playback Engine Validation
+            try {
+                val isPlaying = player.isPlaying
+                results.add(
+                    CheckResult(
+                        "Playback Engine",
+                        true,
+                        "ExoPlayer instance resolved. Current play state: isPlaying=$isPlaying"
+                    )
+                )
+            } catch (e: Exception) {
+                results.add(CheckResult("Playback Engine", false, "ExoPlayer failed: ${e.message}"))
             }
-        } catch (e: Exception) {
-            results.add(CheckResult("Notifications", false, "Notification verification failed: ${e.message}"))
-        }
 
-        Log.i(TAG, "Validation complete. Passed: ${results.count { it.passed }}/${results.size}")
-        return results
+            // 2. DSP Engine Validation
+            try {
+                val dspSessionId = dspEngine.getCurrentSessionId()
+                val state = dspEngine.engineState.value
+                results.add(CheckResult("DSP Engine", true, "DSPEngine state: $state, active session: $dspSessionId"))
+            } catch (e: Exception) {
+                results.add(CheckResult("DSP Engine", false, "DSPEngine check failed: ${e.message}"))
+            }
+
+            // 3. Notification Validation
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    val channel = manager.getNotificationChannel("deepeye_music_playback")
+                    if (channel != null) {
+                        results.add(
+                            CheckResult(
+                                "Notifications",
+                                true,
+                                "Notification channel 'deepeye_music_playback' exists, importance=${channel.importance}"
+                            )
+                        )
+                    } else {
+                        results.add(
+                            CheckResult(
+                                "Notifications",
+                                false,
+                                "Notification channel 'deepeye_music_playback' is missing!"
+                            )
+                        )
+                    }
+                } else {
+                    results.add(CheckResult("Notifications", true, "Notifications checked (Oreo SDK check skipped)."))
+                }
+            } catch (e: Exception) {
+                results.add(CheckResult("Notifications", false, "Notification verification failed: ${e.message}"))
+            }
+
+            Log.i(TAG, "Validation complete. Passed: ${results.count { it.passed }}/${results.size}")
+            return results
+        }
     }
-}

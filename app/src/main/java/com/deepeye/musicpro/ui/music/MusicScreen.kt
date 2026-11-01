@@ -22,14 +22,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SpatialAudioOff
 import androidx.compose.material3.*
@@ -38,7 +38,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -56,7 +55,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.data.source.remote.youtube.MusicFilter
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedItem
-import com.deepeye.musicpro.domain.model.personalization.PersonalizedFeedState
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedItemType
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedSection
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedSectionType
@@ -91,24 +89,27 @@ fun MusicScreen(
         containerColor = Color.Transparent,
         topBar = {
             Column(
-                modifier = Modifier
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                RichBlack.copy(alpha = 0.95f),
-                                RichBlack.copy(alpha = 0.7f),
-                                Color.Transparent
+                modifier =
+                    Modifier
+                        .background(
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        RichBlack.copy(alpha = 0.95f),
+                                        RichBlack.copy(alpha = 0.7f),
+                                        Color.Transparent
+                                    )
                             )
                         )
-                    )
-                    .statusBarsPadding()
+                        .statusBarsPadding()
             ) {
                 if (isLandscape) {
                     // Sleek Single-Line Landscape Header (Title + Compact Search + Segmented Tabs + Refresh)
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = CardGeometry.ScreenGutter, vertical = 6.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = CardGeometry.ScreenGutter, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
@@ -135,24 +136,26 @@ fun MusicScreen(
 
                         // Compact Search Bar Pill
                         Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(38.dp)
-                                .clip(RoundedCornerShape(50))
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.03f))
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(38.dp)
+                                    .clip(RoundedCornerShape(50))
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.03f))
+                                        )
                                     )
-                                )
-                                .border(
-                                    width = 0.5.dp,
-                                    brush = Brush.horizontalGradient(
-                                        listOf(NeonCyan.copy(alpha = 0.3f), ElectricViolet.copy(alpha = 0.3f))
-                                    ),
-                                    shape = RoundedCornerShape(50)
-                                )
-                                .clickable(onClick = onNavigateToSearch)
-                                .padding(horizontal = 14.dp),
+                                    .border(
+                                        width = 0.5.dp,
+                                        brush =
+                                            Brush.horizontalGradient(
+                                                listOf(NeonCyan.copy(alpha = 0.3f), ElectricViolet.copy(alpha = 0.3f))
+                                            ),
+                                        shape = RoundedCornerShape(50)
+                                    )
+                                    .clickable(onClick = onNavigateToSearch)
+                                    .padding(horizontal = 14.dp),
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Row(
@@ -181,7 +184,12 @@ fun MusicScreen(
                             onClick = { viewModel.refreshPersonalizedFeed() },
                             modifier = Modifier.size(36.dp)
                         ) {
-                            Icon(Icons.Default.Refresh, "Refresh", tint = TextSecondary, modifier = Modifier.size(18.dp))
+                            Icon(
+                                Icons.Default.Refresh,
+                                "Refresh",
+                                tint = TextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                     }
                 } else {
@@ -191,9 +199,10 @@ fun MusicScreen(
                     ) {
                         // Top Row: Title and Actions
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = CardGeometry.ScreenGutter, vertical = 8.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = CardGeometry.ScreenGutter, vertical = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -252,6 +261,7 @@ fun MusicScreen(
     }
 }
 // ─── YouTube Account Connect Banner ─────────────────────────────────────────
+
 /**
  * Shown when the user hasn't connected their YouTube account yet. Tapping it opens
  * the device-auth login so music recommendations can be fetched from the account.
@@ -267,32 +277,36 @@ private fun MusicAccountBanner(onConnect: () -> Unit) {
     )
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            // Bounded with the rest of the tab's content. `boundedContent`
-            // must precede `clip`, because clip draws against the node's own
-            // measured size and the cap is what gives that size a ceiling.
-            .boundedContent()
-            .padding(horizontal = 16.dp)
-            .graphicsLayer { scaleX = scale; scaleY = scale }
-            .clip(RoundedCornerShape(14.dp))
-            .background(
-                Brush.horizontalGradient(
-                    listOf(
-                        ElectricViolet.copy(alpha = 0.22f),
-                        NeonCyan.copy(alpha = 0.12f)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                // Bounded with the rest of the tab's content. `boundedContent`
+                // must precede `clip`, because clip draws against the node's own
+                // measured size and the cap is what gives that size a ceiling.
+                .boundedContent()
+                .padding(horizontal = 16.dp)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .clip(RoundedCornerShape(14.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(
+                            ElectricViolet.copy(alpha = 0.22f),
+                            NeonCyan.copy(alpha = 0.12f)
+                        )
                     )
                 )
-            )
-            .border(
-                0.5.dp,
-                Brush.horizontalGradient(
-                    listOf(ElectricViolet.copy(alpha = 0.45f), NeonCyan.copy(alpha = 0.3f))
-                ),
-                RoundedCornerShape(14.dp)
-            )
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onConnect)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+                .border(
+                    0.5.dp,
+                    Brush.horizontalGradient(
+                        listOf(ElectricViolet.copy(alpha = 0.45f), NeonCyan.copy(alpha = 0.3f))
+                    ),
+                    RoundedCornerShape(14.dp)
+                )
+                .clickable(interactionSource = interactionSource, indication = null, onClick = onConnect)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -337,21 +351,23 @@ private fun DiscoveryTab(
     paddingValues: PaddingValues,
 ) {
     val feed = uiState.personalizedFeed
-    val songSections = remember(feed.sections) {
-        feed.sections
-            .filterNot { it.type == PersonalizedSectionType.YOUR_PLAYLISTS }
-            .map { section ->
-                section.copy(
-                    items = section.items.filter {
-                        it.itemType == PersonalizedItemType.SONG &&
-                            it.durationMs !in 1..59_000L &&
-                            MusicFilter.isMusicTrack(it.title, it.artist, it.durationMs / 1000L)
-                    }
-                )
-            }
-            .filter { it.items.isNotEmpty() || it.isLoading || it.error != null }
-    }
-    
+    val songSections =
+        remember(feed.sections) {
+            feed.sections
+                .filterNot { it.type == PersonalizedSectionType.YOUR_PLAYLISTS }
+                .map { section ->
+                    section.copy(
+                        items =
+                            section.items.filter {
+                                it.itemType == PersonalizedItemType.SONG &&
+                                    it.durationMs !in 1..59_000L &&
+                                    MusicFilter.isMusicTrack(it.title, it.artist, it.durationMs / 1000L)
+                            }
+                    )
+                }
+                .filter { it.items.isNotEmpty() || it.isLoading || it.error != null }
+        }
+
     var explanationItem by remember { mutableStateOf<PersonalizedFeedItem?>(null) }
     var explanationSection by remember { mutableStateOf<PersonalizedSection?>(null) }
     var showExplanationSheet by remember { mutableStateOf(false) }
@@ -388,9 +404,10 @@ private fun DiscoveryTab(
                     val listState = rememberLazyListState()
                     LazyColumn(
                         state = listState,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .premiumScrollHaptics(listState),
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .premiumScrollHaptics(listState),
                         contentPadding = PaddingValues(bottom = 200.dp),
                     ) {
                         item {
@@ -410,7 +427,7 @@ private fun DiscoveryTab(
                                 },
                                 onPlayNext = viewModel::playNextPersonalizedItem,
                                 onAddToQueue = viewModel::addPersonalizedItemToQueue,
-                                onShowWhyThis = { item -> 
+                                onShowWhyThis = { item ->
                                     explanationItem = item
                                     explanationSection = section
                                     showExplanationSheet = true
@@ -446,10 +463,11 @@ private fun PersonalizedSectionRow(
         // evenCarouselCardWidth call the loaded rail below uses. Sizing it
         // differently here is what made the section jump sideways on load.
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val skeletonCardWidth = evenCarouselCardWidth(
-                availableWidth = maxWidth,
-                minItemWidth = CardGeometry.Music.minWidth,
-            )
+            val skeletonCardWidth =
+                evenCarouselCardWidth(
+                    availableWidth = maxWidth,
+                    minItemWidth = CardGeometry.Music.minWidth,
+                )
             Column(Modifier.fillMaxWidth()) {
                 SectionHeaderShimmer()
                 SectionRowSkeleton(cardWidth = skeletonCardWidth)
@@ -492,127 +510,136 @@ private fun PersonalizedSectionRow(
     LaunchedEffect(Unit) { visible = true }
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(
-            animationSpec = tween(400, delayMillis = (index % 5) * 60, easing = EaseOutCubic)
-        ) + slideInVertically(
-            animationSpec = tween(400, delayMillis = (index % 5) * 60, easing = EaseOutCubic),
-            initialOffsetY = { it / 4 }
-        )
+        enter =
+            fadeIn(
+                animationSpec = tween(400, delayMillis = (index % 5) * 60, easing = EaseOutCubic)
+            ) +
+                slideInVertically(
+                    animationSpec = tween(400, delayMillis = (index % 5) * 60, easing = EaseOutCubic),
+                    initialOffsetY = { it / 4 }
+                )
     ) {
         // Spotify-style dense rail. A fixed 150.dp card left a wide gap at the end
         // of every row on a landscape phone; this fills the row instead. Square
         // 1:1 cover art survives a narrower column than a 16:9 video poster, hence
         // CardGeometry.Music.minWidth (120.dp) over VideoCardMinWidth.
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val musicCardWidth = evenCarouselCardWidth(
-            availableWidth = maxWidth,
-            minItemWidth = CardGeometry.Music.minWidth,
-        )
-        Column(Modifier.fillMaxWidth()) {
-            // Section header: title + truthful source label
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = CardGeometry.ScreenGutter, vertical = 6.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = section.title,
-                        // titleSmall: section headers repeat down a long scrolling
-                        // list, so a large style compounds into an oversized feel.
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.3).sp
-                        ),
-                        color = TextPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    if (section.sourceLabel.isNotBlank()) {
-                        Spacer(Modifier.height(2.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Box(
-                                Modifier
-                                    .size(5.dp)
-                                    .clip(CircleShape)
-                                    .background(NeonCyan.copy(alpha = 0.8f))
-                            )
-                            Text(
-                                text = section.sourceLabel,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = TextTertiary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                letterSpacing = 0.3.sp,
-                            )
-                            if (section.isFromCache) {
-                                Spacer(Modifier.width(4.dp))
-                                Text(
-                                    text = "• Cached",
-                                    fontSize = 11.sp,
+            val musicCardWidth =
+                evenCarouselCardWidth(
+                    availableWidth = maxWidth,
+                    minItemWidth = CardGeometry.Music.minWidth,
+                )
+            Column(Modifier.fillMaxWidth()) {
+                // Section header: title + truthful source label
+                Row(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = CardGeometry.ScreenGutter, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = section.title,
+                            // titleSmall: section headers repeat down a long scrolling
+                            // list, so a large style compounds into an oversized feel.
+                            style =
+                                MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = TextTertiary.copy(alpha = 0.6f),
-                                    letterSpacing = 0.4.sp,
+                                    letterSpacing = (-0.3).sp
+                                ),
+                            color = TextPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        if (section.sourceLabel.isNotBlank()) {
+                            Spacer(Modifier.height(2.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Box(
+                                    Modifier
+                                        .size(5.dp)
+                                        .clip(CircleShape)
+                                        .background(NeonCyan.copy(alpha = 0.8f))
+                                )
+                                Text(
+                                    text = section.sourceLabel,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = TextTertiary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    letterSpacing = 0.3.sp,
+                                )
+                                if (section.isFromCache) {
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(
+                                        text = "• Cached",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextTertiary.copy(alpha = 0.6f),
+                                        letterSpacing = 0.4.sp,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        if (section.explanation != null) {
+                            IconButton(
+                                onClick = { onShowWhyThis(null) },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    Icons.Rounded.Info,
+                                    contentDescription = "Why this section?",
+                                    tint = TextTertiary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                        if (section.error != null && section.items.isNotEmpty()) {
+                            TextButton(onClick = onRetry) {
+                                Text(
+                                    "Retry",
+                                    color = NeonCyan,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
                                 )
                             }
                         }
                     }
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    if (section.explanation != null) {
-                        IconButton(
-                            onClick = { onShowWhyThis(null) },
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Icon(
-                                Icons.Rounded.Info,
-                                contentDescription = "Why this section?",
-                                tint = TextTertiary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-                    if (section.error != null && section.items.isNotEmpty()) {
-                        TextButton(onClick = onRetry) {
-                            Text(
-                                "Retry",
-                                color = NeonCyan,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
+                val rowState = rememberLazyListState()
+                LazyRow(
+                    state = rowState,
+                    contentPadding = PaddingValues(horizontal = CardGeometry.ScreenGutter),
+                    horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .premiumScrollHaptics(rowState)
+                ) {
+                    items(section.items, key = { it.id }) { item ->
+                        PersonalizedMusicCard(
+                            item = item,
+                            cardWidth = musicCardWidth,
+                            onClick = { onPlay(item) },
+                            onPlayNext = { onPlayNext(item) },
+                            onAddToQueue = { onAddToQueue(item) },
+                            onWhyThis = { onShowWhyThis(item) },
+                        )
                     }
                 }
             }
-
-            val rowState = rememberLazyListState()
-            LazyRow(
-                state = rowState,
-                contentPadding = PaddingValues(horizontal = CardGeometry.ScreenGutter),
-                horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .premiumScrollHaptics(rowState)
-            ) {
-                items(section.items, key = { it.id }) { item ->
-                    PersonalizedMusicCard(
-                        item = item,
-                        cardWidth = musicCardWidth,
-                        onClick = { onPlay(item) },
-                        onPlayNext = { onPlayNext(item) },
-                        onAddToQueue = { onAddToQueue(item) },
-                        onWhyThis = { onShowWhyThis(item) },
-                    )
-                }
-            }
-        }
         }
     }
 }
@@ -635,52 +662,57 @@ fun PersonalizedMusicCard(
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
+        animationSpec =
+            spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            ),
         label = "pressScale"
     )
 
     Box(
-        modifier = Modifier
-            .width(cardWidth)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            // Geometry from CardGeometry (SSOT). MusicCardSkeleton reads the same
-            // fields, so the loading box matches the loaded box exactly.
-            .clip(CardGeometry.Music.shape)
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        CardSurface.copy(alpha = 0.7f),
-                        CardSurfaceElevated.copy(alpha = 0.5f)
+        modifier =
+            Modifier
+                .width(cardWidth)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                // Geometry from CardGeometry (SSOT). MusicCardSkeleton reads the same
+                // fields, so the loading box matches the loaded box exactly.
+                .clip(CardGeometry.Music.shape)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            CardSurface.copy(alpha = 0.7f),
+                            CardSurfaceElevated.copy(alpha = 0.5f)
+                        )
                     )
                 )
-            )
-            .border(
-                width = 1.dp,
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        ElectricViolet.copy(alpha = 0.3f),
-                        NeonCyan.copy(alpha = 0.2f),
-                        ElectricViolet.copy(alpha = 0.1f)
-                    )
-                ),
-                shape = CardGeometry.Music.shape
-            )
-            .clickable(interactionSource = interactionSource, indication = null) { onClick() }
+                .border(
+                    width = 1.dp,
+                    brush =
+                        Brush.linearGradient(
+                            colors =
+                                listOf(
+                                    ElectricViolet.copy(alpha = 0.3f),
+                                    NeonCyan.copy(alpha = 0.2f),
+                                    ElectricViolet.copy(alpha = 0.1f)
+                                )
+                        ),
+                    shape = CardGeometry.Music.shape
+                )
+                .clickable(interactionSource = interactionSource, indication = null) { onClick() }
     ) {
         Column(modifier = Modifier.padding(CardGeometry.Music.contentPadding)) {
             // Artwork
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(CardGeometry.Music.aspectRatio)
-                    .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f))
-                    .background(Color.White.copy(alpha = 0.03f))
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(CardGeometry.Music.aspectRatio)
+                        .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f))
+                        .background(Color.White.copy(alpha = 0.03f))
             ) {
                 if (item.artworkUrl != null) {
                     AsyncImage(
@@ -693,25 +725,27 @@ fun PersonalizedMusicCard(
 
                 // Bottom gradient fade
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .align(Alignment.BottomCenter)
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .align(Alignment.BottomCenter)
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
+                                )
                             )
-                        )
                 )
 
                 // Item-type badge (playlist vs song/video)
                 if (item.itemType == PersonalizedItemType.PLAYLIST) {
                     Box(
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(8.dp)
-                            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(5.dp))
-                            .padding(horizontal = 6.dp, vertical = 3.dp)
+                        modifier =
+                            Modifier
+                                .align(Alignment.TopStart)
+                                .padding(8.dp)
+                                .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(5.dp))
+                                .padding(horizontal = 6.dp, vertical = 3.dp)
                     ) {
                         Text(
                             "PLAYLIST",
@@ -726,11 +760,12 @@ fun PersonalizedMusicCard(
                 // Source badge (truthful provenance)
                 if (item.sourceBadge != null) {
                     Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(5.dp))
-                            .padding(horizontal = 6.dp, vertical = 3.dp)
+                        modifier =
+                            Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
+                                .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(5.dp))
+                                .padding(horizontal = 6.dp, vertical = 3.dp)
                     ) {
                         Text(
                             item.sourceBadge,
@@ -746,11 +781,12 @@ fun PersonalizedMusicCard(
                 if (item.durationMs > 0) {
                     Text(
                         text = formatDuration(item.durationMs),
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(8.dp)
-                            .background(Color.Black.copy(alpha = 0.65f), RoundedCornerShape(5.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                        modifier =
+                            Modifier
+                                .align(Alignment.BottomStart)
+                                .padding(8.dp)
+                                .background(Color.Black.copy(alpha = 0.65f), RoundedCornerShape(5.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
                         color = Color.White.copy(alpha = 0.9f),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -760,20 +796,21 @@ fun PersonalizedMusicCard(
 
                 // Play button
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(8.dp)
-                        .size(30.dp)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(
-                                    ElectricViolet.copy(alpha = 0.9f),
-                                    ElectricViolet.copy(alpha = 0.6f)
-                                )
-                            ),
-                            CircleShape
-                        )
-                        .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape),
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(8.dp)
+                            .size(30.dp)
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(
+                                        ElectricViolet.copy(alpha = 0.9f),
+                                        ElectricViolet.copy(alpha = 0.6f)
+                                    )
+                                ),
+                                CircleShape
+                            )
+                            .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -790,10 +827,11 @@ fun PersonalizedMusicCard(
             // Title
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.3).sp
-                ),
+                style =
+                    MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.3).sp
+                    ),
                 color = TextPrimary,
                 maxLines = CardGeometry.Music.titleMaxLines,
                 overflow = TextOverflow.Ellipsis,
@@ -884,6 +922,7 @@ fun PersonalizedMusicCard(
 }
 
 // ─── Discovery State Composables ─────────────────────────────────────────────
+
 /**
  * Full-screen loading state for the discovery feed.
  *
@@ -896,10 +935,11 @@ fun PersonalizedMusicCard(
 @Composable
 private fun DiscoveryLoadingSkeleton() {
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val cardWidth = evenCarouselCardWidth(
-            availableWidth = maxWidth,
-            minItemWidth = CardGeometry.Music.minWidth,
-        )
+        val cardWidth =
+            evenCarouselCardWidth(
+                availableWidth = maxWidth,
+                minItemWidth = CardGeometry.Music.minWidth,
+            )
         Column(Modifier.fillMaxSize()) {
             repeat(3) {
                 Column(Modifier.fillMaxWidth()) {
@@ -914,9 +954,10 @@ private fun DiscoveryLoadingSkeleton() {
 @Composable
 private fun SectionHeaderShimmer() {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = CardGeometry.ScreenGutter, vertical = 6.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = CardGeometry.ScreenGutter, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SectionHeaderSkeleton()
@@ -1005,24 +1046,25 @@ private fun AccountRequiredSectionCard(
     onConnectAccount: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.horizontalGradient(
-                    listOf(ElectricViolet.copy(alpha = 0.12f), NeonCyan.copy(alpha = 0.08f))
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(ElectricViolet.copy(alpha = 0.12f), NeonCyan.copy(alpha = 0.08f))
+                    )
                 )
-            )
-            .border(
-                0.5.dp,
-                Brush.horizontalGradient(
-                    listOf(ElectricViolet.copy(alpha = 0.4f), NeonCyan.copy(alpha = 0.3f))
-                ),
-                RoundedCornerShape(16.dp)
-            )
-            .clickable(onClick = onConnectAccount)
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+                .border(
+                    0.5.dp,
+                    Brush.horizontalGradient(
+                        listOf(ElectricViolet.copy(alpha = 0.4f), NeonCyan.copy(alpha = 0.3f))
+                    ),
+                    RoundedCornerShape(16.dp)
+                )
+                .clickable(onClick = onConnectAccount)
+                .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -1056,13 +1098,14 @@ private fun SectionErrorCard(
     onRetry: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White.copy(alpha = 0.03f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White.copy(alpha = 0.03f))
+                .border(0.5.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
+                .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -1094,13 +1137,14 @@ private fun SectionEmptyCard(
     onRetry: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White.copy(alpha = 0.03f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White.copy(alpha = 0.03f))
+                .border(0.5.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
+                .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -1124,6 +1168,7 @@ private fun SectionEmptyCard(
         }
     }
 }
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 private fun formatDuration(ms: Long): String {
     val sec = (ms / 1000) % 60
@@ -1143,34 +1188,36 @@ fun PremiumSearchBar(onClick: () -> Unit) {
     )
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(RoundedCornerShape(50))
-            .background(
-                Brush.horizontalGradient(
-                    listOf(
-                        Color.White.copy(alpha = 0.08f),
-                        Color.White.copy(alpha = 0.03f)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .clip(RoundedCornerShape(50))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.08f),
+                            Color.White.copy(alpha = 0.03f)
+                        )
                     )
                 )
-            )
-            .border(
-                width = 0.5.dp,
-                brush = Brush.horizontalGradient(
-                    listOf(
-                        NeonCyan.copy(alpha = 0.3f),
-                        ElectricViolet.copy(alpha = 0.3f)
-                    )
-                ),
-                shape = RoundedCornerShape(50)
-            )
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+                .border(
+                    width = 0.5.dp,
+                    brush =
+                        Brush.horizontalGradient(
+                            listOf(
+                                NeonCyan.copy(alpha = 0.3f),
+                                ElectricViolet.copy(alpha = 0.3f)
+                            )
+                        ),
+                    shape = RoundedCornerShape(50)
+                )
+                .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
+                .padding(horizontal = 20.dp, vertical = 14.dp),
         contentAlignment = Alignment.CenterStart
     ) {
         Row(

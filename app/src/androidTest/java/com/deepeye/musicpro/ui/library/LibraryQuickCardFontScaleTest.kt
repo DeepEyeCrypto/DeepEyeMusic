@@ -47,7 +47,6 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class LibraryQuickCardFontScaleTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -64,7 +63,11 @@ class LibraryQuickCardFontScaleTest {
     private var label by mutableStateOf("Downloads")
     private var count by mutableStateOf(12)
 
-    private fun setState(scale: Float, labelText: String = label, itemCount: Int = count) {
+    private fun setState(
+        scale: Float,
+        labelText: String = label,
+        itemCount: Int = count
+    ) {
         fontScale = scale
         label = labelText
         count = itemCount
@@ -100,7 +103,10 @@ class LibraryQuickCardFontScaleTest {
         composeTestRule.onNodeWithText(text, useUnmergedTree = true)
             .fetchSemanticsNode().boundsInRoot
 
-    private fun assertLabelStaysOnOneLine(target: String, scale: Float) {
+    private fun assertLabelStaysOnOneLine(
+        target: String,
+        scale: Float
+    ) {
         val labelHeight = boundsOf(target).height
         val lineHeight = boundsOf(singleLineProbe).height
         assertTrue(

@@ -11,59 +11,39 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-import com.deepeye.musicpro.ui.components.DynamicLabel
-import com.deepeye.musicpro.ui.components.HeroEmptyState
-import com.deepeye.musicpro.ui.components.SecondaryLabel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.deepeye.musicpro.ui.components.bouncyClickable
 import coil3.compose.AsyncImage
 import coil3.request.crossfade
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
+import com.deepeye.musicpro.ui.components.HeroEmptyState
 import com.deepeye.musicpro.ui.components.ShimmerBox
-import com.deepeye.musicpro.ui.components.rememberSparseAwareRailLayout
+import com.deepeye.musicpro.ui.components.bouncyClickable
 import com.deepeye.musicpro.ui.theme.AppSpacing
 import com.deepeye.musicpro.ui.theme.CardGeometry
-import com.deepeye.musicpro.ui.youtube.SmartTubeVideoCard
-import com.deepeye.musicpro.ui.components.premium.PremiumHeroCard
-import com.deepeye.musicpro.ui.components.premium.SplitMediaHero
-import com.deepeye.musicpro.ui.components.premium.DotMatrixClock
 import com.deepeye.musicpro.ui.theme.GlassBorder
 import com.deepeye.musicpro.ui.theme.sdp
-import com.deepeye.musicpro.ui.components.glassCard
-import com.deepeye.musicpro.ui.components.hoverable
-
+import com.deepeye.musicpro.ui.youtube.SmartTubeVideoCard
 
 @Composable
 fun HomeHubScreen(
@@ -74,7 +54,6 @@ fun HomeHubScreen(
     onNavigateToChat: () -> Unit = {},
     onOpenV4A: () -> Unit,
     onLaunchTvMode: () -> Unit = {},
-
     onNavigateToSettings: () -> Unit,
     viewModel: HomeHubViewModel = hiltViewModel(),
     playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel(),
@@ -107,25 +86,27 @@ fun HomeHubScreen(
     // it is empty (a new account with no history scores nothing). Counting
     // that as content would suppress the hero state on precisely the screen
     // that needs it, leaving the user with a header and an empty column.
-    val hasRecommendationContent = recs?.let { result ->
-        result.becauseYouListened.any { it.items.isNotEmpty() } ||
-            result.favoriteArtists.any { it.items.isNotEmpty() } ||
-            result.genreDive.any { it.items.isNotEmpty() } ||
-            result.perfectForNow.items.isNotEmpty() ||
-            result.trending.items.isNotEmpty() ||
-            result.hiddenGems.items.isNotEmpty()
-    } == true
+    val hasRecommendationContent =
+        recs?.let { result ->
+            result.becauseYouListened.any { it.items.isNotEmpty() } ||
+                result.favoriteArtists.any { it.items.isNotEmpty() } ||
+                result.genreDive.any { it.items.isNotEmpty() } ||
+                result.perfectForNow.items.isNotEmpty() ||
+                result.trending.items.isNotEmpty() ||
+                result.hiddenGems.items.isNotEmpty()
+        } == true
 
-    val hasFeedContent = feedState.continueListening.isNotEmpty() ||
-        feedState.trending.isNotEmpty() ||
-        feedState.shorts.isNotEmpty() ||
-        feedState.supermix.isNotEmpty() ||
-        feedState.discoverMix.isNotEmpty() ||
-        feedState.becauseYouLikedMix.isNotEmpty() ||
-        feedState.newReleases.isNotEmpty() ||
-        feedState.quickPicks.isNotEmpty() ||
-        feedState.localResume.isNotEmpty() ||
-        hasRecommendationContent
+    val hasFeedContent =
+        feedState.continueListening.isNotEmpty() ||
+            feedState.trending.isNotEmpty() ||
+            feedState.shorts.isNotEmpty() ||
+            feedState.supermix.isNotEmpty() ||
+            feedState.discoverMix.isNotEmpty() ||
+            feedState.becauseYouLikedMix.isNotEmpty() ||
+            feedState.newReleases.isNotEmpty() ||
+            feedState.quickPicks.isNotEmpty() ||
+            feedState.localResume.isNotEmpty() ||
+            hasRecommendationContent
 
     // Suppressed while loading: showing "no content" during a fetch is a lie that
     // flashes before real data arrives. The recommendation pass is still in
@@ -133,9 +114,10 @@ fun HomeHubScreen(
     val showFeedEmptyState = !hasFeedContent && !feedState.isLoading && !isRecsLoading
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Transparent),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color.Transparent),
         contentAlignment = Alignment.TopCenter,
     ) {
         // ── Root-level branch: hero vs. feed ───────────────────────────────────
@@ -148,11 +130,12 @@ fun HomeHubScreen(
         if (showFeedEmptyState) {
             HeroEmptyState(
                 title = if (feedState.hasAuth) "Nothing to Play Yet" else "Your Feed Is Empty",
-                subtitle = if (feedState.hasAuth) {
-                    "We couldn't find anything new for you. Try again, or explore something different."
-                } else {
-                    "Play a few tracks or connect your account and we'll build your feed around what you love."
-                },
+                subtitle =
+                    if (feedState.hasAuth) {
+                        "We couldn't find anything new for you. Try again, or explore something different."
+                    } else {
+                        "Play a few tracks or connect your account and we'll build your feed around what you love."
+                    },
                 actionText = "Discover Music",
                 onAction = { viewModel.loadFeed() },
                 icon = if (feedState.hasAuth) Icons.Rounded.Refresh else Icons.Rounded.Search,
@@ -165,263 +148,270 @@ fun HomeHubScreen(
                 // needs, so the copy and CTA were pushed off-screen. Measured
                 // via the accessibility bounds: the host granted 536px and the
                 // hero's own padding cut it to 219px.
-                contentPadding = PaddingValues(
-                    start = 32.sdp,
-                    top = 32.sdp,
-                    end = 32.sdp,
-                    bottom = 24.sdp,
-                ),
+                contentPadding =
+                    PaddingValues(
+                        start = 32.sdp,
+                        top = 32.sdp,
+                        end = 32.sdp,
+                        bottom = 24.sdp,
+                    ),
                 modifier = if (isExpanded) Modifier.widthIn(max = 1200.dp) else Modifier,
             )
         } else {
-        LazyColumn(
-            modifier =
-            Modifier
-                .fillMaxSize()
-                .then(
-                    if (isExpanded) Modifier.widthIn(max = 1200.dp) else Modifier,
-                ),
-            // Section rhythm comes from the SSOT token rather than a literal.
-            //
-            // `AppSpacing.SectionGap` was specified but does not exist; `xxl` is
-            // the token that already carries the 24dp section rhythm across the
-            // app, so it is used here instead of a duplicated magic number.
-            //
-            // This is a plain `.dp`, not `.sdp`: Spacing.kt is explicit that the
-            // global root zoom is the single scaling axis, and routing the gap
-            // through `.sdp` as well would fight it.
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.xxl),
-            contentPadding = PaddingValues(
-                start = if (isExpanded) 24.sdp else 16.sdp,
-                top = 12.sdp,
-                end = if (isExpanded) 24.sdp else 16.sdp,
-                // 140.dp is deliberately NOT `.sdp`: it clears the bottom dock
-                // plus the mini-player sheet above it, both of which are sized
-                // against fixed 48dp touch targets. Scaling this clearance
-                // while the dock stays fixed would let the two drift apart and
-                // bury the last row of the list.
-                bottom = 140.dp,
-            ),
-        ) {
-            item {
-                val btcPrice by viewModel.btcPrice.collectAsStateWithLifecycle()
-                HomeGreetingHeader(
-                    btcPrice = btcPrice,
-                    onNavigateToSettings = onNavigateToSettings,
-                    onNavigateToChat = onNavigateToChat
-                )
-            }
-
-            // 3. Continue Listening rail (Phase 7)
-            if (feedState.continueListening.isNotEmpty()) {
+            LazyColumn(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .then(
+                            if (isExpanded) Modifier.widthIn(max = 1200.dp) else Modifier,
+                        ),
+                // Section rhythm comes from the SSOT token rather than a literal.
+                //
+                // `AppSpacing.SectionGap` was specified but does not exist; `xxl` is
+                // the token that already carries the 24dp section rhythm across the
+                // app, so it is used here instead of a duplicated magic number.
+                //
+                // This is a plain `.dp`, not `.sdp`: Spacing.kt is explicit that the
+                // global root zoom is the single scaling axis, and routing the gap
+                // through `.sdp` as well would fight it.
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.xxl),
+                contentPadding =
+                    PaddingValues(
+                        start = if (isExpanded) 24.sdp else 16.sdp,
+                        top = 12.sdp,
+                        end = if (isExpanded) 24.sdp else 16.sdp,
+                        // 140.dp is deliberately NOT `.sdp`: it clears the bottom dock
+                        // plus the mini-player sheet above it, both of which are sized
+                        // against fixed 48dp touch targets. Scaling this clearance
+                        // while the dock stays fixed would let the two drift apart and
+                        // bury the last row of the list.
+                        bottom = 140.dp,
+                    ),
+            ) {
                 item {
-                    ContinueListeningRow(
-                        items = feedState.continueListening,
-                        onItemClick = { music ->
-                            viewModel.playContinueListeningItem(music)
-                            onNavigateToMusic(music.id)
-                        },
+                    val btcPrice by viewModel.btcPrice.collectAsStateWithLifecycle()
+                    HomeGreetingHeader(
+                        btcPrice = btcPrice,
+                        onNavigateToSettings = onNavigateToSettings,
+                        onNavigateToChat = onNavigateToChat
                     )
                 }
-            }
 
-            item {
-                HorizontalDivider(
-                    color = Color.White.copy(0.05f),
-                    modifier = Modifier.padding(horizontal = 16.sdp, vertical = 8.sdp),
-                )
-            }
+                // 3. Continue Listening rail (Phase 7)
+                if (feedState.continueListening.isNotEmpty()) {
+                    item {
+                        ContinueListeningRow(
+                            items = feedState.continueListening,
+                            onItemClick = { music ->
+                                viewModel.playContinueListeningItem(music)
+                                onNavigateToMusic(music.id)
+                            },
+                        )
+                    }
+                }
 
-            // 5b. YouTube / Trending Rails
-            if (feedState.trending.isNotEmpty()) {
                 item {
-                    HomeVideoRail(
-                        title = if (feedState.hasAuth) "🌟 For You" else "🔥 Trending",
-                        items = feedState.trending,
-                        onClick = { 
-                            viewModel.playVideo(it)
-                            onNavigateToVideo(it.id) 
+                    HorizontalDivider(
+                        color = Color.White.copy(0.05f),
+                        modifier = Modifier.padding(horizontal = 16.sdp, vertical = 8.sdp),
+                    )
+                }
+
+                // 5b. YouTube / Trending Rails
+                if (feedState.trending.isNotEmpty()) {
+                    item {
+                        HomeVideoRail(
+                            title = if (feedState.hasAuth) "🌟 For You" else "🔥 Trending",
+                            items = feedState.trending,
+                            onClick = {
+                                viewModel.playVideo(it)
+                                onNavigateToVideo(it.id)
+                            }
+                        )
+                    }
+                }
+
+                if (feedState.supermix.isNotEmpty()) {
+                    item {
+                        HomeMusicRail(
+                            title = "✨ My Supermix",
+                            items = feedState.supermix,
+                            onClick = {
+                                viewModel.playMusic(it)
+                                onNavigateToMusic(it.id)
+                            }
+                        )
+                    }
+                }
+
+                if (feedState.discoverMix.isNotEmpty()) {
+                    item {
+                        HomeMusicRail(
+                            title = "🔭 Discover Mix",
+                            items = feedState.discoverMix,
+                            onClick = {
+                                viewModel.playMusic(it)
+                                onNavigateToMusic(it.id)
+                            }
+                        )
+                    }
+                }
+
+                if (feedState.becauseYouLikedMix.isNotEmpty() && feedState.becauseYouLikedArtist != null) {
+                    item {
+                        HomeMusicRail(
+                            title = "❤️ Because You Liked ${feedState.becauseYouLikedArtist}",
+                            items = feedState.becauseYouLikedMix,
+                            onClick = {
+                                viewModel.playMusic(it)
+                                onNavigateToMusic(it.id)
+                            }
+                        )
+                    }
+                }
+
+                if (feedState.newReleases.isNotEmpty()) {
+                    item {
+                        HomeMusicRail(
+                            title = "🆕 New Releases For You",
+                            items = feedState.newReleases,
+                            onClick = {
+                                viewModel.playMusic(it)
+                                onNavigateToMusic(it.id)
+                            }
+                        )
+                    }
+                }
+
+                if (feedState.quickPicks.isNotEmpty()) {
+                    item {
+                        HomeMusicRail(
+                            title = "🎵 Quick Picks",
+                            items = feedState.quickPicks,
+                            onClick = {
+                                viewModel.playMusic(it)
+                                onNavigateToMusic(it.id)
+                            }
+                        )
+                    }
+                }
+
+                // Phase 4: AI Prompt Bar
+                item {
+                    val isGenerating by viewModel.isAIGenerating.collectAsStateWithLifecycle()
+                    val context = androidx.compose.ui.platform.LocalContext.current
+                    AIPromptBar(
+                        isGenerating = isGenerating,
+                        onSubmitPrompt = { prompt ->
+                            android.widget.Toast.makeText(
+                                context,
+                                "AI is curating based on: $prompt",
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                            viewModel.onAIPromptSubmitted(prompt)
                         }
                     )
                 }
-            }
 
-            if (feedState.supermix.isNotEmpty()) {
+                // 6. DSP Quick Panel (Phase 7)
                 item {
-                    HomeMusicRail(
-                        title = "✨ My Supermix",
-                        items = feedState.supermix,
-                        onClick = { 
-                            viewModel.playMusic(it)
-                            onNavigateToMusic(it.id) 
+                    DspQuickPanel(
+                        activePresetName = feedState.activeDspPreset,
+                        isEngineAttached =
+                            dspEngineState == com.deepeye.musicpro.dsp.model.EngineState.ATTACHED ||
+                                dspEngineState == com.deepeye.musicpro.dsp.model.EngineState.PROCESSING,
+                        onOpenDsp = onOpenV4A,
+                    )
+                }
+
+                // 7. Local Library Resume (Phase 7)
+                if (feedState.localResume.isNotEmpty()) {
+                    item {
+                        LocalResumeRail(
+                            items = feedState.localResume,
+                            onItemClick = { music ->
+                                viewModel.playLocalResume(music)
+                                onNavigateToMusic(music.id)
+                            },
+                        )
+                    }
+                }
+
+                item {
+                    HorizontalDivider(
+                        color = Color.White.copy(0.05f),
+                        modifier = Modifier.padding(horizontal = 16.sdp, vertical = 8.sdp),
+                    )
+                }
+
+                // 8. Dynamic Recommendation Rows
+                if (isRecsLoading && recs == null) {
+                    item { HomeRailShimmer(title = "Loading Recommendations...") }
+                    item { HomeRailShimmer(title = "") }
+                    item { HomeRailShimmer(title = "") }
+                }
+
+                recs?.let { result ->
+                    // Because you listened
+                    items(result.becauseYouListened) { row ->
+                        com.deepeye.musicpro.ui.home.RecommendationRowUI(row, windowSizeClass) { video ->
+                            playRecMusic(video, row.items, playerViewModel, onNavigateToMusic)
                         }
-                    )
-                }
-            }
+                    }
 
-            if (feedState.discoverMix.isNotEmpty()) {
-                item {
-                    HomeMusicRail(
-                        title = "🔭 Discover Mix",
-                        items = feedState.discoverMix,
-                        onClick = { 
-                            viewModel.playMusic(it)
-                            onNavigateToMusic(it.id) 
+                    // Perfect for right now
+                    item {
+                        com.deepeye.musicpro.ui.home.RecommendationRowUI(
+                            result.perfectForNow,
+                            windowSizeClass,
+                            isHighlighted = true
+                        ) { video ->
+                            playRecMusic(video, result.perfectForNow.items, playerViewModel, onNavigateToMusic)
                         }
-                    )
-                }
-            }
+                    }
 
-            if (feedState.becauseYouLikedMix.isNotEmpty() && feedState.becauseYouLikedArtist != null) {
-                item {
-                    HomeMusicRail(
-                        title = "❤️ Because You Liked ${feedState.becauseYouLikedArtist}",
-                        items = feedState.becauseYouLikedMix,
-                        onClick = {
-                            viewModel.playMusic(it)
-                            onNavigateToMusic(it.id)
+                    // Favorite artists
+                    items(result.favoriteArtists) { row ->
+                        com.deepeye.musicpro.ui.home.RecommendationRowUI(row, windowSizeClass) { video ->
+                            playRecMusic(video, row.items, playerViewModel, onNavigateToMusic)
                         }
-                    )
-                }
-            }
+                    }
 
-            if (feedState.newReleases.isNotEmpty()) {
-                item {
-                    HomeMusicRail(
-                        title = "🆕 New Releases For You",
-                        items = feedState.newReleases,
-                        onClick = {
-                            viewModel.playMusic(it)
-                            onNavigateToMusic(it.id)
+                    // Trending
+                    item {
+                        com.deepeye.musicpro.ui.home.RecommendationRowUI(result.trending, windowSizeClass) { video ->
+                            playRecMusic(video, result.trending.items, playerViewModel, onNavigateToMusic)
                         }
-                    )
-                }
-            }
+                    }
 
-            if (feedState.quickPicks.isNotEmpty()) {
-                item {
-                    HomeMusicRail(
-                        title = "🎵 Quick Picks",
-                        items = feedState.quickPicks,
-                        onClick = { 
-                            viewModel.playMusic(it)
-                            onNavigateToMusic(it.id) 
+                    // Genre dives
+                    items(result.genreDive) { row ->
+                        com.deepeye.musicpro.ui.home.RecommendationRowUI(row, windowSizeClass) { video ->
+                            playRecMusic(video, row.items, playerViewModel, onNavigateToMusic)
                         }
-                    )
-                }
-            }
-
-            // Phase 4: AI Prompt Bar
-            item {
-                val isGenerating by viewModel.isAIGenerating.collectAsStateWithLifecycle()
-                val context = androidx.compose.ui.platform.LocalContext.current
-                AIPromptBar(
-                    isGenerating = isGenerating,
-                    onSubmitPrompt = { prompt ->
-                        android.widget.Toast.makeText(context, "AI is curating based on: $prompt", android.widget.Toast.LENGTH_SHORT).show()
-                        viewModel.onAIPromptSubmitted(prompt)
                     }
-                )
-            }
 
-            // 6. DSP Quick Panel (Phase 7)
-            item {
-                DspQuickPanel(
-                    activePresetName = feedState.activeDspPreset,
-                    isEngineAttached = dspEngineState == com.deepeye.musicpro.dsp.model.EngineState.ATTACHED ||
-                        dspEngineState == com.deepeye.musicpro.dsp.model.EngineState.PROCESSING,
-                    onOpenDsp = onOpenV4A,
-                )
-            }
-
-            // 7. Local Library Resume (Phase 7)
-            if (feedState.localResume.isNotEmpty()) {
-                item {
-                    LocalResumeRail(
-                        items = feedState.localResume,
-                        onItemClick = { music ->
-                            viewModel.playLocalResume(music)
-                            onNavigateToMusic(music.id)
-                        },
-                    )
-                }
-            }
-
-            item {
-                HorizontalDivider(
-                    color = Color.White.copy(0.05f),
-                    modifier = Modifier.padding(horizontal = 16.sdp, vertical = 8.sdp),
-                )
-            }
-
-            // 8. Dynamic Recommendation Rows
-            if (isRecsLoading && recs == null) {
-                item { HomeRailShimmer(title = "Loading Recommendations...") }
-                item { HomeRailShimmer(title = "") }
-                item { HomeRailShimmer(title = "") }
-            }
-
-            recs?.let { result ->
-                // Because you listened
-                items(result.becauseYouListened) { row ->
-                    com.deepeye.musicpro.ui.home.RecommendationRowUI(row, windowSizeClass) { video ->
-                        playRecMusic(video, row.items, playerViewModel, onNavigateToMusic)
+                    // Hidden gems
+                    item {
+                        com.deepeye.musicpro.ui.home.RecommendationRowUI(
+                            result.hiddenGems,
+                            windowSizeClass,
+                            isHighlighted = true
+                        ) { video ->
+                            playRecMusic(video, result.hiddenGems.items, playerViewModel, onNavigateToMusic)
+                        }
                     }
                 }
 
-                // Perfect for right now
-                item {
-                    com.deepeye.musicpro.ui.home.RecommendationRowUI(
-                        result.perfectForNow,
-                        windowSizeClass,
-                        isHighlighted = true
-                    ) { video ->
-                        playRecMusic(video, result.perfectForNow.items, playerViewModel, onNavigateToMusic)
+                // 9. Offline fallback
+                if (feedState.isOffline && !feedState.isLoading) {
+                    item {
+                        OfflineFallbackCard(
+                            onRetry = viewModel::loadFeed,
+                        )
                     }
                 }
-
-                // Favorite artists
-                items(result.favoriteArtists) { row ->
-                    com.deepeye.musicpro.ui.home.RecommendationRowUI(row, windowSizeClass) { video ->
-                        playRecMusic(video, row.items, playerViewModel, onNavigateToMusic)
-                    }
-                }
-
-                // Trending
-                item {
-                    com.deepeye.musicpro.ui.home.RecommendationRowUI(result.trending, windowSizeClass) { video ->
-                        playRecMusic(video, result.trending.items, playerViewModel, onNavigateToMusic)
-                    }
-                }
-
-                // Genre dives
-                items(result.genreDive) { row ->
-                    com.deepeye.musicpro.ui.home.RecommendationRowUI(row, windowSizeClass) { video ->
-                        playRecMusic(video, row.items, playerViewModel, onNavigateToMusic)
-                    }
-                }
-
-                // Hidden gems
-                item {
-                    com.deepeye.musicpro.ui.home.RecommendationRowUI(
-                        result.hiddenGems,
-                        windowSizeClass,
-                        isHighlighted = true
-                    ) { video ->
-                        playRecMusic(video, result.hiddenGems.items, playerViewModel, onNavigateToMusic)
-                    }
-                }
-            }
-
-            // 9. Offline fallback
-            if (feedState.isOffline && !feedState.isLoading) {
-                item {
-                    OfflineFallbackCard(
-                        onRetry = viewModel::loadFeed,
-                    )
-                }
-            }
-        } // Close LazyColumn here
+            } // Close LazyColumn here
         } // Close root-level hero/feed branch
     }
 }
@@ -435,9 +425,10 @@ private fun HomeGreetingHeader(
     val greeting = remember { getDynamicGreeting() }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -453,10 +444,11 @@ private fun HomeGreetingHeader(
                 )
                 Spacer(modifier = Modifier.width(8.sdp))
                 Box(
-                    modifier = Modifier
-                        .size(9.dp)
-                        .clip(androidx.compose.foundation.shape.CircleShape)
-                        .background(Color(0xFF00E5FF))
+                    modifier =
+                        Modifier
+                            .size(9.dp)
+                            .clip(androidx.compose.foundation.shape.CircleShape)
+                            .background(Color(0xFF00E5FF))
                 )
                 Spacer(modifier = Modifier.width(8.sdp))
                 Text(
@@ -465,9 +457,10 @@ private fun HomeGreetingHeader(
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 1.sp,
                     color = Color(0xFFFF9100),
-                    modifier = Modifier
-                        .background(Color(0x33FF9100), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                    modifier =
+                        Modifier
+                            .background(Color(0x33FF9100), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                 )
             }
             Spacer(modifier = Modifier.height(2.sdp))
@@ -493,26 +486,42 @@ private fun HomeGreetingHeader(
             ) {
                 // Bitcoin Ticker Chip
                 Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0x1AFFFFFF))
-                        .clickable { onNavigateToChat() }
-                        .padding(horizontal = 10.sdp, vertical = 6.sdp),
+                    modifier =
+                        Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color(0x1AFFFFFF))
+                            .clickable { onNavigateToChat() }
+                            .padding(horizontal = 10.sdp, vertical = 6.sdp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("₿", color = Color(0xFFFFD700), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.width(4.sdp))
-                    Text(btcPrice.replace("₿ ", ""), color = Color(0xFF00E676), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        btcPrice.replace("₿ ", ""),
+                        color = Color(0xFF00E676),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
                 // Chat Icon
                 IconButton(onClick = onNavigateToChat, modifier = Modifier.size(40.dp)) {
-                    Icon(Icons.Default.Lock, contentDescription = "Chat", tint = Color(0xFF7B3FE4), modifier = Modifier.size(20.dp))
+                    Icon(
+                        Icons.Default.Lock,
+                        contentDescription = "Chat",
+                        tint = Color(0xFF7B3FE4),
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
 
                 // Settings
                 IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(40.dp)) {
-                    Icon(Icons.Default.Settings, contentDescription = "Settings", tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(
+                        Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }
@@ -542,9 +551,10 @@ private fun HomeVideoRail(
     val maxItems = if (isLandscape) 8 else 4
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = CardGeometry.ScreenGutter),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = CardGeometry.ScreenGutter),
         verticalArrangement = Arrangement.spacedBy(12.sdp)
     ) {
         Text(
@@ -587,9 +597,10 @@ private fun HomeMusicRail(
     val maxItems = if (isLandscape) 8 else 4
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = CardGeometry.ScreenGutter),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = CardGeometry.ScreenGutter),
         verticalArrangement = Arrangement.spacedBy(12.sdp)
     ) {
         Text(
@@ -607,30 +618,33 @@ private fun HomeMusicRail(
                 chunk.forEach { music ->
                     Box(
                         modifier =
-                        Modifier
-                            .weight(1f)
-                            .clip(CardGeometry.ContinueListening.shape)
-                            .background(Color.White.copy(alpha = 0.05f)) // Smoother glass effect
-                            .border(1.dp, GlassBorder, CardGeometry.ContinueListening.shape)
-                            .bouncyClickable(
-                                downScale = 0.95f,
-                                onClick = { onClick(music) }
-                            )
-                            .padding(CardGeometry.ContinueListening.contentPadding),
+                            Modifier
+                                .weight(1f)
+                                .clip(CardGeometry.ContinueListening.shape)
+                                .background(Color.White.copy(alpha = 0.05f)) // Smoother glass effect
+                                .border(1.dp, GlassBorder, CardGeometry.ContinueListening.shape)
+                                .bouncyClickable(
+                                    downScale = 0.95f,
+                                    onClick = { onClick(music) }
+                                )
+                                .padding(CardGeometry.ContinueListening.contentPadding),
                     ) {
                         Column {
                             Box(
                                 modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .aspectRatio(CardGeometry.Music.aspectRatio)
-                                    .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f)),
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .aspectRatio(CardGeometry.Music.aspectRatio)
+                                        .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f)),
                             ) {
                                 AsyncImage(
-                                    model = coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
-                                        .data(music.thumbnailUrl)
-                                        .crossfade(true)
-                                        .build(),
+                                    model =
+                                        coil3.request.ImageRequest.Builder(
+                                            androidx.compose.ui.platform.LocalContext.current
+                                        )
+                                            .data(music.thumbnailUrl)
+                                            .crossfade(true)
+                                            .build(),
                                     contentDescription = music.title,
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop,
@@ -681,14 +695,14 @@ private fun HomeRailShimmer(title: String) {
 private fun OfflineFallbackCard(onRetry: () -> Unit) {
     Card(
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(16.dp),
         colors =
-        CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -715,9 +729,9 @@ private fun OfflineFallbackCard(onRetry: () -> Unit) {
             Button(
                 onClick = onRetry,
                 colors =
-                ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF7B3FE4),
-                ),
+                    ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF7B3FE4),
+                    ),
             ) {
                 Text("Retry")
             }

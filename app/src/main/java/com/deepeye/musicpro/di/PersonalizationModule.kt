@@ -38,18 +38,13 @@ annotation class ApplicationScope
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class PersonalizationModule {
+    @Binds
+    @Singleton
+    abstract fun bindAccountDataSource(impl: SettingsAccountDataSourceImpl): AccountDataSource
 
     @Binds
     @Singleton
-    abstract fun bindAccountDataSource(
-        impl: SettingsAccountDataSourceImpl
-    ): AccountDataSource
-
-    @Binds
-    @Singleton
-    abstract fun bindPersonalizationRepository(
-        impl: PersonalizationRepositoryImpl
-    ): PersonalizationRepository
+    abstract fun bindPersonalizationRepository(impl: PersonalizationRepositoryImpl): PersonalizationRepository
 
     companion object {
         @Provides
@@ -63,9 +58,8 @@ abstract class PersonalizationModule {
         @Provides
         @Singleton
         @ApplicationScope
-        fun provideApplicationScope(
-            dispatcher: CoroutineDispatcher,
-        ): CoroutineScope = CoroutineScope(SupervisorJob() + dispatcher)
+        fun provideApplicationScope(dispatcher: CoroutineDispatcher,): CoroutineScope =
+            CoroutineScope(SupervisorJob() + dispatcher)
 
         @Provides
         @Singleton
@@ -75,4 +69,3 @@ abstract class PersonalizationModule {
             }
     }
 }
-

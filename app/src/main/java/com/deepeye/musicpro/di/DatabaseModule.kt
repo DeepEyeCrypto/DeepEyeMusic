@@ -28,116 +28,138 @@ object DatabaseModule {
     fun provideAppDatabase(
         @ApplicationContext context: Context,
     ): AppDatabase {
-        val MIGRATION_9_10 = object : Migration(9, 10) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
-                    """
-                    CREATE TABLE IF NOT EXISTS `subscribed_channels` (
-                        `channelId` TEXT NOT NULL,
-                        `channelName` TEXT NOT NULL,
-                        `lastSeenVideoId` TEXT NOT NULL,
-                        `subscribedAt` INTEGER NOT NULL,
-                        PRIMARY KEY(`channelId`)
+        val MIGRATION_9_10 =
+            object : Migration(9, 10) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `subscribed_channels` (
+                            `channelId` TEXT NOT NULL,
+                            `channelName` TEXT NOT NULL,
+                            `lastSeenVideoId` TEXT NOT NULL,
+                            `subscribedAt` INTEGER NOT NULL,
+                            PRIMARY KEY(`channelId`)
+                        )
+                        """.trimIndent()
                     )
-                    """.trimIndent()
-                )
+                }
             }
-        }
 
-        val MIGRATION_10_11 = object : Migration(10, 11) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
-                    """
-                    CREATE TABLE IF NOT EXISTS `cached_personalized_sections` (
-                        `accountKey` TEXT NOT NULL,
-                        `sectionType` TEXT NOT NULL,
-                        `title` TEXT NOT NULL,
-                        `subtitle` TEXT,
-                        `sourceLabel` TEXT NOT NULL,
-                        `explanation` TEXT,
-                        `cachedAt` INTEGER NOT NULL,
-                        `expiresAt` INTEGER NOT NULL,
-                        PRIMARY KEY(`accountKey`, `sectionType`)
+        val MIGRATION_10_11 =
+            object : Migration(10, 11) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `cached_personalized_sections` (
+                            `accountKey` TEXT NOT NULL,
+                            `sectionType` TEXT NOT NULL,
+                            `title` TEXT NOT NULL,
+                            `subtitle` TEXT,
+                            `sourceLabel` TEXT NOT NULL,
+                            `explanation` TEXT,
+                            `cachedAt` INTEGER NOT NULL,
+                            `expiresAt` INTEGER NOT NULL,
+                            PRIMARY KEY(`accountKey`, `sectionType`)
+                        )
+                        """.trimIndent()
                     )
-                    """.trimIndent()
-                )
-                database.execSQL(
-                    """
-                    CREATE TABLE IF NOT EXISTS `cached_personalized_items` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `accountKey` TEXT NOT NULL,
-                        `sectionType` TEXT NOT NULL,
-                        `itemId` TEXT NOT NULL,
-                        `title` TEXT NOT NULL,
-                        `artist` TEXT NOT NULL,
-                        `channelId` TEXT,
-                        `artworkUrl` TEXT,
-                        `durationMs` INTEGER NOT NULL,
-                        `itemType` TEXT NOT NULL,
-                        `sourceBadge` TEXT,
-                        `explanation` TEXT,
-                        `rank` INTEGER NOT NULL,
-                        `cachedAt` INTEGER NOT NULL
+                    database.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `cached_personalized_items` (
+                            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                            `accountKey` TEXT NOT NULL,
+                            `sectionType` TEXT NOT NULL,
+                            `itemId` TEXT NOT NULL,
+                            `title` TEXT NOT NULL,
+                            `artist` TEXT NOT NULL,
+                            `channelId` TEXT,
+                            `artworkUrl` TEXT,
+                            `durationMs` INTEGER NOT NULL,
+                            `itemType` TEXT NOT NULL,
+                            `sourceBadge` TEXT,
+                            `explanation` TEXT,
+                            `rank` INTEGER NOT NULL,
+                            `cachedAt` INTEGER NOT NULL
+                        )
+                        """.trimIndent()
                     )
-                    """.trimIndent()
-                )
-                database.execSQL(
-                    """
-                    CREATE INDEX IF NOT EXISTS `index_cached_personalized_items_accountKey_sectionType`
-                    ON `cached_personalized_items` (`accountKey`, `sectionType`)
-                    """.trimIndent()
-                )
-                database.execSQL(
-                    """
-                    CREATE INDEX IF NOT EXISTS `index_cached_personalized_items_itemId`
-                    ON `cached_personalized_items` (`itemId`)
-                    """.trimIndent()
-                )
+                    database.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS `index_cached_personalized_items_accountKey_sectionType`
+                        ON `cached_personalized_items` (`accountKey`, `sectionType`)
+                        """.trimIndent()
+                    )
+                    database.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS `index_cached_personalized_items_itemId`
+                        ON `cached_personalized_items` (`itemId`)
+                        """.trimIndent()
+                    )
+                }
             }
-        }
 
-        val MIGRATION_11_12 = object : Migration(11, 12) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
-                    """
-                    CREATE TABLE IF NOT EXISTS `hidden_content` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `accountKey` TEXT,
-                        `itemId` TEXT NOT NULL,
-                        `title` TEXT NOT NULL,
-                        `artist` TEXT,
-                        `itemType` TEXT NOT NULL,
-                        `hiddenAt` INTEGER NOT NULL
+        val MIGRATION_11_12 =
+            object : Migration(11, 12) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `hidden_content` (
+                            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                            `accountKey` TEXT,
+                            `itemId` TEXT NOT NULL,
+                            `title` TEXT NOT NULL,
+                            `artist` TEXT,
+                            `itemType` TEXT NOT NULL,
+                            `hiddenAt` INTEGER NOT NULL
+                        )
+                        """.trimIndent()
                     )
-                    """.trimIndent()
-                )
-                database.execSQL(
-                    """
-                    CREATE INDEX IF NOT EXISTS `index_hidden_content_accountKey`
-                    ON `hidden_content` (`accountKey`)
-                    """.trimIndent()
-                )
-                database.execSQL(
-                    """
-                    CREATE INDEX IF NOT EXISTS `index_hidden_content_itemId`
-                    ON `hidden_content` (`itemId`)
-                    """.trimIndent()
-                )
-                database.execSQL(
-                    """
-                    CREATE INDEX IF NOT EXISTS `index_hidden_content_accountKey_itemType`
-                    ON `hidden_content` (`accountKey`, `itemType`)
-                    """.trimIndent()
-                )
+                    database.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS `index_hidden_content_accountKey`
+                        ON `hidden_content` (`accountKey`)
+                        """.trimIndent()
+                    )
+                    database.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS `index_hidden_content_itemId`
+                        ON `hidden_content` (`itemId`)
+                        """.trimIndent()
+                    )
+                    database.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS `index_hidden_content_accountKey_itemType`
+                        ON `hidden_content` (`accountKey`, `itemType`)
+                        """.trimIndent()
+                    )
+                }
             }
-        }
+
+        val MIGRATION_12_13 =
+            object : Migration(12, 13) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS `profile_cache` (
+                            `accountKey` TEXT NOT NULL,
+                            `subscribedCount` INTEGER NOT NULL,
+                            `likedCount` INTEGER NOT NULL,
+                            `playlistCount` INTEGER NOT NULL,
+                            `downloadCount` INTEGER NOT NULL,
+                            `lastSyncedAt` INTEGER NOT NULL,
+                            PRIMARY KEY(`accountKey`)
+                        )
+                        """.trimIndent()
+                    )
+                }
+            }
 
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
             "deepeye_music.db",
         )
-            .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+            .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
             .fallbackToDestructiveMigration()
             .build()
     }
@@ -152,30 +174,29 @@ object DatabaseModule {
     fun provideTasteDao(database: AppDatabase): com.deepeye.musicpro.data.db.TasteDao = database.tasteDao()
 
     @Provides
-    fun provideRecommendationDao(
-        database: AppDatabase
-    ): com.deepeye.musicpro.data.db.RecommendationDao = database.recommendationDao()
+    fun provideRecommendationDao(database: AppDatabase): com.deepeye.musicpro.data.db.RecommendationDao =
+        database.recommendationDao()
 
     @Provides
     fun provideCacheDao(database: AppDatabase): com.deepeye.musicpro.data.cache.dao.CacheDao = database.cacheDao()
 
     @Provides
     @Singleton
-    fun provideHiddenContentDao(
-        database: AppDatabase
-    ): com.deepeye.musicpro.data.cache.dao.HiddenContentDao = database.hiddenContentDao()
+    fun provideHiddenContentDao(database: AppDatabase): com.deepeye.musicpro.data.cache.dao.HiddenContentDao =
+        database.hiddenContentDao()
 
     @Provides
     @Singleton
-    fun provideLibraryDao(
-        database: AppDatabase,
-    ): com.deepeye.musicpro.data.library.dao.LibraryDao = database.libraryDao()
+    fun provideLibraryDao(database: AppDatabase,): com.deepeye.musicpro.data.library.dao.LibraryDao =
+        database.libraryDao()
 
     @Provides
     @Singleton
-    fun provideHistoryDao(
-        database: AppDatabase,
-    ): com.deepeye.musicpro.data.db.HistoryDao = database.historyDao()
+    fun provideHistoryDao(database: AppDatabase,): com.deepeye.musicpro.data.db.HistoryDao = database.historyDao()
+
+    @Provides
+    @Singleton
+    fun provideProfileCacheDao(database: AppDatabase,): com.deepeye.musicpro.data.db.ProfileCacheDao = database.profileCacheDao()
 
     @Provides
     @Singleton
@@ -194,12 +215,10 @@ object DatabaseModule {
     @Provides
     fun provideDspPresetDao(
         database: com.deepeye.musicpro.dsp.data.DspDatabase
-    ): com.deepeye.musicpro.dsp.data.DspPresetDao =
-        database.dspPresetDao()
+    ): com.deepeye.musicpro.dsp.data.DspPresetDao = database.dspPresetDao()
 
     @Provides
     fun provideDspProfileDao(
         database: com.deepeye.musicpro.dsp.data.DspDatabase
-    ): com.deepeye.musicpro.dsp.data.DspProfileDao =
-        database.dspProfileDao()
+    ): com.deepeye.musicpro.dsp.data.DspProfileDao = database.dspProfileDao()
 }

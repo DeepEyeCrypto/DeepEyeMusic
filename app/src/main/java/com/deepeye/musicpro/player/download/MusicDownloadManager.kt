@@ -4,7 +4,6 @@
 package com.deepeye.musicpro.player.download
 
 import android.content.Context
-import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.widget.Toast
@@ -29,174 +28,193 @@ data class DownloadProgressState(
 
 @Singleton
 class MusicDownloadManager
-@Inject
-constructor(
-    @ApplicationContext private val context: Context,
-    private val historyRepository: com.deepeye.musicpro.domain.repository.HistoryRepository,
-    private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
-    private val sourceResolverManager: com.deepeye.musicpro.domain.resolver.SourceResolverManager,
-    private val simpleCache: androidx.media3.datasource.cache.SimpleCache,
-    okHttpClient: okhttp3.OkHttpClient,
-) {
-    private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+        private val historyRepository: com.deepeye.musicpro.domain.repository.HistoryRepository,
+        private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
+        private val sourceResolverManager: com.deepeye.musicpro.domain.resolver.SourceResolverManager,
+        private val simpleCache: androidx.media3.datasource.cache.SimpleCache,
+        okHttpClient: okhttp3.OkHttpClient,
+    ) {
+        private val scope =
+            kotlinx.coroutines.CoroutineScope(
+                kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO
+            )
 
-    // Clone the injected OkHttpClient to set an appropriate read timeout for large file downloads
-    private val downloadHttpClient = okHttpClient.newBuilder()
-        .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-        .build()
+        // Clone the injected OkHttpClient to set an appropriate read timeout for large file downloads
+        private val downloadHttpClient =
+            okHttpClient.newBuilder()
+                .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
 
-    private val _activeDownloadStates =
-        MutableStateFlow<Map<Long, DownloadProgressState>>(emptyMap())
-    val activeDownloadStates: StateFlow<Map<Long, DownloadProgressState>> = _activeDownloadStates.asStateFlow()
+        private val _activeDownloadStates =
+            MutableStateFlow<Map<Long, DownloadProgressState>>(emptyMap())
+        val activeDownloadStates: StateFlow<Map<Long, DownloadProgressState>> = _activeDownloadStates.asStateFlow()
 
-    val activeDownloads: StateFlow<Map<Long, MediaItem>> =
-        _activeDownloadStates.map { map -> map.mapValues { it.value.item } }
-            .stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
+        val activeDownloads: StateFlow<Map<Long, MediaItem>> =
+            _activeDownloadStates.map { map -> map.mapValues { it.value.item } }
+                .stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyMap())
 
-    fun isFullyCached(videoId: String): Boolean {
-        return try {
-            simpleCache.getCachedSpans(videoId).isNotEmpty()
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    fun enqueueStealthCache(videoId: String, streamUrl: String) {
-        val inputData = androidx.work.workDataOf(
-            OpusDownloadWorker.KEY_STREAM_URL to streamUrl,
-            OpusDownloadWorker.KEY_CACHE_KEY to videoId
-        )
-        val constraints = androidx.work.Constraints.Builder()
-            .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
-            .build()
-        val request = androidx.work.OneTimeWorkRequestBuilder<OpusDownloadWorker>()
-            .setInputData(inputData)
-            .setConstraints(constraints)
-            .addTag("cache_$videoId")
-            .build()
-        androidx.work.WorkManager.getInstance(context).enqueueUniqueWork(
-            "cache_$videoId",
-            androidx.work.ExistingWorkPolicy.KEEP,
-            request
-        )
-    }
-
-    fun downloadTrack(item: MediaItem) {
-        if (item is MediaItem.Local) {
-            Toast.makeText(context, "Track already in local library", Toast.LENGTH_SHORT).show()
-            return
+        fun isFullyCached(videoId: String): Boolean {
+            return try {
+                simpleCache.getCachedSpans(videoId).isNotEmpty()
+            } catch (e: Exception) {
+                false
+            }
         }
 
-        scope.launch {
-            val downloadId = System.currentTimeMillis()
-            try {
-                val sanitizedTitle = item.title.replace(Regex("[^a-zA-Z0-9.-]"), "_")
-                
-                withContext(kotlinx.coroutines.Dispatchers.Main) {
-                    _activeDownloadStates.value = _activeDownloadStates.value.toMutableMap().apply { 
-                        put(downloadId, DownloadProgressState(item = item, progress = 0f))
-                    }
-                    Toast.makeText(context, "Download started: ${item.title}", Toast.LENGTH_SHORT).show()
-                }
-                historyRepository.recordDownload(downloadId, item.id, item.title, "STARTED")
+        fun enqueueStealthCache(
+            videoId: String,
+            streamUrl: String
+        ) {
+            val inputData =
+                androidx.work.workDataOf(
+                    OpusDownloadWorker.KEY_STREAM_URL to streamUrl,
+                    OpusDownloadWorker.KEY_CACHE_KEY to videoId
+                )
+            val constraints =
+                androidx.work.Constraints.Builder()
+                    .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+                    .build()
+            val request =
+                androidx.work.OneTimeWorkRequestBuilder<OpusDownloadWorker>()
+                    .setInputData(inputData)
+                    .setConstraints(constraints)
+                    .addTag("cache_$videoId")
+                    .build()
+            androidx.work.WorkManager.getInstance(context).enqueueUniqueWork(
+                "cache_$videoId",
+                androidx.work.ExistingWorkPolicy.KEEP,
+                request
+            )
+        }
 
-                val rawUrl = (item as? MediaItem.Remote)?.streamUri?.toString()
-                val isExpiredOrStale = rawUrl == null || rawUrl.contains("googlevideo.com") && (rawUrl.contains("expire=") || rawUrl.contains("source=youtube"))
-                val resolvedUrl = if (!isExpiredOrStale) {
-                    rawUrl
-                } else {
-                    sourceResolverManager.resolve(item.id, (item as? MediaItem.Remote)?.isVideo == true)
-                } ?: throw Exception("Could not resolve stream URL")
+        fun downloadTrack(item: MediaItem) {
+            if (item is MediaItem.Local) {
+                Toast.makeText(context, "Track already in local library", Toast.LENGTH_SHORT).show()
+                return
+            }
 
-                val isVideo = (item as? MediaItem.Remote)?.isVideo == true
-                val extension = if (isVideo) "mp4" else "mp3"
-                val mimeType = if (isVideo) "video/mp4" else "audio/mpeg"
-                val subDir = if (isVideo) android.os.Environment.DIRECTORY_MOVIES else android.os.Environment.DIRECTORY_MUSIC
-                
-                val contentValues = android.content.ContentValues().apply {
-                    put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, "$sanitizedTitle.$extension")
-                    put(android.provider.MediaStore.MediaColumns.MIME_TYPE, mimeType)
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                        put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "$subDir/DeepEyeMusic")
-                        put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1)
-                    } else {
-                        val publicDir = android.os.Environment.getExternalStoragePublicDirectory(subDir)
-                        val appDir = java.io.File(publicDir, "DeepEyeMusic")
-                        if (!appDir.exists()) appDir.mkdirs()
-                        val targetFile = java.io.File(appDir, "$sanitizedTitle.$extension")
-                        put(android.provider.MediaStore.MediaColumns.DATA, targetFile.absolutePath)
-                    }
-                }
-                
-                val resolver = context.contentResolver
-                val contentUri = if (isVideo) android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI else android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                val uri = resolver.insert(contentUri, contentValues)
-                    ?: throw Exception("Failed to create MediaStore entry")
-                
-                var success = false
+            scope.launch {
+                val downloadId = System.currentTimeMillis()
                 try {
-                    resolver.openOutputStream(uri)?.use { out ->
-                        DownloaderHelper.downloadWithResume(
-                            client = downloadHttpClient,
-                            url = resolvedUrl,
-                            out = out,
-                            onProgress = { bytesDownloaded, totalBytes, progress ->
-                                _activeDownloadStates.value = _activeDownloadStates.value.toMutableMap().apply {
-                                    put(downloadId, DownloadProgressState(
-                                        item = item,
-                                        progress = progress,
-                                        bytesDownloaded = bytesDownloaded,
-                                        totalBytes = totalBytes
-                                    ))
-                                }
+                    val sanitizedTitle = item.title.replace(Regex("[^a-zA-Z0-9.-]"), "_")
+
+                    withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        _activeDownloadStates.value =
+                            _activeDownloadStates.value.toMutableMap().apply {
+                                put(downloadId, DownloadProgressState(item = item, progress = 0f))
                             }
-                        )
+                        Toast.makeText(context, "Download started: ${item.title}", Toast.LENGTH_SHORT).show()
                     }
-                    success = true
-                } finally {
-                    if (!success) {
-                        resolver.delete(uri, null, null)
-                    }
-                }
-                
-                if (success) {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                        val updateValues = android.content.ContentValues().apply {
-                            put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0)
+                    historyRepository.recordDownload(downloadId, item.id, item.title, "STARTED")
+
+                    val rawUrl = (item as? MediaItem.Remote)?.streamUri?.toString()
+                    val isExpiredOrStale = rawUrl == null || rawUrl.contains("googlevideo.com") && (rawUrl.contains("expire=") || rawUrl.contains("source=youtube"))
+                    val resolvedUrl =
+                        if (!isExpiredOrStale) {
+                            rawUrl
+                        } else {
+                            sourceResolverManager.resolve(item.id, (item as? MediaItem.Remote)?.isVideo == true)
+                        } ?: throw Exception("Could not resolve stream URL")
+
+                    val isVideo = (item as? MediaItem.Remote)?.isVideo == true
+                    val extension = if (isVideo) "mp4" else "mp3"
+                    val mimeType = if (isVideo) "video/mp4" else "audio/mpeg"
+                    val subDir = if (isVideo) android.os.Environment.DIRECTORY_MOVIES else android.os.Environment.DIRECTORY_MUSIC
+
+                    val contentValues =
+                        android.content.ContentValues().apply {
+                            put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, "$sanitizedTitle.$extension")
+                            put(android.provider.MediaStore.MediaColumns.MIME_TYPE, mimeType)
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "$subDir/DeepEyeMusic")
+                                put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1)
+                            } else {
+                                val publicDir = android.os.Environment.getExternalStoragePublicDirectory(subDir)
+                                val appDir = java.io.File(publicDir, "DeepEyeMusic")
+                                if (!appDir.exists()) appDir.mkdirs()
+                                val targetFile = java.io.File(appDir, "$sanitizedTitle.$extension")
+                                put(android.provider.MediaStore.MediaColumns.DATA, targetFile.absolutePath)
+                            }
                         }
-                        resolver.update(uri, updateValues, null, null)
+
+                    val resolver = context.contentResolver
+                    val contentUri = if (isVideo) android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI else android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                    val uri =
+                        resolver.insert(contentUri, contentValues)
+                            ?: throw Exception("Failed to create MediaStore entry")
+
+                    var success = false
+                    try {
+                        resolver.openOutputStream(uri)?.use { out ->
+                            DownloaderHelper.downloadWithResume(
+                                client = downloadHttpClient,
+                                url = resolvedUrl,
+                                out = out,
+                                onProgress = { bytesDownloaded, totalBytes, progress ->
+                                    _activeDownloadStates.value =
+                                        _activeDownloadStates.value.toMutableMap().apply {
+                                            put(
+                                                downloadId,
+                                                DownloadProgressState(
+                                                    item = item,
+                                                    progress = progress,
+                                                    bytesDownloaded = bytesDownloaded,
+                                                    totalBytes = totalBytes
+                                                )
+                                            )
+                                        }
+                                }
+                            )
+                        }
+                        success = true
+                    } finally {
+                        if (!success) {
+                            resolver.delete(uri, null, null)
+                        }
                     }
-                    historyRepository.recordDownload(downloadId, item.id, item.title, "COMPLETED")
-                    libraryRepository.markTrackDownloaded(
-                        videoId = item.id,
-                        title = item.title,
-                        artist = item.artist,
-                        artworkUrl = item.artworkUri?.toString(),
-                        localPath = uri.toString()
-                    )
+
+                    if (success) {
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                            val updateValues =
+                                android.content.ContentValues().apply {
+                                    put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0)
+                                }
+                            resolver.update(uri, updateValues, null, null)
+                        }
+                        historyRepository.recordDownload(downloadId, item.id, item.title, "COMPLETED")
+                        libraryRepository.markTrackDownloaded(
+                            videoId = item.id,
+                            title = item.title,
+                            artist = item.artist,
+                            artworkUrl = item.artworkUri?.toString(),
+                            localPath = uri.toString()
+                        )
+                        withContext(kotlinx.coroutines.Dispatchers.Main) {
+                            _activeDownloadStates.value = _activeDownloadStates.value.toMutableMap().apply { remove(downloadId) }
+                            Toast.makeText(context, "Download complete: ${item.title}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("MusicDownloadManager", "Download failed", e)
+                    historyRepository.recordDownload(downloadId, item.id, item.title, "FAILED")
                     withContext(kotlinx.coroutines.Dispatchers.Main) {
                         _activeDownloadStates.value = _activeDownloadStates.value.toMutableMap().apply { remove(downloadId) }
-                        Toast.makeText(context, "Download complete: ${item.title}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Unable to download: ${item.title}", Toast.LENGTH_LONG).show()
                     }
                 }
-            } catch (e: Exception) {
-                android.util.Log.e("MusicDownloadManager", "Download failed", e)
-                historyRepository.recordDownload(downloadId, item.id, item.title, "FAILED")
-                withContext(kotlinx.coroutines.Dispatchers.Main) {
-                    _activeDownloadStates.value = _activeDownloadStates.value.toMutableMap().apply { remove(downloadId) }
-                    Toast.makeText(context, "Unable to download: ${item.title}", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        fun cancelDownload(downloadId: Long) {
+            val state = _activeDownloadStates.value[downloadId]
+            if (state != null) {
+                scope.launch {
+                    historyRepository.recordDownload(downloadId, state.item.id, state.item.title, "CANCELLED")
                 }
             }
+            _activeDownloadStates.value = _activeDownloadStates.value.toMutableMap().apply { remove(downloadId) }
         }
     }
-
-    fun cancelDownload(downloadId: Long) {
-        val state = _activeDownloadStates.value[downloadId]
-        if (state != null) {
-            scope.launch {
-                historyRepository.recordDownload(downloadId, state.item.id, state.item.title, "CANCELLED")
-            }
-        }
-        _activeDownloadStates.value = _activeDownloadStates.value.toMutableMap().apply { remove(downloadId) }
-    }
-}

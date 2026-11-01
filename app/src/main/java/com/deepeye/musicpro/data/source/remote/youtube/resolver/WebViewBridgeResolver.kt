@@ -13,39 +13,50 @@ import javax.inject.Inject
 /**
  * Stage 4 Resolver: Fallback mechanism using the internal WebView bridge.
  */
-class WebViewBridgeResolver @Inject constructor(
-    private val youtubeRemoteDataSource: YoutubeRemoteDataSource
-) : SourceResolver {
-    
-    override val name: String = "WebViewBridge"
-    
-    override val priority: Int = 100 // Lowest priority fallback
+class WebViewBridgeResolver
+    @Inject
+    constructor(
+        private val youtubeRemoteDataSource: YoutubeRemoteDataSource
+    ) : SourceResolver {
+        override val name: String = "WebViewBridge"
 
-    override suspend fun resolveSource(videoId: String, preferVideo: Boolean): ResolvedSource? {
-        return withContext(Dispatchers.IO) {
-            val result = youtubeRemoteDataSource.getStreamUrl(
-                videoId = videoId, 
-                preferVideo = preferVideo, 
-                onLayerFallback = {}
-            ) ?: return@withContext null
+        override val priority: Int = 100 // Lowest priority fallback
 
-            android.util.Log.d("DeepEyeHQ", "event=bridge_result videoCount=${result.videoFormats.size} audioCount=${result.audioFormats.size}")
+        override suspend fun resolveSource(
+            videoId: String,
+            preferVideo: Boolean
+        ): ResolvedSource? {
+            return withContext(Dispatchers.IO) {
+                val result =
+                    youtubeRemoteDataSource.getStreamUrl(
+                        videoId = videoId,
+                        preferVideo = preferVideo,
+                        onLayerFallback = {}
+                    ) ?: return@withContext null
 
-            ResolvedSource(
-                url = result.url,
-                isDirectStream = !result.isAdaptive,
-                headers = result.headers,
-                isVideo = result.isVideo,
-                expiresAt = result.expiresAt,
-                videoFormats = result.videoFormats,
-                audioFormats = result.audioFormats,
-                dashManifestUrl = result.dashManifestUrl,
-                hlsManifestUrl = result.hlsManifestUrl
-            )
+                android.util.Log.d(
+                    "DeepEyeHQ",
+                    "event=bridge_result videoCount=${result.videoFormats.size} audioCount=${result.audioFormats.size}"
+                )
+
+                ResolvedSource(
+                    url = result.url,
+                    isDirectStream = !result.isAdaptive,
+                    headers = result.headers,
+                    isVideo = result.isVideo,
+                    expiresAt = result.expiresAt,
+                    videoFormats = result.videoFormats,
+                    audioFormats = result.audioFormats,
+                    dashManifestUrl = result.dashManifestUrl,
+                    hlsManifestUrl = result.hlsManifestUrl
+                )
+            }
+        }
+
+        override suspend fun resolveStreamUrl(
+            videoId: String,
+            preferVideo: Boolean
+        ): String? {
+            return resolveSource(videoId, preferVideo)?.url
         }
     }
-
-    override suspend fun resolveStreamUrl(videoId: String, preferVideo: Boolean): String? {
-        return resolveSource(videoId, preferVideo)?.url
-    }
-}

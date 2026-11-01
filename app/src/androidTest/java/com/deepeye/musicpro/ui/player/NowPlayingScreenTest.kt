@@ -6,7 +6,6 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class NowPlayingScreenTest {
-
     @Test
     fun `NowPlayingScreen_should_display_controls`() {
         // Assert play/pause/seek controls are present

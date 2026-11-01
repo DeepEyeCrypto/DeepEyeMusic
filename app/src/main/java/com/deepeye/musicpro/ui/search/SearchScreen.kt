@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,12 +39,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import com.deepeye.musicpro.domain.model.search.SearchResultItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
+import com.deepeye.musicpro.domain.model.search.SearchResultItem
 import com.deepeye.musicpro.ui.youtube.SmartTubeVideoCard
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
 import kotlinx.coroutines.flow.collectLatest
 
 // ── Glassmorphism Palette ───────────────────────────────────────────────────
@@ -91,33 +90,34 @@ fun SearchScreen(
         topBar = {
             Column(
                 modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .then(
-                        if (hazeState != null) {
-                            Modifier.hazeEffect(
-                                state = hazeState,
-                                style = HazeStyle(
-                                    tint = HazeTint(Color(0xFF1D1E26).copy(alpha = 0.4f)),
-                                    blurRadius = 32.dp,
-                                    noiseFactor = 0.05f
+                    Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (hazeState != null) {
+                                Modifier.hazeEffect(
+                                    state = hazeState,
+                                    style =
+                                        HazeStyle(
+                                            tint = HazeTint(Color(0xFF1D1E26).copy(alpha = 0.4f)),
+                                            blurRadius = 32.dp,
+                                            noiseFactor = 0.05f
+                                        )
                                 )
-                            )
-                        } else {
-                            Modifier.background(Color(0xFF1D1E26).copy(alpha = 0.4f))
-                        }
-                    )
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                            } else {
+                                Modifier.background(Color(0xFF1D1E26).copy(alpha = 0.4f))
+                            }
+                        )
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
                 Text(
                     text = "Search",
                     style =
-                    MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp,
-                        fontSize = 28.sp,
-                    ),
+                        MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.5).sp,
+                            fontSize = 28.sp,
+                        ),
                     color = TextWhite,
                     modifier = Modifier.padding(bottom = 12.dp),
                 )
@@ -128,15 +128,15 @@ fun SearchScreen(
                 ) {
                     Box(
                         modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .then(
-                                when (windowSizeClass.widthSizeClass) {
-                                    WindowWidthSizeClass.Medium -> Modifier.widthIn(max = 600.dp)
-                                    WindowWidthSizeClass.Expanded -> Modifier.widthIn(max = 800.dp)
-                                    else -> Modifier
-                                },
-                            ),
+                            Modifier
+                                .fillMaxWidth()
+                                .then(
+                                    when (windowSizeClass.widthSizeClass) {
+                                        WindowWidthSizeClass.Medium -> Modifier.widthIn(max = 600.dp)
+                                        WindowWidthSizeClass.Expanded -> Modifier.widthIn(max = 800.dp)
+                                        else -> Modifier
+                                    },
+                                ),
                     ) {
                         com.deepeye.musicpro.ui.components.premium.GlassOmnibox(
                             query = query,
@@ -153,79 +153,80 @@ fun SearchScreen(
             isRefreshing = isLoading && results.isNotEmpty(),
             onRefresh = { viewModel.refresh() },
             modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-            SearchFilterBar(
-                selected = selectedFilter,
-                onSelected = viewModel::onFilterChange,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
-
-            if (query.isBlank()) {
-                SearchSuggestionsSection(
-                    suggestions = suggestions,
-                    recentSearches = recent,
-                    onSuggestionClick = viewModel::onQueryChange,
+                SearchFilterBar(
+                    selected = selectedFilter,
+                    onSelected = viewModel::onFilterChange,
+                    modifier = Modifier.padding(bottom = 8.dp),
                 )
-            } else if (isLoading && results.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = NeonCyanAccent)
-                }
-            } else if (results.isEmpty()) {
-                SearchEmptyState(query)
-            } else {
-                LazyColumn(
-                    state = listState,
-                    contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 180.dp),
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    items(results, key = { it.id }) { item ->
-                        if (item.videoId != null) {
-                            SmartTubeVideoCard(
-                                video = HomeVideoItem(
-                                    id = item.videoId,
-                                    title = item.title,
-                                    channelName = item.artist ?: item.subtitle,
-                                    thumbnailUrl = item.thumbnailUrl ?: "",
-                                ),
-                                onClick = {
-                                    viewModel.playResult(item)
-                                    onNavigateToNowPlaying()
-                                },
-                            )
-                        } else {
-                            SearchResultRow(
-                                item = item,
-                                onClick = {
-                                    viewModel.playResult(item)
-                                    onNavigateToNowPlaying()
-                                },
-                                onArtistClick = { item.artist?.let(onNavigateToArtist) },
-                                onAddToQueue = { viewModel.addToQueue(item) },
-                            )
-                        }
-                    }
 
-                    if (hasMoreResults) {
-                        item(key = "footer_loading") {
-                            LoadingIndicatorRow(modifier = Modifier.padding(vertical = 12.dp))
+                if (query.isBlank()) {
+                    SearchSuggestionsSection(
+                        suggestions = suggestions,
+                        recentSearches = recent,
+                        onSuggestionClick = viewModel::onQueryChange,
+                    )
+                } else if (isLoading && results.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = NeonCyanAccent)
+                    }
+                } else if (results.isEmpty()) {
+                    SearchEmptyState(query)
+                } else {
+                    LazyColumn(
+                        state = listState,
+                        contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 180.dp),
+                        modifier = Modifier.fillMaxSize(),
+                    ) {
+                        items(results, key = { it.id }) { item ->
+                            if (item.videoId != null) {
+                                SmartTubeVideoCard(
+                                    video =
+                                        HomeVideoItem(
+                                            id = item.videoId,
+                                            title = item.title,
+                                            channelName = item.artist ?: item.subtitle,
+                                            thumbnailUrl = item.thumbnailUrl ?: "",
+                                        ),
+                                    onClick = {
+                                        viewModel.playResult(item)
+                                        onNavigateToNowPlaying()
+                                    },
+                                )
+                            } else {
+                                SearchResultRow(
+                                    item = item,
+                                    onClick = {
+                                        viewModel.playResult(item)
+                                        onNavigateToNowPlaying()
+                                    },
+                                    onArtistClick = { item.artist?.let(onNavigateToArtist) },
+                                    onAddToQueue = { viewModel.addToQueue(item) },
+                                )
+                            }
                         }
-                    } else if (results.size >= 5) {
-                        item(key = "footer_end") {
-                            EndOfResultsRow(modifier = Modifier.padding(vertical = 12.dp))
+
+                        if (hasMoreResults) {
+                            item(key = "footer_loading") {
+                                LoadingIndicatorRow(modifier = Modifier.padding(vertical = 12.dp))
+                            }
+                        } else if (results.size >= 5) {
+                            item(key = "footer_end") {
+                                EndOfResultsRow(modifier = Modifier.padding(vertical = 12.dp))
+                            }
                         }
                     }
                 }
             }
         }
     }
-}
 }
 
 @Composable
@@ -238,9 +239,9 @@ fun SearchBar(
 
     Surface(
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .height(64.dp),
+            Modifier
+                .fillMaxWidth()
+                .height(64.dp),
         shape = RoundedCornerShape(32.dp),
         color = GlassContainer,
         tonalElevation = 0.dp,
@@ -248,9 +249,9 @@ fun SearchBar(
     ) {
         Row(
             modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
@@ -263,9 +264,9 @@ fun SearchBar(
                 value = query,
                 onValueChange = onQueryChange,
                 modifier =
-                Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                 placeholder = {
                     Text(
                         text = "Search local & YouTube Music",
@@ -273,26 +274,27 @@ fun SearchBar(
                         color = TextSecondaryGlass,
                     )
                 },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 16.sp,
-                    color = TextWhite,
-                ),
+                textStyle =
+                    MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 16.sp,
+                        color = TextWhite,
+                    ),
                 colors =
-                TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    cursorColor = NeonCyanAccent,
-                    focusedTextColor = TextWhite,
-                    unfocusedTextColor = TextWhite,
-                ),
+                    TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = NeonCyanAccent,
+                        focusedTextColor = TextWhite,
+                        unfocusedTextColor = TextWhite,
+                    ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions =
-                KeyboardActions(
-                    onSearch = { focusManager.clearFocus() },
-                ),
+                    KeyboardActions(
+                        onSearch = { focusManager.clearFocus() },
+                    ),
                 singleLine = true,
             )
 
@@ -330,14 +332,15 @@ fun SearchSuggestionsSection(
             }
             items(recentSearches, key = { it }) { recent ->
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 64.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(GlassContainer)
-                        .border(1.dp, GlassBorder, RoundedCornerShape(14.dp))
-                        .clickable { onSuggestionClick(recent) }
-                        .padding(vertical = 14.dp, horizontal = 12.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = 64.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(GlassContainer)
+                            .border(1.dp, GlassBorder, RoundedCornerShape(14.dp))
+                            .clickable { onSuggestionClick(recent) }
+                            .padding(vertical = 14.dp, horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -392,15 +395,17 @@ fun SearchSuggestionsSection(
                             },
                             modifier = Modifier.defaultMinSize(minHeight = 48.dp),
                             shape = RoundedCornerShape(16.dp),
-                            colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = GlassContainer,
-                                labelColor = TextWhite,
-                            ),
-                            border = SuggestionChipDefaults.suggestionChipBorder(
-                                enabled = true,
-                                borderColor = GlassBorder,
-                                borderWidth = 1.dp,
-                            ),
+                            colors =
+                                SuggestionChipDefaults.suggestionChipColors(
+                                    containerColor = GlassContainer,
+                                    labelColor = TextWhite,
+                                ),
+                            border =
+                                SuggestionChipDefaults.suggestionChipBorder(
+                                    enabled = true,
+                                    borderColor = GlassBorder,
+                                    borderWidth = 1.dp,
+                                ),
                         )
                     }
                 }
@@ -418,38 +423,40 @@ fun SearchResultRow(
 ) {
     Row(
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 64.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(GlassContainer)
-            .border(1.dp, GlassBorder, RoundedCornerShape(18.dp))
-            .clickable { onClick() }
-            .padding(vertical = 10.dp, horizontal = 12.dp),
+            Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 64.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(GlassContainer)
+                .border(1.dp, GlassBorder, RoundedCornerShape(18.dp))
+                .clickable { onClick() }
+                .padding(vertical = 10.dp, horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
             model = item.thumbnailUrl,
             contentDescription = null,
-            modifier = Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(GlassContainer)
-                .border(
-                    width = 1.dp,
-                    color = GlassBorder,
-                    shape = RoundedCornerShape(18.dp)
-                ),
+            modifier =
+                Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(GlassContainer)
+                    .border(
+                        width = 1.dp,
+                        color = GlassBorder,
+                        shape = RoundedCornerShape(18.dp)
+                    ),
             contentScale = ContentScale.Crop,
         )
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp,
-                ),
+                style =
+                    MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                    ),
                 color = TextWhite,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -466,9 +473,10 @@ fun SearchResultRow(
         if (onAddToQueue != null) {
             IconButton(
                 onClick = onAddToQueue,
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .size(48.dp),
+                modifier =
+                    Modifier
+                        .padding(start = 8.dp)
+                        .size(48.dp),
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -481,9 +489,10 @@ fun SearchResultRow(
         if (item.artist != null) {
             IconButton(
                 onClick = onArtistClick,
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .size(48.dp),
+                modifier =
+                    Modifier
+                        .padding(start = 8.dp)
+                        .size(48.dp),
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,

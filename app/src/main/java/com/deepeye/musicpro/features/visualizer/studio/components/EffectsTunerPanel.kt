@@ -22,7 +22,7 @@ fun EffectsTunerPanel(
 
     Column(modifier = modifier.padding(16.dp)) {
         Text("Effects Tuner", color = Color.White, style = MaterialTheme.typography.labelLarge)
-        
+
         Spacer(modifier = Modifier.height(8.dp))
         Text("Rotation Speed", color = Color.LightGray, style = MaterialTheme.typography.bodySmall)
         Slider(
@@ -30,7 +30,7 @@ fun EffectsTunerPanel(
             onValueChange = { viewModel.setRotationSpeed(it) },
             valueRange = 0f..2f
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
         Text("Base Glow", color = Color.LightGray, style = MaterialTheme.typography.bodySmall)
         Slider(

@@ -20,10 +20,10 @@ fun SplitMediaHero(
 ) {
     Row(
         modifier =
-        modifier
-            .fillMaxWidth()
-            .height(220.dp)
-            .padding(horizontal = 20.dp),
+            modifier
+                .fillMaxWidth()
+                .height(220.dp)
+                .padding(horizontal = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         PremiumHeroCard(

@@ -21,146 +21,159 @@ import javax.inject.Singleton
  * decorrelated delay lines, and center-image vocal preservation.
  */
 @Singleton
-class FieldSurroundProcessor @Inject constructor() : AudioProcessor {
+class FieldSurroundProcessor
+    @Inject
+    constructor() : AudioProcessor {
+        private var active = false
+        private var inputAudioFormat = AudioFormat.NOT_SET
+        private var outputAudioFormat = AudioFormat.NOT_SET
+        private var buffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
+        private var outputBuffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
+        private var inputEnded = false
 
-    private var active = false
-    private var inputAudioFormat = AudioFormat.NOT_SET
-    private var outputAudioFormat = AudioFormat.NOT_SET
-    private var buffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
-    private var outputBuffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
-    private var inputEnded = false
+        private var surroundStrength = 500 // 0..1000
+        private var midImageStrength = 500 // 0..1000
+        private var stereoWidth = 1.2f
 
-    private var surroundStrength = 500 // 0..1000
-    private var midImageStrength = 500 // 0..1000
-    private var stereoWidth = 1.2f
+        // Circular delay buffer for Side channel (up to 30ms at 192kHz ~ 6000 samples)
+        private val delayBuffer = FloatArray(8192)
+        private var writeIndex = 0
+        private var delaySamples = 441 // ~10ms at 44.1kHz
 
-    // Circular delay buffer for Side channel (up to 30ms at 192kHz ~ 6000 samples)
-    private val delayBuffer = FloatArray(8192)
-    private var writeIndex = 0
-    private var delaySamples = 441 // ~10ms at 44.1kHz
+        // Low-pass filter for delayed side signal
+        private var lastDelayedSide = 0f
 
-    // Low-pass filter for delayed side signal
-    private var lastDelayedSide = 0f
+        fun setConfig(
+            enabled: Boolean,
+            strength: Int,
+            midStrength: Int
+        ) {
+            active = enabled && strength > 0
+            surroundStrength = strength.coerceIn(0, 1000)
+            midImageStrength = midStrength.coerceIn(0, 1000)
+            // Map strength to 1.0x - 2.2x width
+            stereoWidth = 1.0f + (surroundStrength / 1000f) * 1.2f
 
-    fun setConfig(enabled: Boolean, strength: Int, midStrength: Int) {
-        active = enabled && strength > 0
-        surroundStrength = strength.coerceIn(0, 1000)
-        midImageStrength = midStrength.coerceIn(0, 1000)
-        // Map strength to 1.0x - 2.2x width
-        stereoWidth = 1.0f + (surroundStrength / 1000f) * 1.2f
-
-        if (inputAudioFormat.sampleRate > 0) {
-            updateDelay(inputAudioFormat.sampleRate)
-        }
-    }
-
-    private fun updateDelay(sampleRate: Int) {
-        // Delay between 6ms (subtle) to 18ms (immersive) based on strength
-        val delayMs = 6.0f + (surroundStrength / 1000f) * 12.0f
-        delaySamples = ((delayMs / 1000f) * sampleRate).toInt().coerceIn(64, delayBuffer.size - 1)
-    }
-
-    override fun configure(inputAudioFormat: AudioFormat): AudioFormat {
-        if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT) {
-            throw AudioProcessor.UnhandledAudioFormatException(inputAudioFormat)
-        }
-        this.inputAudioFormat = inputAudioFormat
-        this.outputAudioFormat = inputAudioFormat
-        updateDelay(inputAudioFormat.sampleRate)
-        return outputAudioFormat
-    }
-
-    override fun isActive(): Boolean {
-        return inputAudioFormat.channelCount != Format.NO_VALUE
-    }
-
-    override fun queueInput(inputBuffer: ByteBuffer) {
-        val limit = inputBuffer.limit()
-        val position = inputBuffer.position()
-        val frameCount = (limit - position) / inputAudioFormat.bytesPerFrame
-
-        if (!inputBuffer.hasRemaining()) return
-
-        val requiredBufferSize = frameCount * outputAudioFormat.bytesPerFrame
-        if (buffer.capacity() < requiredBufferSize) {
-            buffer = ByteBuffer.allocateDirect(requiredBufferSize).order(ByteOrder.nativeOrder())
-        } else {
-            buffer.clear()
-        }
-
-        if (!active || inputAudioFormat.channelCount != 2) {
-            buffer.put(inputBuffer)
-        } else {
-            val midGain = 0.8f + (midImageStrength / 1000f) * 0.4f
-            val wetFactor = (surroundStrength / 1000f) * 0.45f
-            val bufSize = delayBuffer.size
-
-            while (inputBuffer.position() < limit) {
-                val inL = sanitize(inputBuffer.short.toFloat() / 32768f)
-                val inR = sanitize(inputBuffer.short.toFloat() / 32768f)
-
-                // Mid/Side Decomposition
-                val mid = sanitize((inL + inR) * 0.5f * midGain)
-                val side = sanitize((inL - inR) * 0.5f)
-
-                // Push side to circular delay line
-                delayBuffer[writeIndex] = side
-                val readIndex = (writeIndex - delaySamples + bufSize) % bufSize
-                val delayedRaw = sanitize(delayBuffer[readIndex])
-                writeIndex = (writeIndex + 1) % bufSize
-
-                // 1-pole low-pass on delayed side (damps harsh reflections above 4kHz)
-                lastDelayedSide = sanitize(lastDelayedSide + 0.35f * (delayedRaw - lastDelayedSide))
-
-                // Synthesize enhanced stereo field
-                val expandedSide = sanitize(side * stereoWidth + lastDelayedSide * wetFactor)
-
-                val outL = sanitize((mid + expandedSide).coerceIn(-1.0f, 1.0f))
-                val outR = sanitize((mid - expandedSide).coerceIn(-1.0f, 1.0f))
-
-                val outShortL = (outL * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
-                val outShortR = (outR * 32767f).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
-
-                buffer.putShort(outShortL)
-                buffer.putShort(outShortR)
+            if (inputAudioFormat.sampleRate > 0) {
+                updateDelay(inputAudioFormat.sampleRate)
             }
         }
 
-        inputBuffer.position(limit)
-        buffer.flip()
-        outputBuffer = this.buffer
-    }
+        private fun updateDelay(sampleRate: Int) {
+            // Delay between 6ms (subtle) to 18ms (immersive) based on strength
+            val delayMs = 6.0f + (surroundStrength / 1000f) * 12.0f
+            delaySamples = ((delayMs / 1000f) * sampleRate).toInt().coerceIn(64, delayBuffer.size - 1)
+        }
 
-    private inline fun sanitize(v: Float): Float {
-        if (v.isNaN() || v.isInfinite()) return 0.0f
-        if (kotlin.math.abs(v) < 1e-15f) return 0.0f // FTZ (Flush-To-Zero) subnormals
-        return v
-    }
+        override fun configure(inputAudioFormat: AudioFormat): AudioFormat {
+            if (inputAudioFormat.encoding != C.ENCODING_PCM_16BIT) {
+                throw AudioProcessor.UnhandledAudioFormatException(inputAudioFormat)
+            }
+            this.inputAudioFormat = inputAudioFormat
+            this.outputAudioFormat = inputAudioFormat
+            updateDelay(inputAudioFormat.sampleRate)
+            return outputAudioFormat
+        }
 
-    override fun queueEndOfStream() {
-        inputEnded = true
-    }
+        override fun isActive(): Boolean {
+            return inputAudioFormat.channelCount != Format.NO_VALUE
+        }
 
-    override fun getOutput(): ByteBuffer {
-        val output = outputBuffer
-        outputBuffer = AudioProcessor.EMPTY_BUFFER
-        return output
-    }
+        override fun queueInput(inputBuffer: ByteBuffer) {
+            val limit = inputBuffer.limit()
+            val position = inputBuffer.position()
+            val frameCount = (limit - position) / inputAudioFormat.bytesPerFrame
 
-    override fun isEnded(): Boolean = inputEnded && outputBuffer === AudioProcessor.EMPTY_BUFFER
+            if (!inputBuffer.hasRemaining()) return
 
-    override fun flush() {
-        outputBuffer = AudioProcessor.EMPTY_BUFFER
-        inputEnded = false
-        delayBuffer.fill(0f)
-        writeIndex = 0
-        lastDelayedSide = 0f
-    }
+            val requiredBufferSize = frameCount * outputAudioFormat.bytesPerFrame
+            if (buffer.capacity() < requiredBufferSize) {
+                buffer = ByteBuffer.allocateDirect(requiredBufferSize).order(ByteOrder.nativeOrder())
+            } else {
+                buffer.clear()
+            }
 
-    override fun reset() {
-        flush()
-        buffer = AudioProcessor.EMPTY_BUFFER
-        inputAudioFormat = AudioFormat.NOT_SET
-        outputAudioFormat = AudioFormat.NOT_SET
+            if (!active || inputAudioFormat.channelCount != 2) {
+                buffer.put(inputBuffer)
+            } else {
+                val midGain = 0.8f + (midImageStrength / 1000f) * 0.4f
+                val wetFactor = (surroundStrength / 1000f) * 0.45f
+                val bufSize = delayBuffer.size
+
+                while (inputBuffer.position() < limit) {
+                    val inL = sanitize(inputBuffer.short.toFloat() / 32768f)
+                    val inR = sanitize(inputBuffer.short.toFloat() / 32768f)
+
+                    // Mid/Side Decomposition
+                    val mid = sanitize((inL + inR) * 0.5f * midGain)
+                    val side = sanitize((inL - inR) * 0.5f)
+
+                    // Push side to circular delay line
+                    delayBuffer[writeIndex] = side
+                    val readIndex = (writeIndex - delaySamples + bufSize) % bufSize
+                    val delayedRaw = sanitize(delayBuffer[readIndex])
+                    writeIndex = (writeIndex + 1) % bufSize
+
+                    // 1-pole low-pass on delayed side (damps harsh reflections above 4kHz)
+                    lastDelayedSide = sanitize(lastDelayedSide + 0.35f * (delayedRaw - lastDelayedSide))
+
+                    // Synthesize enhanced stereo field
+                    val expandedSide = sanitize(side * stereoWidth + lastDelayedSide * wetFactor)
+
+                    val outL = sanitize((mid + expandedSide).coerceIn(-1.0f, 1.0f))
+                    val outR = sanitize((mid - expandedSide).coerceIn(-1.0f, 1.0f))
+
+                    val outShortL =
+                        (outL * 32767f).toInt().coerceIn(
+                            Short.MIN_VALUE.toInt(),
+                            Short.MAX_VALUE.toInt()
+                        ).toShort()
+                    val outShortR =
+                        (outR * 32767f).toInt().coerceIn(
+                            Short.MIN_VALUE.toInt(),
+                            Short.MAX_VALUE.toInt()
+                        ).toShort()
+
+                    buffer.putShort(outShortL)
+                    buffer.putShort(outShortR)
+                }
+            }
+
+            inputBuffer.position(limit)
+            buffer.flip()
+            outputBuffer = this.buffer
+        }
+
+        private inline fun sanitize(v: Float): Float {
+            if (v.isNaN() || v.isInfinite()) return 0.0f
+            if (kotlin.math.abs(v) < 1e-15f) return 0.0f // FTZ (Flush-To-Zero) subnormals
+            return v
+        }
+
+        override fun queueEndOfStream() {
+            inputEnded = true
+        }
+
+        override fun getOutput(): ByteBuffer {
+            val output = outputBuffer
+            outputBuffer = AudioProcessor.EMPTY_BUFFER
+            return output
+        }
+
+        override fun isEnded(): Boolean = inputEnded && outputBuffer === AudioProcessor.EMPTY_BUFFER
+
+        override fun flush() {
+            outputBuffer = AudioProcessor.EMPTY_BUFFER
+            inputEnded = false
+            delayBuffer.fill(0f)
+            writeIndex = 0
+            lastDelayedSide = 0f
+        }
+
+        override fun reset() {
+            flush()
+            buffer = AudioProcessor.EMPTY_BUFFER
+            inputAudioFormat = AudioFormat.NOT_SET
+            outputAudioFormat = AudioFormat.NOT_SET
+        }
     }
-}

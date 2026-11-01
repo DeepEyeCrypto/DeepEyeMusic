@@ -17,8 +17,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
-import com.deepeye.musicpro.ui.theme.TouchTargets
 import androidx.compose.ui.unit.Dp
+import com.deepeye.musicpro.ui.theme.TouchTargets
 
 /**
  * Shared accessibility helpers.
@@ -50,20 +50,22 @@ fun Modifier.minTouchTarget(minSize: Dp = TouchTargets.Min): Modifier =
 fun Modifier.semanticsRoleButton(): Modifier = this.semantics { role = Role.Button }
 
 /** Marks a node as a checkbox-style toggle and announces its on/off state. */
-fun Modifier.semanticsRoleCheckbox(checked: Boolean): Modifier = this.semantics {
-    role = Role.Checkbox
-    toggleableState = if (checked) ToggleableState.On else ToggleableState.Off
-}
+fun Modifier.semanticsRoleCheckbox(checked: Boolean): Modifier =
+    this.semantics {
+        role = Role.Checkbox
+        toggleableState = if (checked) ToggleableState.On else ToggleableState.Off
+    }
 
 /**
  * Marks a node as a navigation tab and announces which one is currently
  * selected, so TalkBack reads "Home, selected, tab 1 of 7" instead of silently
  * treating all destinations as equivalent buttons.
  */
-fun Modifier.semanticsRoleTab(selected: Boolean): Modifier = this.semantics {
-    role = Role.Tab
-    this.selected = selected
-}
+fun Modifier.semanticsRoleTab(selected: Boolean): Modifier =
+    this.semantics {
+        role = Role.Tab
+        this.selected = selected
+    }
 
 /**
  * Attaches a human-readable label to a node that has no label of its own.
@@ -72,17 +74,19 @@ fun Modifier.semanticsRoleTab(selected: Boolean): Modifier = this.semantics {
  * a null description on a *decorative* node is correct, but on an interactive
  * node it silently removes the control from the TalkBack focus order.
  */
-fun Modifier.semanticsLabel(label: String): Modifier = this.semantics {
-    contentDescription = label
-}
+fun Modifier.semanticsLabel(label: String): Modifier =
+    this.semantics {
+        contentDescription = label
+    }
 
 /**
  * Announces a non-visual state (e.g. "Favourite", "Downloaded", "Locked") so it
  * is not conveyed by colour or icon alone.
  */
-fun Modifier.semanticsState(state: String): Modifier = this.semantics {
-    stateDescription = state
-}
+fun Modifier.semanticsState(state: String): Modifier =
+    this.semantics {
+        stateDescription = state
+    }
 
 /**
  * Attaches an explicit accessibility action for nodes driven by raw
@@ -92,9 +96,13 @@ fun Modifier.semanticsState(state: String): Modifier = this.semantics {
  * @param action must return `true` when it consumed the action, per the
  *   `SemanticsPropertyReceiver.onClick` contract.
  */
-fun Modifier.semanticsAction(label: String, action: () -> Boolean): Modifier = this.semantics {
-    onClick(label = label, action = action)
-}
+fun Modifier.semanticsAction(
+    label: String,
+    action: () -> Boolean
+): Modifier =
+    this.semantics {
+        onClick(label = label, action = action)
+    }
 
 /**
  * Builds a [MutableInteractionSource] for custom clickables that should still

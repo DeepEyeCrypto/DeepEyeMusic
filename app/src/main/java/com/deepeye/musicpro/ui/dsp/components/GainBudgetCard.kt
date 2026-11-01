@@ -40,11 +40,11 @@ fun GainBudgetCard(
 ) {
     val riskColor by animateColorAsState(
         targetValue =
-        when (gainBudget.risk) {
-            RiskLevel.SAFE -> Color(0xFF00B248)
-            RiskLevel.MODERATE -> Color(0xFFE69A00)
-            RiskLevel.DANGER -> Color(0xFFE53935)
-        },
+            when (gainBudget.risk) {
+                RiskLevel.SAFE -> Color(0xFF00B248)
+                RiskLevel.MODERATE -> Color(0xFFE69A00)
+                RiskLevel.DANGER -> Color(0xFFE53935)
+            },
         animationSpec = tween(400),
         label = "riskColor",
     )
@@ -54,10 +54,10 @@ fun GainBudgetCard(
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
         animationSpec =
-        spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium,
-        ),
+            spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMedium,
+            ),
         label = "progress",
     )
 
@@ -65,9 +65,9 @@ fun GainBudgetCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors =
-        CardDefaults.cardColors(
-            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant,
-        ),
+            CardDefaults.cardColors(
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant,
+            ),
         border = BorderStroke(1.dp, riskColor.copy(alpha = 0.4f)),
     ) {
         Column(
@@ -107,10 +107,10 @@ fun GainBudgetCard(
                     Text(
                         text = gainBudget.risk.name,
                         modifier =
-                        Modifier.padding(
-                            horizontal = 8.dp,
-                            vertical = 2.dp,
-                        ),
+                            Modifier.padding(
+                                horizontal = 8.dp,
+                                vertical = 2.dp,
+                            ),
                         fontSize = 10.sp,
                         color = riskColor,
                         fontWeight = FontWeight.Bold,
@@ -130,29 +130,29 @@ fun GainBudgetCard(
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Box(
                     modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(androidx.compose.material3.MaterialTheme.colorScheme.surface),
+                        Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(androidx.compose.material3.MaterialTheme.colorScheme.surface),
                 ) {
                     Box(
                         modifier =
-                        Modifier
-                            .fillMaxWidth(animatedProgress)
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(
-                                Brush.horizontalGradient(
-                                    colors =
-                                    listOf(
-                                        Color(0xFF00B248),
-                                        Color(0xFFE69A00),
-                                        Color(0xFFE53935),
+                            Modifier
+                                .fillMaxWidth(animatedProgress)
+                                .fillMaxHeight()
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        colors =
+                                            listOf(
+                                                Color(0xFF00B248),
+                                                Color(0xFFE69A00),
+                                                Color(0xFFE53935),
+                                            ),
+                                        endX = Float.POSITIVE_INFINITY,
                                     ),
-                                    endX = Float.POSITIVE_INFINITY,
                                 ),
-                            ),
                     )
                 }
 

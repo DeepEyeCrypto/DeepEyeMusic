@@ -25,11 +25,12 @@ class VisualizerDataBridge(
 ) {
     private val pixelBuffer = IntArray(textureWidth)
     private val audioBitmap: Bitmap = Bitmap.createBitmap(textureWidth, 1, Bitmap.Config.ARGB_8888)
-    private val audioShader: BitmapShader = BitmapShader(
-        audioBitmap,
-        Shader.TileMode.CLAMP,
-        Shader.TileMode.CLAMP
-    )
+    private val audioShader: BitmapShader =
+        BitmapShader(
+            audioBitmap,
+            Shader.TileMode.CLAMP,
+            Shader.TileMode.CLAMP
+        )
 
     /**
      * Updates the internal 256x1 audio bitmap with the latest FFT spectrum and band energies.
@@ -49,27 +50,30 @@ class VisualizerDataBridge(
         val treble = if (bandsLen > 4) frequencyBands[4].coerceIn(0f, 2f) else 0f
         val peak = if (bandsLen > 5) frequencyBands[5].coerceIn(0f, 2f) else 0f
 
-        val blueValue = ((peak * 0.4f + bass * 0.3f + mids * 0.3f) * scale * 255f)
-            .toInt()
-            .coerceIn(0, 255)
+        val blueValue =
+            ((peak * 0.4f + bass * 0.3f + mids * 0.3f) * scale * 255f)
+                .toInt()
+                .coerceIn(0, 255)
 
         for (i in 0 until textureWidth) {
             // Map 256 pixels across the available FFT spectrum
-            val specIndex = if (specLen > 0) {
-                val ratio = i.toFloat() / (textureWidth - 1)
-                val mapped = (ratio * (specLen - 1)).toInt()
-                min(mapped, specLen - 1)
-            } else {
-                0
-            }
+            val specIndex =
+                if (specLen > 0) {
+                    val ratio = i.toFloat() / (textureWidth - 1)
+                    val mapped = (ratio * (specLen - 1)).toInt()
+                    min(mapped, specLen - 1)
+                } else {
+                    0
+                }
 
             val rawMag = if (specLen > specIndex) fftSpectrum[specIndex] else 0f
             val redValue = (rawMag * scale * 255f).toInt().coerceIn(0, 255)
 
             // Waveform synthetic / phase modulation for green channel
-            val greenValue = ((rawMag * 0.7f + (if (i % 2 == 0) treble else bass) * 0.3f) * scale * 255f)
-                .toInt()
-                .coerceIn(0, 255)
+            val greenValue =
+                ((rawMag * 0.7f + (if (i % 2 == 0) treble else bass) * 0.3f) * scale * 255f)
+                    .toInt()
+                    .coerceIn(0, 255)
 
             // Pack ARGB_8888 (0xFF_RR_GG_BB)
             pixelBuffer[i] = (0xFF shl 24) or (redValue shl 16) or (greenValue shl 8) or blueValue

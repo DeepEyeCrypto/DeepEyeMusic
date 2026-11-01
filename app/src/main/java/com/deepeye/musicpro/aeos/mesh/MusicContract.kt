@@ -6,13 +6,16 @@ package com.deepeye.musicpro.aeos.mesh
  */
 sealed class MusicIntent {
     object Play : MusicIntent()
+
     object Pause : MusicIntent()
+
     object NextTrack : MusicIntent()
+
     object SimulateChaos : MusicIntent()
 }
 
 data class MusicState(
-    val currentTrack: String = "No Track", 
+    val currentTrack: String = "No Track",
     val isPlaying: Boolean = false,
     val isSystemFailure: Boolean = false,
     val errorMessage: String? = null

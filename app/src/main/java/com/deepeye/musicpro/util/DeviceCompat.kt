@@ -1,8 +1,8 @@
 package com.deepeye.musicpro.util
 
-import android.os.Build
 import android.app.ActivityManager
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import java.util.concurrent.ConcurrentHashMap
 
@@ -46,37 +46,38 @@ object DeviceCompat {
      */
     private val lowTierCache = ConcurrentHashMap<Context, Boolean>()
 
-    fun isLowTierDevice(context: Context): Boolean = lowTierCache.getOrPut(context.applicationContext) {
-        try {
-            val activityManager =
-                context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
-            val lowRam = activityManager?.isLowRamDevice ?: false
+    fun isLowTierDevice(context: Context): Boolean =
+        lowTierCache.getOrPut(context.applicationContext) {
+            try {
+                val activityManager =
+                    context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+                val lowRam = activityManager?.isLowRamDevice ?: false
 
-            val memoryInfo = ActivityManager.MemoryInfo()
-            activityManager?.getMemoryInfo(memoryInfo)
-            val totalRamMb = memoryInfo.totalMem / (1024L * 1024L)
+                val memoryInfo = ActivityManager.MemoryInfo()
+                activityManager?.getMemoryInfo(memoryInfo)
+                val totalRamMb = memoryInfo.totalMem / (1024L * 1024L)
 
-            // 3 GB is the floor: below this, blur buffers plus the ExoPlayer +
-            // AudioTrack + DSP graph allocations thrash the heap.
-            lowRam || totalRamMb in 1 until LOW_TIER_RAM_MB
-        } catch (e: Exception) {
-            Log.w(TAG, "Low-tier detection failed, assuming capable device: ${e.message}")
-            false
+                // 3 GB is the floor: below this, blur buffers plus the ExoPlayer +
+                // AudioTrack + DSP graph allocations thrash the heap.
+                lowRam || totalRamMb in 1 until LOW_TIER_RAM_MB
+            } catch (e: Exception) {
+                Log.w(TAG, "Low-tier detection failed, assuming capable device: ${e.message}")
+                false
+            }
         }
-    }
 
     fun getSurfaceType(context: Context): String {
         if (isVivo || isLowRamDevice(context)) {
-            return "surface_view"  // Vivo prefers SurfaceView
+            return "surface_view" // Vivo prefers SurfaceView
         }
-        return "texture_view"  // Others use TextureView
+        return "texture_view" // Others use TextureView
     }
 
     fun getRendererType(): String {
         if (isAndroid16 && isVivo) {
-            return "OpenGL_ES"  // Force OpenGL on Vivo + Android 16
+            return "OpenGL_ES" // Force OpenGL on Vivo + Android 16
         }
-        return "Vulkan"  // Default Vulkan
+        return "Vulkan" // Default Vulkan
     }
 
     fun shouldForceSoftwareRenderer(context: Context): Boolean {

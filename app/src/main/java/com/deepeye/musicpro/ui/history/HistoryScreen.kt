@@ -3,8 +3,6 @@
 
 package com.deepeye.musicpro.ui.history
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -29,13 +27,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import com.deepeye.musicpro.domain.model.home.HomeVideoItem
-import com.deepeye.musicpro.ui.youtube.SmartTubeVideoCard
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.data.db.PlaybackHistoryEntity
 import com.deepeye.musicpro.data.db.SearchHistoryEntity
 import com.deepeye.musicpro.data.db.VideoHistoryEntity
+import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.domain.repository.HistoryRepository
+import com.deepeye.musicpro.ui.youtube.SmartTubeVideoCard
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -44,27 +42,29 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class HistoryViewModel @Inject constructor(
-    private val historyRepository: HistoryRepository
-) : ViewModel() {
-    val recentPlaybacks: StateFlow<List<PlaybackHistoryEntity>> =
-        historyRepository.getRecentPlaybacks()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+class HistoryViewModel
+    @Inject
+    constructor(
+        private val historyRepository: HistoryRepository
+    ) : ViewModel() {
+        val recentPlaybacks: StateFlow<List<PlaybackHistoryEntity>> =
+            historyRepository.getRecentPlaybacks()
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val recentVideos: StateFlow<List<VideoHistoryEntity>> =
-        historyRepository.getRecentVideos()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        val recentVideos: StateFlow<List<VideoHistoryEntity>> =
+            historyRepository.getRecentVideos()
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val recentSearches: StateFlow<List<SearchHistoryEntity>> =
-        historyRepository.getRecentSearches()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        val recentSearches: StateFlow<List<SearchHistoryEntity>> =
+            historyRepository.getRecentSearches()
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun clearHistory() {
-        viewModelScope.launch {
-            historyRepository.clearAllHistory()
+        fun clearHistory() {
+            viewModelScope.launch {
+                historyRepository.clearAllHistory()
+            }
         }
     }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,13 +81,13 @@ fun HistoryScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        text = "Memory Engine", 
+                        text = "Memory Engine",
                         color = Color.White,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
-                    ) 
+                    )
                 },
                 navigationIcon = {
                     IconButton(
@@ -95,8 +95,8 @@ fun HistoryScreen(
                         modifier = Modifier.size(52.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
-                            contentDescription = "Back", 
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
                             tint = Color.White,
                             modifier = Modifier.size(24.dp)
                         )
@@ -108,7 +108,7 @@ fun HistoryScreen(
                         modifier = Modifier.defaultMinSize(minHeight = 52.dp)
                     ) {
                         Text(
-                            text = "Clear All", 
+                            text = "Clear All",
                             color = Color(0xFFFF453A),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
@@ -120,9 +120,10 @@ fun HistoryScreen(
         }
     ) { padding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding),
             contentPadding = PaddingValues(top = 16.dp, bottom = 180.dp),
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
@@ -200,16 +201,25 @@ fun VideoHistoryCard(
     onClick: () -> Unit = {}
 ) {
     SmartTubeVideoCard(
-        video = HomeVideoItem(
-            id = video.videoId,
-            title = video.title,
-            channelName = "",
-            thumbnailUrl = video.thumbnailUri ?: "",
-            duration = video.durationMs / 1000,
-        ),
+        video =
+            HomeVideoItem(
+                id = video.videoId,
+                title = video.title,
+                channelName = "",
+                thumbnailUrl = video.thumbnailUri ?: "",
+                duration = video.durationMs / 1000,
+            ),
         onClick = onClick,
         modifier = Modifier.width(280.dp),
-        progressFraction = if (video.completionPercent > 1f) (video.completionPercent / 100f).coerceIn(0f, 1f) else video.completionPercent.coerceIn(0f, 1f),
+        progressFraction =
+            if (video.completionPercent > 1f) {
+                (video.completionPercent / 100f).coerceIn(
+                    0f,
+                    1f
+                )
+            } else {
+                video.completionPercent.coerceIn(0f, 1f)
+            },
     )
 }
 
@@ -220,27 +230,31 @@ fun PlaybackHistoryRow(
 ) {
     Card(
         onClick = onClick,
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF131722).copy(alpha = 0.85f)
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+        colors =
+            CardDefaults.cardColors(
+                containerColor = Color(0xFF131722).copy(alpha = 0.85f)
+            ),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 64.dp)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 64.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
                 model = playback.artworkUri,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                modifier =
+                    Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(8.dp))
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -265,8 +279,8 @@ fun PlaybackHistoryRow(
                 modifier = Modifier.size(52.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.PlayCircle, 
-                    contentDescription = "Play", 
+                    imageVector = Icons.Default.PlayCircle,
+                    contentDescription = "Play",
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )

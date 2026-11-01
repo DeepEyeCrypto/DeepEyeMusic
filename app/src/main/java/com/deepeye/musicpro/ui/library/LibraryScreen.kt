@@ -5,19 +5,17 @@ package com.deepeye.musicpro.ui.library
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Bookmark
@@ -32,7 +30,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -48,7 +45,6 @@ import com.deepeye.musicpro.core.utils.TimeFormatter
 import com.deepeye.musicpro.domain.model.Album
 import com.deepeye.musicpro.domain.model.Artist
 import com.deepeye.musicpro.domain.model.Song
-import com.deepeye.musicpro.domain.model.library.LibraryItem
 import com.deepeye.musicpro.ui.components.bouncyClickable
 import com.deepeye.musicpro.ui.motion.premiumScrollHaptics
 import com.deepeye.musicpro.ui.theme.CardGeometry
@@ -77,25 +73,28 @@ fun LibraryScreen(
     val libraryHome = uiState.libraryHome
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .background(Color.Transparent)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .background(Color.Transparent)
     ) {
         // ── Cyberpunk Header ──
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.sdp, vertical = 12.sdp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.sdp, vertical = 12.sdp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Brush.linearGradient(listOf(Color(0xFF7B1FA2), neonCyan))),
+                    modifier =
+                        Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Brush.linearGradient(listOf(Color(0xFF7B1FA2), neonCyan))),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -132,10 +131,11 @@ fun LibraryScreen(
                     onClick = { viewModel.toggleOfflineMode() },
                     shape = RoundedCornerShape(16.dp),
                     color = if (uiState.offlineMode) Color(0x3300E5FF) else darkSurface,
-                    border = androidx.compose.foundation.BorderStroke(
-                        1.dp,
-                        if (uiState.offlineMode) neonCyan else glassBorder
-                    ),
+                    border =
+                        androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (uiState.offlineMode) neonCyan else glassBorder
+                        ),
                     modifier = Modifier.heightIn(min = 44.dp)
                 ) {
                     Row(
@@ -160,11 +160,12 @@ fun LibraryScreen(
 
                 IconButton(
                     onClick = onNavigateToDownloads,
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(darkSurface)
-                        .border(1.dp, glassBorder, CircleShape)
+                    modifier =
+                        Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(darkSurface)
+                            .border(1.dp, glassBorder, CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Download,
@@ -244,9 +245,10 @@ fun LibraryScreen(
 
         // ── Horizontal Media Tabs Ribbon ──
         LazyRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.sdp, vertical = 6.sdp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.sdp, vertical = 6.sdp),
             horizontalArrangement = Arrangement.spacedBy(10.sdp)
         ) {
             itemsIndexed(tabs) { index, title ->
@@ -255,10 +257,11 @@ fun LibraryScreen(
                     onClick = { viewModel.selectTab(index) },
                     shape = RoundedCornerShape(20.dp),
                     color = if (isSelected) Color(0x3300E5FF) else darkSurface,
-                    border = androidx.compose.foundation.BorderStroke(
-                        width = if (isSelected) 1.5.dp else 1.dp,
-                        color = if (isSelected) neonCyan else glassBorder
-                    ),
+                    border =
+                        androidx.compose.foundation.BorderStroke(
+                            width = if (isSelected) 1.5.dp else 1.dp,
+                            color = if (isSelected) neonCyan else glassBorder
+                        ),
                     modifier = Modifier.heightIn(min = 48.dp)
                 ) {
                     Box(
@@ -280,17 +283,19 @@ fun LibraryScreen(
 
         // ── Content Area ──
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
         ) {
             when (uiState.selectedTab) {
-                0 -> SongsTab(uiState.songs) { song ->
-                    val mediaItems = uiState.songs.map { com.deepeye.musicpro.domain.model.MediaItem.Local(it) }
-                    val index = uiState.songs.indexOfFirst { it.id == song.id }
-                    playerViewModel.setQueue(mediaItems, if (index >= 0) index else 0)
-                    onNavigateToNowPlaying()
-                }
+                0 ->
+                    SongsTab(uiState.songs) { song ->
+                        val mediaItems = uiState.songs.map { com.deepeye.musicpro.domain.model.MediaItem.Local(it) }
+                        val index = uiState.songs.indexOfFirst { it.id == song.id }
+                        playerViewModel.setQueue(mediaItems, if (index >= 0) index else 0)
+                        onNavigateToNowPlaying()
+                    }
                 1 -> AlbumsTab(uiState.albums, onNavigateToAlbum)
                 2 -> ArtistsTab(uiState.artists, onNavigateToArtist)
                 3 -> GenresTab()
@@ -303,8 +308,7 @@ fun LibraryScreen(
  * Formats a collection size for the quick-access tiles: "0 items", "1 item", "12 items".
  * Internal rather than private so the pluralisation is unit-testable.
  */
-internal fun itemCountLabel(count: Int): String =
-    if (count == 1) "1 item" else "$count items"
+internal fun itemCountLabel(count: Int): String = if (count == 1) "1 item" else "$count items"
 
 // ── Quick Access Tile ──
 
@@ -327,31 +331,34 @@ internal fun LibraryQuickCard(
     onClick: () -> Unit,
 ) {
     Card(
-        modifier = Modifier
-            // Adaptive floor from the SSOT. Was a bare `160.dp` literal, which
-            // meant the floor here could not be retuned alongside the grids in
-            // this same file without editing both.
-            .widthIn(min = CardGeometry.Music.minWidth, max = 260.dp)
-            .height(84.dp)
-            .clip(CardGeometry.Music.shape)
-            .bouncyClickable(downScale = 0.95f, onClick = onClick),
+        modifier =
+            Modifier
+                // Adaptive floor from the SSOT. Was a bare `160.dp` literal, which
+                // meant the floor here could not be retuned alongside the grids in
+                // this same file without editing both.
+                .widthIn(min = CardGeometry.Music.minWidth, max = 260.dp)
+                .height(84.dp)
+                .clip(CardGeometry.Music.shape)
+                .bouncyClickable(downScale = 0.95f, onClick = onClick),
         shape = CardGeometry.Music.shape,
         colors = CardDefaults.cardColors(containerColor = darkSurface),
         border = androidx.compose.foundation.BorderStroke(1.dp, glassBorder)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxHeight()
-                .padding(horizontal = 16.sdp, vertical = 14.sdp),
+            modifier =
+                Modifier
+                    .fillMaxHeight()
+                    .padding(horizontal = 16.sdp, vertical = 14.sdp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.sdp)
         ) {
             Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(accentColor.copy(alpha = 0.18f))
-                    .border(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(14.dp)),
+                modifier =
+                    Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(accentColor.copy(alpha = 0.18f))
+                        .border(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -389,9 +396,10 @@ internal fun LibraryQuickCard(
 @Composable
 private fun EmptyLibraryState(message: String) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(48.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -440,9 +448,10 @@ private fun SongsTab(
                 shape = RoundedCornerShape(18.dp),
                 color = darkSurface,
                 border = androidx.compose.foundation.BorderStroke(1.dp, glassBorder),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 68.dp)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 68.dp)
             ) {
                 Row(
                     modifier = Modifier.padding(12.dp),
@@ -451,10 +460,11 @@ private fun SongsTab(
                     AsyncImage(
                         model = song.artUri,
                         contentDescription = null,
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color.Black.copy(alpha = 0.4f)),
+                        modifier =
+                            Modifier
+                                .size(52.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color.Black.copy(alpha = 0.4f)),
                         contentScale = ContentScale.Crop,
                     )
                     Spacer(Modifier.width(16.dp))
@@ -510,19 +520,21 @@ private fun AlbumsTab(
         // and a fixed column count that could not exploit extra landscape width.
         // Adaptive fits as many 1:1 album tiles as naturally fit.
         columns = GridCells.Adaptive(CardGeometry.Music.minWidth),
-        contentPadding = PaddingValues(
-            horizontal = CardGeometry.ScreenGutter,
-            vertical = 12.dp
-        ),
+        contentPadding =
+            PaddingValues(
+                horizontal = CardGeometry.ScreenGutter,
+                vertical = 12.dp
+            ),
         horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
         verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
     ) {
         items(albums, key = { it.id }) { album ->
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(CardGeometry.Music.shape)
-                    .bouncyClickable(downScale = 0.95f, onClick = { onAlbumClick(album.id) }),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(CardGeometry.Music.shape)
+                        .bouncyClickable(downScale = 0.95f, onClick = { onAlbumClick(album.id) }),
                 shape = CardGeometry.Music.shape,
                 colors = CardDefaults.cardColors(containerColor = darkSurface),
                 border = androidx.compose.foundation.BorderStroke(1.dp, glassBorder)
@@ -531,10 +543,11 @@ private fun AlbumsTab(
                     AsyncImage(
                         model = album.artUri,
                         contentDescription = album.title,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(CardGeometry.Music.aspectRatio)
-                            .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f)),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(CardGeometry.Music.aspectRatio)
+                                .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f)),
                         contentScale = ContentScale.Crop,
                     )
                     Spacer(Modifier.height(8.sdp))
@@ -575,19 +588,21 @@ private fun ArtistsTab(
         state = gridState,
         modifier = Modifier.premiumScrollHaptics(gridState),
         columns = GridCells.Adaptive(CardGeometry.Music.minWidth),
-        contentPadding = PaddingValues(
-            horizontal = CardGeometry.ScreenGutter,
-            vertical = 12.dp
-        ),
+        contentPadding =
+            PaddingValues(
+                horizontal = CardGeometry.ScreenGutter,
+                vertical = 12.dp
+            ),
         horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
         verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
     ) {
         items(artists, key = { it.id }) { artist ->
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(CardGeometry.Music.shape)
-                    .bouncyClickable(downScale = 0.95f, onClick = { onArtistClick(artist.id) }),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(CardGeometry.Music.shape)
+                        .bouncyClickable(downScale = 0.95f, onClick = { onArtistClick(artist.id) }),
                 shape = CardGeometry.Music.shape,
                 colors = CardDefaults.cardColors(containerColor = darkSurface),
                 border = androidx.compose.foundation.BorderStroke(1.dp, glassBorder)
@@ -597,11 +612,12 @@ private fun ArtistsTab(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(
-                        modifier = Modifier
-                            .size(96.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x3300E5FF))
-                            .border(1.5.dp, neonCyan, CircleShape),
+                        modifier =
+                            Modifier
+                                .size(96.dp)
+                                .clip(CircleShape)
+                                .background(Color(0x3300E5FF))
+                                .border(1.5.dp, neonCyan, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(

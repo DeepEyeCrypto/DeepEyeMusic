@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
  * to ensure consistent, premium-feeling motion.
  */
 object MotionTokens {
-
     // ═══════════════════════════════════════════════════
     // Easing Curves
     // ═══════════════════════════════════════════════════
@@ -38,28 +37,32 @@ object MotionTokens {
     // ═══════════════════════════════════════════════════
 
     /** Expand/collapse spring — used for sheet, mini-player, panels. */
-    val ExpandCollapseSpring = spring<Float>(
-        stiffness = 300f,
-        dampingRatio = 0.7f,
-    )
+    val ExpandCollapseSpring =
+        spring<Float>(
+            stiffness = 300f,
+            dampingRatio = 0.7f,
+        )
 
     /** Artwork transition spring — used for album art crossfade/scale. */
-    val ArtworkTransitionSpring = spring<Float>(
-        stiffness = 400f,
-        dampingRatio = 0.8f,
-    )
+    val ArtworkTransitionSpring =
+        spring<Float>(
+            stiffness = 400f,
+            dampingRatio = 0.8f,
+        )
 
     /** Snappy spring — used for quick UI responses (buttons, toggles). */
-    val SnappySpring = spring<Float>(
-        stiffness = Spring.StiffnessMediumLow,
-        dampingRatio = Spring.DampingRatioNoBouncy,
-    )
+    val SnappySpring =
+        spring<Float>(
+            stiffness = Spring.StiffnessMediumLow,
+            dampingRatio = Spring.DampingRatioNoBouncy,
+        )
 
     /** Bouncy spring — used for playful elements (bass ring, visualizer). */
-    val BouncySpring = spring<Float>(
-        stiffness = Spring.StiffnessLow,
-        dampingRatio = 0.6f,
-    )
+    val BouncySpring =
+        spring<Float>(
+            stiffness = Spring.StiffnessLow,
+            dampingRatio = 0.6f,
+        )
 
     // ═══════════════════════════════════════════════════
     // Durations (ms)
@@ -101,20 +104,23 @@ object MotionTokens {
     // ═══════════════════════════════════════════════════
 
     /** Standard tween with premium easing. */
-    fun <T> standardTween(durationMs: Int = NavigationTransitionMs) = tween<T>(
-        durationMillis = durationMs,
-        easing = StandardEasing,
-    )
+    fun <T> standardTween(durationMs: Int = NavigationTransitionMs) =
+        tween<T>(
+            durationMillis = durationMs,
+            easing = StandardEasing,
+        )
 
     /** Fast tween for micro-interactions. */
-    fun <T> fastTween() = tween<T>(
-        durationMillis = ControlFadeMs,
-        easing = StandardEasing,
-    )
+    fun <T> fastTween() =
+        tween<T>(
+            durationMillis = ControlFadeMs,
+            easing = StandardEasing,
+        )
 
     /** Palette transition tween. */
-    fun <T> paletteTween() = tween<T>(
-        durationMillis = PaletteTransitionMs,
-        easing = StandardEasing,
-    )
+    fun <T> paletteTween() =
+        tween<T>(
+            durationMillis = PaletteTransitionMs,
+            easing = StandardEasing,
+        )
 }

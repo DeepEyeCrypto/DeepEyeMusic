@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,12 +30,12 @@ import androidx.media3.exoplayer.ExoPlayer
  * Represents the audio quality metadata of the currently playing track.
  */
 data class AudioQualityInfo(
-    val sampleRate: Int = 0,        // e.g., 44100, 48000, 96000
-    val bitDepth: Int = 0,          // e.g., 16, 24, 32
-    val codec: String = "",         // e.g., "FLAC", "AAC", "OPUS", "MP3"
-    val isHiRes: Boolean = false,   // sampleRate > 44100 || bitDepth > 16
+    val sampleRate: Int = 0, // e.g., 44100, 48000, 96000
+    val bitDepth: Int = 0, // e.g., 16, 24, 32
+    val codec: String = "", // e.g., "FLAC", "AAC", "OPUS", "MP3"
+    val isHiRes: Boolean = false, // sampleRate > 44100 || bitDepth > 16
     val isDvcActive: Boolean = false,
-    val bitrate: Int = 0,           // kbps
+    val bitrate: Int = 0, // kbps
 ) {
     companion object {
         val EMPTY = AudioQualityInfo()
@@ -178,18 +176,19 @@ private fun QualityChip(
 ) {
     val shape = RoundedCornerShape(4.dp)
     Box(
-        modifier = Modifier
-            .clip(shape)
-            .then(
-                if (highlighted) {
-                    Modifier
-                        .background(color.copy(alpha = 0.15f), shape)
-                        .border(0.5.dp, color.copy(alpha = 0.4f), shape)
-                } else {
-                    Modifier.background(Color.White.copy(alpha = 0.06f), shape)
-                }
-            )
-            .padding(horizontal = 6.dp, vertical = 2.dp),
+        modifier =
+            Modifier
+                .clip(shape)
+                .then(
+                    if (highlighted) {
+                        Modifier
+                            .background(color.copy(alpha = 0.15f), shape)
+                            .border(0.5.dp, color.copy(alpha = 0.4f), shape)
+                    } else {
+                        Modifier.background(Color.White.copy(alpha = 0.06f), shape)
+                    }
+                )
+                .padding(horizontal = 6.dp, vertical = 2.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(

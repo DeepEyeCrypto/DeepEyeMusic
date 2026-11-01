@@ -16,81 +16,82 @@ import javax.inject.Singleton
  */
 @Singleton
 class PresetRepository
-@Inject
-constructor(
-    private val dao: DspPresetDao,
-    private val gson: Gson,
-) {
-    fun getAllPresets(): Flow<List<Pair<Long, String>>> =
-        dao.getAllPresets().map { entities ->
-            entities.map { it.id to it.name }
-        }
-
-    fun getPresetParams(id: Long): Flow<DspParams?> =
-        dao.getPresetById(id).map { entity ->
-            entity?.let { gson.fromJson(it.paramsJson, DspParams::class.java) }
-        }
-
-    suspend fun savePreset(
-        name: String,
-        params: DspParams,
-    ): Long {
-        val json = gson.toJson(params)
-        return dao.insert(
-            DspPresetEntity(
-                name = name,
-                paramsJson = json,
-                isBuiltin = false,
-            ),
-        )
-    }
-
-    suspend fun updatePreset(
-        id: Long,
-        name: String,
-        params: DspParams,
+    @Inject
+    constructor(
+        private val dao: DspPresetDao,
+        private val gson: Gson,
     ) {
-        val json = gson.toJson(params)
-        dao.update(
-            DspPresetEntity(
-                id = id,
-                name = name,
-                paramsJson = json,
-                modifiedAt = System.currentTimeMillis(),
-            ),
-        )
-    }
+        fun getAllPresets(): Flow<List<Pair<Long, String>>> =
+            dao.getAllPresets().map { entities ->
+                entities.map { it.id to it.name }
+            }
 
-    suspend fun deletePreset(id: Long) = dao.deleteUserPreset(id)
+        fun getPresetParams(id: Long): Flow<DspParams?> =
+            dao.getPresetById(id).map { entity ->
+                entity?.let { gson.fromJson(it.paramsJson, DspParams::class.java) }
+            }
 
-    /**
-     * Finds a preset by name.
-     */
-    suspend fun findByName(name: String): DspParams? {
-        val presets = dao.getBuiltinPresetsList()
-        val entity = presets.find { it.name == name }
-        return entity?.let { gson.fromJson(it.paramsJson, DspParams::class.java) }
-    }
-
-    /**
-     * Seeds the database with the Phase D3 premium presets.
-     */
-    suspend fun seedBuiltinPresets() {
-        if (dao.getBuiltinCount() > 0) return
-
-        val builtins = com.deepeye.musicpro.dsp.model.DSPPreset.entries.map {
-            it.presetName to it.params
-        }
-
-        builtins.forEach { (name, params) ->
-            dao.insert(
+        suspend fun savePreset(
+            name: String,
+            params: DspParams,
+        ): Long {
+            val json = gson.toJson(params)
+            return dao.insert(
                 DspPresetEntity(
                     name = name,
-                    paramsJson = gson.toJson(params),
-                    isBuiltin = true,
+                    paramsJson = json,
+                    isBuiltin = false,
                 ),
             )
         }
-        Log.i("PresetRepository", "✅ Seeded ${builtins.size} premium built-in presets")
+
+        suspend fun updatePreset(
+            id: Long,
+            name: String,
+            params: DspParams,
+        ) {
+            val json = gson.toJson(params)
+            dao.update(
+                DspPresetEntity(
+                    id = id,
+                    name = name,
+                    paramsJson = json,
+                    modifiedAt = System.currentTimeMillis(),
+                ),
+            )
+        }
+
+        suspend fun deletePreset(id: Long) = dao.deleteUserPreset(id)
+
+        /**
+         * Finds a preset by name.
+         */
+        suspend fun findByName(name: String): DspParams? {
+            val presets = dao.getBuiltinPresetsList()
+            val entity = presets.find { it.name == name }
+            return entity?.let { gson.fromJson(it.paramsJson, DspParams::class.java) }
+        }
+
+        /**
+         * Seeds the database with the Phase D3 premium presets.
+         */
+        suspend fun seedBuiltinPresets() {
+            if (dao.getBuiltinCount() > 0) return
+
+            val builtins =
+                com.deepeye.musicpro.dsp.model.DSPPreset.entries.map {
+                    it.presetName to it.params
+                }
+
+            builtins.forEach { (name, params) ->
+                dao.insert(
+                    DspPresetEntity(
+                        name = name,
+                        paramsJson = gson.toJson(params),
+                        isBuiltin = true,
+                    ),
+                )
+            }
+            Log.i("PresetRepository", "✅ Seeded ${builtins.size} premium built-in presets")
+        }
     }
-}

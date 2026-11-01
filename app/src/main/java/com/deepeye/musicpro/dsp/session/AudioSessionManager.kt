@@ -25,189 +25,204 @@ import javax.inject.Singleton
  */
 @Singleton
 class AudioSessionManager
-@Inject
-constructor(
-    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
-    private val dspEngine: DSPEngine,
-    private val visualizerEngine: com.deepeye.musicpro.player.visualizer.VisualizerEngine,
-) : AnalyticsListener {
-    companion object {
-        private const val TAG = "AudioSessionManager"
-    }
-
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private var currentSessionId: Int = 0
-    private var debounceJob: kotlinx.coroutines.Job? = null
-
-    /**
-     * Registers a listener on the ExoPlayer to track audio session ID changes.
-     */
-    fun attachToPlayer(player: ExoPlayer) {
-        Log.d(TAG, "attachToPlayer called with player: $player")
-
-        // Register as AnalyticsListener for more robust session tracking
-        player.addAnalyticsListener(this)
-
-        // Do NOT eagerly attach here. The DSP/Visualizer effects need an active
-        // AudioTrack to initialize successfully (error -3 otherwise).
-        // The onAudioSessionIdChanged callback will trigger attachment once
-        // the player actually begins audio rendering.
-        val sessionId = player.audioSessionId
-        Log.i(TAG, "Registered AnalyticsListener on ExoPlayer, current session: $sessionId (will attach on playback)")
-    }
-
-    override fun onAudioSessionIdChanged(
-        eventTime: EventTime,
-        audioSessionId: Int,
-    ) {
-        Log.d(TAG, "onAudioSessionIdChanged (Analytics): $audioSessionId")
-        handleSessionChange(audioSessionId)
-    }
-
-    override fun onIsPlayingChanged(
-        eventTime: EventTime,
-        isPlaying: Boolean
-    ) {
-        // Drive the visualizer zero-data watchdog from the real playback state
-        // so pauses/silence are never mistaken for a dead capture session.
-        visualizerEngine.setPlaybackActive(isPlaying)
-        if (isPlaying && currentSessionId != 0) {
-            Log.d(TAG, "onIsPlayingChanged: isPlaying=true, ensuring VisualizerEngine is active on session $currentSessionId")
-            // Defer attach by 300ms — the AudioTrack needs time to fully
-            // initialize after ExoPlayer reports isPlaying=true. Without this
-            // delay, Visualizer(sessionId) fails with error -3 on MediaTek SoCs.
-            scope.launch {
-                kotlinx.coroutines.delay(300)
-                if (!visualizerEngine.isHealthy()) {
-                    Log.d(TAG, "Deferred VisualizerEngine.start($currentSessionId)")
-                    visualizerEngine.start(currentSessionId)
-                }
-            }
+    @Inject
+    constructor(
+        @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
+        private val dspEngine: DSPEngine,
+        private val visualizerEngine: com.deepeye.musicpro.player.visualizer.VisualizerEngine,
+    ) : AnalyticsListener {
+        companion object {
+            private const val TAG = "AudioSessionManager"
         }
-    }
 
-    override fun onPlaybackStateChanged(
-        eventTime: EventTime,
-        state: Int
-    ) {
-        if (state == androidx.media3.common.Player.STATE_READY && currentSessionId != 0) {
-            Log.d(TAG, "onPlaybackStateChanged(STATE_READY): ensuring VisualizerEngine is active on session $currentSessionId")
-            scope.launch {
-                kotlinx.coroutines.delay(500)
-                if (!visualizerEngine.isHealthy()) {
-                    visualizerEngine.start(currentSessionId)
-                }
-            }
+        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+        private var currentSessionId: Int = 0
+        private var debounceJob: kotlinx.coroutines.Job? = null
+
+        /**
+         * Registers a listener on the ExoPlayer to track audio session ID changes.
+         */
+        fun attachToPlayer(player: ExoPlayer) {
+            Log.d(TAG, "attachToPlayer called with player: $player")
+
+            // Register as AnalyticsListener for more robust session tracking
+            player.addAnalyticsListener(this)
+
+            // Do NOT eagerly attach here. The DSP/Visualizer effects need an active
+            // AudioTrack to initialize successfully (error -3 otherwise).
+            // The onAudioSessionIdChanged callback will trigger attachment once
+            // the player actually begins audio rendering.
+            val sessionId = player.audioSessionId
+            Log.i(
+                TAG,
+                "Registered AnalyticsListener on ExoPlayer, current session: $sessionId (will attach on playback)"
+            )
         }
-    }
 
-    /**
-     * Called when ExoPlayer initializes the AudioTrack — this is the FIRST
-     * moment the Android native Visualizer can successfully attach. Earlier
-     * attempts fail with error -3 (no AudioTrack exists yet).
-     */
-    override fun onAudioTrackInitialized(
-        eventTime: EventTime,
-        audioTrackConfig: androidx.media3.exoplayer.audio.AudioSink.AudioTrackConfig
-    ) {
-        Log.i(TAG, "onAudioTrackInitialized: session=$currentSessionId sampleRate=${audioTrackConfig.sampleRate}")
-        if (currentSessionId != 0) {
-            // Small delay ensures the native AudioTrack is fully bound
-            scope.launch {
-                kotlinx.coroutines.delay(200)
-                Log.d(TAG, "Post-AudioTrackInit VisualizerEngine.start($currentSessionId)")
-                visualizerEngine.start(currentSessionId)
-            }
+        override fun onAudioSessionIdChanged(
+            eventTime: EventTime,
+            audioSessionId: Int,
+        ) {
+            Log.d(TAG, "onAudioSessionIdChanged (Analytics): $audioSessionId")
+            handleSessionChange(audioSessionId)
         }
-    }
 
-    fun handleSessionChange(newSessionId: Int, force: Boolean = false) {
-        if (newSessionId == 0) return
-        
-        val isSameSession = (newSessionId == currentSessionId)
-        if (isSameSession && !force) return
-
-        debounceJob?.cancel()
-        debounceJob = scope.launch {
-            kotlinx.coroutines.delay(100) // Debounce rapid flashes
-            
-            // If session is unchanged and already attached to the DSP engine, skip redundant re-attach
-            if (isSameSession && currentSessionId != 0 && dspEngine.getCurrentSessionId() == currentSessionId) {
-                Log.d(TAG, "Session remains unchanged ($newSessionId). Skipping redundant re-attach.")
-                return@launch
-            }
-
-            Log.d(TAG, "Handling session change: $currentSessionId -> $newSessionId")
-            
-            // Broadcast CLOSE for the old session before opening the new one
-            if (currentSessionId != 0 && currentSessionId != newSessionId) {
-                val closeIntent = android.content.Intent(
-                    android.media.audiofx.AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION
-                ).apply {
-                    putExtra(android.media.audiofx.AudioEffect.EXTRA_AUDIO_SESSION, currentSessionId)
-                    putExtra(android.media.audiofx.AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
-                }
-                context.sendBroadcast(closeIntent)
-            }
-
-            val sessionChanged = (currentSessionId != newSessionId)
-            currentSessionId = newSessionId
-
-            if (sessionChanged) {
-                // Broadcast session open to the system
-                val intent =
-                    android.content.Intent(
-                        android.media.audiofx.AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION
-                    ).apply {
-                        putExtra(android.media.audiofx.AudioEffect.EXTRA_AUDIO_SESSION, newSessionId)
-                        putExtra(android.media.audiofx.AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
-                        putExtra(
-                            android.media.audiofx.AudioEffect.EXTRA_CONTENT_TYPE,
-                            android.media.audiofx.AudioEffect.CONTENT_TYPE_MUSIC
-                        )
+        override fun onIsPlayingChanged(
+            eventTime: EventTime,
+            isPlaying: Boolean
+        ) {
+            // Drive the visualizer zero-data watchdog from the real playback state
+            // so pauses/silence are never mistaken for a dead capture session.
+            visualizerEngine.setPlaybackActive(isPlaying)
+            if (isPlaying && currentSessionId != 0) {
+                Log.d(
+                    TAG,
+                    "onIsPlayingChanged: isPlaying=true, ensuring VisualizerEngine is active on session $currentSessionId"
+                )
+                // Defer attach by 300ms — the AudioTrack needs time to fully
+                // initialize after ExoPlayer reports isPlaying=true. Without this
+                // delay, Visualizer(sessionId) fails with error -3 on MediaTek SoCs.
+                scope.launch {
+                    kotlinx.coroutines.delay(300)
+                    if (!visualizerEngine.isHealthy()) {
+                        Log.d(TAG, "Deferred VisualizerEngine.start($currentSessionId)")
+                        visualizerEngine.start(currentSessionId)
                     }
-                context.sendBroadcast(intent)
+                }
             }
+        }
 
-            if (sessionChanged || dspEngine.getCurrentSessionId() != newSessionId) {
+        override fun onPlaybackStateChanged(
+            eventTime: EventTime,
+            state: Int
+        ) {
+            if (state == androidx.media3.common.Player.STATE_READY && currentSessionId != 0) {
+                Log.d(
+                    TAG,
+                    "onPlaybackStateChanged(STATE_READY): ensuring VisualizerEngine is active on session $currentSessionId"
+                )
+                scope.launch {
+                    kotlinx.coroutines.delay(500)
+                    if (!visualizerEngine.isHealthy()) {
+                        visualizerEngine.start(currentSessionId)
+                    }
+                }
+            }
+        }
+
+        /**
+         * Called when ExoPlayer initializes the AudioTrack — this is the FIRST
+         * moment the Android native Visualizer can successfully attach. Earlier
+         * attempts fail with error -3 (no AudioTrack exists yet).
+         */
+        override fun onAudioTrackInitialized(
+            eventTime: EventTime,
+            audioTrackConfig: androidx.media3.exoplayer.audio.AudioSink.AudioTrackConfig
+        ) {
+            Log.i(TAG, "onAudioTrackInitialized: session=$currentSessionId sampleRate=${audioTrackConfig.sampleRate}")
+            if (currentSessionId != 0) {
+                // Small delay ensures the native AudioTrack is fully bound
+                scope.launch {
+                    kotlinx.coroutines.delay(200)
+                    Log.d(TAG, "Post-AudioTrackInit VisualizerEngine.start($currentSessionId)")
+                    visualizerEngine.start(currentSessionId)
+                }
+            }
+        }
+
+        fun handleSessionChange(
+            newSessionId: Int,
+            force: Boolean = false
+        ) {
+            if (newSessionId == 0) return
+
+            val isSameSession = (newSessionId == currentSessionId)
+            if (isSameSession && !force) return
+
+            debounceJob?.cancel()
+            debounceJob =
+                scope.launch {
+                    kotlinx.coroutines.delay(100) // Debounce rapid flashes
+
+                    // If session is unchanged and already attached to the DSP engine, skip redundant re-attach
+                    if (isSameSession && currentSessionId != 0 && dspEngine.getCurrentSessionId() == currentSessionId) {
+                        Log.d(TAG, "Session remains unchanged ($newSessionId). Skipping redundant re-attach.")
+                        return@launch
+                    }
+
+                    Log.d(TAG, "Handling session change: $currentSessionId -> $newSessionId")
+
+                    // Broadcast CLOSE for the old session before opening the new one
+                    if (currentSessionId != 0 && currentSessionId != newSessionId) {
+                        val closeIntent =
+                            android.content.Intent(
+                                android.media.audiofx.AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION
+                            ).apply {
+                                putExtra(android.media.audiofx.AudioEffect.EXTRA_AUDIO_SESSION, currentSessionId)
+                                putExtra(android.media.audiofx.AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
+                            }
+                        context.sendBroadcast(closeIntent)
+                    }
+
+                    val sessionChanged = (currentSessionId != newSessionId)
+                    currentSessionId = newSessionId
+
+                    if (sessionChanged) {
+                        // Broadcast session open to the system
+                        val intent =
+                            android.content.Intent(
+                                android.media.audiofx.AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION
+                            ).apply {
+                                putExtra(android.media.audiofx.AudioEffect.EXTRA_AUDIO_SESSION, newSessionId)
+                                putExtra(android.media.audiofx.AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
+                                putExtra(
+                                    android.media.audiofx.AudioEffect.EXTRA_CONTENT_TYPE,
+                                    android.media.audiofx.AudioEffect.CONTENT_TYPE_MUSIC
+                                )
+                            }
+                        context.sendBroadcast(intent)
+                    }
+
+                    if (sessionChanged || dspEngine.getCurrentSessionId() != newSessionId) {
+                        dspEngine.releaseSession()
+                        visualizerEngine.release()
+
+                        dspEngine.attachSession(newSessionId, force = force)
+                        visualizerEngine.start(newSessionId)
+                    }
+                }
+        }
+
+        /**
+         * Forces the DSP to re-attach to the current session ID, ignoring any caching.
+         * Use this when the AudioTrack is recreated but the session ID remains the same.
+         */
+        fun forceReattach() {
+            if (currentSessionId != 0) {
+                Log.d(TAG, "forceReattach() called for session $currentSessionId")
+                handleSessionChange(currentSessionId, force = true)
+            }
+        }
+
+        /**
+         * Detaches from the ExoPlayer and releases the DSP session.
+         */
+        fun detach() {
+            debounceJob?.cancel()
+            scope.launch {
+                if (currentSessionId != 0) {
+                    val closeIntent =
+                        android.content.Intent(
+                            android.media.audiofx.AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION
+                        ).apply {
+                            putExtra(android.media.audiofx.AudioEffect.EXTRA_AUDIO_SESSION, currentSessionId)
+                            putExtra(android.media.audiofx.AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
+                        }
+                    context.sendBroadcast(closeIntent)
+                }
                 dspEngine.releaseSession()
                 visualizerEngine.release()
-
-                dspEngine.attachSession(newSessionId, force = force)
-                visualizerEngine.start(newSessionId)
+                currentSessionId = 0
             }
         }
     }
-
-    /**
-     * Forces the DSP to re-attach to the current session ID, ignoring any caching.
-     * Use this when the AudioTrack is recreated but the session ID remains the same.
-     */
-    fun forceReattach() {
-        if (currentSessionId != 0) {
-            Log.d(TAG, "forceReattach() called for session $currentSessionId")
-            handleSessionChange(currentSessionId, force = true)
-        }
-    }
-
-    /**
-     * Detaches from the ExoPlayer and releases the DSP session.
-     */
-    fun detach() {
-        debounceJob?.cancel()
-        scope.launch {
-            if (currentSessionId != 0) {
-                val closeIntent = android.content.Intent(
-                    android.media.audiofx.AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION
-                ).apply {
-                    putExtra(android.media.audiofx.AudioEffect.EXTRA_AUDIO_SESSION, currentSessionId)
-                    putExtra(android.media.audiofx.AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
-                }
-                context.sendBroadcast(closeIntent)
-            }
-            dspEngine.releaseSession()
-            visualizerEngine.release()
-            currentSessionId = 0
-        }
-    }
-}

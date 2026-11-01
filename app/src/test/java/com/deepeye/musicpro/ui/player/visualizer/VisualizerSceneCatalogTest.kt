@@ -14,7 +14,6 @@ import org.junit.Test
  * so nothing surfaced the mismatch. These tests make the drift a build failure.
  */
 class VisualizerSceneCatalogTest {
-
     @Test
     fun `every scene id has catalog metadata`() {
         val catalogued = AvailableVisualizerScenes.map { it.id }.toSet()

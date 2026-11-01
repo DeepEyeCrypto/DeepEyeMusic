@@ -17,7 +17,6 @@ import org.junit.Test
  *    the same track twice.
  */
 class StableLazyKeysTest {
-
     @Test
     fun `unique ids produce one key per item in order`() {
         val items = listOf("a", "b", "c")

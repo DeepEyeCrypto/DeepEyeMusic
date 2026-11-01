@@ -34,7 +34,10 @@ interface TasteDao {
         LIMIT :limit
         """
     )
-    fun getTopTracks(sinceTimestamp: Long, limit: Int): Flow<List<TopTrackResult>>
+    fun getTopTracks(
+        sinceTimestamp: Long,
+        limit: Int
+    ): Flow<List<TopTrackResult>>
 
     @Query(
         """

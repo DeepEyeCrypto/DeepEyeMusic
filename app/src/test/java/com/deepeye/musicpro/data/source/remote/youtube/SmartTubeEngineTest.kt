@@ -15,7 +15,6 @@ import org.junit.Before
 import org.junit.Test
 
 class SmartTubeEngineTest {
-
     private lateinit var engine: SmartTubeEngine
     private val context: Context = mockk(relaxed = true)
     private val authManager: InnerTubeAuthManager = mockk(relaxed = true)
@@ -39,30 +38,36 @@ class SmartTubeEngineTest {
 
     @Test
     fun extractAutoplayFromSampleAutoplayOverlayRenderer() {
-        val sampleJson = JSONObject(
-            """
-            {
-              "playerOverlays": {
-                "playerOverlayRenderer": {
-                  "autoplay": {
-                    "playerOverlayAutoplayRenderer": {
-                      "videoTitle": { "runs": [{ "text": "Arijit Singh Mix" }] },
-                      "byline": { "runs": [{ "text": "Arijit Singh" }] },
-                      "videoEndpoint": {
-                        "watchEndpoint": {
-                          "videoId": "SAMPLE_AUTO_ID_123"
+        val sampleJson =
+            JSONObject(
+                """
+                {
+                  "playerOverlays": {
+                    "playerOverlayRenderer": {
+                      "autoplay": {
+                        "playerOverlayAutoplayRenderer": {
+                          "videoTitle": { "runs": [{ "text": "Arijit Singh Mix" }] },
+                          "byline": { "runs": [{ "text": "Arijit Singh" }] },
+                          "videoEndpoint": {
+                            "watchEndpoint": {
+                              "videoId": "SAMPLE_AUTO_ID_123"
+                            }
+                          }
                         }
                       }
                     }
                   }
                 }
-              }
-            }
-            """.trimIndent()
-        )
+                """.trimIndent()
+            )
 
         // Reflection check on private method for thorough testing
-        val method = SmartTubeEngine::class.java.getDeclaredMethod("extractAutoplayFromJson", JSONObject::class.java, String::class.java)
+        val method =
+            SmartTubeEngine::class.java.getDeclaredMethod(
+                "extractAutoplayFromJson",
+                JSONObject::class.java,
+                String::class.java
+            )
         method.isAccessible = true
         val result = method.invoke(engine, sampleJson, "CURRENT_ID") as? AutoplayTrack
 

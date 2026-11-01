@@ -60,31 +60,31 @@ fun MarqueeText(
             initialValue = 0f,
             targetValue = -(textWidth.toFloat() + containerWidth * 0.3f),
             animationSpec =
-            infiniteRepeatable(
-                animation = tween(scrollSpeed, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart,
-            ),
+                infiniteRepeatable(
+                    animation = tween(scrollSpeed, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart,
+                ),
             label = "marqueeOffset",
         )
 
         Box(
             modifier =
-            modifier
-                .clipToBounds()
-                .onSizeChanged { containerWidth = it.width }
-                .drawWithContent {
-                    drawContent()
-                    // Fade edges
-                    drawRect(
-                        brush =
-                        Brush.horizontalGradient(
-                            0f to Color.Transparent,
-                            gradientEdgeWidth / size.width to color,
-                            (size.width - gradientEdgeWidth) / size.width to color,
-                            1f to Color.Transparent,
-                        ),
-                    )
-                },
+                modifier
+                    .clipToBounds()
+                    .onSizeChanged { containerWidth = it.width }
+                    .drawWithContent {
+                        drawContent()
+                        // Fade edges
+                        drawRect(
+                            brush =
+                                Brush.horizontalGradient(
+                                    0f to Color.Transparent,
+                                    gradientEdgeWidth / size.width to color,
+                                    (size.width - gradientEdgeWidth) / size.width to color,
+                                    1f to Color.Transparent,
+                                ),
+                        )
+                    },
         ) {
             Row {
                 Text(
@@ -94,9 +94,9 @@ fun MarqueeText(
                     maxLines = 1,
                     softWrap = false,
                     modifier =
-                    Modifier
-                        .offset { IntOffset(offset.toInt(), 0) }
-                        .onSizeChanged { textWidth = it.width / 2 },
+                        Modifier
+                            .offset { IntOffset(offset.toInt(), 0) }
+                            .onSizeChanged { textWidth = it.width / 2 },
                 )
             }
         }
@@ -108,8 +108,8 @@ fun MarqueeText(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier =
-            modifier
-                .onSizeChanged { containerWidth = it.width },
+                modifier
+                    .onSizeChanged { containerWidth = it.width },
         )
     }
 }
@@ -120,8 +120,8 @@ private fun MarqueeTextPreview() {
     MarqueeText(
         text = "This Is A Very Long Song Title That Should Scroll Smoothly Across The Screen",
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
     )
 }

@@ -1,6 +1,5 @@
 package com.deepeye.musicpro.aeos.ui.dashboard
 
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,14 +11,13 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.musicpro.aeos.control_plane.MusicControlPlane
-import com.deepeye.musicpro.aeos.mesh.MusicIntent
 import com.deepeye.musicpro.aeos.memory.CognitiveMemoryMesh
+import com.deepeye.musicpro.aeos.mesh.MusicIntent
 
 @Composable
-fun MusicDashboard(
-    controlPlane: MusicControlPlane = remember { MusicControlPlane() }
-) {
+fun MusicDashboard(controlPlane: MusicControlPlane = remember { MusicControlPlane() }) {
     val uiState by controlPlane.uiState.collectAsStateWithLifecycle()
     val memoryState by CognitiveMemoryMesh.getInstance().state.collectAsStateWithLifecycle()
 
@@ -54,47 +52,50 @@ private fun DashboardContent(
     onNext: () -> Unit,
     onChaos: () -> Unit
 ) {
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(MaterialTheme.colorScheme.background)) {
-        
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+    ) {
         Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(24.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.Center)
+                    .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "AEOS Dashboard", 
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), 
+                text = "AEOS Dashboard",
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Isolated Control/Data Plane", 
-                style = MaterialTheme.typography.bodyMedium, 
+                text = "Isolated Control/Data Plane",
+                style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
-            
+
             Spacer(modifier = Modifier.height(48.dp))
-            
+
             // Track Info with deferred reads
             TrackInfo(
                 trackNameProvider = trackNameProvider,
                 isPlayingProvider = isPlayingProvider
             )
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             // Glassmorphism player controls with Chaos Button
             PlayerControls(onPlay = onPlay, onPause = onPause, onNext = onNext, onChaos = onChaos)
-            
+
             Spacer(modifier = Modifier.height(64.dp))
-            
+
             // Memory Mesh Logs
             MemoryMeshLog(memoryStatusProvider = memoryStatusProvider)
         }
-        
+
         // Phase 4 Chaos Engineering Overlay
         RecoveryOverlay(
             isFailureProvider = isFailureProvider,
@@ -111,7 +112,7 @@ private fun TrackInfo(
 ) {
     val isPlaying = isPlayingProvider()
     Text(
-        text = trackNameProvider(), 
+        text = trackNameProvider(),
         style = MaterialTheme.typography.titleLarge,
         color = Color.White
     )
@@ -131,36 +132,37 @@ private fun PlayerControls(
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .background(MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.extraLarge)
-                .then(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Modifier.blur(24.dp) else Modifier)
-                .padding(vertical = 24.dp, horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth(0.9f)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.extraLarge)
+                    .then(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Modifier.blur(24.dp) else Modifier)
+                    .padding(vertical = 24.dp, horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
                 onClick = onPlay,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) { 
-                Text("PLAY") 
+            ) {
+                Text("PLAY")
             }
             Button(
                 onClick = onPause,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) { 
-                Text("PAUSE") 
+            ) {
+                Text("PAUSE")
             }
             Button(
                 onClick = onNext,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) { 
-                Text("NEXT") 
+            ) {
+                Text("NEXT")
             }
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         Button(
             onClick = onChaos,
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
@@ -177,7 +179,11 @@ private fun MemoryMeshLog(memoryStatusProvider: () -> String) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Cognitive Memory Logs:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            Text(
+                text = "Cognitive Memory Logs:",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = memoryStatusProvider(), style = MaterialTheme.typography.bodySmall, color = Color.LightGray)
         }
@@ -192,10 +198,11 @@ private fun RecoveryOverlay(
 ) {
     if (isFailureProvider()) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.7f))
-                .then(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Modifier.blur(32.dp) else Modifier),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.7f))
+                    .then(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Modifier.blur(32.dp) else Modifier),
             contentAlignment = Alignment.Center
         ) {
             Card(
@@ -206,16 +213,25 @@ private fun RecoveryOverlay(
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("SYSTEM RECOVERY MODE", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onErrorContainer)
+                    Text(
+                        "SYSTEM RECOVERY MODE",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text(errorMessageProvider(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onErrorContainer)
+                    Text(
+                        errorMessageProvider(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
-                        onClick = onRecover, 
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.onErrorContainer, 
-                            contentColor = MaterialTheme.colorScheme.errorContainer
-                        )
+                        onClick = onRecover,
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.onErrorContainer,
+                                contentColor = MaterialTheme.colorScheme.errorContainer
+                            )
                     ) {
                         Text("REBOOT & RECOVER")
                     }

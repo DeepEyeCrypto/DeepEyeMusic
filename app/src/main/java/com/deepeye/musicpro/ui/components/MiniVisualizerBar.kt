@@ -52,9 +52,9 @@ fun MiniVisualizerBar(
 
             drawRoundRect(
                 color =
-                barColor.copy(
-                    alpha = 0.4f + (rawMagnitude * 0.6f),
-                ),
+                    barColor.copy(
+                        alpha = 0.4f + (rawMagnitude * 0.6f),
+                    ),
                 topLeft = Offset(x, y),
                 size = Size(barWidth, barHeight),
                 cornerRadius = CornerRadius(2.dp.toPx()),

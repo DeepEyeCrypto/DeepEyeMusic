@@ -113,51 +113,53 @@ fun FloatingVideoPipOverlay(
         }
 
         Box(
-            modifier = Modifier
-                .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
-                .size(
-                    width = with(density) { currentPipWidthPx.toDp() },
-                    height = with(density) { currentPipHeightPx.toDp() }
-                )
-                .shadow(
-                    elevation = 16.dp,
-                    shape = RoundedCornerShape(16.dp),
-                    spotColor = NeonCyan.copy(alpha = 0.5f),
-                    ambientColor = Color.Black
-                )
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.Black)
-                .border(
-                    BorderStroke(
-                        1.5.dp,
-                        Brush.linearGradient(
-                            colors = listOf(NeonCyan, Color.White.copy(alpha = 0.4f), NeonCyan)
-                        )
-                    ),
-                    RoundedCornerShape(16.dp)
-                )
-                .pointerInput(parentWidthPx, parentHeightPx) {
-                    detectTransformGestures { _, pan, zoom, _ ->
-                        if (zoom != 1f) {
-                            val newWidthPx = (currentPipWidthPx * zoom).coerceIn(minWidthPx, maxWidthPx)
-                            pipWidthDp = with(density) { newWidthPx.toDp() }
+            modifier =
+                Modifier
+                    .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
+                    .size(
+                        width = with(density) { currentPipWidthPx.toDp() },
+                        height = with(density) { currentPipHeightPx.toDp() }
+                    )
+                    .shadow(
+                        elevation = 16.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        spotColor = NeonCyan.copy(alpha = 0.5f),
+                        ambientColor = Color.Black
+                    )
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.Black)
+                    .border(
+                        BorderStroke(
+                            1.5.dp,
+                            Brush.linearGradient(
+                                colors = listOf(NeonCyan, Color.White.copy(alpha = 0.4f), NeonCyan)
+                            )
+                        ),
+                        RoundedCornerShape(16.dp)
+                    )
+                    .pointerInput(parentWidthPx, parentHeightPx) {
+                        detectTransformGestures { _, pan, zoom, _ ->
+                            if (zoom != 1f) {
+                                val newWidthPx = (currentPipWidthPx * zoom).coerceIn(minWidthPx, maxWidthPx)
+                                pipWidthDp = with(density) { newWidthPx.toDp() }
+                            }
+                            offsetX = (offsetX + pan.x).coerceIn(minX, maxX)
+                            offsetY = (offsetY + pan.y).coerceIn(minY, maxY)
                         }
-                        offsetX = (offsetX + pan.x).coerceIn(minX, maxX)
-                        offsetY = (offsetY + pan.y).coerceIn(minY, maxY)
                     }
-                }
         ) {
             // 1. Live Video Surface View
             VideoPlayerView(
                 playerHolder = playerHolder,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) {
-                        showControls = !showControls
-                    }
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            showControls = !showControls
+                        }
             )
 
             // 2. Floating Quick Controls Overlay
@@ -168,10 +170,11 @@ fun FloatingVideoPipOverlay(
                 modifier = Modifier.fillMaxSize()
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.55f))
-                        .padding(6.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.55f))
+                            .padding(6.dp)
                 ) {
                     // Top Actions (Expand to Fullscreen & Close)
                     Row(
@@ -220,9 +223,10 @@ fun FloatingVideoPipOverlay(
                         shape = CircleShape,
                         color = NeonCyan.copy(alpha = 0.35f),
                         border = BorderStroke(1.2.dp, NeonCyan),
-                        modifier = Modifier
-                            .size(40.dp)
-                            .align(Alignment.Center)
+                        modifier =
+                            Modifier
+                                .size(40.dp)
+                                .align(Alignment.Center)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
@@ -236,13 +240,14 @@ fun FloatingVideoPipOverlay(
 
                     // Bottom Title Badge
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.BottomCenter)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Color.Black.copy(alpha = 0.8f))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                            .clickable { onExpandFullscreen() },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.BottomCenter)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color.Black.copy(alpha = 0.8f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                .clickable { onExpandFullscreen() },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(

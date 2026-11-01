@@ -11,7 +11,6 @@ package com.deepeye.musicpro.domain.auth
  * presented as personalized.
  */
 sealed interface AuthenticatedContentState {
-
     /** No signed-in account. Only guest/public content may be shown. */
     data object SignedOut : AuthenticatedContentState
 
@@ -76,7 +75,10 @@ enum class GuestFallbackReason {
  */
 sealed interface TokenRefreshOutcome {
     data class Success(val accessToken: String) : TokenRefreshOutcome
+
     data object NoRefreshToken : TokenRefreshOutcome
+
     data object TransientFailure : TokenRefreshOutcome
+
     data object InvalidGrant : TokenRefreshOutcome
 }

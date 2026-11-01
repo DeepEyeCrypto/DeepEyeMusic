@@ -22,19 +22,21 @@ object BraveShieldsEngine {
     private const val SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000L // 24 hours
 
     // Fallback Hardcoded High-Performance Blocklist
-    private val DEFAULT_NETWORK_BLOCKLIST = listOf(
-        "doubleclick.net", "googleadservices.com", "google-analytics.com",
-        "/api/stats/ads", "/pagead/", "youtube.com/ptracking", "youtube.com/error_204",
-        "play.google.com/log", "adunit", "googleads", "adservice", "innovid.com",
-        "flashtalking.com", "serving-sys.com"
-    )
+    private val DEFAULT_NETWORK_BLOCKLIST =
+        listOf(
+            "doubleclick.net", "googleadservices.com", "google-analytics.com",
+            "/api/stats/ads", "/pagead/", "youtube.com/ptracking", "youtube.com/error_204",
+            "play.google.com/log", "adunit", "googleads", "adservice", "innovid.com",
+            "flashtalking.com", "serving-sys.com"
+        )
 
     // Fallback Hardcoded Cosmetic Selectors
-    private val DEFAULT_COSMETIC_SELECTORS = listOf(
-        ".ytp-ad-module", ".video-ads", ".ytp-ad-image-overlay", ".ytp-ad-overlay-container",
-        ".ytp-ad-overlay-slot", ".ad-container", ".ad-display", ".display-ad-container",
-        "#player-ads", ".ad-div", ".main-ad-layout", ".ytp-ad-player-overlay"
-    )
+    private val DEFAULT_COSMETIC_SELECTORS =
+        listOf(
+            ".ytp-ad-module", ".video-ads", ".ytp-ad-image-overlay", ".ytp-ad-overlay-container",
+            ".ytp-ad-overlay-slot", ".ad-container", ".ad-display", ".display-ad-container",
+            "#player-ads", ".ad-div", ".main-ad-layout", ".ytp-ad-player-overlay"
+        )
 
     var activeNetworkBlocklist: List<String> = DEFAULT_NETWORK_BLOCKLIST
         private set
@@ -43,19 +45,21 @@ object BraveShieldsEngine {
         private set
 
     // Brave Official Repositories
-    private val BRAVE_NETWORK_REPOS = listOf(
-        "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-specific.txt",
-        "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-android-specific.txt"
-    )
+    private val BRAVE_NETWORK_REPOS =
+        listOf(
+            "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-specific.txt",
+            "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-android-specific.txt"
+        )
 
-    private val BRAVE_COSMETIC_REPOS = listOf(
-        "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/yt-distracting.txt",
-        "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/yt-shorts.txt"
-    )
+    private val BRAVE_COSMETIC_REPOS =
+        listOf(
+            "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/yt-distracting.txt",
+            "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/yt-shorts.txt"
+        )
 
     fun initialize(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        
+
         // Load instantaneously for 0-latency startup
         val cachedNetwork = prefs.getString(KEY_NETWORK_LIST, null)
         if (cachedNetwork != null) {
@@ -119,7 +123,10 @@ object BraveShieldsEngine {
                     putLong(KEY_LAST_SYNC, System.currentTimeMillis())
                     apply()
                 }
-                Log.i(TAG, "Brave Upstream Sync Complete! Network Rules: ${activeNetworkBlocklist.size}, Cosmetic Rules: ${activeCosmeticSelectors.size}")
+                Log.i(
+                    TAG,
+                    "Brave Upstream Sync Complete! Network Rules: ${activeNetworkBlocklist.size}, Cosmetic Rules: ${activeCosmeticSelectors.size}"
+                )
             } else {
                 // Just update sync time
                 context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
@@ -127,7 +134,6 @@ object BraveShieldsEngine {
                     .apply()
                 Log.i(TAG, "Brave Upstream Sync Complete! No new rules found.")
             }
-
         } catch (e: Exception) {
             Log.e(TAG, "Failed to sync with Brave upstream: ${e.message}")
         }
@@ -157,6 +163,8 @@ object BraveShieldsEngine {
     }
 
     fun getCosmeticCssStyles(): String {
-        return activeCosmeticSelectors.joinToString(",\n") { "    $it" } + " {\n        display: none !important;\n        opacity: 0 !important;\n        visibility: hidden !important;\n        pointer-events: none !important;\n    }\n"
+        return activeCosmeticSelectors.joinToString(",\n") {
+            "    $it"
+        } + " {\n        display: none !important;\n        opacity: 0 !important;\n        visibility: hidden !important;\n        pointer-events: none !important;\n    }\n"
     }
 }

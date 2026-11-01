@@ -24,39 +24,40 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ThemeViewModel
-@Inject
-constructor(
-    private val playerController: PlayerController,
-    private val colorExtractor: ColorExtractor,
-    private val settingsDataStore: SettingsDataStore,
-) : ViewModel() {
-    private val _dynamicColors = MutableStateFlow<ExtractedColors?>(null)
-    val dynamicColors: StateFlow<ExtractedColors?> = _dynamicColors.asStateFlow()
+    @Inject
+    constructor(
+        private val playerController: PlayerController,
+        private val colorExtractor: ColorExtractor,
+        private val settingsDataStore: SettingsDataStore,
+    ) : ViewModel() {
+        private val _dynamicColors = MutableStateFlow<ExtractedColors?>(null)
+        val dynamicColors: StateFlow<ExtractedColors?> = _dynamicColors.asStateFlow()
 
-    val settings: StateFlow<AppSettings> = settingsDataStore.settings
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = AppSettings()
-        )
+        val settings: StateFlow<AppSettings> =
+            settingsDataStore.settings
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = AppSettings()
+                )
 
-    init {
-        observeCurrentMedia()
-    }
+        init {
+            observeCurrentMedia()
+        }
 
-    private fun observeCurrentMedia() {
-        viewModelScope.launch {
-            playerController.playerState
-                .map { it.currentItem }
-                .distinctUntilChanged()
-                .collectLatest { mediaItem ->
-                    mediaItem?.artworkUri?.let { uri ->
-                        val colors = colorExtractor.extractColors(uri)
-                        _dynamicColors.value = colors
-                    } ?: run {
-                        _dynamicColors.value = null
+        private fun observeCurrentMedia() {
+            viewModelScope.launch {
+                playerController.playerState
+                    .map { it.currentItem }
+                    .distinctUntilChanged()
+                    .collectLatest { mediaItem ->
+                        mediaItem?.artworkUri?.let { uri ->
+                            val colors = colorExtractor.extractColors(uri)
+                            _dynamicColors.value = colors
+                        } ?: run {
+                            _dynamicColors.value = null
+                        }
                     }
-                }
+            }
         }
     }
-}

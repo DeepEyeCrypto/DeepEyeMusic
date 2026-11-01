@@ -5,15 +5,12 @@ package com.deepeye.musicpro
 
 import android.Manifest
 import android.content.pm.ActivityInfo
-
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -40,8 +38,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-import androidx.fragment.app.FragmentActivity
-
 /**
  * Single Activity host for the Compose-based UI.
  * Supports Picture-in-Picture (PiP) mode for video playback.
@@ -55,7 +51,6 @@ import androidx.fragment.app.FragmentActivity
 @OptIn(androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi::class)
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
-
     @javax.inject.Inject
     lateinit var playerController: com.deepeye.musicpro.player.controller.PlayerController
 
@@ -82,9 +77,10 @@ class MainActivity : FragmentActivity() {
             val display = windowManager.defaultDisplay
             val maxMode = display.supportedModes.maxByOrNull { it.refreshRate }
             maxMode?.let { mode ->
-                window.attributes = window.attributes.apply {
-                    preferredDisplayModeId = mode.modeId
-                }
+                window.attributes =
+                    window.attributes.apply {
+                        preferredDisplayModeId = mode.modeId
+                    }
             }
         }
     }
@@ -97,18 +93,19 @@ class MainActivity : FragmentActivity() {
     }
 
     /** Fullscreen mode controller for auto-rotate to landscape on fullscreen */
-    val fullscreenMode = FullscreenMode().apply {
-        onEnterFullscreen = { _ ->
-            // Strict Kodi/SmartTube-style landscape mode
-            this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            hideSystemBars()
+    val fullscreenMode =
+        FullscreenMode().apply {
+            onEnterFullscreen = { _ ->
+                // Strict Kodi/SmartTube-style landscape mode
+                this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                hideSystemBars()
+            }
+            onExitFullscreen = {
+                // In Kodi mode, stay in sensor landscape orientation and keep system bars hidden
+                this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                hideSystemBars()
+            }
         }
-        onExitFullscreen = {
-            // In Kodi mode, stay in sensor landscape orientation and keep system bars hidden
-            this@MainActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            hideSystemBars()
-        }
-    }
 
     private lateinit var pipEngine: com.deepeye.musicpro.player.controller.PipEngine
 
@@ -119,20 +116,25 @@ class MainActivity : FragmentActivity() {
     var isInPipMode by mutableStateOf(false)
         private set
 
-    private var mediaControllerFuture: com.google.common.util.concurrent.ListenableFuture<androidx.media3.session.MediaController>? = null
+    private var mediaControllerFuture:
+        com.google.common.util.concurrent.ListenableFuture<androidx.media3.session.MediaController>? = null
 
     override fun onStart() {
         super.onStart()
         if (::playerController.isInitialized) {
             playerController.setAppInForeground(true)
         }
-        
+
         // Bind to MediaSessionService so it instantiates safely without startForegroundService crashes
         if (mediaControllerFuture == null) {
-            val sessionToken = androidx.media3.session.SessionToken(
-                this, 
-                android.content.ComponentName(this, com.deepeye.musicpro.player.service.MusicPlayerService::class.java)
-            )
+            val sessionToken =
+                androidx.media3.session.SessionToken(
+                    this,
+                    android.content.ComponentName(
+                        this,
+                        com.deepeye.musicpro.player.service.MusicPlayerService::class.java
+                    )
+                )
             mediaControllerFuture = androidx.media3.session.MediaController.Builder(this, sessionToken).buildAsync()
         }
     }
@@ -153,21 +155,22 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val granted = permissions.entries.all { it.value }
-        if (granted) {
-            // Permissions granted
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            val granted = permissions.entries.all { it.value }
+            if (granted) {
+                // Permissions granted
+            }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
 
         super.onCreate(savedInstanceState)
         hideSystemBars()
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             window.attributes.layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
@@ -186,11 +189,12 @@ class MainActivity : FragmentActivity() {
 
         checkAndRequestPermissions()
 
-        orientationEventListener = object : android.view.OrientationEventListener(this) {
-            override fun onOrientationChanged(orientation: Int) {
-                // In strict Kodi landscape mode, do not auto-exit fullscreen on orientation change
+        orientationEventListener =
+            object : android.view.OrientationEventListener(this) {
+                override fun onOrientationChanged(orientation: Int) {
+                    // In strict Kodi landscape mode, do not auto-exit fullscreen on orientation change
+                }
             }
-        }
         if (orientationEventListener?.canDetectOrientation() == true) {
             orientationEventListener?.enable()
         }
@@ -223,11 +227,12 @@ class MainActivity : FragmentActivity() {
             val dynamicColors by themeViewModel.dynamicColors.collectAsStateWithLifecycle()
             val windowSizeClass = androidx.compose.material3.windowsizeclass.calculateWindowSizeClass(this)
 
-            val isDarkTheme = when (appSettings.themeMode) {
-                ThemeMode.DARK -> true
-                ThemeMode.LIGHT -> false
-                ThemeMode.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
-            }
+            val isDarkTheme =
+                when (appSettings.themeMode) {
+                    ThemeMode.DARK -> true
+                    ThemeMode.LIGHT -> false
+                    ThemeMode.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
+                }
             val useDynamicColor = appSettings.dynamicColor
 
             val currentDensity = androidx.compose.ui.platform.LocalDensity.current
@@ -245,17 +250,19 @@ class MainActivity : FragmentActivity() {
             // accessibility font clips fixed-height rows rather than growing
             // them, so it is bounded at UiScale.MaxFontScale. The old cap was
             // 1.0f, which discarded the user's setting entirely.
-            val cappedFontScale = remember(currentDensity) {
-                currentDensity.fontScale.coerceAtMost(UiScale.MaxFontScale)
-            }
+            val cappedFontScale =
+                remember(currentDensity) {
+                    currentDensity.fontScale.coerceAtMost(UiScale.MaxFontScale)
+                }
 
-            val cappedDensity = remember(currentDensity, cappedFontScale) {
-                androidx.compose.ui.unit.Density(
-                    // Untouched: the global zoom is applied in DeepEyeMusicTheme.
-                    density = currentDensity.density,
-                    fontScale = cappedFontScale
-                )
-            }
+            val cappedDensity =
+                remember(currentDensity, cappedFontScale) {
+                    androidx.compose.ui.unit.Density(
+                        // Untouched: the global zoom is applied in DeepEyeMusicTheme.
+                        density = currentDensity.density,
+                        fontScale = cappedFontScale
+                    )
+                }
 
             androidx.compose.runtime.CompositionLocalProvider(
                 androidx.compose.ui.platform.LocalDensity provides cappedDensity
@@ -266,57 +273,77 @@ class MainActivity : FragmentActivity() {
                     amoledMode = appSettings.amoledMode,
                     overrideColors = dynamicColors
                 ) {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize()) {
-                        // Premium Fog / Mesh Background
-                        if (!appSettings.amoledMode) {
-                            val color1 = androidx.compose.material3.MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                            val color2 = androidx.compose.material3.MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)
-                            val color3 = androidx.compose.material3.MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)
-                            
-                            androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
-                                drawCircle(
-                                    brush = androidx.compose.ui.graphics.Brush.radialGradient(
-                                        colors = listOf(color1, androidx.compose.ui.graphics.Color.Transparent),
-                                        center = androidx.compose.ui.geometry.Offset(0f, 0f),
-                                        radius = size.width * 1.2f
-                                    ),
-                                    radius = size.width * 1.2f,
-                                    center = androidx.compose.ui.geometry.Offset(0f, 0f)
-                                )
-                                drawCircle(
-                                    brush = androidx.compose.ui.graphics.Brush.radialGradient(
-                                        colors = listOf(color2, androidx.compose.ui.graphics.Color.Transparent),
-                                        center = androidx.compose.ui.geometry.Offset(size.width, size.height * 0.4f),
-                                        radius = size.width
-                                    ),
-                                    radius = size.width,
-                                    center = androidx.compose.ui.geometry.Offset(size.width, size.height * 0.4f)
-                                )
-                                drawCircle(
-                                    brush = androidx.compose.ui.graphics.Brush.radialGradient(
-                                        colors = listOf(color3, androidx.compose.ui.graphics.Color.Transparent),
-                                        center = androidx.compose.ui.geometry.Offset(size.width * 0.2f, size.height),
-                                        radius = size.width * 1.1f
-                                    ),
-                                    radius = size.width * 1.1f,
-                                    center = androidx.compose.ui.geometry.Offset(size.width * 0.2f, size.height)
-                                )
-                            }
-                        }
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize()) {
+                            // Premium Fog / Mesh Background
+                            if (!appSettings.amoledMode) {
+                                val color1 =
+                                    androidx.compose.material3.MaterialTheme.colorScheme.primary.copy(
+                                        alpha = 0.2f
+                                    )
+                                val color2 =
+                                    androidx.compose.material3.MaterialTheme.colorScheme.tertiary.copy(
+                                        alpha = 0.2f
+                                    )
+                                val color3 =
+                                    androidx.compose.material3.MaterialTheme.colorScheme.secondary.copy(
+                                        alpha = 0.15f
+                                    )
 
-                        DeepEyeMusicApp(
-                            isInPipMode = isInPipMode,
-                            fullscreenMode = fullscreenMode,
-                            playerController = playerController,
-                            windowSizeClass = windowSizeClass
-                        )
+                                androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+                                    drawCircle(
+                                        brush =
+                                            androidx.compose.ui.graphics.Brush.radialGradient(
+                                                colors = listOf(color1, androidx.compose.ui.graphics.Color.Transparent),
+                                                center = androidx.compose.ui.geometry.Offset(0f, 0f),
+                                                radius = size.width * 1.2f
+                                            ),
+                                        radius = size.width * 1.2f,
+                                        center = androidx.compose.ui.geometry.Offset(0f, 0f)
+                                    )
+                                    drawCircle(
+                                        brush =
+                                            androidx.compose.ui.graphics.Brush.radialGradient(
+                                                colors = listOf(color2, androidx.compose.ui.graphics.Color.Transparent),
+                                                center =
+                                                    androidx.compose.ui.geometry.Offset(
+                                                        size.width,
+                                                        size.height * 0.4f
+                                                    ),
+                                                radius = size.width
+                                            ),
+                                        radius = size.width,
+                                        center = androidx.compose.ui.geometry.Offset(size.width, size.height * 0.4f)
+                                    )
+                                    drawCircle(
+                                        brush =
+                                            androidx.compose.ui.graphics.Brush.radialGradient(
+                                                colors = listOf(color3, androidx.compose.ui.graphics.Color.Transparent),
+                                                center =
+                                                    androidx.compose.ui.geometry.Offset(
+                                                        size.width * 0.2f,
+                                                        size.height
+                                                    ),
+                                                radius = size.width * 1.1f
+                                            ),
+                                        radius = size.width * 1.1f,
+                                        center = androidx.compose.ui.geometry.Offset(size.width * 0.2f, size.height)
+                                    )
+                                }
+                            }
+
+                            DeepEyeMusicApp(
+                                isInPipMode = isInPipMode,
+                                fullscreenMode = fullscreenMode,
+                                playerController = playerController,
+                                windowSizeClass = windowSizeClass
+                            )
+                        }
                     }
                 }
-            }
             } // Close CompositionLocalProvider
         }
-        
+
         handleIntent(intent)
     }
 
@@ -388,9 +415,10 @@ class MainActivity : FragmentActivity() {
         // Required for visualizer
         permissions.add(Manifest.permission.RECORD_AUDIO)
 
-        val permissionsToRequest = permissions.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
+        val permissionsToRequest =
+            permissions.filter {
+                ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+            }
 
         if (permissionsToRequest.isNotEmpty()) {
             requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
@@ -412,14 +440,18 @@ class MainActivity : FragmentActivity() {
             val channelName = intent.getStringExtra("EXTRA_CHANNEL_NAME") ?: "YouTube"
             lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                 try {
-                    val remoteItem = com.deepeye.musicpro.domain.model.MediaItem.Remote(
-                        id = extraVideoId,
-                        title = videoTitle,
-                        artist = channelName,
-                        artworkUri = android.net.Uri.parse("https://img.youtube.com/vi/$extraVideoId/hqdefault.jpg"),
-                        duration = 0L,
-                        isVideo = true
-                    )
+                    val remoteItem =
+                        com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                            id = extraVideoId,
+                            title = videoTitle,
+                            artist = channelName,
+                            artworkUri =
+                                android.net.Uri.parse(
+                                    "https://img.youtube.com/vi/$extraVideoId/hqdefault.jpg"
+                                ),
+                            duration = 0L,
+                            isVideo = true
+                        )
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                         playerController.playMedia(remoteItem)
                     }
@@ -442,28 +474,32 @@ class MainActivity : FragmentActivity() {
         }
 
         if (youtubeUrl != null) {
-            val youtubeUrlRegex = Regex("(?:youtube\\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\\.be/|youtube\\.com/shorts/)([^\"&?/\\s]{11})")
+            val youtubeUrlRegex =
+                Regex(
+                    "(?:youtube\\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\\.be/|youtube\\.com/shorts/)([^\"&?/\\s]{11})"
+                )
             val match = youtubeUrlRegex.find(youtubeUrl)
-            
+
             if (match != null) {
                 val videoId = match.groups[1]?.value ?: return
                 lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                     try {
                         val results = contentFetcher.searchByQuery(videoId, 1)
                         val videoItem = results.firstOrNull { it.videoId == videoId } ?: results.firstOrNull()
-                        
+
                         val title = videoItem?.title ?: "Shared Audio"
                         val artist = videoItem?.artist ?: "YouTube"
-                        
-                        val remoteItem = com.deepeye.musicpro.domain.model.MediaItem.Remote(
-                            id = videoId,
-                            title = title,
-                            artist = artist,
-                            artworkUri = android.net.Uri.parse("https://img.youtube.com/vi/$videoId/hqdefault.jpg"),
-                            duration = 0L,
-                            isVideo = true
-                        )
-                        
+
+                        val remoteItem =
+                            com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                                id = videoId,
+                                title = title,
+                                artist = artist,
+                                artworkUri = android.net.Uri.parse("https://img.youtube.com/vi/$videoId/hqdefault.jpg"),
+                                duration = 0L,
+                                isVideo = true
+                            )
+
                         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                             playerController.playMedia(remoteItem)
                         }
@@ -476,13 +512,16 @@ class MainActivity : FragmentActivity() {
         }
 
         if (intent?.action == android.content.Intent.ACTION_VIEW || intent?.action == android.content.Intent.ACTION_SEND) {
-            val uri = intent.data ?: (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                intent.getParcelableExtra(android.content.Intent.EXTRA_STREAM, android.net.Uri::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                intent.getParcelableExtra(android.content.Intent.EXTRA_STREAM) as? android.net.Uri
-            }) ?: return
-            
+            val uri =
+                intent.data ?: (
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        intent.getParcelableExtra(android.content.Intent.EXTRA_STREAM, android.net.Uri::class.java)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        intent.getParcelableExtra(android.content.Intent.EXTRA_STREAM) as? android.net.Uri
+                    }
+                ) ?: return
+
             lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                 var title = "Unknown Title"
                 var artist = "Unknown Artist"
@@ -492,7 +531,10 @@ class MainActivity : FragmentActivity() {
                     retriever.setDataSource(this@MainActivity, uri)
                     title = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_TITLE) ?: "Unknown Title"
                     artist = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: "Unknown Artist"
-                    val durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)
+                    val durationStr =
+                        retriever.extractMetadata(
+                            android.media.MediaMetadataRetriever.METADATA_KEY_DURATION
+                        )
                     duration = durationStr?.toLongOrNull() ?: 0L
                     retriever.release()
                 } catch (e: Exception) {
@@ -512,32 +554,33 @@ class MainActivity : FragmentActivity() {
                                 }
                             }
                         }
-                    } catch (e: Exception) {}
+                    } catch (e: Exception) {
+                    }
                 } else if (title == "Unknown Title" && uri.scheme == "file") {
                     title = uri.lastPathSegment?.substringBeforeLast('.') ?: "Unknown Title"
                 }
 
-                val song = com.deepeye.musicpro.domain.model.Song(
-                    id = uri.hashCode().toLong(),
-                    title = title,
-                    artist = artist,
-                    album = "",
-                    albumId = 0L,
-                    artistId = 0L,
-                    uri = uri,
-                    duration = duration,
-                    size = 0L,
-                    path = uri.toString(),
-                    artUri = null
-                )
-                
+                val song =
+                    com.deepeye.musicpro.domain.model.Song(
+                        id = uri.hashCode().toLong(),
+                        title = title,
+                        artist = artist,
+                        album = "",
+                        albumId = 0L,
+                        artistId = 0L,
+                        uri = uri,
+                        duration = duration,
+                        size = 0L,
+                        path = uri.toString(),
+                        artUri = null
+                    )
+
                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                     playerController.playMedia(com.deepeye.musicpro.domain.model.MediaItem.Local(song))
                 }
             }
         }
     }
-
 
     override fun onResume() {
         super.onResume()

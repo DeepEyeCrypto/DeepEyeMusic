@@ -13,85 +13,85 @@ import javax.inject.Singleton
  */
 @Singleton
 class DownloadManager
-@Inject
-constructor(
-    private val dao: LibraryDao,
-) {
-    suspend fun enqueueDownload(
-        videoId: String,
-        title: String,
-        artist: String,
-        artworkUrl: String? = null,
+    @Inject
+    constructor(
+        private val dao: LibraryDao,
     ) {
-        dao.upsertDownload(
-            DownloadEntity(
-                videoId = videoId,
-                title = title,
-                artist = artist,
-                artworkUrl = artworkUrl,
-                state = DownloadState.QUEUED,
-                progress = 0,
-            ),
-        )
+        suspend fun enqueueDownload(
+            videoId: String,
+            title: String,
+            artist: String,
+            artworkUrl: String? = null,
+        ) {
+            dao.upsertDownload(
+                DownloadEntity(
+                    videoId = videoId,
+                    title = title,
+                    artist = artist,
+                    artworkUrl = artworkUrl,
+                    state = DownloadState.QUEUED,
+                    progress = 0,
+                ),
+            )
+        }
+
+        suspend fun updateProgress(
+            videoId: String,
+            progress: Int,
+        ) {
+            val current = dao.getDownload(videoId) ?: return
+            dao.upsertDownload(
+                current.copy(
+                    state = DownloadState.DOWNLOADING,
+                    progress = progress,
+                    updatedAt = System.currentTimeMillis(),
+                ),
+            )
+        }
+
+        suspend fun pauseDownload(videoId: String) {
+            val current = dao.getDownload(videoId) ?: return
+            dao.upsertDownload(
+                current.copy(
+                    state = DownloadState.PAUSED,
+                    updatedAt = System.currentTimeMillis(),
+                ),
+            )
+        }
+
+        suspend fun completeDownload(
+            videoId: String,
+            localPath: String,
+            sizeBytes: Long = 0L,
+        ) {
+            val current = dao.getDownload(videoId) ?: return
+            dao.upsertDownload(
+                current.copy(
+                    state = DownloadState.COMPLETED,
+                    progress = 100,
+                    localPath = localPath,
+                    sizeBytes = sizeBytes,
+                    downloadedAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
+                ),
+            )
+        }
+
+        suspend fun failDownload(videoId: String) {
+            val current = dao.getDownload(videoId) ?: return
+            dao.upsertDownload(
+                current.copy(
+                    state = DownloadState.FAILED,
+                    updatedAt = System.currentTimeMillis(),
+                ),
+            )
+        }
+
+        suspend fun removeDownload(videoId: String) {
+            dao.deleteDownload(videoId)
+        }
+
+        fun observeDownloads() = dao.observeDownloads()
+
+        fun observeCompletedDownloads() = dao.observeCompletedDownloads()
     }
-
-    suspend fun updateProgress(
-        videoId: String,
-        progress: Int,
-    ) {
-        val current = dao.getDownload(videoId) ?: return
-        dao.upsertDownload(
-            current.copy(
-                state = DownloadState.DOWNLOADING,
-                progress = progress,
-                updatedAt = System.currentTimeMillis(),
-            ),
-        )
-    }
-
-    suspend fun pauseDownload(videoId: String) {
-        val current = dao.getDownload(videoId) ?: return
-        dao.upsertDownload(
-            current.copy(
-                state = DownloadState.PAUSED,
-                updatedAt = System.currentTimeMillis(),
-            ),
-        )
-    }
-
-    suspend fun completeDownload(
-        videoId: String,
-        localPath: String,
-        sizeBytes: Long = 0L,
-    ) {
-        val current = dao.getDownload(videoId) ?: return
-        dao.upsertDownload(
-            current.copy(
-                state = DownloadState.COMPLETED,
-                progress = 100,
-                localPath = localPath,
-                sizeBytes = sizeBytes,
-                downloadedAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
-            ),
-        )
-    }
-
-    suspend fun failDownload(videoId: String) {
-        val current = dao.getDownload(videoId) ?: return
-        dao.upsertDownload(
-            current.copy(
-                state = DownloadState.FAILED,
-                updatedAt = System.currentTimeMillis(),
-            ),
-        )
-    }
-
-    suspend fun removeDownload(videoId: String) {
-        dao.deleteDownload(videoId)
-    }
-
-    fun observeDownloads() = dao.observeDownloads()
-
-    fun observeCompletedDownloads() = dao.observeCompletedDownloads()
-}

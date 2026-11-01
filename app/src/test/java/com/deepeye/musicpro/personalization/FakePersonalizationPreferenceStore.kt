@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.asStateFlow
 class FakePersonalizationPreferenceStore(
     initial: PersonalizationPreferences = PersonalizationPreferences(),
 ) : PersonalizationPreferenceStore {
-
     private val _state = MutableStateFlow(initial)
     val state = _state.asStateFlow()
 

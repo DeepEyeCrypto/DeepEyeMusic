@@ -47,26 +47,33 @@ fun DSPPresetSelector(
             val isLocked = preset.requiredRank > 0 && userRank > preset.requiredRank
 
             Card(
-                modifier = Modifier
-                    .width(125.dp)
-                    .height(78.dp)
-                    .glassCard(
-                        elevation = if (isSelected) 8.dp else 1.dp,
-                        borderColor = if (isSelected) Color(0xFF00E5FF) else Color(0x22FFFFFF)
-                    )
-                    .then(
-                        if (isLocked) Modifier else Modifier
-                            .clickable { onPresetChanged(preset) }
-                            .hoverable(scale = 1.03f)
+                modifier =
+                    Modifier
+                        .width(125.dp)
+                        .height(78.dp)
+                        .glassCard(
+                            elevation = if (isSelected) 8.dp else 1.dp,
+                            borderColor = if (isSelected) Color(0xFF00E5FF) else Color(0x22FFFFFF)
+                        )
+                        .then(
+                            if (isLocked) {
+                                Modifier
+                            } else {
+                                Modifier
+                                    .clickable { onPresetChanged(preset) }
+                                    .hoverable(scale = 1.03f)
+                            }
+                        ),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = if (isSelected) Color(0x2600E5FF) else Color.Transparent
                     ),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isSelected) Color(0x2600E5FF) else Color.Transparent
-                ),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(
-                    modifier = Modifier
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    modifier =
+                        Modifier
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -77,7 +84,14 @@ fun DSPPresetSelector(
                         text = preset.presetName,
                         fontSize = 11.sp,
                         fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Bold,
-                        color = if (isLocked) Color.DarkGray else if (isSelected) Color(0xFF00E5FF) else Color.White,
+                        color =
+                            if (isLocked) {
+                                Color.DarkGray
+                            } else if (isSelected) {
+                                Color(0xFF00E5FF)
+                            } else {
+                                Color.White
+                            },
                         maxLines = 1,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
@@ -86,7 +100,16 @@ fun DSPPresetSelector(
                         text = if (isLocked) "Requires Top ${preset.requiredRank}" else preset.description,
                         fontSize = 9.sp,
                         lineHeight = 11.sp,
-                        color = if (isLocked) MaterialTheme.colorScheme.error else if (isSelected) Color.White.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.5f),
+                        color =
+                            if (isLocked) {
+                                MaterialTheme.colorScheme.error
+                            } else if (isSelected) {
+                                Color.White.copy(
+                                    alpha = 0.85f
+                                )
+                            } else {
+                                Color.White.copy(alpha = 0.5f)
+                            },
                         maxLines = 2,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )

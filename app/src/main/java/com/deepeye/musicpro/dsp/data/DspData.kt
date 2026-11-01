@@ -82,7 +82,10 @@ data class DspPresetEntity(
 @Dao
 interface DspProfileDao {
     @Query("SELECT * FROM dsp_profiles WHERE track_id = :trackId AND device_id = :deviceId")
-    suspend fun getProfile(trackId: String, deviceId: String): DspProfileEntity?
+    suspend fun getProfile(
+        trackId: String,
+        deviceId: String
+    ): DspProfileEntity?
 
     @Query("SELECT * FROM dsp_profiles WHERE track_id = :trackId")
     suspend fun getProfilesForTrack(trackId: String): List<DspProfileEntity>
@@ -97,7 +100,10 @@ interface DspProfileDao {
     suspend fun upsert(profile: DspProfileEntity)
 
     @Query("DELETE FROM dsp_profiles WHERE track_id = :trackId AND device_id = :deviceId")
-    suspend fun delete(trackId: String, deviceId: String)
+    suspend fun delete(
+        trackId: String,
+        deviceId: String
+    )
 
     @Query("DELETE FROM dsp_profiles WHERE track_id = :trackId")
     suspend fun deleteAllForTrack(trackId: String)
@@ -144,5 +150,6 @@ interface DspPresetDao {
 )
 abstract class DspDatabase : RoomDatabase() {
     abstract fun dspPresetDao(): DspPresetDao
+
     abstract fun dspProfileDao(): DspProfileDao
 }

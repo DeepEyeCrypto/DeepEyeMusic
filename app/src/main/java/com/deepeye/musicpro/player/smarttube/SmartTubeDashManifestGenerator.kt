@@ -36,7 +36,7 @@ object SmartTubeDashManifestGenerator {
             if (itag <= 0) continue
             val mimeType = f.optString("mimeType", "")
             val cleanMime = mimeType.substringBefore(";").trim()
-            
+
             // Accept ISO-BMFF MP4 video and audio
             val isMp4 = cleanMime.startsWith("video/mp4") || cleanMime.startsWith("audio/mp4")
             if (!isMp4) continue
@@ -45,11 +45,41 @@ object SmartTubeDashManifestGenerator {
             val approxDurMs = f.optLong("approxDurationMs", 0L)
             val durSec = if (approxDurMs > 0) approxDurMs / 1000.0 else 0.0
             if (durSec > maxDurationSec) maxDurationSec = durSec
-            val codecs = if (mimeType.contains("codecs=\"")) mimeType.substringAfter("codecs=\"").substringBefore("\"") else ""
-            val item = AdaptiveFormatItem(itag, url, cleanMime, codecs, bitrate, f.optInt("width", 0), f.optInt("height", 0), f.optDouble("fps", 30.0).toFloat(), f.optString("audioSampleRate").ifEmpty { "44100" }, "$initStart-$initEnd", "$idxStart-$idxEnd")
-            
-            if (cleanMime.startsWith("video/")) videoFormats.add(item)
-            else if (cleanMime.startsWith("audio/")) audioFormats.add(item)
+            val codecs =
+                if (mimeType.contains(
+                        "codecs=\""
+                    )
+                ) {
+                    mimeType.substringAfter("codecs=\"").substringBefore("\"")
+                } else {
+                    ""
+                }
+            val item =
+                AdaptiveFormatItem(
+                    itag, url, cleanMime, codecs, bitrate,
+                    f.optInt(
+                        "width",
+                        0
+                    ),
+                    f.optInt(
+                        "height",
+                        0
+                    ),
+                    f.optDouble(
+                        "fps",
+                        30.0
+                    ).toFloat(),
+                    f.optString(
+                        "audioSampleRate"
+                    ).ifEmpty { "44100" },
+                    "$initStart-$initEnd", "$idxStart-$idxEnd"
+                )
+
+            if (cleanMime.startsWith("video/")) {
+                videoFormats.add(item)
+            } else if (cleanMime.startsWith("audio/")) {
+                audioFormats.add(item)
+            }
         }
 
         // Pass 2: Fallback to all formats if no MP4 video or audio was found
@@ -75,11 +105,41 @@ object SmartTubeDashManifestGenerator {
                 val approxDurMs = f.optLong("approxDurationMs", 0L)
                 val durSec = if (approxDurMs > 0) approxDurMs / 1000.0 else 0.0
                 if (durSec > maxDurationSec) maxDurationSec = durSec
-                val codecs = if (mimeType.contains("codecs=\"")) mimeType.substringAfter("codecs=\"").substringBefore("\"") else ""
-                val item = AdaptiveFormatItem(itag, url, cleanMime, codecs, bitrate, f.optInt("width", 0), f.optInt("height", 0), f.optDouble("fps", 30.0).toFloat(), f.optString("audioSampleRate").ifEmpty { "44100" }, "$initStart-$initEnd", "$idxStart-$idxEnd")
-                
-                if (cleanMime.startsWith("video/")) videoFormats.add(item)
-                else if (cleanMime.startsWith("audio/")) audioFormats.add(item)
+                val codecs =
+                    if (mimeType.contains(
+                            "codecs=\""
+                        )
+                    ) {
+                        mimeType.substringAfter("codecs=\"").substringBefore("\"")
+                    } else {
+                        ""
+                    }
+                val item =
+                    AdaptiveFormatItem(
+                        itag, url, cleanMime, codecs, bitrate,
+                        f.optInt(
+                            "width",
+                            0
+                        ),
+                        f.optInt(
+                            "height",
+                            0
+                        ),
+                        f.optDouble(
+                            "fps",
+                            30.0
+                        ).toFloat(),
+                        f.optString(
+                            "audioSampleRate"
+                        ).ifEmpty { "44100" },
+                        "$initStart-$initEnd", "$idxStart-$idxEnd"
+                    )
+
+                if (cleanMime.startsWith("video/")) {
+                    videoFormats.add(item)
+                } else if (cleanMime.startsWith("audio/")) {
+                    audioFormats.add(item)
+                }
             }
         }
 
@@ -89,17 +149,23 @@ object SmartTubeDashManifestGenerator {
 
         val sb = java.lang.StringBuilder()
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
-        sb.append("<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\" profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\" type=\"static\" mediaPresentationDuration=\"$durationAttr\" minBufferTime=\"PT1.5S\">\n")
+        sb.append(
+            "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\" profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\" type=\"static\" mediaPresentationDuration=\"$durationAttr\" minBufferTime=\"PT1.5S\">\n"
+        )
         sb.append("  <Period duration=\"$durationAttr\">\n")
 
         val videoGroups = videoFormats.groupBy { it.mimeType }
         for ((mime, items) in videoGroups) {
-            sb.append("    <AdaptationSet mimeType=\"$mime\" contentType=\"video\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\">\n")
+            sb.append(
+                "    <AdaptationSet mimeType=\"$mime\" contentType=\"video\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\">\n"
+            )
             for (v in items) {
                 val fpsAttr = if (v.frameRate > 0) " frameRate=\"${v.frameRate.toInt()}\"" else ""
                 val dimAttr = if (v.width > 0 && v.height > 0) " width=\"${v.width}\" height=\"${v.height}\"" else ""
                 val codecAttr = if (v.codecs.isNotBlank()) " codecs=\"${escapeXml(v.codecs)}\"" else ""
-                sb.append("      <Representation id=\"${v.itag}\" bandwidth=\"${v.bitrate}\"$dimAttr$fpsAttr$codecAttr>\n")
+                sb.append(
+                    "      <Representation id=\"${v.itag}\" bandwidth=\"${v.bitrate}\"$dimAttr$fpsAttr$codecAttr>\n"
+                )
                 sb.append("        <BaseURL>${escapeXml(v.url)}</BaseURL>\n")
                 sb.append("        <SegmentBase indexRange=\"${v.indexRange}\">\n")
                 sb.append("          <Initialization range=\"${v.initRange}\"/>\n")
@@ -111,10 +177,14 @@ object SmartTubeDashManifestGenerator {
 
         val audioGroups = audioFormats.groupBy { it.mimeType }
         for ((mime, items) in audioGroups) {
-            sb.append("    <AdaptationSet mimeType=\"$mime\" contentType=\"audio\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\">\n")
+            sb.append(
+                "    <AdaptationSet mimeType=\"$mime\" contentType=\"audio\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\">\n"
+            )
             for (a in items) {
                 val codecAttr = if (a.codecs.isNotBlank()) " codecs=\"${escapeXml(a.codecs)}\"" else ""
-                sb.append("      <Representation id=\"${a.itag}\" bandwidth=\"${a.bitrate}\" audioSamplingRate=\"${a.audioSampleRate}\"$codecAttr>\n")
+                sb.append(
+                    "      <Representation id=\"${a.itag}\" bandwidth=\"${a.bitrate}\" audioSamplingRate=\"${a.audioSampleRate}\"$codecAttr>\n"
+                )
                 sb.append("        <BaseURL>${escapeXml(a.url)}</BaseURL>\n")
                 sb.append("        <SegmentBase indexRange=\"${a.indexRange}\">\n")
                 sb.append("          <Initialization range=\"${a.initRange}\"/>\n")
@@ -133,16 +203,25 @@ object SmartTubeDashManifestGenerator {
         urlResolver: (JSONObject) -> String?
     ): String? {
         val xml = generateDashManifest(streamingData, urlResolver) ?: return null
-        val base64 = try {
-            val encoded = android.util.Base64.encodeToString(xml.toByteArray(Charsets.UTF_8), android.util.Base64.NO_WRAP)
-            encoded ?: java.util.Base64.getEncoder().encodeToString(xml.toByteArray(Charsets.UTF_8))
-        } catch (_: Throwable) {
-            java.util.Base64.getEncoder().encodeToString(xml.toByteArray(Charsets.UTF_8))
-        }
+        val base64 =
+            try {
+                val encoded =
+                    android.util.Base64.encodeToString(
+                        xml.toByteArray(Charsets.UTF_8),
+                        android.util.Base64.NO_WRAP
+                    )
+                encoded ?: java.util.Base64.getEncoder().encodeToString(xml.toByteArray(Charsets.UTF_8))
+            } catch (_: Throwable) {
+                java.util.Base64.getEncoder().encodeToString(xml.toByteArray(Charsets.UTF_8))
+            }
         return "data:application/dash+xml;charset=utf-8;base64,$base64"
     }
 
-    private fun escapeXml(s: String): String = s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&apos;")
+    private fun escapeXml(s: String): String =
+        s.replace(
+            "&",
+            "&amp;"
+        ).replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&apos;")
 
     private data class AdaptiveFormatItem(val itag: Int, val url: String, val mimeType: String, val codecs: String, val bitrate: Long, val width: Int, val height: Int, val frameRate: Float, val audioSampleRate: String, val initRange: String, val indexRange: String)
 }

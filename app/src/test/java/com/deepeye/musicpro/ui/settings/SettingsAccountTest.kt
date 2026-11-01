@@ -14,13 +14,14 @@ import java.io.File
  * screen's account surface is a fixed set of Compose strings.
  */
 class SettingsAccountTest {
-
     private fun settingsScreenSource(): String {
-        val root = File("src/main/java").takeIf { it.exists() }
-            ?: File("../src/main/java")
-            ?: File("app/src/main/java")
-        val file = root.walkTopDown().firstOrNull { it.name == "SettingsScreen.kt" }
-            ?: error("SettingsScreen.kt not found")
+        val root =
+            File("src/main/java").takeIf { it.exists() }
+                ?: File("../src/main/java")
+                ?: File("app/src/main/java")
+        val file =
+            root.walkTopDown().firstOrNull { it.name == "SettingsScreen.kt" }
+                ?: error("SettingsScreen.kt not found")
         return file.readText()
     }
 

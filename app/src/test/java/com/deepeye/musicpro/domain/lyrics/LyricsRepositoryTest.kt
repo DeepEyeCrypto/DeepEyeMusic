@@ -10,14 +10,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LyricsRepositoryTest {
-
     @Test
     fun verifyLrcParserParsesTimedLyricsCorrectly() {
-        val sampleLrc = """
+        val sampleLrc =
+            """
             [00:12.00]First line of the song
             [00:24.50]Second line with vocals
             [01:05.10]Chorus line playing loud
-        """.trimIndent()
+            """.trimIndent()
 
         val parsed = LrcParser.parseSyncedLyrics(sampleLrc)
         assertNotNull(parsed)
@@ -31,11 +31,12 @@ class LyricsRepositoryTest {
 
     @Test
     fun verifyActiveLineBinarySearch() {
-        val sampleLrc = """
+        val sampleLrc =
+            """
             [00:10.00]Line 1
             [00:20.00]Line 2
             [00:30.00]Line 3
-        """.trimIndent()
+            """.trimIndent()
 
         val lyrics = LrcParser.parseSyncedLyrics(sampleLrc)
         val pos = 25000L // 25s -> Should be Line 2 (index 1)

@@ -24,7 +24,6 @@ package com.deepeye.musicpro.ui.theme
  *    except for the three narrow categories documented on that constant.
  */
 object UiScale {
-
     /**
      * Multiplier applied to the system `fontScale`.
      *
@@ -130,8 +129,7 @@ object UiScale {
      * @param isLandscape whether the current configuration is landscape.
      * @return the multiplier to apply to `Density.density`.
      */
-    fun zoomFor(isLandscape: Boolean): Float =
-        if (isLandscape) LandscapeDensityScale else PortraitDensityScale
+    fun zoomFor(isLandscape: Boolean): Float = if (isLandscape) LandscapeDensityScale else PortraitDensityScale
 
     /**
      * Smallest font size that may be **authored**, such that it still renders at
@@ -156,6 +154,5 @@ object UiScale {
      * render below the floor, because the user asked for bigger type in that
      * case; only shrinking needs the compensation.
      */
-    fun authoredFloorFor(zoom: Float): Float =
-        if (zoom >= 1f) MinReadableFontSize else MinReadableFontSize / zoom
+    fun authoredFloorFor(zoom: Float): Float = if (zoom >= 1f) MinReadableFontSize else MinReadableFontSize / zoom
 }

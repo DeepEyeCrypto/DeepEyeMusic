@@ -11,7 +11,6 @@ import org.schabi.newpipe.extractor.downloader.Response
 import java.io.IOException
 
 class NewPipeDownloader(private val client: OkHttpClient) : Downloader() {
-
     @Throws(IOException::class)
     override fun execute(request: Request): Response {
         val httpMethod = request.httpMethod()

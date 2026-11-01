@@ -3,17 +3,14 @@
 
 package com.deepeye.musicpro.ui.homehub.video
 
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.WifiOff
@@ -24,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun VideoRail(
@@ -52,9 +49,10 @@ fun VideoRail(
         if (activeSections.isNotEmpty()) {
             OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
             androidx.compose.foundation.layout.FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
@@ -71,18 +69,18 @@ fun VideoRail(
                             )
                         },
                         colors =
-                        FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = section.accentColor.copy(alpha = 0.2f),
-                            selectedLabelColor = section.accentColor,
-                            selectedLeadingIconColor = section.accentColor,
-                        ),
+                            FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = section.accentColor.copy(alpha = 0.2f),
+                                selectedLabelColor = section.accentColor,
+                                selectedLeadingIconColor = section.accentColor,
+                            ),
                         border =
-                        FilterChipDefaults.filterChipBorder(
-                            enabled = true,
-                            selected = isActive,
-                            selectedBorderColor = section.accentColor.copy(0.4f),
-                            borderColor = Color.White.copy(0.08f),
-                        ),
+                            FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = isActive,
+                                selectedBorderColor = section.accentColor.copy(0.4f),
+                                borderColor = Color.White.copy(0.08f),
+                            ),
                         shape = RoundedCornerShape(20.dp),
                     )
                 }
@@ -130,9 +128,10 @@ fun VideoRail(
             // Video cards (Adaptive Grid - No side scroll)
             val displayedItems = section.items.take(4)
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 displayedItems.chunked(2).forEach { chunk ->
@@ -163,9 +162,10 @@ fun VideoRail(
         // Loading shimmer (No side scroll)
         if (state.isLoading) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Row(

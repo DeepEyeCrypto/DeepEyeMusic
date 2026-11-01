@@ -34,33 +34,38 @@ fun Modifier.consumeHorizontalDrags(
     onDragEnd: () -> Unit = {},
     onDragCancel: () -> Unit = {},
     onHorizontalDrag: (change: PointerInputChange, dragAmount: Float) -> Unit
-): Modifier = if (!enabled) this else this.pointerInput(Unit) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-        val pointerId = down.id
-        var isDragging = false
+): Modifier =
+    if (!enabled) {
+        this
+    } else {
+        this.pointerInput(Unit) {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                val pointerId = down.id
+                var isDragging = false
 
-        onDragStart(down.position)
+                onDragStart(down.position)
 
-        while (true) {
-            val event = awaitPointerEvent(pass = PointerEventPass.Initial)
-            val change = event.changes.firstOrNull { it.id == pointerId } ?: break
+                while (true) {
+                    val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                    val change = event.changes.firstOrNull { it.id == pointerId } ?: break
 
-            if (change.changedToUp()) {
-                if (isDragging) onDragEnd() else onDragCancel()
-                break
-            }
+                    if (change.changedToUp()) {
+                        if (isDragging) onDragEnd() else onDragCancel()
+                        break
+                    }
 
-            val deltaX = change.position.x - change.previousPosition.x
+                    val deltaX = change.position.x - change.previousPosition.x
 
-            if (isDragging || abs(deltaX) > horizontalSlopPx) {
-                isDragging = true
-                change.consume() // Starve parent scrollable on Main pass
-                onHorizontalDrag(change, deltaX)
+                    if (isDragging || abs(deltaX) > horizontalSlopPx) {
+                        isDragging = true
+                        change.consume() // Starve parent scrollable on Main pass
+                        onHorizontalDrag(change, deltaX)
+                    }
+                }
             }
         }
     }
-}
 
 /**
  * 2. EAGER VERTICAL DRAG INTERCEPTOR
@@ -73,33 +78,38 @@ fun Modifier.consumeVerticalDrags(
     onDragEnd: () -> Unit = {},
     onDragCancel: () -> Unit = {},
     onVerticalDrag: (change: PointerInputChange, dragAmount: Float) -> Unit
-): Modifier = if (!enabled) this else this.pointerInput(Unit) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-        val pointerId = down.id
-        var isDragging = false
+): Modifier =
+    if (!enabled) {
+        this
+    } else {
+        this.pointerInput(Unit) {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                val pointerId = down.id
+                var isDragging = false
 
-        onDragStart(down.position)
+                onDragStart(down.position)
 
-        while (true) {
-            val event = awaitPointerEvent(pass = PointerEventPass.Initial)
-            val change = event.changes.firstOrNull { it.id == pointerId } ?: break
+                while (true) {
+                    val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                    val change = event.changes.firstOrNull { it.id == pointerId } ?: break
 
-            if (change.changedToUp()) {
-                if (isDragging) onDragEnd() else onDragCancel()
-                break
-            }
+                    if (change.changedToUp()) {
+                        if (isDragging) onDragEnd() else onDragCancel()
+                        break
+                    }
 
-            val deltaY = change.position.y - change.previousPosition.y
+                    val deltaY = change.position.y - change.previousPosition.y
 
-            if (isDragging || abs(deltaY) > verticalSlopPx) {
-                isDragging = true
-                change.consume() // Starve parent scrollable on Main pass
-                onVerticalDrag(change, deltaY)
+                    if (isDragging || abs(deltaY) > verticalSlopPx) {
+                        isDragging = true
+                        change.consume() // Starve parent scrollable on Main pass
+                        onVerticalDrag(change, deltaY)
+                    }
+                }
             }
         }
     }
-}
 
 /**
  * 3. PREVENT PARENT SCROLL ON DRAG (Generic Hook)
@@ -111,33 +121,38 @@ fun Modifier.preventParentScrollOnDrag(
     onDragEnd: () -> Unit = {},
     onDragCancel: () -> Unit = {},
     onDrag: (change: PointerInputChange, dragAmount: Offset) -> Unit = { _, _ -> }
-): Modifier = if (!enabled) this else this.pointerInput(Unit) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-        val pointerId = down.id
-        var isDragging = false
+): Modifier =
+    if (!enabled) {
+        this
+    } else {
+        this.pointerInput(Unit) {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                val pointerId = down.id
+                var isDragging = false
 
-        onDragStart(down.position)
+                onDragStart(down.position)
 
-        while (true) {
-            val event = awaitPointerEvent(pass = PointerEventPass.Initial)
-            val change = event.changes.firstOrNull { it.id == pointerId } ?: break
+                while (true) {
+                    val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                    val change = event.changes.firstOrNull { it.id == pointerId } ?: break
 
-            if (change.changedToUp()) {
-                if (isDragging) onDragEnd() else onDragCancel()
-                break
-            }
+                    if (change.changedToUp()) {
+                        if (isDragging) onDragEnd() else onDragCancel()
+                        break
+                    }
 
-            val delta = change.position - change.previousPosition
+                    val delta = change.position - change.previousPosition
 
-            if (isDragging || delta.getDistance() > slopPx) {
-                isDragging = true
-                change.consume()
-                onDrag(change, delta)
+                    if (isDragging || delta.getDistance() > slopPx) {
+                        isDragging = true
+                        change.consume()
+                        onDrag(change, delta)
+                    }
+                }
             }
         }
     }
-}
 
 /**
  * 4. NESTED SCROLL PARENT LOCK CONNECTION
@@ -147,7 +162,10 @@ fun Modifier.preventParentScrollOnDrag(
 fun rememberParentScrollLockConnection(isLocked: Boolean): NestedScrollConnection {
     return remember(isLocked) {
         object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+            override fun onPreScroll(
+                available: Offset,
+                source: NestedScrollSource
+            ): Offset {
                 return if (isLocked) available else Offset.Zero
             }
 

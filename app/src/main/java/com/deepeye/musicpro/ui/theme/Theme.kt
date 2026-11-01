@@ -125,7 +125,6 @@ fun DeepEyeMusicTheme(
                 }
         }
 
-
     val view = androidx.compose.ui.platform.LocalView.current
     if (!view.isInEditMode) {
         androidx.compose.runtime.SideEffect {
@@ -176,11 +175,13 @@ fun DeepEyeMusicTheme(
     // The typography compensator *reads* `ZoomState.zoom`, so the zoom must be
     // committed first or the type scale would be computed from the previous
     // orientation's value and lag a frame behind the geometry.
-    val isLandscape = LocalConfiguration.current.orientation ==
-        Configuration.ORIENTATION_LANDSCAPE
-    val zoom = remember(isLandscape) {
-        UiScale.zoomFor(isLandscape).also(ZoomState::update)
-    }
+    val isLandscape =
+        LocalConfiguration.current.orientation ==
+            Configuration.ORIENTATION_LANDSCAPE
+    val zoom =
+        remember(isLandscape) {
+            UiScale.zoomFor(isLandscape).also(ZoomState::update)
+        }
 
     // Viewport-scaled type.
     //
@@ -197,12 +198,13 @@ fun DeepEyeMusicTheme(
         shapes = AppShapes,
     ) {
         val baseDensity = LocalDensity.current
-        val customDensity = remember(zoom, baseDensity) {
-            Density(
-                density = baseDensity.density * zoom,
-                fontScale = baseDensity.fontScale * zoom
-            )
-        }
+        val customDensity =
+            remember(zoom, baseDensity) {
+                Density(
+                    density = baseDensity.density * zoom,
+                    fontScale = baseDensity.fontScale * zoom
+                )
+            }
 
         CompositionLocalProvider(LocalDensity provides customDensity, content = content)
     }
@@ -247,11 +249,12 @@ fun DeepEyeMusicTheme(
 fun ProvideAppZoom(content: @Composable () -> Unit) {
     val baseDensity = LocalDensity.current
     val zoom = ZoomState.zoom
-    val density = remember(baseDensity, zoom) {
-        Density(
-            density = baseDensity.density * zoom,
-            fontScale = baseDensity.fontScale * zoom
-        )
-    }
+    val density =
+        remember(baseDensity, zoom) {
+            Density(
+                density = baseDensity.density * zoom,
+                fontScale = baseDensity.fontScale * zoom
+            )
+        }
     CompositionLocalProvider(LocalDensity provides density, content = content)
 }

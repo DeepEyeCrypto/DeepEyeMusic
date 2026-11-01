@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.dp
  * rotation.
  */
 object ContentBounds {
-
     /**
      * Widest a vertically scrolling list of settings may become.
      *

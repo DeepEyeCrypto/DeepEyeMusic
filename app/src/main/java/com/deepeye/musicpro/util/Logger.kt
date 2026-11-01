@@ -16,11 +16,18 @@ object Logger {
         UI("UI")
     }
 
-    fun d(category: Category, message: String) {
+    fun d(
+        category: Category,
+        message: String
+    ) {
         Log.d("${GLOBAL_TAG}_${category.tag}", message)
     }
 
-    fun e(category: Category, message: String, throwable: Throwable? = null) {
+    fun e(
+        category: Category,
+        message: String,
+        throwable: Throwable? = null
+    ) {
         if (throwable != null) {
             Log.e("${GLOBAL_TAG}_${category.tag}", message, throwable)
         } else {
@@ -28,7 +35,10 @@ object Logger {
         }
     }
 
-    fun i(category: Category, message: String) {
+    fun i(
+        category: Category,
+        message: String
+    ) {
         Log.i("${GLOBAL_TAG}_${category.tag}", message)
     }
 }

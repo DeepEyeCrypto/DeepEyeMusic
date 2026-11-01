@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -30,8 +29,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.domain.auth.YouTubeDeviceAuthManager
-import com.deepeye.musicpro.ui.player.PlayerViewModel
 import com.deepeye.musicpro.ui.components.QrCodeView
+import com.deepeye.musicpro.ui.player.PlayerViewModel
 import com.deepeye.musicpro.ui.player.components.AmbilightBackground
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -51,29 +50,39 @@ fun YouTubeLoginScreen(
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
 
     val authManager = remember { YouTubeDeviceAuthManager(OkHttpClient()) }
-    
+
     var userCode by remember { mutableStateOf("") }
     var verificationUrl by remember { mutableStateOf("") }
     var statusMessage by remember { mutableStateOf("Connecting to YouTube OAuth...") }
     var isLoading by remember { mutableStateOf(true) }
 
-    val fullActivationUrl = remember(verificationUrl, userCode) {
-        if (verificationUrl.isNotBlank() && userCode.isNotBlank()) {
-            if (verificationUrl.contains("?")) "$verificationUrl&user_code=$userCode" else "$verificationUrl?user_code=$userCode"
-        } else verificationUrl.ifBlank { "https://www.youtube.com/activate" }
-    }
+    val fullActivationUrl =
+        remember(verificationUrl, userCode) {
+            if (verificationUrl.isNotBlank() && userCode.isNotBlank()) {
+                if (verificationUrl.contains(
+                        "?"
+                    )
+                ) {
+                    "$verificationUrl&user_code=$userCode"
+                } else {
+                    "$verificationUrl?user_code=$userCode"
+                }
+            } else {
+                verificationUrl.ifBlank { "https://www.youtube.com/activate" }
+            }
+        }
 
     LaunchedEffect(Unit) {
         statusMessage = "Connecting with YouTube OAuth Server..."
         isLoading = true
         val response = authManager.requestDeviceCode()
-        
+
         if (response != null) {
             userCode = response.userCode
             verificationUrl = response.verificationUrl
             statusMessage = "Waiting for you to authorize on your device..."
             isLoading = false
-            
+
             // Start polling for user approval
             authManager.pollForToken(response.deviceCode, response.interval) { token ->
                 coroutineScope.launch {
@@ -83,7 +92,11 @@ fun YouTubeLoginScreen(
                     if (profile != null) {
                         settingsViewModel.saveYouTubeProfile(profile.name, profile.pictureUrl, profile.email)
                     }
-                    android.widget.Toast.makeText(context, "YouTube Connected! \uD83C\uDF89", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(
+                        context,
+                        "YouTube Connected! \uD83C\uDF89",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
                     kotlinx.coroutines.delay(1000)
                     onLoginSuccess(token.accessToken, token.refreshToken)
                 }
@@ -100,10 +113,11 @@ fun YouTubeLoginScreen(
         androidx.compose.foundation.Image(
             painter = androidx.compose.ui.res.painterResource(id = com.deepeye.musicpro.R.drawable.spatial_bg),
             contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(40.dp)
-                .alpha(0.6f),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .blur(40.dp)
+                    .alpha(0.6f),
             contentScale = ContentScale.Crop
         )
 
@@ -113,10 +127,11 @@ fun YouTubeLoginScreen(
             AsyncImage(
                 model = currentArtworkUri,
                 contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .blur(70.dp)
-                    .alpha(0.45f),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .blur(70.dp)
+                        .alpha(0.45f),
                 contentScale = ContentScale.Crop
             )
         }
@@ -129,9 +144,10 @@ fun YouTubeLoginScreen(
         ) {
             // Dark scrim to keep text and QR readable
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.45f))
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.45f))
             ) {
                 Scaffold(
                     topBar = {
@@ -162,17 +178,19 @@ fun YouTubeLoginScreen(
                                     )
                                 }
                             },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent
-                            )
+                            colors =
+                                TopAppBarDefaults.topAppBarColors(
+                                    containerColor = Color.Transparent
+                                )
                         )
                     },
                     containerColor = Color.Transparent
                 ) { paddingValues ->
                     BoxWithConstraints(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues)
                     ) {
                         val isLandscape = maxWidth > 640.dp
 
@@ -202,9 +220,10 @@ fun YouTubeLoginScreen(
                             if (isLandscape) {
                                 // ─── 2-Column Side-by-Side Landscape Layout ───
                                 Row(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(horizontal = 32.dp, vertical = 8.dp),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxSize()
+                                            .padding(horizontal = 32.dp, vertical = 8.dp),
                                     horizontalArrangement = Arrangement.spacedBy(36.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -224,8 +243,13 @@ fun YouTubeLoginScreen(
                                         QrCodeView(
                                             content = fullActivationUrl,
                                             size = 180.dp,
-                                            modifier = Modifier
-                                                .border(2.dp, Color(0xFF00E5FF).copy(alpha = 0.6f), RoundedCornerShape(18.dp))
+                                            modifier =
+                                                Modifier
+                                                    .border(
+                                                        2.dp,
+                                                        Color(0xFF00E5FF).copy(alpha = 0.6f),
+                                                        RoundedCornerShape(18.dp)
+                                                    )
                                         )
                                         Spacer(Modifier.height(10.dp))
                                         Text(
@@ -237,20 +261,26 @@ fun YouTubeLoginScreen(
 
                                     // Right Column: Activation Code + All Actions + Polling
                                     Column(
-                                        modifier = Modifier
-                                            .weight(0.58f)
-                                            .verticalScroll(rememberScrollState()),
+                                        modifier =
+                                            Modifier
+                                                .weight(0.58f)
+                                                .verticalScroll(rememberScrollState()),
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(14.dp)
                                     ) {
                                         // Glassmorphic Activation Code Box
                                         Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clip(RoundedCornerShape(18.dp))
-                                                .background(Color.White.copy(alpha = 0.08f))
-                                                .border(1.5.dp, Color(0xFF00E5FF).copy(alpha = 0.8f), RoundedCornerShape(18.dp))
-                                                .padding(vertical = 14.dp, horizontal = 16.dp),
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .clip(RoundedCornerShape(18.dp))
+                                                    .background(Color.White.copy(alpha = 0.08f))
+                                                    .border(
+                                                        1.5.dp,
+                                                        Color(0xFF00E5FF).copy(alpha = 0.8f),
+                                                        RoundedCornerShape(18.dp)
+                                                    )
+                                                    .padding(vertical = 14.dp, horizontal = 16.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -280,16 +310,38 @@ fun YouTubeLoginScreen(
                                             // 1. Copy Code Button
                                             OutlinedButton(
                                                 onClick = {
-                                                    clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(userCode))
-                                                    android.widget.Toast.makeText(context, "Code copied: $userCode", android.widget.Toast.LENGTH_SHORT).show()
+                                                    clipboardManager.setText(
+                                                        androidx.compose.ui.text.AnnotatedString(userCode)
+                                                    )
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        "Code copied: $userCode",
+                                                        android.widget.Toast.LENGTH_SHORT
+                                                    ).show()
                                                 },
                                                 modifier = Modifier.weight(1f),
                                                 shape = RoundedCornerShape(12.dp),
-                                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                                                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
-                                                contentPadding = PaddingValues(vertical = 10.dp, horizontal = 8.dp)
+                                                colors =
+                                                    ButtonDefaults.outlinedButtonColors(
+                                                        contentColor = Color.White
+                                                    ),
+                                                border =
+                                                    androidx.compose.foundation.BorderStroke(
+                                                        1.dp,
+                                                        Color.White.copy(alpha = 0.35f)
+                                                    ),
+                                                contentPadding =
+                                                    PaddingValues(
+                                                        vertical = 10.dp,
+                                                        horizontal = 8.dp
+                                                    )
                                             ) {
-                                                Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(15.dp), tint = Color.White)
+                                                Icon(
+                                                    Icons.Default.ContentCopy,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(15.dp),
+                                                    tint = Color.White
+                                                )
                                                 Spacer(Modifier.width(4.dp))
                                                 Text("Copy Code", fontSize = 11.sp, maxLines = 1)
                                             }
@@ -297,16 +349,38 @@ fun YouTubeLoginScreen(
                                             // 2. Copy Link Button
                                             OutlinedButton(
                                                 onClick = {
-                                                    clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(fullActivationUrl))
-                                                    android.widget.Toast.makeText(context, "Activation Link copied!", android.widget.Toast.LENGTH_SHORT).show()
+                                                    clipboardManager.setText(
+                                                        androidx.compose.ui.text.AnnotatedString(fullActivationUrl)
+                                                    )
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        "Activation Link copied!",
+                                                        android.widget.Toast.LENGTH_SHORT
+                                                    ).show()
                                                 },
                                                 modifier = Modifier.weight(1f),
                                                 shape = RoundedCornerShape(12.dp),
-                                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF00E5FF)),
-                                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF00E5FF).copy(alpha = 0.5f)),
-                                                contentPadding = PaddingValues(vertical = 10.dp, horizontal = 8.dp)
+                                                colors =
+                                                    ButtonDefaults.outlinedButtonColors(
+                                                        contentColor = Color(0xFF00E5FF)
+                                                    ),
+                                                border =
+                                                    androidx.compose.foundation.BorderStroke(
+                                                        1.dp,
+                                                        Color(0xFF00E5FF).copy(alpha = 0.5f)
+                                                    ),
+                                                contentPadding =
+                                                    PaddingValues(
+                                                        vertical = 10.dp,
+                                                        horizontal = 8.dp
+                                                    )
                                             ) {
-                                                Icon(Icons.Default.Link, contentDescription = null, modifier = Modifier.size(15.dp), tint = Color(0xFF00E5FF))
+                                                Icon(
+                                                    Icons.Default.Link,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(15.dp),
+                                                    tint = Color(0xFF00E5FF)
+                                                )
                                                 Spacer(Modifier.width(4.dp))
                                                 Text("Copy Link", fontSize = 11.sp, maxLines = 1)
                                             }
@@ -316,12 +390,26 @@ fun YouTubeLoginScreen(
                                                 onClick = { uriHandler.openUri(fullActivationUrl) },
                                                 modifier = Modifier.weight(1f),
                                                 shape = RoundedCornerShape(12.dp),
-                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
+                                                colors =
+                                                    ButtonDefaults.buttonColors(
+                                                        containerColor = Color(0xFF00E5FF)
+                                                    ),
                                                 contentPadding = PaddingValues(vertical = 10.dp, horizontal = 8.dp)
                                             ) {
-                                                Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(15.dp), tint = Color.Black)
+                                                Icon(
+                                                    Icons.Default.OpenInBrowser,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(15.dp),
+                                                    tint = Color.Black
+                                                )
                                                 Spacer(Modifier.width(4.dp))
-                                                Text("Open Link", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp, maxLines = 1)
+                                                Text(
+                                                    "Open Link",
+                                                    color = Color.Black,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 11.sp,
+                                                    maxLines = 1
+                                                )
                                             }
                                         }
 
@@ -348,10 +436,11 @@ fun YouTubeLoginScreen(
                             } else {
                                 // ─── Portrait Fallback Layout ───
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(24.dp)
-                                        .verticalScroll(rememberScrollState()),
+                                    modifier =
+                                        Modifier
+                                            .fillMaxSize()
+                                            .padding(24.dp)
+                                            .verticalScroll(rememberScrollState()),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.spacedBy(16.dp)
                                 ) {
@@ -364,17 +453,23 @@ fun YouTubeLoginScreen(
                                     QrCodeView(
                                         content = fullActivationUrl,
                                         size = 180.dp,
-                                        modifier = Modifier
-                                            .border(2.dp, Color(0xFF00E5FF).copy(alpha = 0.6f), RoundedCornerShape(18.dp))
+                                        modifier =
+                                            Modifier
+                                                .border(
+                                                    2.dp,
+                                                    Color(0xFF00E5FF).copy(alpha = 0.6f),
+                                                    RoundedCornerShape(18.dp)
+                                                )
                                     )
-                                    
+
                                     Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(16.dp))
-                                            .background(Color.White.copy(alpha = 0.08f))
-                                            .border(1.5.dp, Color(0xFF00E5FF), RoundedCornerShape(16.dp))
-                                            .padding(vertical = 14.dp, horizontal = 16.dp),
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(16.dp))
+                                                .background(Color.White.copy(alpha = 0.08f))
+                                                .border(1.5.dp, Color(0xFF00E5FF), RoundedCornerShape(16.dp))
+                                                .padding(vertical = 14.dp, horizontal = 16.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -402,25 +497,45 @@ fun YouTubeLoginScreen(
                                     ) {
                                         OutlinedButton(
                                             onClick = {
-                                                clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(userCode))
-                                                android.widget.Toast.makeText(context, "Code copied: $userCode", android.widget.Toast.LENGTH_SHORT).show()
+                                                clipboardManager.setText(
+                                                    androidx.compose.ui.text.AnnotatedString(userCode)
+                                                )
+                                                android.widget.Toast.makeText(
+                                                    context,
+                                                    "Code copied: $userCode",
+                                                    android.widget.Toast.LENGTH_SHORT
+                                                ).show()
                                             },
                                             modifier = Modifier.weight(1f),
                                             shape = RoundedCornerShape(12.dp)
                                         ) {
-                                            Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(15.dp))
+                                            Icon(
+                                                Icons.Default.ContentCopy,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(15.dp)
+                                            )
                                             Spacer(Modifier.width(4.dp))
                                             Text("Copy Code", fontSize = 11.sp)
                                         }
                                         OutlinedButton(
                                             onClick = {
-                                                clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(fullActivationUrl))
-                                                android.widget.Toast.makeText(context, "Link copied!", android.widget.Toast.LENGTH_SHORT).show()
+                                                clipboardManager.setText(
+                                                    androidx.compose.ui.text.AnnotatedString(fullActivationUrl)
+                                                )
+                                                android.widget.Toast.makeText(
+                                                    context,
+                                                    "Link copied!",
+                                                    android.widget.Toast.LENGTH_SHORT
+                                                ).show()
                                             },
                                             modifier = Modifier.weight(1f),
                                             shape = RoundedCornerShape(12.dp)
                                         ) {
-                                            Icon(Icons.Default.Link, contentDescription = null, modifier = Modifier.size(15.dp))
+                                            Icon(
+                                                Icons.Default.Link,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(15.dp)
+                                            )
                                             Spacer(Modifier.width(4.dp))
                                             Text("Copy Link", fontSize = 11.sp)
                                         }
@@ -430,9 +545,19 @@ fun YouTubeLoginScreen(
                                             shape = RoundedCornerShape(12.dp),
                                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
                                         ) {
-                                            Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(15.dp), tint = Color.Black)
+                                            Icon(
+                                                Icons.Default.OpenInBrowser,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(15.dp),
+                                                tint = Color.Black
+                                            )
                                             Spacer(Modifier.width(4.dp))
-                                            Text("Open Link", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                            Text(
+                                                "Open Link",
+                                                color = Color.Black,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.sp
+                                            )
                                         }
                                     }
 

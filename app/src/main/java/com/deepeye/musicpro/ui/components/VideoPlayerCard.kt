@@ -25,11 +25,11 @@ fun VideoPlayerCard(
 ) {
     Box(
         modifier =
-        modifier
-            .fillMaxWidth()
-            .aspectRatio(16 / 9f)
-            .padding(16.dp)
-            .clip(RoundedCornerShape(12.dp)),
+            modifier
+                .fillMaxWidth()
+                .aspectRatio(16 / 9f)
+                .padding(16.dp)
+                .clip(RoundedCornerShape(12.dp)),
         contentAlignment = Alignment.Center,
     ) {
         AndroidView(
@@ -45,9 +45,9 @@ fun VideoPlayerCard(
         if (isLoading) {
             Box(
                 modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f)),
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(color = Color.White)

@@ -19,24 +19,24 @@ private val Context.updatePrefsDataStore by preferencesDataStore(name = "update_
  */
 @Singleton
 class UpdatePrefsManager
-@Inject
-constructor(
-    @ApplicationContext private val context: Context,
-) {
-    private object Keys {
-        val LAST_SHOWN_VERSION = intPreferencesKey("last_shown_version")
-    }
-
-    val lastShownVersionFlow: Flow<Int> =
-        context.updatePrefsDataStore.data.map { prefs ->
-            prefs[Keys.LAST_SHOWN_VERSION] ?: 0
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+    ) {
+        private object Keys {
+            val LAST_SHOWN_VERSION = intPreferencesKey("last_shown_version")
         }
 
-    suspend fun getLastShownVersion(): Int = context.updatePrefsDataStore.data.first()[Keys.LAST_SHOWN_VERSION] ?: 0
+        val lastShownVersionFlow: Flow<Int> =
+            context.updatePrefsDataStore.data.map { prefs ->
+                prefs[Keys.LAST_SHOWN_VERSION] ?: 0
+            }
 
-    suspend fun markVersionShown(versionCode: Int) {
-        context.updatePrefsDataStore.edit { prefs ->
-            prefs[Keys.LAST_SHOWN_VERSION] = versionCode
+        suspend fun getLastShownVersion(): Int = context.updatePrefsDataStore.data.first()[Keys.LAST_SHOWN_VERSION] ?: 0
+
+        suspend fun markVersionShown(versionCode: Int) {
+            context.updatePrefsDataStore.edit { prefs ->
+                prefs[Keys.LAST_SHOWN_VERSION] = versionCode
+            }
         }
     }
-}

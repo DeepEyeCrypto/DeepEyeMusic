@@ -12,3 +12,6 @@ ktlint_standard_filename=disabled
 ktlint_standard_no-empty-file=disabled
 ktlint_standard_trailing-comma-on-call-site=disabled
 ktlint_standard_trailing-comma-on-declaration-site=disabled
+indent_size = 4
+continuation_indent_size = 8
+max_line_length = 120

@@ -11,13 +11,13 @@ import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.player.controller.PlayerController
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 data class NetMirrorUiState(
@@ -42,182 +42,239 @@ data class EpisodeSheetState(
 )
 
 @HiltViewModel
-class NetMirrorViewModel @Inject constructor(
-    private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
-    private val playerController: PlayerController,
-    private val authClient: com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient,
-    private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
-) : ViewModel() {
+class NetMirrorViewModel
+    @Inject
+    constructor(
+        private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
+        private val playerController: PlayerController,
+        private val authClient: com.deepeye.musicpro.data.source.remote.youtube.AuthenticatedYouTubeClient,
+        private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(NetMirrorUiState())
+        val uiState: StateFlow<NetMirrorUiState> = _uiState.asStateFlow()
 
-    private val _uiState = MutableStateFlow(NetMirrorUiState())
-    val uiState: StateFlow<NetMirrorUiState> = _uiState.asStateFlow()
-
-    init {
-        loadContent()
-    }
-
-    private fun loadContent() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            try {
-                val authSettings = try { settingsDataStore.settings.first() } catch (e: Exception) { null }
-                val hasAuth = authSettings?.youtubeAccessToken != null
-
-                val deferredBollywood = async {
-                    if (hasAuth) authClient.search("latest official bollywood full movies 2024 -south -dubbed -hollywood -bhojpuri")
-                    else youtubeRemoteDataSource.searchVideosFirstPage("latest official bollywood full movies 2024 -south -dubbed -hollywood -bhojpuri").items
-                }
-                val deferredHollywood = async {
-                    if (hasAuth) authClient.search("latest hollywood full movies action english -hindi -dubbed")
-                    else youtubeRemoteDataSource.searchVideosFirstPage("latest hollywood full movies action english -hindi -dubbed").items
-                }
-                val deferredSouth = async {
-                    if (hasAuth) authClient.search("latest south indian movies dubbed in hindi full -bollywood")
-                    else youtubeRemoteDataSource.searchVideosFirstPage("latest south indian movies dubbed in hindi full -bollywood").items
-                }
-                val deferredWebSeries = async {
-                    if (hasAuth) authClient.search("popular hindi web series 2024 2025")
-                    else youtubeRemoteDataSource.searchVideosFirstPage("popular hindi web series 2024 2025").items
-                }
-                val deferredPakistani = async {
-                    if (hasAuth) authClient.search("popular pakistani drama 2024 2025")
-                    else youtubeRemoteDataSource.searchVideosFirstPage("popular pakistani drama 2024 2025").items
-                }
-                val deferredKids = async {
-                    if (hasAuth) authClient.search("latest kids cartoons in hindi full -horror")
-                    else youtubeRemoteDataSource.searchVideosFirstPage("latest kids cartoons in hindi full -horror").items
-                }
-
-                val bollywood = deferredBollywood.await()
-                val hollywood = deferredHollywood.await()
-                val south = deferredSouth.await()
-                val webSeries = deferredWebSeries.await()
-                val pakistani = deferredPakistani.await()
-                val kidsContent = deferredKids.await()
-
-                _uiState.update {
-                    it.copy(
-                        heroMovie = if (bollywood.isNotEmpty()) bollywood.first() else null,
-                        bollywoodMovies = if (bollywood.size > 1) bollywood.drop(1) else bollywood,
-                        hollywoodMovies = hollywood,
-                        southDubbedMovies = south,
-                        webSeries = webSeries,
-                        pakistaniDramas = pakistani,
-                        kids = kidsContent,
-                        isLoading = false
-                    )
-                }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Failed to load movies") }
-            }
-        }
-    }
-
-    /**
-     * Opens the episode picker sheet for a specific drama/series.
-     * Searches YouTube specifically for episodes of THAT drama.
-     */
-    fun openEpisodePicker(drama: HomeVideoItem) {
-        // Extract a clean show name from the title (remove episode numbers, dates, etc.)
-        val showName = extractShowName(drama.title)
-        val channelName = drama.channelName
-
-        _uiState.update {
-            it.copy(
-                episodeSheet = EpisodeSheetState(
-                    dramaTitle = showName,
-                    isLoading = true
-                )
-            )
+        init {
+            loadContent()
         }
 
-        viewModelScope.launch {
-            try {
-                // Search specifically for this drama's episodes using show name + channel
-                val query = "\"$showName\" episode full"
-                val results = youtubeRemoteDataSource.searchVideos(query)
+        private fun loadContent() {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, error = null) }
+                try {
+                    val authSettings =
+                        try {
+                            settingsDataStore.settings.first()
+                        } catch (e: Exception) {
+                            null
+                        }
+                    val hasAuth = authSettings?.youtubeAccessToken != null
 
-                // If results are too few, try with channel name
-                val episodes = if (results.size >= 3) {
-                    results
-                } else {
-                    youtubeRemoteDataSource.searchVideos("$showName $channelName episodes")
-                }
+                    val deferredBollywood =
+                        async {
+                            if (hasAuth) {
+                                authClient.search(
+                                    "latest official bollywood full movies 2024 -south -dubbed -hollywood -bhojpuri"
+                                )
+                            } else {
+                                youtubeRemoteDataSource.searchVideosFirstPage(
+                                    "latest official bollywood full movies 2024 -south -dubbed -hollywood -bhojpuri"
+                                ).items
+                            }
+                        }
+                    val deferredHollywood =
+                        async {
+                            if (hasAuth) {
+                                authClient.search("latest hollywood full movies action english -hindi -dubbed")
+                            } else {
+                                youtubeRemoteDataSource.searchVideosFirstPage(
+                                    "latest hollywood full movies action english -hindi -dubbed"
+                                ).items
+                            }
+                        }
+                    val deferredSouth =
+                        async {
+                            if (hasAuth) {
+                                authClient.search("latest south indian movies dubbed in hindi full -bollywood")
+                            } else {
+                                youtubeRemoteDataSource.searchVideosFirstPage(
+                                    "latest south indian movies dubbed in hindi full -bollywood"
+                                ).items
+                            }
+                        }
+                    val deferredWebSeries =
+                        async {
+                            if (hasAuth) {
+                                authClient.search("popular hindi web series 2024 2025")
+                            } else {
+                                youtubeRemoteDataSource.searchVideosFirstPage(
+                                    "popular hindi web series 2024 2025"
+                                ).items
+                            }
+                        }
+                    val deferredPakistani =
+                        async {
+                            if (hasAuth) {
+                                authClient.search("popular pakistani drama 2024 2025")
+                            } else {
+                                youtubeRemoteDataSource.searchVideosFirstPage("popular pakistani drama 2024 2025").items
+                            }
+                        }
+                    val deferredKids =
+                        async {
+                            if (hasAuth) {
+                                authClient.search("latest kids cartoons in hindi full -horror")
+                            } else {
+                                youtubeRemoteDataSource.searchVideosFirstPage(
+                                    "latest kids cartoons in hindi full -horror"
+                                ).items
+                            }
+                        }
 
-                _uiState.update {
-                    it.copy(
-                        episodeSheet = it.episodeSheet?.copy(
-                            episodes = episodes,
+                    val bollywood = deferredBollywood.await()
+                    val hollywood = deferredHollywood.await()
+                    val south = deferredSouth.await()
+                    val webSeries = deferredWebSeries.await()
+                    val pakistani = deferredPakistani.await()
+                    val kidsContent = deferredKids.await()
+
+                    _uiState.update {
+                        it.copy(
+                            heroMovie = if (bollywood.isNotEmpty()) bollywood.first() else null,
+                            bollywoodMovies = if (bollywood.size > 1) bollywood.drop(1) else bollywood,
+                            hollywoodMovies = hollywood,
+                            southDubbedMovies = south,
+                            webSeries = webSeries,
+                            pakistaniDramas = pakistani,
+                            kids = kidsContent,
                             isLoading = false
                         )
-                    )
-                }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        episodeSheet = it.episodeSheet?.copy(
-                            isLoading = false,
-                            error = "Could not load episodes"
-                        )
-                    )
+                    }
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(isLoading = false, error = "Failed to load movies") }
                 }
             }
         }
-    }
 
-    fun closeEpisodePicker() {
-        _uiState.update { it.copy(episodeSheet = null) }
-    }
+        /**
+         * Opens the episode picker sheet for a specific drama/series.
+         * Searches YouTube specifically for episodes of THAT drama.
+         */
+        fun openEpisodePicker(drama: HomeVideoItem) {
+            // Extract a clean show name from the title (remove episode numbers, dates, etc.)
+            val showName = extractShowName(drama.title)
+            val channelName = drama.channelName
 
-    /**
-     * Extracts a clean drama/show name from a YouTube video title.
-     * Removes episode numbers, dates, [Eng Sub], HD, etc.
-     */
-    private fun extractShowName(title: String): String {
-        return title
-            .replace(Regex("\\[.*?\\]"), "") // remove [Eng Sub], [HD], etc.
-            .replace(Regex("\\(.*?\\)"), "") // remove (2024), (Official), etc.
-            .replace(Regex("(?i)episode\\s*\\d+", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("(?i)ep\\.?\\s*\\d+", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("\\d{1,2}\\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec).*", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("\\|.*"), "") // remove everything after |
-            .replace(Regex("-\\s*$"), "") // trailing dash
-            .replace(Regex("(?i)(full|hd|4k|new|latest|official|video|2024|2025|2026)", RegexOption.IGNORE_CASE), "")
-            .trim()
-            .split("\\s+".toRegex())
-            .take(5)
-            .joinToString(" ")
-            .trim()
-            .ifBlank { title.take(40) }
-    }
+            _uiState.update {
+                it.copy(
+                    episodeSheet =
+                        EpisodeSheetState(
+                            dramaTitle = showName,
+                            isLoading = true
+                        )
+                )
+            }
 
-    fun playVideo(video: HomeVideoItem) {
-        val mediaItem = MediaItem.Remote(
-            id = video.id,
-            title = video.title,
-            artist = video.channelName,
-            artworkUri = Uri.parse(video.thumbnailUrl),
-            duration = video.duration * 1000L,
-            isVideo = true
-        )
-        playerController.setQueue(listOf(mediaItem), 0)
-    }
+            viewModelScope.launch {
+                try {
+                    // Search specifically for this drama's episodes using show name + channel
+                    val query = "\"$showName\" episode full"
+                    val results = youtubeRemoteDataSource.searchVideos(query)
 
-    /**
-     * Play a video from a category row as a playlist.
-     * Sets the entire category list as queue and starts from the clicked episode index.
-     */
-    fun playVideoFromCategory(categoryItems: List<HomeVideoItem>, clickedIndex: Int) {
-        val queue = categoryItems.map { video ->
-            MediaItem.Remote(
-                id = video.id,
-                title = video.title,
-                artist = video.channelName,
-                artworkUri = Uri.parse(video.thumbnailUrl),
-                duration = video.duration * 1000L,
-                isVideo = true
-            )
+                    // If results are too few, try with channel name
+                    val episodes =
+                        if (results.size >= 3) {
+                            results
+                        } else {
+                            youtubeRemoteDataSource.searchVideos("$showName $channelName episodes")
+                        }
+
+                    _uiState.update {
+                        it.copy(
+                            episodeSheet =
+                                it.episodeSheet?.copy(
+                                    episodes = episodes,
+                                    isLoading = false
+                                )
+                        )
+                    }
+                } catch (e: Exception) {
+                    _uiState.update {
+                        it.copy(
+                            episodeSheet =
+                                it.episodeSheet?.copy(
+                                    isLoading = false,
+                                    error = "Could not load episodes"
+                                )
+                        )
+                    }
+                }
+            }
         }
-        playerController.setQueue(queue, clickedIndex.coerceIn(0, queue.lastIndex))
+
+        fun closeEpisodePicker() {
+            _uiState.update { it.copy(episodeSheet = null) }
+        }
+
+        /**
+         * Extracts a clean drama/show name from a YouTube video title.
+         * Removes episode numbers, dates, [Eng Sub], HD, etc.
+         */
+        private fun extractShowName(title: String): String {
+            return title
+                .replace(Regex("\\[.*?\\]"), "") // remove [Eng Sub], [HD], etc.
+                .replace(Regex("\\(.*?\\)"), "") // remove (2024), (Official), etc.
+                .replace(Regex("(?i)episode\\s*\\d+", RegexOption.IGNORE_CASE), "")
+                .replace(Regex("(?i)ep\\.?\\s*\\d+", RegexOption.IGNORE_CASE), "")
+                .replace(
+                    Regex("\\d{1,2}\\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec).*", RegexOption.IGNORE_CASE),
+                    ""
+                )
+                .replace(Regex("\\|.*"), "") // remove everything after |
+                .replace(Regex("-\\s*$"), "") // trailing dash
+                .replace(
+                    Regex("(?i)(full|hd|4k|new|latest|official|video|2024|2025|2026)", RegexOption.IGNORE_CASE),
+                    ""
+                )
+                .trim()
+                .split("\\s+".toRegex())
+                .take(5)
+                .joinToString(" ")
+                .trim()
+                .ifBlank { title.take(40) }
+        }
+
+        fun playVideo(video: HomeVideoItem) {
+            val mediaItem =
+                MediaItem.Remote(
+                    id = video.id,
+                    title = video.title,
+                    artist = video.channelName,
+                    artworkUri = Uri.parse(video.thumbnailUrl),
+                    duration = video.duration * 1000L,
+                    isVideo = true
+                )
+            playerController.setQueue(listOf(mediaItem), 0)
+        }
+
+        /**
+         * Play a video from a category row as a playlist.
+         * Sets the entire category list as queue and starts from the clicked episode index.
+         */
+        fun playVideoFromCategory(
+            categoryItems: List<HomeVideoItem>,
+            clickedIndex: Int
+        ) {
+            val queue =
+                categoryItems.map { video ->
+                    MediaItem.Remote(
+                        id = video.id,
+                        title = video.title,
+                        artist = video.channelName,
+                        artworkUri = Uri.parse(video.thumbnailUrl),
+                        duration = video.duration * 1000L,
+                        isVideo = true
+                    )
+                }
+            playerController.setQueue(queue, clickedIndex.coerceIn(0, queue.lastIndex))
+        }
     }
-}

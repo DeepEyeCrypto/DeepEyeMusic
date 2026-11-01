@@ -35,23 +35,23 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ArtistDetailViewModel
-@Inject
-constructor(
-    savedStateHandle: SavedStateHandle,
-    getArtistByIdUseCase: GetArtistByIdUseCase,
-    getSongsByArtistUseCase: GetSongsByArtistUseCase,
-) : ViewModel() {
-    private val artistId: Long = savedStateHandle.get<Long>("artistId") ?: 0L
-    private val _artist = MutableStateFlow<Artist?>(null)
-    val artist: StateFlow<Artist?> = _artist.asStateFlow()
-    private val _songs = MutableStateFlow<List<Song>>(emptyList())
-    val songs: StateFlow<List<Song>> = _songs.asStateFlow()
+    @Inject
+    constructor(
+        savedStateHandle: SavedStateHandle,
+        getArtistByIdUseCase: GetArtistByIdUseCase,
+        getSongsByArtistUseCase: GetSongsByArtistUseCase,
+    ) : ViewModel() {
+        private val artistId: Long = savedStateHandle.get<Long>("artistId") ?: 0L
+        private val _artist = MutableStateFlow<Artist?>(null)
+        val artist: StateFlow<Artist?> = _artist.asStateFlow()
+        private val _songs = MutableStateFlow<List<Song>>(emptyList())
+        val songs: StateFlow<List<Song>> = _songs.asStateFlow()
 
-    init {
-        viewModelScope.launch { getArtistByIdUseCase(artistId).collect { _artist.value = it } }
-        viewModelScope.launch { getSongsByArtistUseCase(artistId).collect { _songs.value = it } }
+        init {
+            viewModelScope.launch { getArtistByIdUseCase(artistId).collect { _artist.value = it } }
+            viewModelScope.launch { getSongsByArtistUseCase(artistId).collect { _songs.value = it } }
+        }
     }
-}
 
 @Composable
 fun ArtistDetailScreen(

@@ -7,7 +7,6 @@ import com.deepeye.musicpro.aeos.observability.EbpfRuntimeSecurity
  * Control Plane Boundary - Orchestrates policy and agent rules.
  */
 abstract class ControlPlaneBoundary {
-    
     protected fun invokePolicy(action: String) {
         EbpfRuntimeSecurity.traceExecution("CONTROL_PLANE", action)
     }

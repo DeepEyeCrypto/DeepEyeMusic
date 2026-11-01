@@ -28,7 +28,6 @@ private const val TAG = "DeepEyeCarAppService"
  */
 @AndroidEntryPoint
 class DeepEyeCarAppService : CarAppService() {
-
     @Inject
     lateinit var playerController: PlayerController
 

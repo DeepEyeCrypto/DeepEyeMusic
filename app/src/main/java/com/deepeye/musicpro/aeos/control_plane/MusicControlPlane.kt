@@ -17,10 +17,9 @@ import kotlinx.coroutines.launch
  * Music Control Plane - Orchestrates intents from UI to Data Plane safely.
  */
 class MusicControlPlane(private val dataPlane: MusicDataPlane = MusicDataPlane()) : ControlPlaneBoundary() {
-    
     private val _uiState = MutableStateFlow(MusicState())
     val uiState: StateFlow<MusicState> = _uiState.asStateFlow()
-    
+
     private val controlPlaneScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     fun dispatchIntent(intent: MusicIntent) {
@@ -33,10 +32,11 @@ class MusicControlPlane(private val dataPlane: MusicDataPlane = MusicDataPlane()
             } catch (e: Exception) {
                 // Graceful Chaos Engineering Catch
                 EbpfRuntimeSecurity.traceExecution("CONTROL_PLANE", "FAULT INJECTION CAUGHT: ${e.message}")
-                _uiState.value = _uiState.value.copy(
-                    isSystemFailure = true,
-                    errorMessage = e.message ?: "Unknown AEOS Error"
-                )
+                _uiState.value =
+                    _uiState.value.copy(
+                        isSystemFailure = true,
+                        errorMessage = e.message ?: "Unknown AEOS Error"
+                    )
             }
         }
     }

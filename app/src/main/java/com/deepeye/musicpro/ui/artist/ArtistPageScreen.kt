@@ -41,9 +41,9 @@ fun ArtistPageScreen(
                     }
                 },
                 colors =
-                TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                ),
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                    ),
             )
         },
     ) { paddingValues ->
@@ -54,9 +54,9 @@ fun ArtistPageScreen(
         } else {
             LazyColumn(
                 modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
+                    Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
             ) {
                 item {
                     ArtistHeroHeader(
@@ -101,10 +101,10 @@ fun ArtistHeroHeader(
             model = imageUrl,
             contentDescription = null,
             modifier =
-            Modifier
-                .size(160.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                Modifier
+                    .size(160.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
             contentScale = ContentScale.Crop,
         )
         Spacer(Modifier.height(16.dp))
@@ -162,20 +162,20 @@ fun CompactTrackRow(
 ) {
     Row(
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
             model = song.thumbnailUrl,
             contentDescription = null,
             modifier =
-            Modifier
-                .size(48.dp)
-                .clip(MaterialTheme.shapes.small)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                Modifier
+                    .size(48.dp)
+                    .clip(MaterialTheme.shapes.small)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
             contentScale = ContentScale.Crop,
         )
         Spacer(Modifier.width(16.dp))

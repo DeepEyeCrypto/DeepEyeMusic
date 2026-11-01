@@ -34,7 +34,8 @@ object AppChangelog {
                     ),
             ),
             ChangelogEntry(
-                versionCode = 30101,                versionName = "3.0.1.91",
+                versionCode = 30101,
+                versionName = "3.0.1.91",
                 releaseDate = "October 2026",
                 title = "VVavy Multi-Topology Generative Visualizer Engine 📐✨",
                 highlight = true,
@@ -917,10 +918,10 @@ object AppChangelog {
                 title = "High Quality Video Unlocked",
                 highlight = true,
                 items =
-                listOf(
-                    "Video playback defaults to the highest possible and premium 1080p high bitrate quality.",
-                    "Fixed an issue with alternative extractors grabbing low-res streams.",
-                ),
+                    listOf(
+                        "Video playback defaults to the highest possible and premium 1080p high bitrate quality.",
+                        "Fixed an issue with alternative extractors grabbing low-res streams.",
+                    ),
             ),
             ChangelogEntry(
                 versionCode = 12,
@@ -929,9 +930,9 @@ object AppChangelog {
                 title = "Subscriptions on Home",
                 highlight = true,
                 items =
-                listOf(
-                    "The Home and YouTube tabs will now exclusively prioritize and show content from the channels you have subscribed to within the app.",
-                ),
+                    listOf(
+                        "The Home and YouTube tabs will now exclusively prioritize and show content from the channels you have subscribed to within the app.",
+                    ),
             ),
             ChangelogEntry(
                 versionCode = 11,
@@ -940,9 +941,9 @@ object AppChangelog {
                 title = "YouTube Video Share Fix",
                 highlight = true,
                 items =
-                listOf(
-                    "Shared YouTube links will now open and play as video directly instead of just audio.",
-                ),
+                    listOf(
+                        "Shared YouTube links will now open and play as video directly instead of just audio.",
+                    ),
             ),
             ChangelogEntry(
                 versionCode = 10,
@@ -951,11 +952,11 @@ object AppChangelog {
                 title = "YouTube Share Integration",
                 highlight = true,
                 items =
-                listOf(
-                    "You can now share ANY YouTube video directly to DeepEye Music Pro!",
-                    "Just tap 'Share' on a video in the YouTube app or your browser, select DeepEye Music Pro, and it will instantly play as high-quality audio.",
-                    "Supports standard YouTube videos and YouTube Shorts."
-                ),
+                    listOf(
+                        "You can now share ANY YouTube video directly to DeepEye Music Pro!",
+                        "Just tap 'Share' on a video in the YouTube app or your browser, select DeepEye Music Pro, and it will instantly play as high-quality audio.",
+                        "Supports standard YouTube videos and YouTube Shorts."
+                    ),
             ),
             ChangelogEntry(
                 versionCode = 9,
@@ -964,10 +965,10 @@ object AppChangelog {
                 title = "File Manager Integration",
                 highlight = true,
                 items =
-                listOf(
-                    "DeepEye Music Pro now officially registers as an audio player in Android!",
-                    "You can now directly open any song from your file manager and it will instantly play in the app.",
-                ),
+                    listOf(
+                        "DeepEye Music Pro now officially registers as an audio player in Android!",
+                        "You can now directly open any song from your file manager and it will instantly play in the app.",
+                    ),
             ),
             ChangelogEntry(
                 versionCode = 8,
@@ -976,10 +977,10 @@ object AppChangelog {
                 title = "Local Audio Recommendations",
                 highlight = true,
                 items =
-                listOf(
-                    "Fixed an issue where playing local audio files from the file manager wouldn't generate autoplay recommendations.",
-                    "The app now intelligently searches YouTube for the local song's title and artist to build your queue!",
-                ),
+                    listOf(
+                        "Fixed an issue where playing local audio files from the file manager wouldn't generate autoplay recommendations.",
+                        "The app now intelligently searches YouTube for the local song's title and artist to build your queue!",
+                    ),
             ),
             ChangelogEntry(
                 versionCode = 7,
@@ -988,10 +989,10 @@ object AppChangelog {
                 title = "Glassmorphic Now Playing Screen",
                 highlight = true,
                 items =
-                listOf(
-                    "Cleared the opaque background from the Now Playing screen.",
-                    "The gorgeous glassmorphic haze effect now shines through when the player is expanded!",
-                ),
+                    listOf(
+                        "Cleared the opaque background from the Now Playing screen.",
+                        "The gorgeous glassmorphic haze effect now shines through when the player is expanded!",
+                    ),
             ),
             ChangelogEntry(
                 versionCode = 6,
@@ -1000,10 +1001,10 @@ object AppChangelog {
                 title = "Auto-Update & Changelog Fixes",
                 highlight = true,
                 items =
-                listOf(
-                    "Fixed auto-updater checking logic.",
-                    "Fixed changelog dialog not appearing for new versions.",
-                ),
+                    listOf(
+                        "Fixed auto-updater checking logic.",
+                        "Fixed changelog dialog not appearing for new versions.",
+                    ),
             ),
             ChangelogEntry(
                 versionCode = 5,
@@ -1012,13 +1013,13 @@ object AppChangelog {
                 title = "Massive UI Redesign & Stability",
                 highlight = true,
                 items =
-                listOf(
-                    "Redesigned Home UI with fixed glassmorphic top header and dock.",
-                    "Added real-time Bitcoin ticker header via Binance WebSocket.",
-                    "Fixed critical playback race condition caused by prefetchers.",
-                    "Removed Maroon color and replaced with Neon Green/Gold themes.",
-                    "Improved 0-latency playback response times.",
-                ),
+                    listOf(
+                        "Redesigned Home UI with fixed glassmorphic top header and dock.",
+                        "Added real-time Bitcoin ticker header via Binance WebSocket.",
+                        "Fixed critical playback race condition caused by prefetchers.",
+                        "Removed Maroon color and replaced with Neon Green/Gold themes.",
+                        "Improved 0-latency playback response times.",
+                    ),
             ),
             ChangelogEntry(
                 versionCode = 4,
@@ -1027,10 +1028,10 @@ object AppChangelog {
                 title = "Bug Fixes & Slider Overhaul",
                 highlight = true,
                 items =
-                listOf(
-                    "Fixed the thick slider bug in the player.",
-                    "Performance optimizations and logging improvements.",
-                ),
+                    listOf(
+                        "Fixed the thick slider bug in the player.",
+                        "Performance optimizations and logging improvements.",
+                    ),
             ),
             ChangelogEntry(
                 versionCode = 3,
@@ -1039,13 +1040,13 @@ object AppChangelog {
                 title = "Library & Search Overhaul",
                 highlight = false,
                 items =
-                listOf(
-                    "Full offline library with liked songs, playlists, and downloads.",
-                    "Premium search with smart filter chips and artist pages.",
-                    "Dynamic color theming and glassmorphism system.",
-                    "Gesture-rich mini player with swipe queue controls.",
-                    "Download manager with progress tracking.",
-                ),
+                    listOf(
+                        "Full offline library with liked songs, playlists, and downloads.",
+                        "Premium search with smart filter chips and artist pages.",
+                        "Dynamic color theming and glassmorphism system.",
+                        "Gesture-rich mini player with swipe queue controls.",
+                        "Download manager with progress tracking.",
+                    ),
             ),
             ChangelogEntry(
                 versionCode = 2,
@@ -1053,13 +1054,13 @@ object AppChangelog {
                 releaseDate = "May 2026",
                 title = "Video & Fullscreen Improvements",
                 items =
-                listOf(
-                    "Added Picture-in-Picture support for video mode.",
-                    "Immersive fullscreen with gesture controls.",
-                    "Improved playback sync between UI and player.",
-                    "DSP equalizer with custom presets.",
-                    "Autoplay and smart queue generation.",
-                ),
+                    listOf(
+                        "Added Picture-in-Picture support for video mode.",
+                        "Immersive fullscreen with gesture controls.",
+                        "Improved playback sync between UI and player.",
+                        "DSP equalizer with custom presets.",
+                        "Autoplay and smart queue generation.",
+                    ),
             ),
             ChangelogEntry(
                 versionCode = 1,
@@ -1067,13 +1068,13 @@ object AppChangelog {
                 releaseDate = "May 2026",
                 title = "Initial Release",
                 items =
-                listOf(
-                    "YouTube Music streaming with background playback.",
-                    "Local music library from MediaStore.",
-                    "Taste profile onboarding for personalized recommendations.",
-                    "Premium dark-first Material 3 design.",
-                    "Edge-to-edge UI with splash screen.",
-                ),
+                    listOf(
+                        "YouTube Music streaming with background playback.",
+                        "Local music library from MediaStore.",
+                        "Taste profile onboarding for personalized recommendations.",
+                        "Premium dark-first Material 3 design.",
+                        "Edge-to-edge UI with splash screen.",
+                    ),
             ),
         )
 }

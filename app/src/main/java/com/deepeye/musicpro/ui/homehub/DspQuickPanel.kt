@@ -42,30 +42,34 @@ fun DspQuickPanel(
     )
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.horizontalGradient(
-                    colors = listOf(
-                        accentColor.copy(alpha = 0.12f),
-                        Color(0xFF00E5FF).copy(alpha = 0.08f),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        colors =
+                            listOf(
+                                accentColor.copy(alpha = 0.12f),
+                                Color(0xFF00E5FF).copy(alpha = 0.08f),
+                            )
                     )
                 )
-            )
-            .border(
-                width = 1.dp,
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        accentColor.copy(alpha = 0.3f),
-                        Color(0xFF00E5FF).copy(alpha = 0.15f),
-                    )
-                ),
-                shape = RoundedCornerShape(16.dp),
-            )
-            .clickable(onClick = onOpenDsp)
-            .padding(16.dp),
+                .border(
+                    width = 1.dp,
+                    brush =
+                        Brush.horizontalGradient(
+                            colors =
+                                listOf(
+                                    accentColor.copy(alpha = 0.3f),
+                                    Color(0xFF00E5FF).copy(alpha = 0.15f),
+                                )
+                        ),
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .clickable(onClick = onOpenDsp)
+                .padding(16.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),

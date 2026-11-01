@@ -55,10 +55,10 @@ fun GlowCard(
         initialValue = if (animateGlow) 0.3f else glowIntensity,
         targetValue = if (animateGlow) glowIntensity else glowIntensity,
         animationSpec =
-        infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
+            infiniteRepeatable(
+                animation = tween(2000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
         label = "glowAlpha",
     )
 
@@ -66,39 +66,39 @@ fun GlowCard(
         // Glow layer (behind the card)
         Box(
             modifier =
-            Modifier
-                .matchParentSize()
-                .padding(4.dp)
-                .blur(20.dp)
-                .clip(shape)
-                .background(
-                    brush =
-                    Brush.linearGradient(
-                        colors =
-                        listOf(
-                            glowColor.copy(alpha = animatedAlpha),
-                            secondaryGlowColor.copy(alpha = animatedAlpha * 0.6f),
-                        ),
+                Modifier
+                    .matchParentSize()
+                    .padding(4.dp)
+                    .blur(20.dp)
+                    .clip(shape)
+                    .background(
+                        brush =
+                            Brush.linearGradient(
+                                colors =
+                                    listOf(
+                                        glowColor.copy(alpha = animatedAlpha),
+                                        secondaryGlowColor.copy(alpha = animatedAlpha * 0.6f),
+                                    ),
+                            ),
                     ),
-                ),
         )
 
         // Glass card
         Box(
             modifier =
-            Modifier
-                .matchParentSize()
-                .clip(shape)
-                .background(Color.White.copy(alpha = 0.1f))
-                .border(1.dp, GlassBorder, shape),
+                Modifier
+                    .matchParentSize()
+                    .clip(shape)
+                    .background(Color.White.copy(alpha = 0.1f))
+                    .border(1.dp, GlassBorder, shape),
         )
 
         // Content
         Box(
             modifier =
-            Modifier
-                .clip(shape)
-                .padding(16.dp),
+                Modifier
+                    .clip(shape)
+                    .padding(16.dp),
             content = content,
         )
     }
@@ -109,9 +109,9 @@ fun GlowCard(
 private fun GlowCardPreview() {
     GlowCard(
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
     ) {
         // Preview content
     }

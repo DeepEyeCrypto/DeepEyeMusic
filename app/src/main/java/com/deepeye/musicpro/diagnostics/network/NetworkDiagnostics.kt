@@ -90,25 +90,26 @@ data class NetworkEvent(
     val retryCount: Int
 ) {
     /** Formats a single stable, redacted key=value log line. */
-    fun toRedactedLine(): String = buildString {
-        append("correlationId=").append(correlationId)
-        append(" endpoint=").append(endpointCategory)
-        append(" hostExpected=").append(hostExpected)
-        append(" method=").append(method)
-        append(" status=").append(statusCode)
-        append(" durationMs=").append(elapsedMs)
-        append(" reqBodyBytes=").append(requestBodyBytes)
-        append(" respBodyBytes=").append(responseBodyBytes)
-        append(" authMode=").append(authMode)
-        append(" authHeaderPresent=").append(authHeaderPresent)
-        append(" cookieHeaderPresent=").append(cookieHeaderPresent)
-        append(" client=").append(clientName)
-        append(" clientVersionPresent=").append(clientVersionPresent)
-        append(" playlistIdType=").append(playlistIdType)
-        append(" parsedItems=").append(parserResultCount)
-        append(" fallback=").append(fallbackReason)
-        append(" retries=").append(retryCount)
-    }
+    fun toRedactedLine(): String =
+        buildString {
+            append("correlationId=").append(correlationId)
+            append(" endpoint=").append(endpointCategory)
+            append(" hostExpected=").append(hostExpected)
+            append(" method=").append(method)
+            append(" status=").append(statusCode)
+            append(" durationMs=").append(elapsedMs)
+            append(" reqBodyBytes=").append(requestBodyBytes)
+            append(" respBodyBytes=").append(responseBodyBytes)
+            append(" authMode=").append(authMode)
+            append(" authHeaderPresent=").append(authHeaderPresent)
+            append(" cookieHeaderPresent=").append(cookieHeaderPresent)
+            append(" client=").append(clientName)
+            append(" clientVersionPresent=").append(clientVersionPresent)
+            append(" playlistIdType=").append(playlistIdType)
+            append(" parsedItems=").append(parserResultCount)
+            append(" fallback=").append(fallbackReason)
+            append(" retries=").append(retryCount)
+        }
 }
 
 /**

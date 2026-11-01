@@ -14,11 +14,7 @@ import dagger.multibindings.IntoSet
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ResolverModule {
-
     @Binds
     @IntoSet
-    abstract fun bindWebViewBridgeResolver(
-        resolver: WebViewBridgeResolver
-    ): SourceResolver
-
+    abstract fun bindWebViewBridgeResolver(resolver: WebViewBridgeResolver): SourceResolver
 }

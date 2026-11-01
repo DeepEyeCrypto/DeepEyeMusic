@@ -27,7 +27,10 @@ import com.deepeye.musicpro.ui.theme.palette.PaletteConstrainer
  * When drawn over a blurred background, this forces the text to blend
  * with the underlying pixels, creating a luminous overlay effect.
  */
-fun Modifier.vibrancyEffect(enabled: Boolean = true, blendMode: BlendMode = BlendMode.Overlay): Modifier {
+fun Modifier.vibrancyEffect(
+    enabled: Boolean = true,
+    blendMode: BlendMode = BlendMode.Overlay
+): Modifier {
     return if (enabled) {
         this.graphicsLayer {
             this.blendMode = blendMode
@@ -42,11 +45,14 @@ fun Modifier.vibrancyEffect(enabled: Boolean = true, blendMode: BlendMode = Blen
  * and ensures it meets the required WCAG contrast ratio.
  */
 @Composable
-fun getDynamicTextColor(backgroundColor: Color, isAAA: Boolean = false): Color {
+fun getDynamicTextColor(
+    backgroundColor: Color,
+    isAAA: Boolean = false
+): Color {
     return remember(backgroundColor, isAAA) {
         val isBackgroundLight = PaletteConstrainer.isLight(backgroundColor)
         val baseTextColor = if (isBackgroundLight) Color(0xFF1A1A1A) else Color(0xFFFAFAFA)
-        
+
         if (isAAA) {
             PaletteConstrainer.constrainForTextAAA(baseTextColor, backgroundColor)
         } else {
@@ -82,11 +88,12 @@ fun DynamicLabel(
     useAAAContrast: Boolean = false,
     useVibrancy: Boolean = false
 ) {
-    val dynamicColor = if (color == Color.Unspecified) {
-        getDynamicTextColor(backgroundColor, useAAAContrast)
-    } else {
-        color
-    }
+    val dynamicColor =
+        if (color == Color.Unspecified) {
+            getDynamicTextColor(backgroundColor, useAAAContrast)
+        } else {
+            color
+        }
 
     Text(
         text = text,
@@ -110,7 +117,7 @@ fun DynamicLabel(
 }
 
 /**
- * A secondary emphasis label. Automatically applies a subtle opacity/muting 
+ * A secondary emphasis label. Automatically applies a subtle opacity/muting
  * to the dynamic text color while maintaining minimum WCAG AA contrast.
  */
 @Composable
@@ -127,11 +134,12 @@ fun SecondaryLabel(
     useVibrancy: Boolean = false
 ) {
     val primaryColor = getDynamicTextColor(backgroundColor, false)
-    val mutedColor = remember(primaryColor, backgroundColor) {
-        val isLightText = PaletteConstrainer.isLight(primaryColor)
-        val baseSecondary = if (isLightText) Color(0xFFB3B3B3) else Color(0xFF4D4D4D)
-        PaletteConstrainer.constrainForText(baseSecondary, backgroundColor)
-    }
+    val mutedColor =
+        remember(primaryColor, backgroundColor) {
+            val isLightText = PaletteConstrainer.isLight(primaryColor)
+            val baseSecondary = if (isLightText) Color(0xFFB3B3B3) else Color(0xFF4D4D4D)
+            PaletteConstrainer.constrainForText(baseSecondary, backgroundColor)
+        }
 
     Text(
         text = text,
@@ -163,11 +171,12 @@ fun TertiaryLabel(
     useVibrancy: Boolean = false
 ) {
     val primaryColor = getDynamicTextColor(backgroundColor, false)
-    val mutedColor = remember(primaryColor, backgroundColor) {
-        val isLightText = PaletteConstrainer.isLight(primaryColor)
-        val baseTertiary = if (isLightText) Color(0xFF808080) else Color(0xFF666666)
-        PaletteConstrainer.constrainForText(baseTertiary, backgroundColor)
-    }
+    val mutedColor =
+        remember(primaryColor, backgroundColor) {
+            val isLightText = PaletteConstrainer.isLight(primaryColor)
+            val baseTertiary = if (isLightText) Color(0xFF808080) else Color(0xFF666666)
+            PaletteConstrainer.constrainForText(baseTertiary, backgroundColor)
+        }
 
     Text(
         text = text,

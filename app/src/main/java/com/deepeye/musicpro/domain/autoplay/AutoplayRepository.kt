@@ -19,240 +19,262 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AutoplayRepository @Inject constructor(
-    private val contentFetcher: ContentFetcher,
-    private val smartTubeEngine: SmartTubeEngine,
-    private val innerTubeClient: InnerTubeRemoteClient,
-    private val cacheManager: CacheManager,
-    private val networkConditionChecker: com.deepeye.musicpro.util.NetworkConditionChecker,
-    private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
-    private val tasteModelEngine: TasteModelEngine,
-) {
-    companion object {
-        /**
-         * AUTOPLAY-OMEGA: how many recently-played tracks to exclude from the next queue.
-         * InnerTube up-next graphs frequently contain short cycles (A→B→A); excluding the
-         * recent session window breaks those loops without re-introducing taste/blacklist
-         * interference — InnerTube still dictates *what* plays.
-         */
-        private const val RECENT_HISTORY_GUARD_WINDOW = 15
-    }
-
-    suspend fun generateNextQueue(
-        currentTrack: MediaItem?,
-        autoplayState: AutoplayState,
-        activeQueueArtists: List<String> = emptyList(),
-    ): List<QueueItem> = withContext(Dispatchers.IO) {
-        if (currentTrack == null) return@withContext emptyList()
-
-        android.util.Log.i(
-            "AUTOPLAY_DEBUG",
-            "event=generate_next_queue_enter videoId=${currentTrack.id} " +
-                "type=${currentTrack::class.simpleName}"
-        )
-
-        // Change 3 — Cellular / metered network guard.
-        // Pre-fetch only fires on unmetered networks (Wi-Fi/ethernet) OR when the user
-        // has explicitly opted in via the "Autoplay on Cellular" setting. This prevents
-        // the 15s pre-fetch from silently draining the user's mobile data.
-        val isMetered = networkConditionChecker.isNetworkMetered()
-        val autoplayOnCellular = settingsDataStore.settings.first().autoplayOnCellular
-        if (isMetered && !autoplayOnCellular) {
-            android.util.Log.w(
-                "AUTOPLAY_DEBUG",
-                "event=generate_next_queue_skip reason=metered_network videoId=${currentTrack.id} " +
-                    "metered=$isMetered cellularOptIn=$autoplayOnCellular"
-            )
-            android.util.Log.i(
-                "AutoplayRepository",
-                "event=autoplay_prefetch_skipped reason=metered_network cellular_opt_in=false"
-            )
-            return@withContext emptyList()
+class AutoplayRepository
+    @Inject
+    constructor(
+        private val contentFetcher: ContentFetcher,
+        private val smartTubeEngine: SmartTubeEngine,
+        private val innerTubeClient: InnerTubeRemoteClient,
+        private val cacheManager: CacheManager,
+        private val networkConditionChecker: com.deepeye.musicpro.util.NetworkConditionChecker,
+        private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
+        private val tasteModelEngine: TasteModelEngine,
+    ) {
+        companion object {
+            /**
+             * AUTOPLAY-OMEGA: how many recently-played tracks to exclude from the next queue.
+             * InnerTube up-next graphs frequently contain short cycles (A→B→A); excluding the
+             * recent session window breaks those loops without re-introducing taste/blacklist
+             * interference — InnerTube still dictates *what* plays.
+             */
+            private const val RECENT_HISTORY_GUARD_WINDOW = 15
         }
 
-        // SAME-SONG-LOOP FIX: cached queues bypassed dedup and could re-append the
-        // current track forever. Scrub cache through the same current/history
-        // guard; drop the cache (fall through to live fetch) if nothing eligible.
-        if (currentTrack !is MediaItem.Local) {
-            val cachedQueue = cacheManager.loadAutoplayQueue(currentTrack.id)
-            if (!cachedQueue.isNullOrEmpty()) {
-                val recentIds = autoplayState.history.takeLast(RECENT_HISTORY_GUARD_WINDOW).toSet()
-                val scrubbed = cachedQueue.filter {
-                    it.videoId != currentTrack.id && it.videoId !in recentIds
-                }
-                if (scrubbed.isNotEmpty()) {
+        suspend fun generateNextQueue(
+            currentTrack: MediaItem?,
+            autoplayState: AutoplayState,
+            activeQueueArtists: List<String> = emptyList(),
+        ): List<QueueItem> =
+            withContext(Dispatchers.IO) {
+                if (currentTrack == null) return@withContext emptyList()
+
+                android.util.Log.i(
+                    "AUTOPLAY_DEBUG",
+                    "event=generate_next_queue_enter videoId=${currentTrack.id} " +
+                        "type=${currentTrack::class.simpleName}"
+                )
+
+                // Change 3 — Cellular / metered network guard.
+                // Pre-fetch only fires on unmetered networks (Wi-Fi/ethernet) OR when the user
+                // has explicitly opted in via the "Autoplay on Cellular" setting. This prevents
+                // the 15s pre-fetch from silently draining the user's mobile data.
+                val isMetered = networkConditionChecker.isNetworkMetered()
+                val autoplayOnCellular = settingsDataStore.settings.first().autoplayOnCellular
+                if (isMetered && !autoplayOnCellular) {
+                    android.util.Log.w(
+                        "AUTOPLAY_DEBUG",
+                        "event=generate_next_queue_skip reason=metered_network videoId=${currentTrack.id} " +
+                            "metered=$isMetered cellularOptIn=$autoplayOnCellular"
+                    )
                     android.util.Log.i(
                         "AutoplayRepository",
-                        "event=autoplay_cache_hit eligible=${scrubbed.size} cached=${cachedQueue.size}",
+                        "event=autoplay_prefetch_skipped reason=metered_network cellular_opt_in=false"
                     )
-                    return@withContext scrubbed
+                    return@withContext emptyList()
                 }
-                android.util.Log.w(
-                    "AutoplayRepository",
-                    "event=autoplay_cache_exhausted cached=${cachedQueue.size} reason=all_duplicates",
-                )
-            }
-        }
 
-        // ── Fetch candidates from SmartTube + InnerTube via coroutineScope ──────────────
-        val candidates = coroutineScope {
-            val smartTubeDeferred = async {
+                // SAME-SONG-LOOP FIX: cached queues bypassed dedup and could re-append the
+                // current track forever. Scrub cache through the same current/history
+                // guard; drop the cache (fall through to live fetch) if nothing eligible.
                 if (currentTrack !is MediaItem.Local) {
-                    try {
-                        // FEL-400: send the bare provider contract (videoId only).
-                        // Evidence: fabricated playlistId=RDAMVM<videoId> is rejected
-                        // with HTTP 400 by the TVHTML5 /next endpoint. No credentials
-                        // or client-identity changes; no raw payload logging.
-                        val upNextItem = smartTubeEngine.fetchUpNext(currentTrack.id) as? MediaItem.Remote
-                        val primary = if (upNextItem != null && upNextItem.id.isNotBlank()) {
-                            VideoItem(
-                                videoId = upNextItem.id,
-                                title = upNextItem.title,
-                                artist = upNextItem.artist,
-                                channelId = "",
-                                duration = (upNextItem.duration / 1000L).toString(),
-                                genre = "SmartTube-Algorithmic"
-                            )
-                        } else {
-                            innerTubeClient.fetchNextAutoplay(currentTrack.id)?.let { track ->
-                                if (track.videoId.isNotBlank()) {
-                                    VideoItem(
-                                        videoId = track.videoId,
-                                        title = track.title,
-                                        artist = track.artist,
-                                        channelId = "",
-                                        duration = track.durationSeconds.toString(),
-                                        genre = "SmartTube-Algorithmic"
-                                    )
-                                } else null
+                    val cachedQueue = cacheManager.loadAutoplayQueue(currentTrack.id)
+                    if (!cachedQueue.isNullOrEmpty()) {
+                        val recentIds = autoplayState.history.takeLast(RECENT_HISTORY_GUARD_WINDOW).toSet()
+                        val scrubbed =
+                            cachedQueue.filter {
+                                it.videoId != currentTrack.id && it.videoId !in recentIds
                             }
+                        if (scrubbed.isNotEmpty()) {
+                            android.util.Log.i(
+                                "AutoplayRepository",
+                                "event=autoplay_cache_hit eligible=${scrubbed.size} cached=${cachedQueue.size}",
+                            )
+                            return@withContext scrubbed
                         }
-                        if (primary != null) listOf(primary) else emptyList()
-                    } catch (e: kotlinx.coroutines.CancellationException) {
-                        // Req 1: cancellation propagates — never convert to emptyList.
-                        throw e
-                    } catch (e: Exception) {
                         android.util.Log.w(
                             "AutoplayRepository",
-                            "event=autoplay_up_next_fetch_failed videoId=${currentTrack.id} reason=\"${e.message}\"",
-                            e
+                            "event=autoplay_cache_exhausted cached=${cachedQueue.size} reason=all_duplicates",
                         )
-                        emptyList()
                     }
-                } else emptyList()
-            }
+                }
 
-            val relatedDeferred = async {
-                try {
-                    if (currentTrack is MediaItem.Local) {
-                        val query = "${currentTrack.title} ${currentTrack.artist} song audio"
-                        contentFetcher.searchByQuery(query, 20)
+                // ── Fetch candidates from SmartTube + InnerTube via coroutineScope ──────────────
+                val candidates =
+                    coroutineScope {
+                        val smartTubeDeferred =
+                            async {
+                                if (currentTrack !is MediaItem.Local) {
+                                    try {
+                                        // FEL-400: send the bare provider contract (videoId only).
+                                        // Evidence: fabricated playlistId=RDAMVM<videoId> is rejected
+                                        // with HTTP 400 by the TVHTML5 /next endpoint. No credentials
+                                        // or client-identity changes; no raw payload logging.
+                                        val upNextItem =
+                                            smartTubeEngine.fetchUpNext(
+                                                currentTrack.id
+                                            ) as? MediaItem.Remote
+                                        val primary =
+                                            if (upNextItem != null && upNextItem.id.isNotBlank()) {
+                                                VideoItem(
+                                                    videoId = upNextItem.id,
+                                                    title = upNextItem.title,
+                                                    artist = upNextItem.artist,
+                                                    channelId = "",
+                                                    duration = (upNextItem.duration / 1000L).toString(),
+                                                    genre = "SmartTube-Algorithmic"
+                                                )
+                                            } else {
+                                                innerTubeClient.fetchNextAutoplay(currentTrack.id)?.let { track ->
+                                                    if (track.videoId.isNotBlank()) {
+                                                        VideoItem(
+                                                            videoId = track.videoId,
+                                                            title = track.title,
+                                                            artist = track.artist,
+                                                            channelId = "",
+                                                            duration = track.durationSeconds.toString(),
+                                                            genre = "SmartTube-Algorithmic"
+                                                        )
+                                                    } else {
+                                                        null
+                                                    }
+                                                }
+                                            }
+                                        if (primary != null) listOf(primary) else emptyList()
+                                    } catch (e: kotlinx.coroutines.CancellationException) {
+                                        // Req 1: cancellation propagates — never convert to emptyList.
+                                        throw e
+                                    } catch (e: Exception) {
+                                        android.util.Log.w(
+                                            "AutoplayRepository",
+                                            "event=autoplay_up_next_fetch_failed videoId=${currentTrack.id} reason=\"${e.message}\"",
+                                            e
+                                        )
+                                        emptyList()
+                                    }
+                                } else {
+                                    emptyList()
+                                }
+                            }
+
+                        val relatedDeferred =
+                            async {
+                                try {
+                                    if (currentTrack is MediaItem.Local) {
+                                        val query = "${currentTrack.title} ${currentTrack.artist} song audio"
+                                        contentFetcher.searchByQuery(query, 20)
+                                    } else {
+                                        val isVideo = (currentTrack as? MediaItem.Remote)?.isVideo ?: false
+                                        contentFetcher.getRelatedVideos(currentTrack.id, 20, isVideo)
+                                    }
+                                } catch (e: kotlinx.coroutines.CancellationException) {
+                                    // Req 1: cancellation propagates — never convert to emptyList.
+                                    throw e
+                                } catch (_: Exception) {
+                                    emptyList()
+                                }
+                            }
+
+                        val smartList = smartTubeDeferred.await()
+                        val relatedList = relatedDeferred.await()
+
+                        // AUTOPLAY-OMEGA loop guard. The Isolation refactor removed the local
+                        // blacklist/sessionHistory filtering, leaving only a same-track guard at the
+                        // call sites. That alone lets InnerTube's short up-next cycles (A→B→A) loop
+                        // Infinite Radio forever. Here we exclude the recent session-history window
+                        // (already maintained in AutoplayState.history) plus the current track. This is
+                        // NOT taste/blacklist interference — it only prevents immediate repeats; if the
+                        // guard would empty the pool we fall back to a same-track-only filter so the
+                        // stream never halts.
+                        val recentHistory = autoplayState.history.takeLast(RECENT_HISTORY_GUARD_WINDOW).toSet()
+                        val merged = (smartList + relatedList).distinctBy { it.videoId }
+                        val guarded = merged.filter { it.videoId != currentTrack.id && it.videoId !in recentHistory }
+                        val effective =
+                            guarded.ifEmpty {
+                                merged.filter { it.videoId != currentTrack.id }
+                            }
+                        android.util.Log.i(
+                            "AutoplayRepository",
+                            "event=autoplay_loop_guard videoId=${currentTrack.id} " +
+                                "merged=${merged.size} recentHistory=${recentHistory.size} " +
+                                "guarded=${guarded.size} effective=${effective.size}"
+                        )
+                        effective
+                    }
+
+                // ── Plan Task 5 — Mode-aware reordering via TasteModelEngine ───────────────────
+                // FAMILIAR / FAMILIAR_PLUS → highest-affinity artists first
+                // DISCOVERY                → lowest-affinity (novelty) first
+                // BALANCED                 → interleaved high + low affinity
+                val mode =
+                    when {
+                        autoplayState.familiarMode -> AutoplayMode.FAMILIAR
+                        autoplayState.discoveryMode -> AutoplayMode.DISCOVERY
+                        else -> AutoplayMode.BALANCED
+                    }
+
+                val now = System.currentTimeMillis()
+                val sinceMs = now - 30L * 24 * 3600 * 1000L
+
+                // Bulk-compute affinity scores for all candidate artists (one DAO query).
+                val affinityScores =
+                    if (candidates.isNotEmpty()) {
+                        tasteModelEngine.affinityScoresForArtists(
+                            artists = candidates.map { it.artist },
+                            sinceMs = sinceMs,
+                            now = now,
+                        )
                     } else {
-                        val isVideo = (currentTrack as? MediaItem.Remote)?.isVideo ?: false
-                        contentFetcher.getRelatedVideos(currentTrack.id, 20, isVideo)
+                        emptyMap<String, Double>()
                     }
-                } catch (e: kotlinx.coroutines.CancellationException) {
-                    // Req 1: cancellation propagates — never convert to emptyList.
-                    throw e
-                } catch (_: Exception) {
-                    emptyList()
+
+                // Tag each candidate with its affinity score.
+                val scored =
+                    candidates.map { video ->
+                        video to (affinityScores[video.artist.lowercase()] ?: 0.0)
+                    }
+
+                // Reorder per mode. Note: `mode` is reconstructed above from the
+                // familiarMode/discoveryMode booleans, so it is only ever FAMILIAR,
+                // DISCOVERY or BALANCED; the `else` covers BALANCED (and any future
+                // FAMILAR_PLUS that collapses to it in the reconstruction when-block).
+                val ordered =
+                    when (mode) {
+                        AutoplayMode.FAMILIAR -> scored.sortedByDescending { it.second }
+                        AutoplayMode.DISCOVERY -> scored.sortedBy { it.second }
+                        else -> {
+                            // BALANCED: interleave high-affinity (>0.1) and low-affinity (<=0.1) items.
+                            val byDesc = scored.sortedByDescending { it.second }
+                            val high = byDesc.filter { it.second > 0.1 }
+                            val low = byDesc.filter { it.second <= 0.1 }
+                            buildList {
+                                var i = 0
+                                while (i < high.size || i < low.size) {
+                                    if (i < high.size) add(high[i])
+                                    if (i < low.size) add(low[i])
+                                    i++
+                                }
+                            }
+                        }
+                    }
+
+                android.util.Log.i(
+                    "AutoplayRepository",
+                    "event=autoplay_mode_sort videoId=${currentTrack.id} mode=$mode ordered=${ordered.size}"
+                )
+
+                // Build final QueueItem list (dedup via distinctBy is already done above;
+                // take(20) caps the result to the queue ceiling).
+                ordered.take(20).mapIndexed { index, (video, affinity) ->
+                    QueueItem(
+                        videoId = video.videoId,
+                        title = video.title,
+                        artist = video.artist,
+                        channelId = video.channelId,
+                        reason = if (video.genre == "SmartTube-Algorithmic") "Up Next on YouTube" else "Similar Track",
+                        rank = index + 1,
+                        // Normalize affinity to [0,1] float for score. Use clamp to avoid >1 from heavy listeners.
+                        score = affinity.coerceAtLeast(0.0).toFloat().coerceIn(0f, 1f),
+                    )
                 }
             }
-
-            val smartList = smartTubeDeferred.await()
-            val relatedList = relatedDeferred.await()
-
-            // AUTOPLAY-OMEGA loop guard. The Isolation refactor removed the local
-            // blacklist/sessionHistory filtering, leaving only a same-track guard at the
-            // call sites. That alone lets InnerTube's short up-next cycles (A→B→A) loop
-            // Infinite Radio forever. Here we exclude the recent session-history window
-            // (already maintained in AutoplayState.history) plus the current track. This is
-            // NOT taste/blacklist interference — it only prevents immediate repeats; if the
-            // guard would empty the pool we fall back to a same-track-only filter so the
-            // stream never halts.
-            val recentHistory = autoplayState.history.takeLast(RECENT_HISTORY_GUARD_WINDOW).toSet()
-            val merged = (smartList + relatedList).distinctBy { it.videoId }
-            val guarded = merged.filter { it.videoId != currentTrack.id && it.videoId !in recentHistory }
-            val effective = guarded.ifEmpty {
-                merged.filter { it.videoId != currentTrack.id }
-            }
-            android.util.Log.i(
-                "AutoplayRepository",
-                "event=autoplay_loop_guard videoId=${currentTrack.id} " +
-                    "merged=${merged.size} recentHistory=${recentHistory.size} " +
-                    "guarded=${guarded.size} effective=${effective.size}"
-            )
-            effective
-        }
-
-        // ── Plan Task 5 — Mode-aware reordering via TasteModelEngine ───────────────────
-        // FAMILIAR / FAMILIAR_PLUS → highest-affinity artists first
-        // DISCOVERY                → lowest-affinity (novelty) first
-        // BALANCED                 → interleaved high + low affinity
-        val mode = when {
-            autoplayState.familiarMode -> AutoplayMode.FAMILIAR
-            autoplayState.discoveryMode -> AutoplayMode.DISCOVERY
-            else -> AutoplayMode.BALANCED
-        }
-
-        val now = System.currentTimeMillis()
-        val sinceMs = now - 30L * 24 * 3600 * 1000L
-
-        // Bulk-compute affinity scores for all candidate artists (one DAO query).
-        val affinityScores = if (candidates.isNotEmpty()) {
-            tasteModelEngine.affinityScoresForArtists(
-                artists = candidates.map { it.artist },
-                sinceMs = sinceMs,
-                now = now,
-            )
-        } else emptyMap<String, Double>()
-
-        // Tag each candidate with its affinity score.
-        val scored = candidates.map { video ->
-            video to (affinityScores[video.artist.lowercase()] ?: 0.0)
-        }
-
-        // Reorder per mode. Note: `mode` is reconstructed above from the
-        // familiarMode/discoveryMode booleans, so it is only ever FAMILIAR,
-        // DISCOVERY or BALANCED; the `else` covers BALANCED (and any future
-        // FAMILAR_PLUS that collapses to it in the reconstruction when-block).
-        val ordered = when (mode) {
-            AutoplayMode.FAMILIAR -> scored.sortedByDescending { it.second }
-            AutoplayMode.DISCOVERY -> scored.sortedBy { it.second }
-            else -> {
-                // BALANCED: interleave high-affinity (>0.1) and low-affinity (<=0.1) items.
-                val byDesc = scored.sortedByDescending { it.second }
-                val high = byDesc.filter { it.second > 0.1 }
-                val low = byDesc.filter { it.second <= 0.1 }
-                buildList {
-                    var i = 0
-                    while (i < high.size || i < low.size) {
-                        if (i < high.size) add(high[i])
-                        if (i < low.size) add(low[i])
-                        i++
-                    }
-                }
-            }
-        }
-
-        android.util.Log.i(
-            "AutoplayRepository",
-            "event=autoplay_mode_sort videoId=${currentTrack.id} mode=$mode ordered=${ordered.size}"
-        )
-
-        // Build final QueueItem list (dedup via distinctBy is already done above;
-        // take(20) caps the result to the queue ceiling).
-        ordered.take(20).mapIndexed { index, (video, affinity) ->
-            QueueItem(
-                videoId = video.videoId,
-                title = video.title,
-                artist = video.artist,
-                channelId = video.channelId,
-                reason = if (video.genre == "SmartTube-Algorithmic") "Up Next on YouTube" else "Similar Track",
-                rank = index + 1,
-                // Normalize affinity to [0,1] float for score. Use clamp to avoid >1 from heavy listeners.
-                score = affinity.coerceAtLeast(0.0).toFloat().coerceIn(0f, 1f),
-            )
-        }
     }
-}

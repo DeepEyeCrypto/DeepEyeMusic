@@ -6,7 +6,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MarkdownLiteDecoderTest {
-
     @Test
     fun `html entity 10 becomes newline`() {
         val raw = "line1&#10;line2"

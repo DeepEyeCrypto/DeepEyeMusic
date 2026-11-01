@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -52,21 +51,23 @@ fun PlaylistScreen(
                 // huge cards on a landscape phone; Adaptive fits as many tiles as
                 // the width allows and keeps a partial final row tidy.
                 columns = GridCells.Adaptive(CardGeometry.Compact.minWidth),
-                contentPadding = PaddingValues(
-                    start = CardGeometry.ScreenGutter,
-                    top = CardGeometry.ScreenGutter,
-                    end = CardGeometry.ScreenGutter,
-                    bottom = 90.dp
-                ),
+                contentPadding =
+                    PaddingValues(
+                        start = CardGeometry.ScreenGutter,
+                        top = CardGeometry.ScreenGutter,
+                        end = CardGeometry.ScreenGutter,
+                        bottom = 90.dp
+                    ),
                 horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
                 verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
             ) {
                 items(playlists, key = { it.id }) { playlist ->
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(CardGeometry.Compact.shape)
-                            .clickable { onNavigateToPlaylist(playlist.id) },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(CardGeometry.Compact.shape)
+                                .clickable { onNavigateToPlaylist(playlist.id) },
                         shape = CardGeometry.Compact.shape,
                     ) {
                         Column(

@@ -65,7 +65,6 @@ import kotlin.math.roundToInt
  * captured at class initialisation time.
  */
 object ViewportScaler {
-
     /**
      * Reference canvas width in dp -- a desktop-class landscape viewport.
      *
@@ -176,6 +175,7 @@ object ViewportScaler {
         viewportWidthDp = ReferenceLandscapeWidth.toInt()
     }
 }
+
 /**
  * Commits the live viewport width for the duration of [content].
  *
@@ -365,20 +365,21 @@ fun rememberDynamicTypography(): Typography {
 }
 
 /** Applies [scaleToViewport] across all fifteen Material3 styles. */
-private fun Typography.scaleToViewport(): Typography = Typography(
-    displayLarge = displayLarge.scaleToViewport(),
-    displayMedium = displayMedium.scaleToViewport(),
-    displaySmall = displaySmall.scaleToViewport(),
-    headlineLarge = headlineLarge.scaleToViewport(),
-    headlineMedium = headlineMedium.scaleToViewport(),
-    headlineSmall = headlineSmall.scaleToViewport(),
-    titleLarge = titleLarge.scaleToViewport(),
-    titleMedium = titleMedium.scaleToViewport(),
-    titleSmall = titleSmall.scaleToViewport(),
-    bodyLarge = bodyLarge.scaleToViewport(),
-    bodyMedium = bodyMedium.scaleToViewport(),
-    bodySmall = bodySmall.scaleToViewport(),
-    labelLarge = labelLarge.scaleToViewport(),
-    labelMedium = labelMedium.scaleToViewport(),
-    labelSmall = labelSmall.scaleToViewport(),
-)
+private fun Typography.scaleToViewport(): Typography =
+    Typography(
+        displayLarge = displayLarge.scaleToViewport(),
+        displayMedium = displayMedium.scaleToViewport(),
+        displaySmall = displaySmall.scaleToViewport(),
+        headlineLarge = headlineLarge.scaleToViewport(),
+        headlineMedium = headlineMedium.scaleToViewport(),
+        headlineSmall = headlineSmall.scaleToViewport(),
+        titleLarge = titleLarge.scaleToViewport(),
+        titleMedium = titleMedium.scaleToViewport(),
+        titleSmall = titleSmall.scaleToViewport(),
+        bodyLarge = bodyLarge.scaleToViewport(),
+        bodyMedium = bodyMedium.scaleToViewport(),
+        bodySmall = bodySmall.scaleToViewport(),
+        labelLarge = labelLarge.scaleToViewport(),
+        labelMedium = labelMedium.scaleToViewport(),
+        labelSmall = labelSmall.scaleToViewport(),
+    )

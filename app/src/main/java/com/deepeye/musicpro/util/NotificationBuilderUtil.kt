@@ -28,40 +28,42 @@ object NotificationBuilderUtil {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
-            
+
             val existing = notificationManager.getNotificationChannel(CHANNEL_ID)
             if (existing == null) {
-                val channel = NotificationChannel(
-                    CHANNEL_ID,
-                    CHANNEL_NAME,
-                    NotificationManager.IMPORTANCE_HIGH
-                ).apply {
-                    description = CHANNEL_DESC
-                    enableLights(true)
-                    lightColor = android.graphics.Color.CYAN
-                    enableVibration(true)
-                }
+                val channel =
+                    NotificationChannel(
+                        CHANNEL_ID,
+                        CHANNEL_NAME,
+                        NotificationManager.IMPORTANCE_HIGH
+                    ).apply {
+                        description = CHANNEL_DESC
+                        enableLights(true)
+                        lightColor = android.graphics.Color.CYAN
+                        enableVibration(true)
+                    }
                 notificationManager.createNotificationChannel(channel)
             }
         }
     }
 
-    suspend fun fetchBitmap(urlStr: String?): Bitmap? = withContext(Dispatchers.IO) {
-        if (urlStr.isNullOrBlank()) return@withContext null
-        try {
-            val url = URL(urlStr)
-            val connection = url.openConnection() as HttpURLConnection
-            connection.doInput = true
-            connection.connectTimeout = 6000
-            connection.readTimeout = 6000
-            connection.connect()
-            connection.inputStream.use { input ->
-                BitmapFactory.decodeStream(input)
+    suspend fun fetchBitmap(urlStr: String?): Bitmap? =
+        withContext(Dispatchers.IO) {
+            if (urlStr.isNullOrBlank()) return@withContext null
+            try {
+                val url = URL(urlStr)
+                val connection = url.openConnection() as HttpURLConnection
+                connection.doInput = true
+                connection.connectTimeout = 6000
+                connection.readTimeout = 6000
+                connection.connect()
+                connection.inputStream.use { input ->
+                    BitmapFactory.decodeStream(input)
+                }
+            } catch (e: Exception) {
+                null
             }
-        } catch (e: Exception) {
-            null
         }
-    }
 
     fun showRichSubscriptionNotification(
         context: Context,
@@ -72,30 +74,33 @@ object NotificationBuilderUtil {
     ) {
         ensureNotificationChannel(context)
 
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("EXTRA_VIDEO_ID", videoId)
-            putExtra("EXTRA_VIDEO_TITLE", videoTitle)
-            putExtra("EXTRA_CHANNEL_NAME", channelName)
-        }
+        val intent =
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("EXTRA_VIDEO_ID", videoId)
+                putExtra("EXTRA_VIDEO_TITLE", videoTitle)
+                putExtra("EXTRA_CHANNEL_NAME", channelName)
+            }
 
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            videoId.hashCode(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
-        )
+        val pendingIntent =
+            PendingIntent.getActivity(
+                context,
+                videoId.hashCode(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
+            )
 
         val iconRes = R.drawable.ic_notification.takeIf { it != 0 } ?: R.mipmap.ic_launcher
 
-        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(iconRes)
-            .setContentTitle(videoTitle)
-            .setContentText("New upload from $channelName")
-            .setSubText(channelName)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
+        val builder =
+            NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(iconRes)
+                .setContentTitle(videoTitle)
+                .setContentText("New upload from $channelName")
+                .setSubText(channelName)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
 
         if (thumbnailBitmap != null) {
             builder.setLargeIcon(thumbnailBitmap)

@@ -68,10 +68,11 @@ private fun rememberSkeletonBrush(): Brush {
     val progress by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1400, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(durationMillis = 1400, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart,
+            ),
         label = "glassShimmerProgress",
     )
 
@@ -79,13 +80,14 @@ private fun rememberSkeletonBrush(): Brush {
     val start = -0.7f + (progress * 2.4f)
 
     return Brush.linearGradient(
-        colors = listOf(
-            SkeletonBase,
-            SkeletonAccentCyan,
-            SkeletonHighlight,
-            SkeletonAccentViolet,
-            SkeletonBase,
-        ),
+        colors =
+            listOf(
+                SkeletonBase,
+                SkeletonAccentCyan,
+                SkeletonHighlight,
+                SkeletonAccentViolet,
+                SkeletonBase,
+            ),
         start = Offset(start * 1000f, 0f),
         end = Offset((start + 0.7f) * 1000f, 140f),
     )
@@ -106,9 +108,10 @@ fun ShimmerBox(
 ) {
     val brush = rememberSkeletonBrush()
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(cornerRadius))
-            .background(brush),
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(brush),
     )
 }
 
@@ -135,39 +138,44 @@ fun VideoCardSkeleton(
     width: Dp = CardGeometry.Video.minWidth,
 ) {
     Column(
-        modifier = modifier
-            .width(width)
-            .clip(CardGeometry.Video.shape)
+        modifier =
+            modifier
+                .width(width)
+                .clip(CardGeometry.Video.shape)
     ) {
         SkeletonBlock(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(CardGeometry.Video.aspectRatio),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(CardGeometry.Video.aspectRatio),
             cornerRadius = CardGeometry.Video.cornerRadius / 1.5f,
         )
         // Text block mirrors the real card: contentPadding, then a clamped title
         // plus a single metadata line.
         Column(modifier = Modifier.padding(CardGeometry.Video.contentPadding)) {
             SkeletonBlock(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(12.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(12.dp),
                 cornerRadius = 3.dp,
             )
             if (CardGeometry.Video.titleMaxLines > 1) {
                 Spacer(Modifier.height(5.dp))
                 SkeletonBlock(
-                    modifier = Modifier
-                        .fillMaxWidth(0.65f)
-                        .height(12.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(0.65f)
+                            .height(12.dp),
                     cornerRadius = 3.dp,
                 )
             }
             Spacer(Modifier.height(7.dp))
             SkeletonBlock(
-                modifier = Modifier
-                    .width(72.dp)
-                    .height(10.dp),
+                modifier =
+                    Modifier
+                        .width(72.dp)
+                        .height(10.dp),
                 cornerRadius = 3.dp,
             )
         }
@@ -186,42 +194,48 @@ fun MusicCardSkeleton(
     width: Dp = CardGeometry.Music.minWidth,
 ) {
     Column(
-        modifier = modifier
-            .width(width)
-            .clip(CardGeometry.Music.shape)
+        modifier =
+            modifier
+                .width(width)
+                .clip(CardGeometry.Music.shape)
     ) {
         SkeletonBlock(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(CardGeometry.Music.aspectRatio),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(CardGeometry.Music.aspectRatio),
             cornerRadius = CardGeometry.Music.cornerRadius / 1.5f,
         )
         Column(modifier = Modifier.padding(CardGeometry.Music.contentPadding)) {
             SkeletonBlock(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(12.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(12.dp),
                 cornerRadius = 3.dp,
             )
             repeat(CardGeometry.Music.titleMaxLines - 1) {
                 Spacer(Modifier.height(5.dp))
                 SkeletonBlock(
-                    modifier = Modifier
-                        .fillMaxWidth(0.6f)
-                        .height(12.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(0.6f)
+                            .height(12.dp),
                     cornerRadius = 3.dp,
                 )
             }
             Spacer(Modifier.height(7.dp))
             SkeletonBlock(
-                modifier = Modifier
-                    .width(64.dp)
-                    .height(10.dp),
+                modifier =
+                    Modifier
+                        .width(64.dp)
+                        .height(10.dp),
                 cornerRadius = 3.dp,
             )
         }
     }
 }
+
 /**
  * Placeholder for a compact horizontal list row ("Continue Listening").
  *
@@ -241,10 +255,11 @@ fun ListRowSkeleton(
     width: Dp = CardGeometry.ContinueListening.maxWidth,
 ) {
     Row(
-        modifier = modifier
-            .width(width)
-            .heightIn(min = CardGeometry.ContinueListening.minHeight)
-            .clip(CardGeometry.ContinueListening.shape),
+        modifier =
+            modifier
+                .width(width)
+                .heightIn(min = CardGeometry.ContinueListening.minHeight)
+                .clip(CardGeometry.ContinueListening.shape),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -254,16 +269,18 @@ fun ListRowSkeleton(
         )
         Column {
             SkeletonBlock(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(11.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(11.dp),
                 cornerRadius = 3.dp,
             )
             Spacer(Modifier.height(6.dp))
             SkeletonBlock(
-                modifier = Modifier
-                    .width(70.dp)
-                    .height(9.dp),
+                modifier =
+                    Modifier
+                        .width(70.dp)
+                        .height(9.dp),
                 cornerRadius = 3.dp,
             )
         }
@@ -276,13 +293,12 @@ fun ListRowSkeleton(
  * Geometry is [CardGeometry.Compact].
  */
 @Composable
-fun CompactCardSkeleton(
-    modifier: Modifier = Modifier,
-) {
+fun CompactCardSkeleton(modifier: Modifier = Modifier,) {
     Row(
-        modifier = modifier
-            .height(CardGeometry.Compact.height)
-            .clip(CardGeometry.Compact.shape),
+        modifier =
+            modifier
+                .height(CardGeometry.Compact.height)
+                .clip(CardGeometry.Compact.shape),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SkeletonBlock(
@@ -292,16 +308,18 @@ fun CompactCardSkeleton(
         Spacer(Modifier.width(CardGeometry.Compact.contentPadding))
         Column(modifier = Modifier.padding(CardGeometry.Compact.contentPadding)) {
             SkeletonBlock(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(11.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(11.dp),
                 cornerRadius = 3.dp,
             )
             Spacer(Modifier.height(5.dp))
             SkeletonBlock(
-                modifier = Modifier
-                    .fillMaxWidth(0.6f)
-                    .height(10.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(10.dp),
                 cornerRadius = 3.dp,
             )
         }
@@ -315,21 +333,21 @@ fun CompactCardSkeleton(
  * not slide down when data lands.
  */
 @Composable
-fun SectionHeaderSkeleton(
-    modifier: Modifier = Modifier,
-) {
+fun SectionHeaderSkeleton(modifier: Modifier = Modifier,) {
     Column(modifier = modifier.padding(vertical = 6.dp)) {
         SkeletonBlock(
-            modifier = Modifier
-                .width(120.dp)
-                .height(15.dp),
+            modifier =
+                Modifier
+                    .width(120.dp)
+                    .height(15.dp),
             cornerRadius = 4.dp,
         )
         Spacer(Modifier.height(5.dp))
         SkeletonBlock(
-            modifier = Modifier
-                .width(80.dp)
-                .height(11.dp),
+            modifier =
+                Modifier
+                    .width(80.dp)
+                    .height(11.dp),
             cornerRadius = 4.dp,
         )
     }
@@ -354,4 +372,3 @@ private fun SkeletonPreviews() {
         CompactCardSkeleton(modifier = Modifier.width(200.dp))
     }
 }
-

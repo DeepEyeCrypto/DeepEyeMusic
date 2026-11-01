@@ -148,35 +148,39 @@ fun GlassSkeletonLoader(
     height: Dp = 60.dp,
     cornerRadius: Dp = 12.dp,
 ) {
-    val shimmerColors = listOf(
-        Color.White.copy(alpha = 0.04f),
-        Color.White.copy(alpha = 0.10f),
-        Color.White.copy(alpha = 0.04f),
-    )
+    val shimmerColors =
+        listOf(
+            Color.White.copy(alpha = 0.04f),
+            Color.White.copy(alpha = 0.10f),
+            Color.White.copy(alpha = 0.04f),
+        )
 
     val transition = rememberInfiniteTransition(label = "shimmer")
     val translateAnim by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(1200, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart,
+            ),
         label = "shimmerTranslate",
     )
 
-    val brush = Brush.linearGradient(
-        colors = shimmerColors,
-        start = Offset(translateAnim - 200f, 0f),
-        end = Offset(translateAnim + 200f, 0f),
-    )
+    val brush =
+        Brush.linearGradient(
+            colors = shimmerColors,
+            start = Offset(translateAnim - 200f, 0f),
+            end = Offset(translateAnim + 200f, 0f),
+        )
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(height)
-            .clip(RoundedCornerShape(cornerRadius))
-            .background(brush),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(height)
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(brush),
     )
 }
 
@@ -184,13 +188,12 @@ fun GlassSkeletonLoader(
  * Skeleton list item — mimics a track row with artwork + text placeholders.
  */
 @Composable
-fun GlassSkeletonTrackRow(
-    modifier: Modifier = Modifier,
-) {
+fun GlassSkeletonTrackRow(modifier: Modifier = Modifier,) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {

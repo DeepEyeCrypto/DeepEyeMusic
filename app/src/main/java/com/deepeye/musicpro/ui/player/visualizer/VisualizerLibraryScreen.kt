@@ -4,7 +4,6 @@ import android.content.res.Configuration
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -13,7 +12,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -25,8 +23,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
@@ -54,9 +50,10 @@ fun VisualizerLibraryScreen(
     var showSettings by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         // ── Header Row ────────────────────────────────────────────────────────
         Row(
@@ -89,9 +86,10 @@ fun VisualizerLibraryScreen(
                 if (onIntensityChanged != null || onReducedMotionChanged != null) {
                     IconButton(
                         onClick = { showSettings = !showSettings },
-                        modifier = Modifier
-                            .size(36.dp)
-                            .minTouchTarget()
+                        modifier =
+                            Modifier
+                                .size(36.dp)
+                                .minTouchTarget()
                     ) {
                         Icon(
                             Icons.Default.Tune,
@@ -103,9 +101,10 @@ fun VisualizerLibraryScreen(
                 }
                 IconButton(
                     onClick = onDismiss,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .minTouchTarget()
+                    modifier =
+                        Modifier
+                            .size(36.dp)
+                            .minTouchTarget()
                 ) {
                     Icon(
                         Icons.Default.Close,
@@ -125,9 +124,10 @@ fun VisualizerLibraryScreen(
                 shape = RoundedCornerShape(14.dp),
                 color = Color(0x33FFFFFF),
                 border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp)
             ) {
                 Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
                     if (onIntensityChanged != null) {
@@ -137,41 +137,54 @@ fun VisualizerLibraryScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text("Intensity", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                            Text("${(visualizerIntensity * 100).toInt()}%", color = NeonCyan, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                "${(visualizerIntensity * 100).toInt()}%",
+                                color = NeonCyan,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                         Slider(
                             value = visualizerIntensity,
                             onValueChange = onIntensityChanged,
                             valueRange = 0.5f..1.5f,
-                            colors = SliderDefaults.colors(
-                                thumbColor = NeonCyan,
-                                activeTrackColor = NeonCyan,
-                                inactiveTrackColor = Color.White.copy(alpha = 0.2f)
-                            ),
+                            colors =
+                                SliderDefaults.colors(
+                                    thumbColor = NeonCyan,
+                                    activeTrackColor = NeonCyan,
+                                    inactiveTrackColor = Color.White.copy(alpha = 0.2f)
+                                ),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
 
                     if (onReducedMotionChanged != null) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onReducedMotionChanged(!reducedMotion) }
-                                .padding(vertical = 4.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onReducedMotionChanged(!reducedMotion) }
+                                    .padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text("Reduced Motion", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    "Reduced Motion",
+                                    color = Color.White,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
                                 Text("Limit fast strobing", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp)
                             }
                             Switch(
                                 checked = reducedMotion,
                                 onCheckedChange = onReducedMotionChanged,
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = NeonCyan,
-                                    checkedTrackColor = NeonCyan.copy(alpha = 0.5f)
-                                )
+                                colors =
+                                    SwitchDefaults.colors(
+                                        checkedThumbColor = NeonCyan,
+                                        checkedTrackColor = NeonCyan.copy(alpha = 0.5f)
+                                    )
                             )
                         }
                     }
@@ -182,10 +195,11 @@ fun VisualizerLibraryScreen(
         // ── Category Filter Chips ─────────────────────────────────────────────
         val categories = VisualizerCategories
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(bottom = 10.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(bottom = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             categories.forEach { cat ->
@@ -193,13 +207,15 @@ fun VisualizerLibraryScreen(
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     color = if (isCatSelected) NeonCyan.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.08f),
-                    border = BorderStroke(
-                        1.dp,
-                        if (isCatSelected) NeonCyan else Color.White.copy(alpha = 0.12f)
-                    ),
-                    modifier = Modifier
-                        .minTouchTarget()
-                        .clickable { selectedCategory = cat }
+                    border =
+                        BorderStroke(
+                            1.dp,
+                            if (isCatSelected) NeonCyan else Color.White.copy(alpha = 0.12f)
+                        ),
+                    modifier =
+                        Modifier
+                            .minTouchTarget()
+                            .clickable { selectedCategory = cat }
                 ) {
                     Box(
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
@@ -216,17 +232,19 @@ fun VisualizerLibraryScreen(
             }
         }
 
-        val filteredScenes = AvailableVisualizerScenes.filter {
-            selectedCategory == "All" || it.tags.contains(selectedCategory)
-        }
+        val filteredScenes =
+            AvailableVisualizerScenes.filter {
+                selectedCategory == "All" || it.tags.contains(selectedCategory)
+            }
 
         // ── Adaptive Responsive Scene Grid (Touch Optimized) ────────────────
         val gridMinSize = if (isLandscape) 150.dp else 140.dp
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = gridMinSize),
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = if (isLandscape) 200.dp else 420.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = if (isLandscape) 200.dp else 420.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -243,17 +261,19 @@ fun VisualizerLibraryScreen(
                     shape = RoundedCornerShape(16.dp),
                     color = if (isSelected) Color(0xFF162030) else Color(0xFF11141D),
                     border = BorderStroke(if (isSelected) 1.8.dp else 1.dp, borderGlow),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(108.dp)
-                        .minTouchTarget()
-                        .clickable { onSceneSelected(scene.id) }
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(108.dp)
+                            .minTouchTarget()
+                            .clickable { onSceneSelected(scene.id) }
                 ) {
                     Column(
                         verticalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(12.dp)
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(12.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),

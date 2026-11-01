@@ -14,10 +14,10 @@ import androidx.car.app.model.GridTemplate
 import androidx.car.app.model.ItemList
 import androidx.car.app.model.ListTemplate
 import androidx.car.app.model.Template
+import androidx.lifecycle.coroutineScope
 import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.PlayerState
 import com.deepeye.musicpro.player.controller.PlayerController
-import androidx.lifecycle.coroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -35,7 +35,6 @@ class LibraryRootScreen(
     private val carContext: CarContext,
     private val playerController: PlayerController,
 ) : Screen(carContext) {
-
     init {
         // invalidate() asks the head unit to re-pull the template. Auto requires
         // this explicit call; it will not observe our state on its own.
@@ -74,12 +73,13 @@ class LibraryRootScreen(
      * so touch targets stay compliant without us computing them.
      */
     private fun libraryTemplate(state: PlayerState): GridTemplate {
-        val gridBuilder = ItemList.Builder()
-            .setOnSelectedListener { index ->
-                Log.i(TAG, "grid tile selected index=$index result=success")
-                playerController.playQueueItem(index)
-            }
-            .setNoItemsMessage("Queue is empty.")
+        val gridBuilder =
+            ItemList.Builder()
+                .setOnSelectedListener { index ->
+                    Log.i(TAG, "grid tile selected index=$index result=success")
+                    playerController.playQueueItem(index)
+                }
+                .setNoItemsMessage("Queue is empty.")
 
         state.queue.forEachIndexed { index, item ->
             gridBuilder.addItem(buildQueueTile(item, index))
@@ -126,7 +126,10 @@ class LibraryRootScreen(
             .build()
     }
 
-    private fun buildQueueTile(item: MediaItem, index: Int): GridItem =
+    private fun buildQueueTile(
+        item: MediaItem,
+        index: Int
+    ): GridItem =
         GridItem.Builder()
             .setTitle(CarText.create(item.title))
             .setText(CarText.create(item.artist))
@@ -135,7 +138,4 @@ class LibraryRootScreen(
                 playerController.playQueueItem(index)
             }
             .build()
-
-
-
 }

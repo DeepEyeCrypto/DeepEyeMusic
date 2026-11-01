@@ -20,6 +20,7 @@ data class SectionDiagnostics(
     val hiddenItemsPruned: Int,
 ) {
     enum class CacheSource { LIVE, MEMORY_CACHE, ROOM_CACHE, LOCAL_ONLY }
+
     enum class RefreshState { FRESH, STALE_WHILE_REVALIDATE, OFFLINE }
 
     fun formatCacheAge(): String {

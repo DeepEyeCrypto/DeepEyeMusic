@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
  * account feeds into structured, section-based feeds.
  */
 interface PersonalizationRepository {
-
     /**
      * Observes the active personalized feed state, reacting automatically to account changes,
      * local queue mutations, and listening history updates.
@@ -48,13 +47,18 @@ interface PersonalizationRepository {
     suspend fun updatePreferences(transform: (PersonalizationPreferences) -> PersonalizationPreferences)
 
     /** Hides an item from all sections. Returns true if newly hidden. */
-    suspend fun hideItem(itemId: String, label: String, alsoHideArtist: String? = null): Boolean
+    suspend fun hideItem(
+        itemId: String,
+        label: String,
+        alsoHideArtist: String? = null
+    ): Boolean
 
     /** Reverses a hide decision (for the undo Snackbar). */
     suspend fun undoHideItem(itemId: String)
 
     /** Permanently removes a hidden item or artist entry. */
     suspend fun unhideItem(itemId: String)
+
     suspend fun unhideArtist(artistName: String)
 
     /** Resets all hidden items and artists. */

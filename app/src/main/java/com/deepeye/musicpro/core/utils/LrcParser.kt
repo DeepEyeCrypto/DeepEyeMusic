@@ -24,11 +24,12 @@ object LrcParser {
 
                 var ms = 0L
                 if (msStr != null) {
-                    ms = if (msStr.length == 2) {
-                        msStr.toLongOrNull()?.times(10) ?: 0L
-                    } else {
-                        msStr.toLongOrNull() ?: 0L
-                    }
+                    ms =
+                        if (msStr.length == 2) {
+                            msStr.toLongOrNull()?.times(10) ?: 0L
+                        } else {
+                            msStr.toLongOrNull() ?: 0L
+                        }
                 }
 
                 val totalMs = min * 60000 + sec * 1000 + ms
@@ -51,9 +52,10 @@ object LrcParser {
     }
 
     fun parsePlainLyrics(plainText: String): Lyrics {
-        val lines = plainText.split("\n").map { line ->
-            LyricsLine(0L, line.trim())
-        }
+        val lines =
+            plainText.split("\n").map { line ->
+                LyricsLine(0L, line.trim())
+            }
         return Lyrics(lines = lines, isSynced = false)
     }
 }

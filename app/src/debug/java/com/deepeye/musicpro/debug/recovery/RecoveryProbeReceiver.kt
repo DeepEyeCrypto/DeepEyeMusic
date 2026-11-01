@@ -25,7 +25,6 @@ private const val TAG = "RecoveryProbe"
  */
 @AndroidEntryPoint
 class RecoveryProbeReceiver : BroadcastReceiver() {
-
     @Inject
     lateinit var playerController: PlayerController
 
@@ -39,7 +38,10 @@ class RecoveryProbeReceiver : BroadcastReceiver() {
         const val ACTION_TRIGGER_BUDGET_EXHAUSTION = "com.deepeye.musicpro.debug.action.TRIGGER_BUDGET_EXHAUSTION"
     }
 
-    override fun onReceive(context: Context?, intent: Intent?) {
+    override fun onReceive(
+        context: Context?,
+        intent: Intent?
+    ) {
         if (context == null || intent == null) return
 
         val action = intent.action ?: return

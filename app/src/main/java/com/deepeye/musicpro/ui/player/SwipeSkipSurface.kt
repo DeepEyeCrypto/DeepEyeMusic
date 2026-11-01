@@ -8,8 +8,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import com.deepeye.musicpro.ui.modifiers.consumeHorizontalDrags
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -21,8 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import com.deepeye.musicpro.ui.modifiers.consumeHorizontalDrags
 
 @Composable
 fun SwipeSkipSurface(
@@ -37,28 +35,28 @@ fun SwipeSkipSurface(
 
     Box(
         modifier =
-        modifier
-            .fillMaxSize()
-            .consumeHorizontalDrags(
-                enabled = true,
-                onHorizontalDrag = { _, amount ->
-                    dragX += amount
-                    isDragging = true
-                },
-                onDragEnd = {
-                    isDragging = false
-                    when {
-                        dragX < -180f -> onSwipeLeft() // Swiped left -> Next
-                        dragX > 180f -> onSwipeRight() // Swiped right -> Previous
+            modifier
+                .fillMaxSize()
+                .consumeHorizontalDrags(
+                    enabled = true,
+                    onHorizontalDrag = { _, amount ->
+                        dragX += amount
+                        isDragging = true
+                    },
+                    onDragEnd = {
+                        isDragging = false
+                        when {
+                            dragX < -180f -> onSwipeLeft() // Swiped left -> Next
+                            dragX > 180f -> onSwipeRight() // Swiped right -> Previous
+                        }
+                        dragX = 0f
+                    },
+                    onDragCancel = {
+                        isDragging = false
+                        dragX = 0f
                     }
-                    dragX = 0f
-                },
-                onDragCancel = {
-                    isDragging = false
-                    dragX = 0f
-                }
-            )
-            .clickable { onTap() },
+                )
+                .clickable { onTap() },
     ) {
         content()
 
@@ -68,16 +66,16 @@ fun SwipeSkipSurface(
             enter = fadeIn(),
             exit = fadeOut(),
             modifier =
-            Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 24.dp),
+                Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 24.dp),
         ) {
             Box(
                 modifier =
-                Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(Color.Black.copy(alpha = 0.5f)),
+                    Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color.Black.copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(Icons.Default.FastForward, contentDescription = "Next", tint = Color.White)
@@ -89,16 +87,16 @@ fun SwipeSkipSurface(
             enter = fadeIn(),
             exit = fadeOut(),
             modifier =
-            Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 24.dp),
+                Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 24.dp),
         ) {
             Box(
                 modifier =
-                Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(Color.Black.copy(alpha = 0.5f)),
+                    Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color.Black.copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(Icons.Default.FastRewind, contentDescription = "Previous", tint = Color.White)

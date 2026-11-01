@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.asStateFlow
  * Cognitive Memory Mesh - Manages episodic, semantic, and decision memory states.
  */
 class CognitiveMemoryMesh private constructor() {
-    
     data class MemoryState(
         val status: String = "GENESIS_FILES_PENDING",
         val mode: String = "SECURE_PREMIUM_REWRITE",
@@ -22,7 +21,7 @@ class CognitiveMemoryMesh private constructor() {
     fun updatePhase(phase: Int) {
         _state.value = _state.value.copy(currentPhase = phase)
     }
-    
+
     fun setStatus(newStatus: String) {
         _state.value = _state.value.copy(status = newStatus)
     }

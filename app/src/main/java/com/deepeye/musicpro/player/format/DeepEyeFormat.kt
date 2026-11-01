@@ -130,12 +130,13 @@ data class DeepEyeFormat(
             if (isAuto) return "Auto (Highest Quality)"
             val bitrateStr = if (bitrate > 0) "${bitrate / 1000} kbps" else ""
             val sampleRateStr = if (audioSampleRate > 0) "${audioSampleRate / 1000}.${(audioSampleRate % 1000) / 100} kHz" else ""
-            val channelStr = when (audioChannels) {
-                1 -> "Mono"
-                2 -> "Stereo"
-                6 -> "5.1 Surround"
-                else -> if (audioChannels > 0) "${audioChannels}ch" else ""
-            }
+            val channelStr =
+                when (audioChannels) {
+                    1 -> "Mono"
+                    2 -> "Stereo"
+                    6 -> "5.1 Surround"
+                    else -> if (audioChannels > 0) "${audioChannels}ch" else ""
+                }
             return listOf(codecName, bitrateStr, sampleRateStr, channelStr)
                 .filter { it.isNotEmpty() }
                 .joinToString(" • ")

@@ -58,7 +58,10 @@ fun HqPlaybackSheet(
     LaunchedEffect(playerState.availableVideoFormats.size, playerState.availableAudioFormats.size) {
         val vCount = playerState.availableVideoFormats.count { !it.isAuto }
         val aCount = playerState.availableAudioFormats.count { !it.isAuto }
-        android.util.Log.d("DeepEyeHQ", "event=sheet_render videoRows=$vCount audioRows=$aCount emptyReason=${if (vCount == 0 && aCount == 0) "No formats loaded" else null}")
+        android.util.Log.d(
+            "DeepEyeHQ",
+            "event=sheet_render videoRows=$vCount audioRows=$aCount emptyReason=${if (vCount == 0 && aCount == 0) "No formats loaded" else null}"
+        )
     }
 
     ModalBottomSheet(
@@ -71,10 +74,11 @@ fun HqPlaybackSheet(
         }
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 8.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -83,10 +87,11 @@ fun HqPlaybackSheet(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(accentColor.copy(alpha = 0.15f)),
+                        modifier =
+                            Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(accentColor.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -123,9 +128,10 @@ fun HqPlaybackSheet(
                     border = BorderStroke(1.dp, accentColor.copy(alpha = 0.3f))
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (playerState.isRecovering) {
@@ -157,27 +163,31 @@ fun HqPlaybackSheet(
 
             Crossfade(targetState = selectedTab, label = "HqSheetContent") { tab ->
                 when (tab) {
-                    HqSheetTab.VIDEO -> VideoQualityTab(
-                        playerState = playerState,
-                        accentColor = accentColor,
-                        onSelectQualityPreset = onSelectQualityPreset,
-                        onSelectVideoFormat = onSelectVideoFormat
-                    )
-                    HqSheetTab.AUDIO -> AudioFormatTab(
-                        playerState = playerState,
-                        accentColor = accentColor,
-                        onSelectAudioFormat = onSelectAudioFormat
-                    )
-                    HqSheetTab.BUFFER -> BufferProfileTab(
-                        playerState = playerState,
-                        diagnostics = diagnostics,
-                        accentColor = accentColor,
-                        onSelectBufferProfile = onSelectBufferProfile
-                    )
-                    HqSheetTab.STATS -> StatsForNerdsTab(
-                        diagnostics = diagnostics,
-                        accentColor = accentColor
-                    )
+                    HqSheetTab.VIDEO ->
+                        VideoQualityTab(
+                            playerState = playerState,
+                            accentColor = accentColor,
+                            onSelectQualityPreset = onSelectQualityPreset,
+                            onSelectVideoFormat = onSelectVideoFormat
+                        )
+                    HqSheetTab.AUDIO ->
+                        AudioFormatTab(
+                            playerState = playerState,
+                            accentColor = accentColor,
+                            onSelectAudioFormat = onSelectAudioFormat
+                        )
+                    HqSheetTab.BUFFER ->
+                        BufferProfileTab(
+                            playerState = playerState,
+                            diagnostics = diagnostics,
+                            accentColor = accentColor,
+                            onSelectBufferProfile = onSelectBufferProfile
+                        )
+                    HqSheetTab.STATS ->
+                        StatsForNerdsTab(
+                            diagnostics = diagnostics,
+                            accentColor = accentColor
+                        )
                 }
             }
 
@@ -193,22 +203,24 @@ private fun HqTabBar(
     accentColor: Color
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .padding(4.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White.copy(alpha = 0.05f))
+                .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         HqSheetTab.values().forEach { tab ->
             val isSelected = tab == selectedTab
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (isSelected) accentColor else Color.Transparent)
-                    .clickable { onTabSelected(tab) }
-                    .padding(vertical = 8.dp),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(if (isSelected) accentColor else Color.Transparent)
+                        .clickable { onTabSelected(tab) }
+                        .padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Row(
@@ -223,10 +235,11 @@ private fun HqTabBar(
                     )
                     Text(
                         text = tab.title,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            fontSize = 11.sp
-                        ),
+                        style =
+                            MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 11.sp
+                            ),
                         color = if (isSelected) Color.White else Color.White.copy(alpha = 0.6f)
                     )
                 }
@@ -258,18 +271,25 @@ private fun VideoQualityTab(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf(QualityPreset.AUTO, QualityPreset.HIGH_QUALITY, QualityPreset.BALANCED, QualityPreset.DATA_SAVER).forEach { preset ->
+                listOf(
+                    QualityPreset.AUTO,
+                    QualityPreset.HIGH_QUALITY,
+                    QualityPreset.BALANCED,
+                    QualityPreset.DATA_SAVER
+                ).forEach { preset ->
                     val isSelected = playerState.qualityPreset == preset
                     Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { onSelectQualityPreset(preset) },
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .clickable { onSelectQualityPreset(preset) },
                         shape = RoundedCornerShape(10.dp),
                         color = if (isSelected) accentColor.copy(alpha = 0.2f) else Color.White.copy(alpha = 0.05f),
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp,
-                            if (isSelected) accentColor else Color.White.copy(alpha = 0.1f)
-                        )
+                        border =
+                            androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (isSelected) accentColor else Color.White.copy(alpha = 0.1f)
+                            )
                     ) {
                         Column(
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 8.dp),
@@ -277,10 +297,11 @@ private fun VideoQualityTab(
                         ) {
                             Text(
                                 text = preset.name.replace("_", " "),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 10.sp
-                                ),
+                                style =
+                                    MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 10.sp
+                                    ),
                                 color = if (isSelected) accentColor else Color.White,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -318,8 +339,9 @@ private fun VideoQualityTab(
             }
         } else {
             items(playerState.availableVideoFormats) { format ->
-                val isSelected = (format.isAuto && playerState.selectedVideoFormat == null) ||
-                    (playerState.selectedVideoFormat?.id == format.id)
+                val isSelected =
+                    (format.isAuto && playerState.selectedVideoFormat == null) ||
+                        (playerState.selectedVideoFormat?.id == format.id)
 
                 FormatSelectionCard(
                     format = format,
@@ -331,6 +353,7 @@ private fun VideoQualityTab(
         }
     }
 }
+
 @Composable
 private fun AudioFormatTab(
     playerState: PlayerState,
@@ -366,8 +389,9 @@ private fun AudioFormatTab(
             }
         } else {
             items(playerState.availableAudioFormats) { format ->
-                val isSelected = (format.isAuto && playerState.selectedAudioFormat == null) ||
-                    (playerState.selectedAudioFormat?.id == format.id)
+                val isSelected =
+                    (format.isAuto && playerState.selectedAudioFormat == null) ||
+                        (playerState.selectedAudioFormat?.id == format.id)
 
                 FormatSelectionCard(
                     format = format,
@@ -406,16 +430,27 @@ private fun BufferProfileTab(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Speed, contentDescription = null, tint = Color(0xFF00E676), modifier = Modifier.size(16.dp))
+                            Icon(
+                                Icons.Default.Speed,
+                                contentDescription = null,
+                                tint = Color(0xFF00E676),
+                                modifier = Modifier.size(16.dp)
+                            )
                             Spacer(Modifier.width(8.dp))
-                            Text("Real-Time Buffer Health", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(
+                                "Real-Time Buffer Health",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
                         }
                         Text(
                             text = diagnostics.formattedBufferHealth,
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace
-                            ),
+                            style =
+                                MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = FontFamily.Monospace
+                                ),
                             color = Color(0xFF00E676)
                         )
                     }
@@ -424,10 +459,11 @@ private fun BufferProfileTab(
 
                     LinearProgressIndicator(
                         progress = { (diagnostics.bufferedPercentage / 100f).coerceIn(0f, 1f) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
                         color = Color(0xFF00E676),
                         trackColor = Color.White.copy(alpha = 0.1f),
                     )
@@ -438,8 +474,16 @@ private fun BufferProfileTab(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Current: ${(diagnostics.bufferedDurationMs / 1000.0).toInt()}s buffered", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.5f))
-                        Text("Target: ${playerState.bufferProfile.maxBufferMs / 1000}s cap", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.5f))
+                        Text(
+                            "Current: ${(diagnostics.bufferedDurationMs / 1000.0).toInt()}s buffered",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.5f)
+                        )
+                        Text(
+                            "Target: ${playerState.bufferProfile.maxBufferMs / 1000}s cap",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.5f)
+                        )
                     }
                 }
             }
@@ -458,15 +502,17 @@ private fun BufferProfileTab(
         items(BufferProfile.values()) { profile ->
             val isSelected = playerState.bufferProfile == profile
             Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSelectBufferProfile(profile) },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelectBufferProfile(profile) },
                 shape = RoundedCornerShape(12.dp),
                 color = if (isSelected) accentColor.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.03f),
-                border = androidx.compose.foundation.BorderStroke(
-                    1.dp,
-                    if (isSelected) accentColor.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.06f)
-                )
+                border =
+                    androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        if (isSelected) accentColor.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.06f)
+                    )
             ) {
                 Row(
                     modifier = Modifier.padding(14.dp),
@@ -499,6 +545,7 @@ private fun BufferProfileTab(
         }
     }
 }
+
 @Composable
 private fun StatsForNerdsTab(
     diagnostics: PlaybackDiagnostics,
@@ -526,26 +573,29 @@ private fun StatsForNerdsTab(
                     ) {
                         Text(
                             text = "SMARTTUBE STATS HUD",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.2.sp,
-                                fontFamily = FontFamily.Monospace
-                            ),
+                            style =
+                                MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.2.sp,
+                                    fontFamily = FontFamily.Monospace
+                                ),
                             color = accentColor
                         )
                         Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(Color(0xFF00E676).copy(alpha = 0.2f))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                            modifier =
+                                Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Color(0xFF00E676).copy(alpha = 0.2f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = "LIVE TELEMETRY",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp,
-                                    fontFamily = FontFamily.Monospace
-                                ),
+                                style =
+                                    MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp,
+                                        fontFamily = FontFamily.Monospace
+                                    ),
                                 color = Color(0xFF00E676)
                             )
                         }
@@ -605,10 +655,11 @@ private fun StatHudRow(
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.SemiBold,
-                fontFamily = FontFamily.Monospace
-            ),
+            style =
+                MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.Monospace
+                ),
             color = if (highlight) Color(0xFF00E676) else Color.White
         )
     }
@@ -621,22 +672,25 @@ private fun FormatSelectionCard(
     accentColor: Color,
     onClick: () -> Unit
 ) {
-    val title = if (format.type == com.deepeye.musicpro.player.format.FormatType.VIDEO) {
-        format.formattedVideoResolution
-    } else {
-        format.formattedAudioSpec
-    }
+    val title =
+        if (format.type == com.deepeye.musicpro.player.format.FormatType.VIDEO) {
+            format.formattedVideoResolution
+        } else {
+            format.formattedAudioSpec
+        }
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         color = if (isSelected) accentColor.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.03f),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (isSelected) accentColor.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.06f)
-        )
+        border =
+            androidx.compose.foundation.BorderStroke(
+                1.dp,
+                if (isSelected) accentColor.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.06f)
+            )
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -653,18 +707,20 @@ private fun FormatSelectionCard(
                     if (format.isHardwareAccelerated && !format.isAuto) {
                         Spacer(Modifier.width(8.dp))
                         Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(Color(0xFF00E676).copy(alpha = 0.15f))
-                                .padding(horizontal = 5.dp, vertical = 2.dp)
+                            modifier =
+                                Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Color(0xFF00E676).copy(alpha = 0.15f))
+                                    .padding(horizontal = 5.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = "HW ACCEL",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp,
-                                    fontFamily = FontFamily.Monospace
-                                ),
+                                style =
+                                    MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp,
+                                        fontFamily = FontFamily.Monospace
+                                    ),
                                 color = Color(0xFF00E676)
                             )
                         }
@@ -672,18 +728,20 @@ private fun FormatSelectionCard(
                     if (format.isHdr) {
                         Spacer(Modifier.width(6.dp))
                         Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(Color(0xFFFFB300).copy(alpha = 0.15f))
-                                .padding(horizontal = 5.dp, vertical = 2.dp)
+                            modifier =
+                                Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Color(0xFFFFB300).copy(alpha = 0.15f))
+                                    .padding(horizontal = 5.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = "HDR",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp,
-                                    fontFamily = FontFamily.Monospace
-                                ),
+                                style =
+                                    MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp,
+                                        fontFamily = FontFamily.Monospace
+                                    ),
                                 color = Color(0xFFFFB300)
                             )
                         }
@@ -692,9 +750,10 @@ private fun FormatSelectionCard(
                 if (!format.isAuto) {
                     Spacer(Modifier.height(3.dp))
                     Text(
-                        text = listOf(format.codecName, format.container, format.formattedBitrate)
-                            .filter { it.isNotEmpty() }
-                            .joinToString(" • "),
+                        text =
+                            listOf(format.codecName, format.container, format.formattedBitrate)
+                                .filter { it.isNotEmpty() }
+                                .joinToString(" • "),
                         style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
                         color = Color.White.copy(alpha = 0.5f)
                     )

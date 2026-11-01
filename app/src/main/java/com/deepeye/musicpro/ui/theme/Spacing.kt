@@ -80,8 +80,10 @@ object TouchTargets {
      * Clamped to at least [MIN] *before* dividing, so a future zoom cannot
      * silently drive any target below the platform floor.
      */
-    fun compensated(unscaledDp: Float, zoom: Float): Dp =
-        (unscaledDp / zoom).dp
+    fun compensated(
+        unscaledDp: Float,
+        zoom: Float
+    ): Dp = (unscaledDp / zoom).dp
 
     /**
      * The zoomed factor currently in effect.

@@ -20,33 +20,33 @@ import javax.inject.Singleton
  */
 @Singleton
 class NetworkConditionChecker
-@Inject
-constructor(
-    @ApplicationContext private val context: Context,
-) {
-    companion object {
-        private const val TAG = "NetworkConditionChecker"
-    }
-
-    private val connectivityManager: ConnectivityManager?
-        get() = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-
-    /**
-     * True when the active network is metered (cellular / metered Wi-Fi) and pre-fetching
-     * should be treated as consuming the user's mobile data.
-     */
-    fun isNetworkMetered(): Boolean {
-        val cm = connectivityManager
-        if (cm == null) {
-            Log.w(TAG, "event=metered_check_failed reason=connectivity_manager_unavailable result=metered")
-            // Fail closed: treat as metered so we never silently burn mobile data.
-            return true
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+    ) {
+        companion object {
+            private const val TAG = "NetworkConditionChecker"
         }
-        return try {
-            cm.isActiveNetworkMetered
-        } catch (e: Exception) {
-            Log.e(TAG, "event=metered_check_failed reason=\"${e.message}\" result=metered", e)
-            true
+
+        private val connectivityManager: ConnectivityManager?
+            get() = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+
+        /**
+         * True when the active network is metered (cellular / metered Wi-Fi) and pre-fetching
+         * should be treated as consuming the user's mobile data.
+         */
+        fun isNetworkMetered(): Boolean {
+            val cm = connectivityManager
+            if (cm == null) {
+                Log.w(TAG, "event=metered_check_failed reason=connectivity_manager_unavailable result=metered")
+                // Fail closed: treat as metered so we never silently burn mobile data.
+                return true
+            }
+            return try {
+                cm.isActiveNetworkMetered
+            } catch (e: Exception) {
+                Log.e(TAG, "event=metered_check_failed reason=\"${e.message}\" result=metered", e)
+                true
+            }
         }
     }
-}

@@ -22,7 +22,10 @@ package com.deepeye.musicpro.ui.util
  * @param identity maps an item to its stable identity (e.g. `MediaItem::id`)
  * @return a key per item, positionally aligned with [items]
  */
-fun <T> stableLazyKeys(items: List<T>, identity: (T) -> String): List<String> {
+fun <T> stableLazyKeys(
+    items: List<T>,
+    identity: (T) -> String
+): List<String> {
     val totalCounts = HashMap<String, Int>(items.size)
     for (item in items) {
         val id = identity(item)

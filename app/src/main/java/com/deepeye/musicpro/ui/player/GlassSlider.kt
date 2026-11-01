@@ -6,7 +6,6 @@ package com.deepeye.musicpro.ui.player
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
@@ -21,8 +20,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.deepeye.musicpro.ui.motion.rememberPremiumHaptics
 import com.deepeye.musicpro.ui.modifiers.consumeHorizontalDrags
+import com.deepeye.musicpro.ui.motion.rememberPremiumHaptics
 import kotlin.math.abs
 
 /**
@@ -43,8 +42,9 @@ fun GlassSlider(
     accentColor: Color = Color.White,
     testTag: String = "glass_seek_slider",
 ) {
-    val normalizedValue = ((value - valueRange.start) / (valueRange.endInclusive - valueRange.start))
-        .coerceIn(0f, 1f)
+    val normalizedValue =
+        ((value - valueRange.start) / (valueRange.endInclusive - valueRange.start))
+            .coerceIn(0f, 1f)
 
     val animatedProgress by animateFloatAsState(
         targetValue = normalizedValue,
@@ -75,53 +75,56 @@ fun GlassSlider(
         label = "glowAlphaAnimated"
     )
 
-    val trackGradient = remember(accentColor) {
-        Brush.horizontalGradient(
-            colors = listOf(
-                accentColor.copy(alpha = 0.6f),
-                accentColor,
-                Color.White.copy(alpha = 0.95f),
+    val trackGradient =
+        remember(accentColor) {
+            Brush.horizontalGradient(
+                colors =
+                    listOf(
+                        accentColor.copy(alpha = 0.6f),
+                        accentColor,
+                        Color.White.copy(alpha = 0.95f),
+                    )
             )
-        )
-    }
+        }
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(32.dp)
-            .testTag(testTag)
-            .onSizeChanged { sliderWidthPx = it.width.toFloat().coerceAtLeast(1f) }
-            .pointerInput(valueRange) {
-                detectTapGestures { offset ->
-                    haptics.heavyClick()
-                    val fraction = (offset.x / size.width).coerceIn(0f, 1f)
-                    val newValue = valueRange.start + fraction * (valueRange.endInclusive - valueRange.start)
-                    onValueChange(newValue)
-                }
-            }
-            .consumeHorizontalDrags(
-                enabled = true,
-                onDragStart = { 
-                    isDragging = true
-                    accumulatedDrag = 0f
-                    haptics.click()
-                },
-                onDragEnd = { 
-                    isDragging = false
-                    haptics.heavyClick()
-                },
-                onDragCancel = { isDragging = false },
-                onHorizontalDrag = { change, dragAmount ->
-                    accumulatedDrag += abs(dragAmount)
-                    if (accumulatedDrag > 12f) {
-                        haptics.slideTick()
-                        accumulatedDrag = 0f
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(32.dp)
+                .testTag(testTag)
+                .onSizeChanged { sliderWidthPx = it.width.toFloat().coerceAtLeast(1f) }
+                .pointerInput(valueRange) {
+                    detectTapGestures { offset ->
+                        haptics.heavyClick()
+                        val fraction = (offset.x / size.width).coerceIn(0f, 1f)
+                        val newValue = valueRange.start + fraction * (valueRange.endInclusive - valueRange.start)
+                        onValueChange(newValue)
                     }
-                    val fraction = (change.position.x / sliderWidthPx).coerceIn(0f, 1f)
-                    val newValue = valueRange.start + fraction * (valueRange.endInclusive - valueRange.start)
-                    onValueChange(newValue)
                 }
-            ),
+                .consumeHorizontalDrags(
+                    enabled = true,
+                    onDragStart = {
+                        isDragging = true
+                        accumulatedDrag = 0f
+                        haptics.click()
+                    },
+                    onDragEnd = {
+                        isDragging = false
+                        haptics.heavyClick()
+                    },
+                    onDragCancel = { isDragging = false },
+                    onHorizontalDrag = { change, dragAmount ->
+                        accumulatedDrag += abs(dragAmount)
+                        if (accumulatedDrag > 12f) {
+                            haptics.slideTick()
+                            accumulatedDrag = 0f
+                        }
+                        val fraction = (change.position.x / sliderWidthPx).coerceIn(0f, 1f)
+                        val newValue = valueRange.start + fraction * (valueRange.endInclusive - valueRange.start)
+                        onValueChange(newValue)
+                    }
+                ),
         contentAlignment = Alignment.CenterStart,
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {

@@ -40,41 +40,48 @@ class PipEngine(
     private var pipActionsReceiver: BroadcastReceiver? = null
 
     init {
-        playerController.player.addListener(object : Player.Listener {
-            override fun onVideoSizeChanged(videoSize: VideoSize) {
-                if (videoSize.width > 0 && videoSize.height > 0) {
-                    currentVideoSize = videoSize
-                    updatePipParams()
+        playerController.player.addListener(
+            object : Player.Listener {
+                override fun onVideoSizeChanged(videoSize: VideoSize) {
+                    if (videoSize.width > 0 && videoSize.height > 0) {
+                        currentVideoSize = videoSize
+                        updatePipParams()
+                    }
                 }
-            }
 
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    updatePipParams()
+                override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        updatePipParams()
+                    }
                 }
             }
-        })
+        )
 
         // Register broadcast receiver for PiP custom actions
         registerPipActions()
     }
 
     private fun registerPipActions() {
-        pipActionsReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                when (intent?.action) {
-                    ACTION_PLAY_PAUSE -> playerController.togglePlayPause()
-                    ACTION_NEXT -> playerController.next()
-                    ACTION_PREVIOUS -> playerController.previous()
+        pipActionsReceiver =
+            object : BroadcastReceiver() {
+                override fun onReceive(
+                    context: Context?,
+                    intent: Intent?
+                ) {
+                    when (intent?.action) {
+                        ACTION_PLAY_PAUSE -> playerController.togglePlayPause()
+                        ACTION_NEXT -> playerController.next()
+                        ACTION_PREVIOUS -> playerController.previous()
+                    }
                 }
             }
-        }
 
-        val filter = IntentFilter().apply {
-            addAction(ACTION_PLAY_PAUSE)
-            addAction(ACTION_NEXT)
-            addAction(ACTION_PREVIOUS)
-        }
+        val filter =
+            IntentFilter().apply {
+                addAction(ACTION_PLAY_PAUSE)
+                addAction(ACTION_NEXT)
+                addAction(ACTION_PREVIOUS)
+            }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             activity.registerReceiver(pipActionsReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
@@ -102,41 +109,47 @@ class PipEngine(
 
         val isPlaying = playerController.playerState.value.isPlaying
 
-        val prevAction = RemoteAction(
-            Icon.createWithResource(activity, android.R.drawable.ic_media_previous),
-            "Previous",
-            "Previous track",
-            PendingIntent.getBroadcast(
-                activity, 0,
-                Intent(ACTION_PREVIOUS).setPackage(activity.packageName),
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        val prevAction =
+            RemoteAction(
+                Icon.createWithResource(activity, android.R.drawable.ic_media_previous),
+                "Previous",
+                "Previous track",
+                PendingIntent.getBroadcast(
+                    activity,
+                    0,
+                    Intent(ACTION_PREVIOUS).setPackage(activity.packageName),
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
             )
-        )
 
-        val playPauseAction = RemoteAction(
-            Icon.createWithResource(
-                activity,
-                if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
-            ),
-            if (isPlaying) "Pause" else "Play",
-            if (isPlaying) "Pause playback" else "Resume playback",
-            PendingIntent.getBroadcast(
-                activity, 1,
-                Intent(ACTION_PLAY_PAUSE).setPackage(activity.packageName),
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        val playPauseAction =
+            RemoteAction(
+                Icon.createWithResource(
+                    activity,
+                    if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+                ),
+                if (isPlaying) "Pause" else "Play",
+                if (isPlaying) "Pause playback" else "Resume playback",
+                PendingIntent.getBroadcast(
+                    activity,
+                    1,
+                    Intent(ACTION_PLAY_PAUSE).setPackage(activity.packageName),
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
             )
-        )
 
-        val nextAction = RemoteAction(
-            Icon.createWithResource(activity, android.R.drawable.ic_media_next),
-            "Next",
-            "Next track",
-            PendingIntent.getBroadcast(
-                activity, 2,
-                Intent(ACTION_NEXT).setPackage(activity.packageName),
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        val nextAction =
+            RemoteAction(
+                Icon.createWithResource(activity, android.R.drawable.ic_media_next),
+                "Next",
+                "Next track",
+                PendingIntent.getBroadcast(
+                    activity,
+                    2,
+                    Intent(ACTION_NEXT).setPackage(activity.packageName),
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
             )
-        )
 
         return listOf(prevAction, playPauseAction, nextAction)
     }
@@ -147,16 +160,17 @@ class PipEngine(
         val state = playerController.playerState.value
         if (!state.isVideo) return
 
-        val params = PictureInPictureParams.Builder()
-            .setAspectRatio(getAspectRatio())
-            .setActions(buildRemoteActions())
-            .apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    setAutoEnterEnabled(true)
-                    setSeamlessResizeEnabled(true)
+        val params =
+            PictureInPictureParams.Builder()
+                .setAspectRatio(getAspectRatio())
+                .setActions(buildRemoteActions())
+                .apply {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        setAutoEnterEnabled(true)
+                        setSeamlessResizeEnabled(true)
+                    }
                 }
-            }
-            .build()
+                .build()
 
         try {
             activity.enterPictureInPictureMode(params)
@@ -168,9 +182,10 @@ class PipEngine(
     fun updatePipParams(sourceRect: Rect? = null) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
 
-        val builder = PictureInPictureParams.Builder()
-            .setAspectRatio(getAspectRatio())
-            .setActions(buildRemoteActions())
+        val builder =
+            PictureInPictureParams.Builder()
+                .setAspectRatio(getAspectRatio())
+                .setActions(buildRemoteActions())
 
         if (sourceRect != null) {
             builder.setSourceRectHint(sourceRect)
@@ -199,7 +214,10 @@ class PipEngine(
         }
     }
 
-    fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration?) {
+    fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration?
+    ) {
         if (!isInPictureInPictureMode) {
             playerController.setAppInForeground(true)
         }
@@ -208,6 +226,7 @@ class PipEngine(
     fun destroy() {
         try {
             pipActionsReceiver?.let { activity.unregisterReceiver(it) }
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+        }
     }
 }

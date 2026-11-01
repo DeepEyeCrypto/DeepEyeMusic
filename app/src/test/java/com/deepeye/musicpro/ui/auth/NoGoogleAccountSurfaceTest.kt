@@ -19,7 +19,6 @@ import java.io.File
  *   it is documentation of removed features, not an account entry point.
  */
 class NoGoogleAccountSurfaceTest {
-
     private val routeNames: Set<String> =
         Routes::class.nestedClasses.mapNotNull { it.simpleName }.toSet()
 
@@ -42,17 +41,19 @@ class NoGoogleAccountSurfaceTest {
 
     @Test
     fun `no Google account UI strings in live Compose screens`() {
-        val badStrings = listOf(
-            "Sign in with Google",
-            "Continue with Google",
-            "Sign up with Google",
-            "Add Google account",
-            "Sign in to your Google account"
-        )
-        val offenders = badStrings.flatMap { needle ->
-            liveScreenKtFiles().filter { it.readText().contains(needle) }
-                .map { "${it.name}:$needle" }
-        }
+        val badStrings =
+            listOf(
+                "Sign in with Google",
+                "Continue with Google",
+                "Sign up with Google",
+                "Add Google account",
+                "Sign in to your Google account"
+            )
+        val offenders =
+            badStrings.flatMap { needle ->
+                liveScreenKtFiles().filter { it.readText().contains(needle) }
+                    .map { "${it.name}:$needle" }
+            }
         assertTrue(
             "Live screens contain Google-account UI strings: $offenders",
             offenders.isEmpty()
@@ -61,21 +62,23 @@ class NoGoogleAccountSurfaceTest {
 
     @Test
     fun `no Firebase login surface in live Compose screens`() {
-        val offenders = liveScreenKtFiles().filter {
-            val text = it.readText()
-            text.contains("FirebaseAuth") ||
-                text.contains("signInWithGoogle") ||
-                text.contains("signUpWithEmail") ||
-                text.contains("signInWithEmail")
-        }.map { it.name }
+        val offenders =
+            liveScreenKtFiles().filter {
+                val text = it.readText()
+                text.contains("FirebaseAuth") ||
+                    text.contains("signInWithGoogle") ||
+                    text.contains("signUpWithEmail") ||
+                    text.contains("signInWithEmail")
+            }.map { it.name }
         assertTrue("Live screens contain a Firebase login surface: $offenders", offenders.isEmpty())
     }
 
     /** Live Compose screen sources (the account/login UI lives here), not historical changelog docs. */
     private fun liveScreenKtFiles(): List<File> {
-        val root = File("src/main/java/com/deepeye/musicpro/ui").takeIf { it.exists() }
-            ?: File("../src/main/java/com/deepeye/musicpro/ui")
-            ?: File("app/src/main/java/com/deepeye/musicpro/ui")
+        val root =
+            File("src/main/java/com/deepeye/musicpro/ui").takeIf { it.exists() }
+                ?: File("../src/main/java/com/deepeye/musicpro/ui")
+                ?: File("app/src/main/java/com/deepeye/musicpro/ui")
         return root.walkTopDown().filter { it.extension == "kt" }.toList()
     }
 }

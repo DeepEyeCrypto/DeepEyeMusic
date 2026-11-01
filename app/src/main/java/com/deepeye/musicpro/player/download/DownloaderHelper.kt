@@ -1,10 +1,10 @@
 package com.deepeye.musicpro.player.download
 
+import kotlinx.coroutines.isActive
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.OutputStream
 import java.net.SocketTimeoutException
-import kotlinx.coroutines.isActive
 import kotlin.coroutines.coroutineContext
 
 object DownloaderHelper {
@@ -21,21 +21,25 @@ object DownloaderHelper {
 
         while (retries < maxRetries && coroutineContext.isActive) {
             try {
-                val requestBuilder = Request.Builder()
-                    .url(url)
-                    .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
-                
+                val requestBuilder =
+                    Request.Builder()
+                        .url(url)
+                        .addHeader(
+                            "User-Agent",
+                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+                        )
+
                 if (currentBytes > 0) {
                     requestBuilder.addHeader("Range", "bytes=$currentBytes-")
                 }
 
                 val request = requestBuilder.build()
-                
+
                 client.newCall(request).execute().use { response ->
                     if (!response.isSuccessful && response.code != 206) {
                         throw Exception("HTTP ${response.code}: ${response.message}")
                     }
-                    
+
                     val body = response.body ?: throw Exception("Empty response body")
                     val contentLength = body.contentLength()
                     val totalContentLength = if (contentLength > 0) currentBytes + contentLength else -1L
@@ -43,7 +47,7 @@ object DownloaderHelper {
                     val buffer = ByteArray(8 * 1024)
                     var bytesRead: Int
                     var lastEmitTime = System.currentTimeMillis()
-                    
+
                     while (coroutineContext.isActive) {
                         bytesRead = inputStream.read(buffer)
                         if (bytesRead == -1) break
@@ -52,11 +56,12 @@ object DownloaderHelper {
 
                         val now = System.currentTimeMillis()
                         if (now - lastEmitTime > 80) {
-                            val progress = if (totalContentLength > 0) {
-                                (currentBytes.toFloat() / totalContentLength.toFloat()).coerceIn(0f, 1f)
-                            } else {
-                                0f
-                            }
+                            val progress =
+                                if (totalContentLength > 0) {
+                                    (currentBytes.toFloat() / totalContentLength.toFloat()).coerceIn(0f, 1f)
+                                } else {
+                                    0f
+                                }
                             onProgress?.invoke(currentBytes, totalContentLength, progress)
                             lastEmitTime = now
                         }
@@ -66,7 +71,12 @@ object DownloaderHelper {
                 break
             } catch (e: Exception) {
                 if (e is SocketTimeoutException || e.message?.contains("timeout") == true || e.cause is SocketTimeoutException) {
-                    android.util.Log.e("DownloaderHelper", "Socket timeout! Retrying with Range: bytes=$currentBytes- (Attempt ${retries + 1})", e); retries++
+                    android.util.Log.e(
+                        "DownloaderHelper",
+                        "Socket timeout! Retrying with Range: bytes=$currentBytes- (Attempt ${retries + 1})",
+                        e
+                    )
+                    retries++
                     if (retries >= maxRetries) {
                         throw Exception("Max retries reached due to timeouts", e)
                     }

@@ -12,7 +12,11 @@ import android.util.Log
  * VisualizerExportService — Foreground service for surface recording visualizer frames to MP4.
  */
 class VisualizerExportService : Service() {
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int
+    ): Int {
         Log.d("VisualizerExport", "Export service started")
         return START_STICKY
     }

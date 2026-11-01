@@ -24,103 +24,112 @@ import javax.inject.Singleton
  */
 @Singleton
 class AudioVisualizerManager
-@Inject
-constructor() {
-    private var visualizer: Visualizer? = null
-    private var audioSessionId: Int = 0
-    private val fftSize = 128
-    // Pre-allocated ByteArray reused across all FFT captures — zero allocation in callback
-    private val preAllocatedMagnitude = ByteArray(fftSize)
-    // Nier-Engine FFT Decay/Smoothing Buffer
-    private val smoothedMagnitude = FloatArray(fftSize)
-    
-    // SharedFlow is used to avoid StateFlow's equality check and permit true zero-alloc event pushing
-    private val _fftData = kotlinx.coroutines.flow.MutableSharedFlow<FloatArray>(
-        replay = 1,
-        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
-    )
-    private val _isCapturing = MutableStateFlow(false)
-    private val lock = Any()
+    @Inject
+    constructor() {
+        private var visualizer: Visualizer? = null
+        private var audioSessionId: Int = 0
+        private val fftSize = 128
 
-    val fftData: kotlinx.coroutines.flow.Flow<FloatArray> = _fftData
-    val isCapturing: StateFlow<Boolean> = _isCapturing.asStateFlow()
+        // Pre-allocated ByteArray reused across all FFT captures — zero allocation in callback
+        private val preAllocatedMagnitude = ByteArray(fftSize)
 
-    /**
-     * Attaches Visualizer to ExoPlayer's audio session.
-     * Must be called AFTER audioTrackInitialized in AnalyticsListener.
-     */
-    fun attachToAudioSession(sessionId: Int): Boolean = synchronized(lock) {
-        if (sessionId == audioSessionId && visualizer != null) return true
+        // Nier-Engine FFT Decay/Smoothing Buffer
+        private val smoothedMagnitude = FloatArray(fftSize)
 
-        try {
-            detachInternal()
+        // SharedFlow is used to avoid StateFlow's equality check and permit true zero-alloc event pushing
+        private val _fftData =
+            kotlinx.coroutines.flow.MutableSharedFlow<FloatArray>(
+                replay = 1,
+                onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
+            )
+        private val _isCapturing = MutableStateFlow(false)
+        private val lock = Any()
 
-            audioSessionId = sessionId
+        val fftData: kotlinx.coroutines.flow.Flow<FloatArray> = _fftData
+        val isCapturing: StateFlow<Boolean> = _isCapturing.asStateFlow()
 
-            val maxRate = Visualizer.getMaxCaptureRate()
-            val captureSize = Visualizer.getCaptureSizeRange()[1]
+        /**
+         * Attaches Visualizer to ExoPlayer's audio session.
+         * Must be called AFTER audioTrackInitialized in AnalyticsListener.
+         */
+        fun attachToAudioSession(sessionId: Int): Boolean =
+            synchronized(lock) {
+                if (sessionId == audioSessionId && visualizer != null) return true
 
-            visualizer = Visualizer(sessionId).apply {
-                setCaptureSize(captureSize)
-                enabled = true
+                try {
+                    detachInternal()
+
+                    audioSessionId = sessionId
+
+                    val maxRate = Visualizer.getMaxCaptureRate()
+                    val captureSize = Visualizer.getCaptureSizeRange()[1]
+
+                    visualizer =
+                        Visualizer(sessionId).apply {
+                            setCaptureSize(captureSize)
+                            enabled = true
+                        }
+
+                    visualizer?.setDataCaptureListener(
+                        object : Visualizer.OnDataCaptureListener {
+                            override fun onWaveFormDataCapture(
+                                visualizer: Visualizer?,
+                                waveform: ByteArray,
+                                samplingRate: Int
+                            ) {
+                                // Waveform data unused
+                            }
+
+                            override fun onFftDataCapture(
+                                visualizer: Visualizer?,
+                                fft: ByteArray,
+                                samplingRate: Int
+                            ) {
+                                val numMag = minOf(smoothedMagnitude.size, fft.size / 2)
+                                for (i in 0 until numMag) {
+                                    val newMag = (fft[i * 2].toInt() and 0xFF).toFloat() / 255f
+                                    // Nier-Engine Decay: smoothed[i] = prev[i]*0.7 + new[i]*0.3
+                                    smoothedMagnitude[i] = smoothedMagnitude[i] * 0.7f + newMag * 0.3f
+                                }
+                                // Emit in-place
+                                _fftData.tryEmit(smoothedMagnitude)
+                            }
+                        },
+                        maxRate / 2,
+                        false,
+                        true
+                    )
+
+                    _isCapturing.value = true
+                    Log.d(
+                        TAG,
+                        "[AudioVisualizerManager] Attached to session $sessionId, FFT size: $captureSize, rate: $maxRate"
+                    )
+                    return true
+                } catch (e: Exception) {
+                    Log.e(TAG, "[AudioVisualizerManager] Failed to attach: ${e.message}", e)
+                    return false
+                }
             }
 
-            visualizer?.setDataCaptureListener(
-                object : Visualizer.OnDataCaptureListener {
-                    override fun onWaveFormDataCapture(
-                        visualizer: Visualizer?,
-                        waveform: ByteArray,
-                        samplingRate: Int
-                    ) {
-                        // Waveform data unused
-                    }
+        /** Detaches and cleans up the Visualizer. Thread-safe. */
+        fun detach(): Unit =
+            synchronized(lock) {
+                detachInternal()
+            }
 
-                    override fun onFftDataCapture(
-                        visualizer: Visualizer?,
-                        fft: ByteArray,
-                        samplingRate: Int
-                    ) {
-                        val numMag = minOf(smoothedMagnitude.size, fft.size / 2)
-                        for (i in 0 until numMag) {
-                            val newMag = (fft[i * 2].toInt() and 0xFF).toFloat() / 255f
-                            // Nier-Engine Decay: smoothed[i] = prev[i]*0.7 + new[i]*0.3
-                            smoothedMagnitude[i] = smoothedMagnitude[i] * 0.7f + newMag * 0.3f
-                        }
-                        // Emit in-place 
-                        _fftData.tryEmit(smoothedMagnitude)
-                    }
-                },
-                maxRate / 2,
-                false,
-                true
-            )
+        private fun detachInternal() {
+            try {
+                visualizer?.enabled = false
+                visualizer?.release()
+                visualizer = null
+                _isCapturing.value = false
+            } catch (e: Exception) {
+                Log.w(TAG, "[AudioVisualizerManager] Error during detach: ${e.message}")
+            }
+        }
 
-            _isCapturing.value = true
-            Log.d(TAG, "[AudioVisualizerManager] Attached to session $sessionId, FFT size: $captureSize, rate: $maxRate")
-            return true
-        } catch (e: Exception) {
-            Log.e(TAG, "[AudioVisualizerManager] Failed to attach: ${e.message}", e)
-            return false
+        companion object {
+            private const val TAG = "AudioVisualizerMgr"
         }
     }
-
-    /** Detaches and cleans up the Visualizer. Thread-safe. */
-    fun detach(): Unit = synchronized(lock) {
-        detachInternal()
-    }
-
-    private fun detachInternal() {
-        try {
-            visualizer?.enabled = false
-            visualizer?.release()
-            visualizer = null
-            _isCapturing.value = false
-        } catch (e: Exception) {
-            Log.w(TAG, "[AudioVisualizerManager] Error during detach: ${e.message}")
-        }
-    }
-
-    companion object {
-        private const val TAG = "AudioVisualizerMgr"
-    }
-}

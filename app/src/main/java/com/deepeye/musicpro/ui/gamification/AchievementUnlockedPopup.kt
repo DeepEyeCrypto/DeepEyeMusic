@@ -70,9 +70,10 @@ fun AchievementUnlockedPopup(
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                 Button(
                     onClick = onShare,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
                     colors = ButtonDefaults.buttonColors(Color(0xFFE1306C)), // Instagram color
                     shape = RoundedCornerShape(8.dp)
                 ) {

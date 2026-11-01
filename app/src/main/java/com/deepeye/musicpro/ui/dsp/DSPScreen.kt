@@ -3,7 +3,6 @@
 
 package com.deepeye.musicpro.ui.dsp
 
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,8 +15,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -28,20 +27,17 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.musicpro.dsp.engine.DSPViewModel
 import com.deepeye.musicpro.dsp.model.*
-import com.deepeye.musicpro.ui.theme.ContentBounds
 import com.deepeye.musicpro.ui.dsp.components.DspDebugCard
 import com.deepeye.musicpro.ui.dsp.components.GainBudgetCard
 import com.deepeye.musicpro.ui.dsp.components.StudioKnob
@@ -71,10 +67,11 @@ fun DSPScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = onNavigateBack,
-                        modifier = Modifier
-                            .padding(start = 8.dp)
-                            .size(56.dp)
-                            .background(Color(0x1AFFFFFF), androidx.compose.foundation.shape.CircleShape)
+                        modifier =
+                            Modifier
+                                .padding(start = 8.dp)
+                                .size(56.dp)
+                                .background(Color(0x1AFFFFFF), androidx.compose.foundation.shape.CircleShape)
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
@@ -99,48 +96,49 @@ fun DSPScreen(
                         Switch(
                             checked = isEnabled,
                             onCheckedChange = { viewModel.toggleMasterEnabled() },
-                            modifier = Modifier
-                                .testTag("dsp_toggle")
-                                .scale(1.35f),
+                            modifier =
+                                Modifier
+                                    .testTag("dsp_toggle")
+                                    .scale(1.35f),
                             colors =
-                            SwitchDefaults.colors(
-                                checkedThumbColor = Color(0xFF00E5FF),
-                                checkedTrackColor = Color(0x4400E5FF),
-                                uncheckedThumbColor = Color.White,
-                                uncheckedTrackColor = Color(0x1AFFFFFF),
-                            ),
+                                SwitchDefaults.colors(
+                                    checkedThumbColor = Color(0xFF00E5FF),
+                                    checkedTrackColor = Color(0x4400E5FF),
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = Color(0x1AFFFFFF),
+                                ),
                         )
                     }
                 },
                 colors =
-                TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                ),
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                    ),
             )
         },
     ) { innerPadding ->
         Box(
             modifier =
-            Modifier
-                .fillMaxSize()
-                .background(Color.Transparent)
-                .padding(innerPadding),
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Transparent)
+                    .padding(innerPadding),
         ) {
             if (isWideScreen) {
                 // Dual Pane Layout for Tablet / Landscape
                 Row(
                     modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(12.dp),
+                        Modifier
+                            .fillMaxSize()
+                            .padding(12.dp),
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     // Left Pane: Sticky Dashboard
                     Column(
                         modifier =
-                        Modifier
-                            .width(250.dp)
-                            .verticalScroll(rememberScrollState()),
+                            Modifier
+                                .width(250.dp)
+                                .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         StudioVisualizer(
@@ -189,10 +187,10 @@ fun DSPScreen(
                 // Single Column Layout for Phones
                 Column(
                     modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 120.dp),
+                        Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 120.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     StudioVisualizer(
@@ -273,10 +271,20 @@ fun PresetsCard(
                 Text("Presets", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 Row {
                     IconButton(onClick = onSaveForTrackClick, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Star, contentDescription = "Link to Track", tint = Color(0xFFFFD700), modifier = Modifier.size(18.dp))
+                        Icon(
+                            Icons.Default.Star,
+                            contentDescription = "Link to Track",
+                            tint = Color(0xFFFFD700),
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                     IconButton(onClick = onSaveClick, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Add, contentDescription = "Save Custom Preset", tint = Color(0xFF00E5FF), modifier = Modifier.size(20.dp))
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Save Custom Preset",
+                            tint = Color(0xFF00E5FF),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }
@@ -311,7 +319,12 @@ fun PresetsCard(
                         // Allow deletion of custom user presets (id > 7, built-ins are 1-7)
                         if (id > 7) {
                             IconButton(onClick = { onPresetDelete(id) }, modifier = Modifier.size(28.dp)) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFFF5252), modifier = Modifier.size(16.dp))
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Delete",
+                                    tint = Color(0xFFFF5252),
+                                    modifier = Modifier.size(16.dp)
+                                )
                             }
                         }
                     }
@@ -331,9 +344,9 @@ fun PresetsRow(
 ) {
     Row(
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -366,37 +379,54 @@ fun SavePresetDialog(
         // inherit the root zoom. Without this it renders at system scale
         // while the screen behind it is zoomed. See ProvideAppZoom.
         ProvideAppZoom {
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant),
-            modifier = Modifier.padding(16.dp),
-        ) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Save Preset", style = MaterialTheme.typography.titleMedium, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface)
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    label = { Text("Preset Name") },
-                    colors =
-                    OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                        unfocusedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                        focusedBorderColor = Color(0xFF00E5FF),
-                        unfocusedBorderColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.2f),
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
                     ),
-                )
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onDismiss) { Text("Cancel", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.6f)) }
-                    Spacer(Modifier.width(8.dp))
-                    Button(
-                        onClick = { if (text.isNotBlank()) onSave(text) },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
-                    ) {
-                        Text("Save", color = Color.Black)
+                modifier = Modifier.padding(16.dp),
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(
+                        "Save Preset",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
+                    )
+                    OutlinedTextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        label = { Text("Preset Name") },
+                        colors =
+                            OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                                focusedBorderColor = Color(0xFF00E5FF),
+                                unfocusedBorderColor =
+                                    androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(
+                                        0.2f
+                                    ),
+                            ),
+                    )
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        TextButton(
+                            onClick = onDismiss
+                        ) {
+                            Text(
+                                "Cancel",
+                                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.6f)
+                            )
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Button(
+                            onClick = { if (text.isNotBlank()) onSave(text) },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
+                        ) {
+                            Text("Save", color = Color.Black)
+                        }
                     }
                 }
             }
-        }
         }
     }
 }
@@ -489,10 +519,11 @@ fun CollapsibleCard(
     Card(
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF131722).copy(alpha = 0.85f)),
-        border = BorderStroke(
-            if (isEnabled && isMasterEnabled) 1.5.dp else 1.dp,
-            if (isEnabled && isMasterEnabled) Color(0xFF00E5FF).copy(0.4f) else Color(0x22FFFFFF)
-        ),
+        border =
+            BorderStroke(
+                if (isEnabled && isMasterEnabled) 1.5.dp else 1.dp,
+                if (isEnabled && isMasterEnabled) Color(0xFF00E5FF).copy(0.4f) else Color(0x22FFFFFF)
+            ),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(16.dp)) {
@@ -512,20 +543,21 @@ fun CollapsibleCard(
                         checked = isEnabled,
                         onCheckedChange = onToggle,
                         enabled = isMasterEnabled,
-                        modifier = Modifier
-                            .scale(1.35f)
-                            .padding(end = 16.dp),
+                        modifier =
+                            Modifier
+                                .scale(1.35f)
+                                .padding(end = 16.dp),
                         colors =
-                        SwitchDefaults.colors(
-                            checkedThumbColor = Color(0xFF00E5FF),
-                            checkedTrackColor = Color(0x4400E5FF),
-                            uncheckedThumbColor = Color.White,
-                            uncheckedTrackColor = Color(0x1AFFFFFF),
-                            disabledUncheckedThumbColor = Color.White.copy(alpha = 0.4f),
-                            disabledUncheckedTrackColor = Color(0x1AFFFFFF),
-                            disabledCheckedThumbColor = Color(0xFF00E5FF).copy(alpha = 0.4f),
-                            disabledCheckedTrackColor = Color(0x2200E5FF),
-                        ),
+                            SwitchDefaults.colors(
+                                checkedThumbColor = Color(0xFF00E5FF),
+                                checkedTrackColor = Color(0x4400E5FF),
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = Color(0x1AFFFFFF),
+                                disabledUncheckedThumbColor = Color.White.copy(alpha = 0.4f),
+                                disabledUncheckedTrackColor = Color(0x1AFFFFFF),
+                                disabledCheckedThumbColor = Color(0xFF00E5FF).copy(alpha = 0.4f),
+                                disabledCheckedTrackColor = Color(0x2200E5FF),
+                            ),
                     )
                     Text(
                         text = title,
@@ -579,11 +611,11 @@ fun DspSliderRow(
             onValueChange = onValueChange,
             valueRange = valueRange,
             colors =
-            SliderDefaults.colors(
-                thumbColor = Color(0xFF00E5FF),
-                activeTrackColor = Color(0xFF00E5FF),
-                inactiveTrackColor = Color(0x33FFFFFF),
-            ),
+                SliderDefaults.colors(
+                    thumbColor = Color(0xFF00E5FF),
+                    activeTrackColor = Color(0xFF00E5FF),
+                    inactiveTrackColor = Color(0x33FFFFFF),
+                ),
         )
     }
 }
@@ -623,20 +655,20 @@ fun PresetChip(
         onClick = onClick,
         shape = RoundedCornerShape(14.dp),
         color =
-        if (isSelected) {
-            Color(0x3300E5FF)
-        } else {
-            Color(0x0EFFFFFF)
-        },
-        border =
-        BorderStroke(
-            if (isSelected) 1.5.dp else 1.dp,
             if (isSelected) {
-                Color(0xFF00E5FF)
+                Color(0x3300E5FF)
             } else {
-                Color(0x14FFFFFF)
+                Color(0x0EFFFFFF)
             },
-        ),
+        border =
+            BorderStroke(
+                if (isSelected) 1.5.dp else 1.dp,
+                if (isSelected) {
+                    Color(0xFF00E5FF)
+                } else {
+                    Color(0x14FFFFFF)
+                },
+            ),
         modifier = Modifier.heightIn(min = 48.dp)
     ) {
         Box(
@@ -692,10 +724,11 @@ fun EqualizerCard(
     Card(
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF131722).copy(alpha = 0.85f)),
-        border = BorderStroke(
-            if (isEnabled && isMasterEnabled) 1.5.dp else 1.dp,
-            if (isEnabled && isMasterEnabled) Color(0xFF00E5FF).copy(0.4f) else Color(0x22FFFFFF)
-        ),
+        border =
+            BorderStroke(
+                if (isEnabled && isMasterEnabled) 1.5.dp else 1.dp,
+                if (isEnabled && isMasterEnabled) Color(0xFF00E5FF).copy(0.4f) else Color(0x22FFFFFF)
+            ),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(16.dp)) {
@@ -715,16 +748,17 @@ fun EqualizerCard(
                         checked = isEnabled,
                         onCheckedChange = onToggle,
                         enabled = isMasterEnabled,
-                        modifier = Modifier
-                            .scale(1.35f)
-                            .padding(end = 16.dp),
+                        modifier =
+                            Modifier
+                                .scale(1.35f)
+                                .padding(end = 16.dp),
                         colors =
-                        SwitchDefaults.colors(
-                            checkedThumbColor = Color(0xFF00E5FF),
-                            checkedTrackColor = Color(0x4400E5FF),
-                            uncheckedThumbColor = Color.White,
-                            uncheckedTrackColor = Color(0x1AFFFFFF),
-                        ),
+                            SwitchDefaults.colors(
+                                checkedThumbColor = Color(0xFF00E5FF),
+                                checkedTrackColor = Color(0x4400E5FF),
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = Color(0x1AFFFFFF),
+                            ),
                     )
                     Column {
                         Text(
@@ -814,9 +848,9 @@ fun ViperBassCard(
             onValueChange = { v -> onUpdateParams { it.copy(viperBassFreq = v.toInt()) } },
             valueFormatter = { "${it.toInt()} Hz" },
         )
-        
+
         Spacer(Modifier.height(8.dp))
-        
+
         DspSliderRow(
             label = "Sub-Bass Gain",
             value = params.viperBassGain,
@@ -905,9 +939,15 @@ fun ReverbCard(
                 var menuExpanded by remember { mutableStateOf(false) }
                 Button(
                     onClick = { menuExpanded = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.08f)),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.08f)
+                        ),
                 ) {
-                    Text(params.reverbPreset.name, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface)
+                    Text(
+                        params.reverbPreset.name,
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
+                    )
                 }
                 DropdownMenu(
                     expanded = menuExpanded,
@@ -987,7 +1027,10 @@ fun DynamicsCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Enable Peak Limiter", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.7f))
+            Text(
+                "Enable Peak Limiter",
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.7f)
+            )
             Switch(
                 checked = params.limiterEnabled,
                 onCheckedChange = { v -> onUpdateParams { it.copy(limiterEnabled = v) } },
@@ -1094,7 +1137,10 @@ fun ClarityCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Clarity Exciter Mode", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.7f))
+            Text(
+                "Clarity Exciter Mode",
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.7f)
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 ViperClarityMode.values().forEach { mode ->
                     val isSelected = params.viperClarityMode == mode
@@ -1136,12 +1182,18 @@ fun HrtfCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Binaural HRTF Filter", color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.7f))
+            Text(
+                "Binaural HRTF Filter",
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.7f)
+            )
             Box {
                 var menuExpanded by remember { mutableStateOf(false) }
                 Button(
                     onClick = { menuExpanded = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.08f)),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(0.08f)
+                        ),
                 ) {
                     Text(params.hrtfPreset.name, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface)
                 }
@@ -1280,8 +1332,8 @@ fun SpeedPitchCard(
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             horizontalArrangement = Arrangement.End
         ) {
-            TextButton(onClick = { 
-                onUpdateParams { it.copy(playbackSpeed = 1.0f, playbackPitch = 1.0f) } 
+            TextButton(onClick = {
+                onUpdateParams { it.copy(playbackSpeed = 1.0f, playbackPitch = 1.0f) }
             }) {
                 Text("Reset", color = Color(0xFF00E5FF))
             }

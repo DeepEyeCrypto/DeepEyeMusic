@@ -12,250 +12,276 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 
-val DotMatrixDigits = mapOf(
-    '0' to listOf(
-        " 111 ",
-        "1   1",
-        "1  11",
-        "1 1 1",
-        "11  1",
-        "1   1",
-        " 111 "
-    ),
-    '1' to listOf(
-        "  1  ",
-        " 11  ",
-        "1 1  ",
-        "  1  ",
-        "  1  ",
-        "  1  ",
-        "11111"
-    ),
-    '2' to listOf(
-        " 111 ",
-        "1   1",
-        "    1",
-        "   1 ",
-        "  1  ",
-        " 1   ",
-        "11111"
-    ),
-    '3' to listOf(
-        " 111 ",
-        "1   1",
-        "    1",
-        "  11 ",
-        "    1",
-        "1   1",
-        " 111 "
-    ),
-    '4' to listOf(
-        "   1 ",
-        "  11 ",
-        " 1 1 ",
-        "1  1 ",
-        "11111",
-        "   1 ",
-        "   1 "
-    ),
-    '5' to listOf(
-        "11111",
-        "1    ",
-        "1111 ",
-        "    1",
-        "    1",
-        "1   1",
-        " 111 "
-    ),
-    '6' to listOf(
-        " 111 ",
-        "1   1",
-        "1    ",
-        "1111 ",
-        "1   1",
-        "1   1",
-        " 111 "
-    ),
-    '7' to listOf(
-        "11111",
-        "    1",
-        "   1 ",
-        "  1  ",
-        " 1   ",
-        " 1   ",
-        " 1   "
-    ),
-    '8' to listOf(
-        " 111 ",
-        "1   1",
-        "1   1",
-        " 111 ",
-        "1   1",
-        "1   1",
-        " 111 "
-    ),
-    '9' to listOf(
-        " 111 ",
-        "1   1",
-        "1   1",
-        " 1111",
-        "    1",
-        "1   1",
-        " 111 "
-    ),
-    ':' to listOf(
-        "   ",
-        " 1 ",
-        " 1 ",
-        "   ",
-        " 1 ",
-        " 1 ",
-        "   "
-    ),
-    ' ' to listOf(
-        "   ",
-        "   ",
-        "   ",
-        "   ",
-        "   ",
-        "   ",
-        "   "
-    ),
-    'A' to listOf(
-        " 111 ",
-        "1   1",
-        "11111",
-        "1   1",
-        "1   1",
-        "1   1",
-        "1   1"
-    ),
-    'P' to listOf(
-        "1111 ",
-        "1   1",
-        "1   1",
-        "1111 ",
-        "1    ",
-        "1    ",
-        "1    "
-    ),
-    'M' to listOf(
-        "1   1",
-        "11 11",
-        "1 1 1",
-        "1   1",
-        "1   1",
-        "1   1",
-        "1   1"
-    ),
-    'G' to listOf(
-        " 111 ",
-        "1   1",
-        "1    ",
-        "1 111",
-        "1   1",
-        "1   1",
-        " 111 "
-    ),
-    'O' to listOf(
-        " 111 ",
-        "1   1",
-        "1   1",
-        "1   1",
-        "1   1",
-        "1   1",
-        " 111 "
-    ),
-    'D' to listOf(
-        "1111 ",
-        "1   1",
-        "1   1",
-        "1   1",
-        "1   1",
-        "1   1",
-        "1111 "
-    ),
-    'R' to listOf(
-        "1111 ",
-        "1   1",
-        "1   1",
-        "1111 ",
-        "1 1  ",
-        "1  1 ",
-        "1   1"
-    ),
-    'N' to listOf(
-        "1   1",
-        "11  1",
-        "1 1 1",
-        "1  11",
-        "1   1",
-        "1   1",
-        "1   1"
-    ),
-    'I' to listOf(
-        " 111 ",
-        "  1  ",
-        "  1  ",
-        "  1  ",
-        "  1  ",
-        "  1  ",
-        " 111 "
-    ),
-    'F' to listOf(
-        "11111",
-        "1    ",
-        "1    ",
-        "1111 ",
-        "1    ",
-        "1    ",
-        "1    "
-    ),
-    'T' to listOf(
-        "11111",
-        "  1  ",
-        "  1  ",
-        "  1  ",
-        "  1  ",
-        "  1  ",
-        "  1  "
-    ),
-    'E' to listOf(
-        "11111",
-        "1    ",
-        "1    ",
-        "1111 ",
-        "1    ",
-        "1    ",
-        "11111"
-    ),
-    'V' to listOf(
-        "1   1",
-        "1   1",
-        "1   1",
-        "1   1",
-        " 1 1 ",
-        " 1 1 ",
-        "  1  "
-    ),
-    'H' to listOf(
-        "1   1",
-        "1   1",
-        "1   1",
-        "11111",
-        "1   1",
-        "1   1",
-        "1   1"
+val DotMatrixDigits =
+    mapOf(
+        '0' to
+            listOf(
+                " 111 ",
+                "1   1",
+                "1  11",
+                "1 1 1",
+                "11  1",
+                "1   1",
+                " 111 "
+            ),
+        '1' to
+            listOf(
+                "  1  ",
+                " 11  ",
+                "1 1  ",
+                "  1  ",
+                "  1  ",
+                "  1  ",
+                "11111"
+            ),
+        '2' to
+            listOf(
+                " 111 ",
+                "1   1",
+                "    1",
+                "   1 ",
+                "  1  ",
+                " 1   ",
+                "11111"
+            ),
+        '3' to
+            listOf(
+                " 111 ",
+                "1   1",
+                "    1",
+                "  11 ",
+                "    1",
+                "1   1",
+                " 111 "
+            ),
+        '4' to
+            listOf(
+                "   1 ",
+                "  11 ",
+                " 1 1 ",
+                "1  1 ",
+                "11111",
+                "   1 ",
+                "   1 "
+            ),
+        '5' to
+            listOf(
+                "11111",
+                "1    ",
+                "1111 ",
+                "    1",
+                "    1",
+                "1   1",
+                " 111 "
+            ),
+        '6' to
+            listOf(
+                " 111 ",
+                "1   1",
+                "1    ",
+                "1111 ",
+                "1   1",
+                "1   1",
+                " 111 "
+            ),
+        '7' to
+            listOf(
+                "11111",
+                "    1",
+                "   1 ",
+                "  1  ",
+                " 1   ",
+                " 1   ",
+                " 1   "
+            ),
+        '8' to
+            listOf(
+                " 111 ",
+                "1   1",
+                "1   1",
+                " 111 ",
+                "1   1",
+                "1   1",
+                " 111 "
+            ),
+        '9' to
+            listOf(
+                " 111 ",
+                "1   1",
+                "1   1",
+                " 1111",
+                "    1",
+                "1   1",
+                " 111 "
+            ),
+        ':' to
+            listOf(
+                "   ",
+                " 1 ",
+                " 1 ",
+                "   ",
+                " 1 ",
+                " 1 ",
+                "   "
+            ),
+        ' ' to
+            listOf(
+                "   ",
+                "   ",
+                "   ",
+                "   ",
+                "   ",
+                "   ",
+                "   "
+            ),
+        'A' to
+            listOf(
+                " 111 ",
+                "1   1",
+                "11111",
+                "1   1",
+                "1   1",
+                "1   1",
+                "1   1"
+            ),
+        'P' to
+            listOf(
+                "1111 ",
+                "1   1",
+                "1   1",
+                "1111 ",
+                "1    ",
+                "1    ",
+                "1    "
+            ),
+        'M' to
+            listOf(
+                "1   1",
+                "11 11",
+                "1 1 1",
+                "1   1",
+                "1   1",
+                "1   1",
+                "1   1"
+            ),
+        'G' to
+            listOf(
+                " 111 ",
+                "1   1",
+                "1    ",
+                "1 111",
+                "1   1",
+                "1   1",
+                " 111 "
+            ),
+        'O' to
+            listOf(
+                " 111 ",
+                "1   1",
+                "1   1",
+                "1   1",
+                "1   1",
+                "1   1",
+                " 111 "
+            ),
+        'D' to
+            listOf(
+                "1111 ",
+                "1   1",
+                "1   1",
+                "1   1",
+                "1   1",
+                "1   1",
+                "1111 "
+            ),
+        'R' to
+            listOf(
+                "1111 ",
+                "1   1",
+                "1   1",
+                "1111 ",
+                "1 1  ",
+                "1  1 ",
+                "1   1"
+            ),
+        'N' to
+            listOf(
+                "1   1",
+                "11  1",
+                "1 1 1",
+                "1  11",
+                "1   1",
+                "1   1",
+                "1   1"
+            ),
+        'I' to
+            listOf(
+                " 111 ",
+                "  1  ",
+                "  1  ",
+                "  1  ",
+                "  1  ",
+                "  1  ",
+                " 111 "
+            ),
+        'F' to
+            listOf(
+                "11111",
+                "1    ",
+                "1    ",
+                "1111 ",
+                "1    ",
+                "1    ",
+                "1    "
+            ),
+        'T' to
+            listOf(
+                "11111",
+                "  1  ",
+                "  1  ",
+                "  1  ",
+                "  1  ",
+                "  1  ",
+                "  1  "
+            ),
+        'E' to
+            listOf(
+                "11111",
+                "1    ",
+                "1    ",
+                "1111 ",
+                "1    ",
+                "1    ",
+                "11111"
+            ),
+        'V' to
+            listOf(
+                "1   1",
+                "1   1",
+                "1   1",
+                "1   1",
+                " 1 1 ",
+                " 1 1 ",
+                "  1  "
+            ),
+        'H' to
+            listOf(
+                "1   1",
+                "1   1",
+                "1   1",
+                "11111",
+                "1   1",
+                "1   1",
+                "1   1"
+            )
     )
-)
 
 @Composable
 fun DotMatrixClock(
@@ -266,16 +292,18 @@ fun DotMatrixClock(
     dotSpacing: Float = 12f
 ) {
     var currentTime by remember { mutableStateOf(System.currentTimeMillis()) }
-    
+
     // Animate the colon blinking
     val infiniteTransition = rememberInfiniteTransition()
     val blinkAlpha by infiniteTransition.animateFloat(
         initialValue = 0.2f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ), label = "blink"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(500, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+        label = "blink"
     )
 
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -288,24 +316,29 @@ fun DotMatrixClock(
         }
     }
 
-    val timeString = remember(currentTime) {
-        SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(currentTime)).uppercase()
-    }
+    val timeString =
+        remember(currentTime) {
+            SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(currentTime)).uppercase()
+        }
 
     // Calculate total width
-    val totalCols = timeString.sumOf { char ->
-        DotMatrixDigits[char]?.first()?.length ?: 0
-    } + (timeString.length - 1) // +1 for spacing between chars
-    
+    val totalCols =
+        timeString.sumOf { char ->
+            DotMatrixDigits[char]?.first()?.length ?: 0
+        } + (timeString.length - 1) // +1 for spacing between chars
+
     val totalWidth = totalCols * dotSpacing
     val totalHeight = 7 * dotSpacing // 7 rows fixed
 
     Box(modifier = modifier) {
         Canvas(
-            modifier = Modifier
-                .size(width = (totalWidth / LocalContext.current.resources.displayMetrics.density).dp, 
-                      height = (totalHeight / LocalContext.current.resources.displayMetrics.density).dp)
-                .padding(4.dp)
+            modifier =
+                Modifier
+                    .size(
+                        width = (totalWidth / LocalContext.current.resources.displayMetrics.density).dp,
+                        height = (totalHeight / LocalContext.current.resources.displayMetrics.density).dp
+                    )
+                    .padding(4.dp)
         ) {
             var currentX = 0f
 
@@ -316,18 +349,26 @@ fun DotMatrixClock(
                 for (row in 0 until 7) {
                     for (col in 0 until cols) {
                         val isLit = matrix[row][col] == '1'
-                        
+
                         // Handle colon blinking
-                        val finalAlpha = if (char == ':' && isLit) blinkAlpha else if (isLit) 1f else 1f
+                        val finalAlpha =
+                            if (char == ':' && isLit) {
+                                blinkAlpha
+                            } else if (isLit) {
+                                1f
+                            } else {
+                                1f
+                            }
                         val color = if (isLit) activeColor.copy(alpha = finalAlpha) else inactiveColor
 
                         drawCircle(
                             color = color,
                             radius = dotRadius,
-                            center = Offset(
-                                x = currentX + (col * dotSpacing) + dotRadius,
-                                y = (row * dotSpacing) + dotRadius
-                            )
+                            center =
+                                Offset(
+                                    x = currentX + (col * dotSpacing) + dotRadius,
+                                    y = (row * dotSpacing) + dotRadius
+                                )
                         )
                     }
                 }
@@ -347,21 +388,23 @@ fun DotMatrixText(
     dotSpacing: Float = 12f
 ) {
     // Calculate total width
-    val totalCols = text.sumOf { char ->
-        DotMatrixDigits[char]?.first()?.length ?: 0
-    } + (text.length - 1).coerceAtLeast(0) // spacing
-    
+    val totalCols =
+        text.sumOf { char ->
+            DotMatrixDigits[char]?.first()?.length ?: 0
+        } + (text.length - 1).coerceAtLeast(0) // spacing
+
     val totalWidth = totalCols * dotSpacing
     val totalHeight = 7 * dotSpacing
 
     Box(modifier = modifier) {
         Canvas(
-            modifier = Modifier
-                .size(
-                    width = (totalWidth / LocalContext.current.resources.displayMetrics.density).dp, 
-                    height = (totalHeight / LocalContext.current.resources.displayMetrics.density).dp
-                )
-                .padding(4.dp)
+            modifier =
+                Modifier
+                    .size(
+                        width = (totalWidth / LocalContext.current.resources.displayMetrics.density).dp,
+                        height = (totalHeight / LocalContext.current.resources.displayMetrics.density).dp
+                    )
+                    .padding(4.dp)
         ) {
             var currentX = 0f
             for (char in text) {
@@ -376,10 +419,11 @@ fun DotMatrixText(
                         drawCircle(
                             color = color,
                             radius = dotRadius,
-                            center = Offset(
-                                x = currentX + (col * dotSpacing) + dotRadius,
-                                y = (row * dotSpacing) + dotRadius
-                            )
+                            center =
+                                Offset(
+                                    x = currentX + (col * dotSpacing) + dotRadius,
+                                    y = (row * dotSpacing) + dotRadius
+                                )
                         )
                     }
                 }

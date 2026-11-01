@@ -39,67 +39,74 @@ fun AmbilightBackground(
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 0.95f,
         targetValue = 1.15f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(4000, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
         label = "PulseScale"
     )
 
     val driftX by infiniteTransition.animateFloat(
         initialValue = -60f,
         targetValue = 60f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(6000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(6000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
         label = "DriftX"
     )
 
     Box(modifier = modifier.fillMaxSize()) {
         // ── AMBILIGHT GLOW LAYER ──
         Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        renderEffect = RenderEffect
-                            .createBlurEffect(140f, 140f, Shader.TileMode.DECAL)
-                            .asComposeRenderEffect()
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            renderEffect =
+                                RenderEffect
+                                    .createBlurEffect(140f, 140f, Shader.TileMode.DECAL)
+                                    .asComposeRenderEffect()
+                        }
+                        alpha = 0.55f
+                        scaleX = pulseScale
+                        scaleY = pulseScale
                     }
-                    alpha = 0.55f
-                    scaleX = pulseScale
-                    scaleY = pulseScale
-                }
         ) {
             val canvasWidth = size.width
             val canvasHeight = size.height
 
             // Left Ambient Lobe
             drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(primaryColor.copy(alpha = 0.85f), Color.Transparent),
-                    center = Offset(canvasWidth * 0.15f + driftX, canvasHeight * 0.5f),
-                    radius = canvasWidth * 0.50f
-                )
+                brush =
+                    Brush.radialGradient(
+                        colors = listOf(primaryColor.copy(alpha = 0.85f), Color.Transparent),
+                        center = Offset(canvasWidth * 0.15f + driftX, canvasHeight * 0.5f),
+                        radius = canvasWidth * 0.50f
+                    )
             )
 
             // Right Ambient Lobe
             drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(secondaryColor.copy(alpha = 0.85f), Color.Transparent),
-                    center = Offset(canvasWidth * 0.85f - driftX, canvasHeight * 0.5f),
-                    radius = canvasWidth * 0.50f
-                )
+                brush =
+                    Brush.radialGradient(
+                        colors = listOf(secondaryColor.copy(alpha = 0.85f), Color.Transparent),
+                        center = Offset(canvasWidth * 0.85f - driftX, canvasHeight * 0.5f),
+                        radius = canvasWidth * 0.50f
+                    )
             )
 
             // Center Ambient Fill
             drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(primaryColor.copy(alpha = 0.40f), Color.Transparent),
-                    center = Offset(canvasWidth * 0.5f, canvasHeight * 0.5f),
-                    radius = canvasWidth * 0.60f
-                )
+                brush =
+                    Brush.radialGradient(
+                        colors = listOf(primaryColor.copy(alpha = 0.40f), Color.Transparent),
+                        center = Offset(canvasWidth * 0.5f, canvasHeight * 0.5f),
+                        radius = canvasWidth * 0.60f
+                    )
             )
         }
 

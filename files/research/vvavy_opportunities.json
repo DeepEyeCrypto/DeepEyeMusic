@@ -1,0 +1,134 @@
+[
+  {
+    "rank": 1,
+    "name": "AURORA FLUX",
+    "theme": "Organic fluid flow with bass-driven domain warping",
+    "cluster": "ORGANIC / FLUID / SMOKE + GEOMETRIC",
+    "audio_focus": "Bass \u2192 scale, Mids \u2192 turbulence, Treble \u2192 shimmer",
+    "feasibility": "HIGH",
+    "performance": "LOW risk (2D FBM, no raymarch)",
+    "originality": "HIGH \u2014 domain-warped FBM flow not in VVavy",
+    "user_value": "HIGH \u2014 premium organic feel, music-first"
+  },
+  {
+    "rank": 2,
+    "name": "LIQUID CHROME",
+    "theme": "Navier-Stokes curl noise + Monet palette",
+    "cluster": "ORGANIC / FLUID / SMOKE + CINEMATIC",
+    "audio_focus": "Bass \u2192 dilation, Mids \u2192 curl, Treble \u2192 specular",
+    "feasibility": "HIGH",
+    "performance": "LOW risk (2D curl noise)",
+    "originality": "HIGH \u2014 curl-noise liquid chrome novel",
+    "user_value": "HIGH \u2014 premium liquid metal feel"
+  },
+  {
+    "rank": 3,
+    "name": "NEBULA BLOOM",
+    "theme": "Concentric halos + harmonic rays + bloom",
+    "cluster": "NATURE / COSMIC + CINEMATIC",
+    "audio_focus": "Bass \u2192 core radius, Mids \u2192 ring density, Treble \u2192 rays",
+    "feasibility": "HIGH",
+    "performance": "LOW risk (radial SDF)",
+    "originality": "HIGH \u2014 harmonic orbital rays novel",
+    "user_value": "HIGH \u2014 cosmic premium feel"
+  },
+  {
+    "rank": 4,
+    "name": "PRISM TUNNEL",
+    "theme": "Perspective grid + undulating terrain + horizon glow",
+    "cluster": "TUNNEL / PORTAL + NEON / RETRO",
+    "audio_focus": "Bass \u2192 z-advance, Mids \u2192 line width, Treble \u2192 accents",
+    "feasibility": "HIGH",
+    "performance": "LOW risk (perspective grid SDF)",
+    "originality": "HIGH \u2014 audio-reactive horizon tunnel novel",
+    "user_value": "HIGH \u2014 synthwave tunnel premium feel"
+  },
+  {
+    "rank": 5,
+    "name": "KINETIC MANDALA",
+    "theme": "SDF triangle array with rotation + spatial hashing",
+    "cluster": "GEOMETRIC + KALEIDOSCOPIC",
+    "audio_focus": "Bass \u2192 size, Mids \u2192 rotation, Treble \u2192 neon accents",
+    "feasibility": "HIGH",
+    "performance": "LOW risk (SDF triangles)",
+    "originality": "HIGH \u2014 spatial hash triangle array novel",
+    "user_value": "HIGH \u2014 geometric premium feel"
+  },
+  {
+    "rank": 6,
+    "name": "PULSE GEOMETRY",
+    "theme": "3D raymarch with beat-synced geometry",
+    "cluster": "FRACTAL / ABSTRACT + GEOMETRIC",
+    "audio_focus": "Bass \u2192 iterations, Mids \u2192 drift, Treble \u2192 boundary sparkle",
+    "feasibility": "MEDIUM",
+    "performance": "MEDIUM risk (raymarch loop)",
+    "originality": "HIGH \u2014 beat-synced raymarch geometry novel",
+    "user_value": "HIGH \u2014 technical showcase, high energy"
+  },
+  {
+    "rank": 7,
+    "name": "LIQUID STARFIELD",
+    "theme": "Fluid flow field with star-like particles",
+    "cluster": "ORGANIC / FLUID / SMOKE + NATURE / COSMIC",
+    "audio_focus": "Bass \u2192 flow speed, Mids \u2192 curl, Treble \u2192 star density",
+    "feasibility": "HIGH",
+    "performance": "LOW risk (2D flow + points)",
+    "originality": "HIGH \u2014 fluid starfield novel",
+    "user_value": "HIGH \u2014 dreamy cosmic premium"
+  },
+  {
+    "rank": 8,
+    "name": "PRISMATIC SMOKE",
+    "theme": "Volumetric smoke with chromatic dispersion",
+    "cluster": "ORGANIC / FLUID / SMOKE + CINEMATIC",
+    "audio_focus": "Bass \u2192 density, Mids \u2192 swirl, Treble \u2192 chromatic edges",
+    "feasibility": "MEDIUM",
+    "performance": "MEDIUM risk (volumetric approximation)",
+    "originality": "HIGH \u2014 chromatic smoke novel",
+    "user_value": "HIGH \u2014 atmospheric premium"
+  },
+  {
+    "rank": 9,
+    "name": "NEON WAVEFORM TUNNEL",
+    "theme": "Waveform-driven tunnel with neon persistence",
+    "cluster": "TUNNEL / PORTAL + NEON / RETRO",
+    "audio_focus": "Bass \u2192 tunnel width, Mids \u2192 waveform shape, Treble \u2192 neon glow",
+    "feasibility": "HIGH",
+    "performance": "LOW risk (1D waveform + tunnel)",
+    "originality": "HIGH \u2014 waveform as tunnel geometry novel",
+    "user_value": "HIGH \u2014 music visualization classic"
+  },
+  {
+    "rank": 10,
+    "name": "ORGANIC CELL BLOOM",
+    "theme": "Voronoi/cellular growth with bloom",
+    "cluster": "ORGANIC / FLUID / SMOKE + FRACTAL",
+    "audio_focus": "Bass \u2192 cell size, Mids \u2192 growth rate, Treble \u2192 edge sparkle",
+    "feasibility": "HIGH",
+    "performance": "LOW risk (Voronoi + bloom)",
+    "originality": "HIGH \u2014 cellular bloom novel",
+    "user_value": "HIGH \u2014 organic growth premium"
+  },
+  {
+    "rank": 11,
+    "name": "FRACTAL PULSE MANDALA",
+    "theme": "Mandelbrot/Julia with beat-synced parameters",
+    "cluster": "FRACTAL / ABSTRACT + KALEIDOSCOPIC",
+    "audio_focus": "Bass \u2192 zoom/iterations, Mids \u2192 rotation, Treble \u2192 boundary",
+    "feasibility": "MEDIUM",
+    "performance": "MEDIUM risk (raymarch fractal)",
+    "originality": "HIGH \u2014 beat-synced fractal mandala novel",
+    "user_value": "HIGH \u2014 technical premium"
+  },
+  {
+    "rank": 12,
+    "name": "MINIMAL BASS ORBIT",
+    "theme": "Minimal orbiting geometry driven purely by bass",
+    "cluster": "MINIMAL / MONOCHROME + GEOMETRIC",
+    "audio_focus": "Bass \u2192 orbit radius/speed/count, Mids \u2192 color shift, Treble \u2192 none",
+    "feasibility": "HIGH",
+    "performance": "LOW risk (minimal geometry)",
+    "originality": "HIGH \u2014 bass-only minimal novel",
+    "user_value": "HIGH \u2014 battery-friendly, focus on low-end"
+  }
+]

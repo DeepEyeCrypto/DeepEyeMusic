@@ -5,23 +5,22 @@ package com.deepeye.musicpro.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Subscriptions
 import androidx.compose.material.icons.outlined.GraphicEq
@@ -29,15 +28,13 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material.icons.outlined.MusicNote
-import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Subscriptions
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,6 +45,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -58,13 +56,11 @@ import androidx.navigation.compose.rememberNavController
 import com.deepeye.musicpro.ui.navigation.NavGraph
 import com.deepeye.musicpro.ui.navigation.Routes
 import com.deepeye.musicpro.ui.theme.ProvideViewportScale
-import com.deepeye.musicpro.ui.theme.UiScale
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
-import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.hazeEffect
-import androidx.compose.foundation.layout.height
+import dev.chrisbanes.haze.hazeSource
 
 /** CompositionLocal for PiP state — accessible anywhere in the Compose tree */
 val LocalPipMode = compositionLocalOf { false }
@@ -99,7 +95,7 @@ fun DeepEyeMusicApp(
     val playerState by playerController.playerState.collectAsStateWithLifecycle()
     val sheetViewModel: com.deepeye.musicpro.ui.player.MiniPlayerSheetViewModel = androidx.hilt.navigation.compose.hiltViewModel()
     val sheetState by sheetViewModel.state.collectAsStateWithLifecycle()
-    
+
     // Initialize DSP globally on app launch
     val dspViewModel: com.deepeye.musicpro.dsp.engine.DSPViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 
@@ -218,169 +214,298 @@ fun DeepEyeMusicApp(
             LocalFullscreenMode provides fullscreenMode,
             LocalSharedWebView provides sharedWebView,
         ) {
-        val navController = rememberNavController()
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentDestination = navBackStackEntry?.destination
+            val navController = rememberNavController()
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
 
-        val bottomNavItems =
-            remember {
-                listOf(
-                    BottomNavItem(Routes.Home.route, "Home", Icons.Filled.Home, Icons.Outlined.Home),
-                    BottomNavItem(
-                        Routes.YouTube.route,
-                        "YouTube",
-                        Icons.Filled.Subscriptions,
-                        Icons.Outlined.Subscriptions
-                    ),
-                    BottomNavItem(
-                        Routes.NetMirror.route,
-                        "Video Hub",
-                        Icons.Filled.Movie,
-                        Icons.Outlined.Movie
-                    ),
-                    BottomNavItem(Routes.Music.route, "Music", Icons.Filled.MusicNote, Icons.Outlined.MusicNote),
-                    BottomNavItem(
-                        Routes.Library.route,
-                        "Library",
-                        Icons.Filled.LibraryMusic,
-                        Icons.Outlined.LibraryMusic
-                    ),
-                    BottomNavItem(Routes.DSP.route, "DSP", Icons.Filled.GraphicEq, Icons.Outlined.GraphicEq),
-                    BottomNavItem(Routes.Settings.route, "Profile", Icons.Filled.Person, Icons.Outlined.Person),
-                )
-            }
-
-        // Hide bottom nav on full-screen destinations AND in PiP mode
-        val showBottomBar =
-            !isInPipMode && !fullscreenMode.isFullscreen && currentDestination?.hierarchy?.any { dest ->
-                bottomNavItems.any { it.route == dest.route }
-            } == true
-
-        @OptIn(
-            androidx.compose.material3.adaptive.navigationsuite.ExperimentalMaterial3AdaptiveNavigationSuiteApi::class
-        )
-        val adaptiveInfo = androidx.compose.material3.adaptive.currentWindowAdaptiveInfo()
-        val navLayoutType =
-            if (showBottomBar) {
-                androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(
-                    adaptiveInfo
-                )
-            } else {
-                androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType.None
-            }
-
-        val isBottomBar = navLayoutType == androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType.NavigationBar
-
-        val hazeState = remember { dev.chrisbanes.haze.HazeState() }
-
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(androidx.compose.ui.graphics.Color.Transparent)
-        ) {
-            Box(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
-                androidx.compose.foundation.Image(
-                    painter = androidx.compose.ui.res.painterResource(id = com.deepeye.musicpro.R.drawable.spatial_bg),
-                contentDescription = null,
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-            Box(modifier = Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.4f)))
-
-            if (isBottomBar) {
-                Scaffold(
-                    contentWindowInsets = WindowInsets(0.dp),
-                    containerColor = androidx.compose.ui.graphics.Color.Transparent,
-                ) { innerPadding ->
-                    val exactDockHeight = if (showBottomBar) {
-                        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 100.dp
-                    } else {
-                        0.dp
-                    }
-                    val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-                    val miniPlayerDockHeight = if (isLandscape) 64.dp else 88.dp
-                    val miniPlayerPadding by androidx.compose.animation.core.animateDpAsState(
-                        targetValue = if (playerState.currentItem != null && !isInPipMode) miniPlayerDockHeight else 0.dp,
-                        label = "miniPlayerPadding"
+            val bottomNavItems =
+                remember {
+                    listOf(
+                        BottomNavItem(Routes.Home.route, "Home", Icons.Filled.Home, Icons.Outlined.Home),
+                        BottomNavItem(
+                            Routes.YouTube.route,
+                            "YouTube",
+                            Icons.Filled.Subscriptions,
+                            Icons.Outlined.Subscriptions
+                        ),
+                        BottomNavItem(
+                            Routes.NetMirror.route,
+                            "Video Hub",
+                            Icons.Filled.Movie,
+                            Icons.Outlined.Movie
+                        ),
+                        BottomNavItem(Routes.Music.route, "Music", Icons.Filled.MusicNote, Icons.Outlined.MusicNote),
+                        BottomNavItem(
+                            Routes.Library.route,
+                            "Library",
+                            Icons.Filled.LibraryMusic,
+                            Icons.Outlined.LibraryMusic
+                        ),
+                        BottomNavItem(Routes.DSP.route, "DSP", Icons.Filled.GraphicEq, Icons.Outlined.GraphicEq),
+                        BottomNavItem(
+                            Routes.Profile.route,
+                            "Profile",
+                            Icons.Filled.Person,
+                            Icons.Outlined.Person
+                        ),
                     )
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(bottom = exactDockHeight + miniPlayerPadding),
-                    ) {
-                        NavGraph(
-                            navController = navController,
-                            windowSizeClass = windowSizeClass,
-                            onExpandPlayer = { 
-                                fullscreenMode.enter()
-                                sheetViewModel.expand() 
-                            },
-                            onPlayFullscreenMusic = {
-                                fullscreenMode.enter(forceLandscape = true)
-                                sheetViewModel.expand()
-                            }
-                        )
-                    }
                 }
-            } else {
-            val adaptiveItemColors = androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults.itemColors(
-                navigationBarItemColors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
-                    selectedTextColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
-                    indicatorColor = androidx.compose.ui.graphics.Color(0x3300E5FF),
-                    unselectedIconColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
-                    unselectedTextColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
-                ),
-                navigationRailItemColors = NavigationRailItemDefaults.colors(
-                    selectedIconColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
-                    selectedTextColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
-                    indicatorColor = androidx.compose.ui.graphics.Color(0x3300E5FF),
-                    unselectedIconColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
-                    unselectedTextColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
-                ),
-                navigationDrawerItemColors = NavigationDrawerItemDefaults.colors(
-                    selectedIconColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
-                    selectedTextColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
-                    selectedContainerColor = androidx.compose.ui.graphics.Color(0x3300E5FF),
-                    unselectedIconColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
-                    unselectedTextColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
-                )
-            )
+
+            // Hide bottom nav on full-screen destinations AND in PiP mode
+            val showBottomBar =
+                !isInPipMode && !fullscreenMode.isFullscreen && currentDestination?.hierarchy?.any { dest ->
+                    bottomNavItems.any { it.route == dest.route }
+                } == true
 
             @OptIn(
                 androidx.compose.material3.adaptive.navigationsuite.ExperimentalMaterial3AdaptiveNavigationSuiteApi::class
             )
-            androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold(
-                layoutType = navLayoutType,
-                containerColor = androidx.compose.ui.graphics.Color.Transparent,
-                navigationSuiteColors = androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults.colors(
-                    navigationBarContainerColor = androidx.compose.ui.graphics.Color.Transparent,
-                    navigationRailContainerColor = androidx.compose.ui.graphics.Color(0xFF0C0F17).copy(alpha = 0.85f),
-                    navigationDrawerContainerColor = androidx.compose.ui.graphics.Color.Transparent
-                ),
-                navigationSuiteItems = {
-                    bottomNavItems.forEach { item ->
-                        val selected =
-                            currentDestination?.hierarchy?.any {
-                                it.route == item.route
-                            } == true
+            val adaptiveInfo = androidx.compose.material3.adaptive.currentWindowAdaptiveInfo()
+            val navLayoutType =
+                if (showBottomBar) {
+                    androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(
+                        adaptiveInfo
+                    )
+                } else {
+                    androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType.None
+                }
 
-                        item(
-                            icon = {
-                                Icon(
-                                    imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                                    contentDescription = item.label,
+            val isBottomBar = navLayoutType == androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType.NavigationBar
+
+            val hazeState = remember { dev.chrisbanes.haze.HazeState() }
+
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(androidx.compose.ui.graphics.Color.Transparent)
+            ) {
+                Box(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
+                    androidx.compose.foundation.Image(
+                        painter =
+                            androidx.compose.ui.res.painterResource(
+                                id = com.deepeye.musicpro.R.drawable.spatial_bg
+                            ),
+                        contentDescription = null,
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    Box(
+                        modifier =
+                            Modifier.fillMaxSize().background(
+                                androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.4f)
+                            )
+                    )
+
+                    if (isBottomBar) {
+                        Scaffold(
+                            contentWindowInsets = WindowInsets(0.dp),
+                            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                        ) { innerPadding ->
+                            val exactDockHeight =
+                                if (showBottomBar) {
+                                    WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 100.dp
+                                } else {
+                                    0.dp
+                                }
+                            val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+                            val miniPlayerDockHeight = if (isLandscape) 64.dp else 88.dp
+                            val miniPlayerPadding by androidx.compose.animation.core.animateDpAsState(
+                                targetValue = if (playerState.currentItem != null && !isInPipMode) miniPlayerDockHeight else 0.dp,
+                                label = "miniPlayerPadding"
+                            )
+
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .padding(bottom = exactDockHeight + miniPlayerPadding),
+                            ) {
+                                NavGraph(
+                                    navController = navController,
+                                    windowSizeClass = windowSizeClass,
+                                    onExpandPlayer = {
+                                        fullscreenMode.enter()
+                                        sheetViewModel.expand()
+                                    },
+                                    onPlayFullscreenMusic = {
+                                        fullscreenMode.enter(forceLandscape = true)
+                                        sheetViewModel.expand()
+                                    }
                                 )
+                            }
+                        }
+                    } else {
+                        val adaptiveItemColors =
+                            androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults.itemColors(
+                                navigationBarItemColors =
+                                    NavigationBarItemDefaults.colors(
+                                        selectedIconColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
+                                        selectedTextColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
+                                        indicatorColor = androidx.compose.ui.graphics.Color(0x3300E5FF),
+                                        unselectedIconColor =
+                                            androidx.compose.ui.graphics.Color.White.copy(
+                                                alpha = 0.5f
+                                            ),
+                                        unselectedTextColor =
+                                            androidx.compose.ui.graphics.Color.White.copy(
+                                                alpha = 0.5f
+                                            ),
+                                    ),
+                                navigationRailItemColors =
+                                    NavigationRailItemDefaults.colors(
+                                        selectedIconColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
+                                        selectedTextColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
+                                        indicatorColor = androidx.compose.ui.graphics.Color(0x3300E5FF),
+                                        unselectedIconColor =
+                                            androidx.compose.ui.graphics.Color.White.copy(
+                                                alpha = 0.5f
+                                            ),
+                                        unselectedTextColor =
+                                            androidx.compose.ui.graphics.Color.White.copy(
+                                                alpha = 0.5f
+                                            ),
+                                    ),
+                                navigationDrawerItemColors =
+                                    NavigationDrawerItemDefaults.colors(
+                                        selectedIconColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
+                                        selectedTextColor = androidx.compose.ui.graphics.Color(0xFF00E5FF),
+                                        selectedContainerColor = androidx.compose.ui.graphics.Color(0x3300E5FF),
+                                        unselectedIconColor =
+                                            androidx.compose.ui.graphics.Color.White.copy(
+                                                alpha = 0.5f
+                                            ),
+                                        unselectedTextColor =
+                                            androidx.compose.ui.graphics.Color.White.copy(
+                                                alpha = 0.5f
+                                            ),
+                                    )
+                            )
+
+                        @OptIn(
+                            androidx.compose.material3.adaptive.navigationsuite.ExperimentalMaterial3AdaptiveNavigationSuiteApi::class
+                        )
+                        androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold(
+                            layoutType = navLayoutType,
+                            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                            navigationSuiteColors =
+                                androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults.colors(
+                                    navigationBarContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                                    navigationRailContainerColor =
+                                        androidx.compose.ui.graphics.Color(
+                                            0xFF0C0F17
+                                        ).copy(alpha = 0.85f),
+                                    navigationDrawerContainerColor = androidx.compose.ui.graphics.Color.Transparent
+                                ),
+                            navigationSuiteItems = {
+                                bottomNavItems.forEach { item ->
+                                    val selected =
+                                        currentDestination?.hierarchy?.any {
+                                            it.route == item.route
+                                        } == true
+
+                                    item(
+                                        icon = {
+                                            Icon(
+                                                imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                                contentDescription = item.label,
+                                            )
+                                        },
+                                        label = {
+                                            Text(
+                                                text = item.label,
+                                                fontWeight = if (selected) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal
+                                            )
+                                        },
+                                        selected = selected,
+                                        colors = adaptiveItemColors,
+                                        onClick = {
+                                            if (!selected) {
+                                                navController.navigate(item.route) {
+                                                    popUpTo(Routes.Home.route) { saveState = true }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            }
+                                        },
+                                    )
+                                }
                             },
-                            label = { 
-                                Text(
-                                    text = item.label,
-                                    fontWeight = if (selected) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal
-                                ) 
-                            },
-                            selected = selected,
-                            colors = adaptiveItemColors,
-                            onClick = {
+                        ) {
+                            Scaffold(
+                                containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                                bottomBar = {
+                                    // Empty bottom bar, space handled by AnchoredMiniPlayer
+                                },
+                            ) { innerPadding ->
+                                val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+                                val miniPlayerDockHeight = if (isLandscape) 64.dp else 88.dp
+                                val miniPlayerPadding by androidx.compose.animation.core.animateDpAsState(
+                                    targetValue = if (playerState.currentItem != null && !isInPipMode) miniPlayerDockHeight else 0.dp,
+                                    label = "miniPlayerPadding"
+                                )
+
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxSize()
+                                            .padding(innerPadding)
+                                            .padding(bottom = miniPlayerPadding),
+                                ) {
+                                    NavGraph(
+                                        navController = navController,
+                                        windowSizeClass = windowSizeClass,
+                                        onExpandPlayer = {
+                                            fullscreenMode.enter()
+                                            sheetViewModel.expand()
+                                        },
+                                        onPlayFullscreenMusic = {
+                                            fullscreenMode.enter(forceLandscape = true)
+                                            sheetViewModel.expand()
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } // Close the Box with hazeSource
+
+                // Dock Overlay
+                if (isBottomBar && showBottomBar) {
+                    val selectedIndex =
+                        bottomNavItems.indexOfFirst { item ->
+                            currentDestination?.hierarchy?.any { it.route == item.route } == true
+                        }.coerceAtLeast(0)
+
+                    val magicItems =
+                        remember(bottomNavItems) {
+                            bottomNavItems.map {
+                                com.deepeye.musicpro.ui.components.MagicNavItem(
+                                    route = it.route,
+                                    label = it.label,
+                                    selectedIcon = it.selectedIcon,
+                                    unselectedIcon = it.unselectedIcon
+                                )
+                            }
+                        }
+
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.BottomCenter)
+                                .background(androidx.compose.ui.graphics.Color.Transparent),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        com.deepeye.musicpro.ui.components.MagicNavigationBar(
+                            items = magicItems,
+                            selectedIndex = selectedIndex,
+                            onItemClick = { index ->
+                                // Collapse the player whenever a dock item is clicked
+                                sheetViewModel.collapse()
+
+                                val item = bottomNavItems[index]
+                                val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
                                 if (!selected) {
                                     navController.navigate(item.route) {
                                         popUpTo(Routes.Home.route) { saveState = true }
@@ -389,210 +514,156 @@ fun DeepEyeMusicApp(
                                     }
                                 }
                             },
+                            backgroundColor =
+                                androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(
+                                    alpha = 0.25f
+                                ),
+                            indicatorColor = androidx.compose.ui.graphics.Color(0xFF00E5C3).copy(alpha = 0.2f),
+                            activeIconColor = androidx.compose.ui.graphics.Color(0xFF00E5C3), // Cyan accent
+                            inactiveIconColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
+                            surfaceColor = androidx.compose.ui.graphics.Color.Transparent,
+                            modifier =
+                                Modifier
+                                    .navigationBarsPadding()
+                                    .padding(horizontal = 16.dp)
                         )
                     }
-                },
-            ) {
-                Scaffold(
-                    containerColor = androidx.compose.ui.graphics.Color.Transparent,
-                    bottomBar = {
-                        // Empty bottom bar, space handled by AnchoredMiniPlayer
-                    },
-                ) { innerPadding ->
-                    val isLandscape = androidx.compose.ui.platform.LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-                    val miniPlayerDockHeight = if (isLandscape) 64.dp else 88.dp
-                    val miniPlayerPadding by androidx.compose.animation.core.animateDpAsState(
-                        targetValue = if (playerState.currentItem != null && !isInPipMode) miniPlayerDockHeight else 0.dp,
-                        label = "miniPlayerPadding"
-                    )
+                }
 
+                if (!fullscreenMode.isFullscreen) {
+                    // Status Bar Glass Overlay
                     Box(
                         modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                            .padding(bottom = miniPlayerPadding),
-                    ) {
-                        NavGraph(
-                            navController = navController,
-                            windowSizeClass = windowSizeClass,
-                            onExpandPlayer = { 
-                                fullscreenMode.enter()
-                                sheetViewModel.expand() 
-                            },
-                            onPlayFullscreenMusic = {
-                                fullscreenMode.enter(forceLandscape = true)
-                                sheetViewModel.expand()
-                            }
-                        )
-                    }
-                }
-            }
-        }
-            } // Close the Box with hazeSource
-
-            // Dock Overlay
-            if (isBottomBar && showBottomBar) {
-                val selectedIndex = bottomNavItems.indexOfFirst { item ->
-                    currentDestination?.hierarchy?.any { it.route == item.route } == true
-                }.coerceAtLeast(0)
-
-                val magicItems = remember(bottomNavItems) {
-                    bottomNavItems.map {
-                        com.deepeye.musicpro.ui.components.MagicNavItem(
-                            route = it.route,
-                            label = it.label,
-                            selectedIcon = it.selectedIcon,
-                            unselectedIcon = it.unselectedIcon
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .background(androidx.compose.ui.graphics.Color.Transparent),
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    com.deepeye.musicpro.ui.components.MagicNavigationBar(
-                        items = magicItems,
-                        selectedIndex = selectedIndex,
-                        onItemClick = { index ->
-                            // Collapse the player whenever a dock item is clicked
-                            sheetViewModel.collapse()
-                            
-                            val item = bottomNavItems[index]
-                            val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
-                            if (!selected) {
-                                navController.navigate(item.route) {
-                                    popUpTo(Routes.Home.route) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                        },
-                        backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.25f),
-                        indicatorColor = androidx.compose.ui.graphics.Color(0xFF00E5C3).copy(alpha = 0.2f),
-                        activeIconColor = androidx.compose.ui.graphics.Color(0xFF00E5C3), // Cyan accent
-                        inactiveIconColor = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
-                        surfaceColor = androidx.compose.ui.graphics.Color.Transparent,
-                        modifier = Modifier
-                            .navigationBarsPadding()
-                            .padding(horizontal = 16.dp)
+                            Modifier
+                                .fillMaxWidth()
+                                .height(WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
+                                .align(Alignment.TopCenter)
+                                .background(
+                                    androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.25f)
+                                )
                     )
-                }
-            }
 
-            if (!fullscreenMode.isFullscreen) {
-                // Status Bar Glass Overlay
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
-                        .align(Alignment.TopCenter)
-                        .background(androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.25f))
-                )
-
-                // Global Update Banner
-                if (settingsUiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.UpdateAvailable || 
-                    settingsUiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.Downloading ||
-                    settingsUiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.Downloaded) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
-                            .align(Alignment.TopCenter)
+                    // Global Update Banner
+                    if (settingsUiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.UpdateAvailable ||
+                        settingsUiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.Downloading ||
+                        settingsUiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.Downloaded
                     ) {
-                        com.deepeye.musicpro.ui.update.UpdateDialog(
-                            state = settingsUiState.updateState,
-                            onDownloadClick = { url, version -> settingsViewModel.downloadUpdate(url, version) },
-                            onInstallClick = { file -> settingsViewModel.installApk(file) },
-                            onDismissClick = { settingsViewModel.resetUpdateState() }
+                        Box(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding())
+                                    .align(Alignment.TopCenter)
+                        ) {
+                            com.deepeye.musicpro.ui.update.UpdateDialog(
+                                state = settingsUiState.updateState,
+                                onDownloadClick = { url, version -> settingsViewModel.downloadUpdate(url, version) },
+                                onInstallClick = { file -> settingsViewModel.installApk(file) },
+                                onDismissClick = { settingsViewModel.resetUpdateState() }
+                            )
+                        }
+                    }
+                }
+
+                // Overlay AnchoredMiniPlayer or Floating In-App Video PiP
+                if (playerState.currentItem != null) {
+                    var isPipDismissed by remember(
+                        playerState.currentSong?.id,
+                        playerState.currentItem?.id
+                    ) { mutableStateOf(false) }
+
+                    val isVideo = playerState.isVideo
+                    val isPlayerExpanded =
+                        sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.EXPANDED ||
+                            sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.HALF_EXPANDED
+                    val isPipActive = !fullscreenMode.isFullscreen && !isPlayerExpanded && isVideo && !isInPipMode && !isPipDismissed
+
+                    if (isPipActive) {
+                        val stablePlayer =
+                            remember(playerController.player) {
+                                com.deepeye.musicpro.ui.components.StablePlayerHolder(playerController.player)
+                            }
+                        com.deepeye.musicpro.ui.player.FloatingVideoPipOverlay(
+                            playerHolder = stablePlayer,
+                            playerState = playerState,
+                            onExpandFullscreen = {
+                                isPipDismissed = false
+                                fullscreenMode.enter()
+                                sheetViewModel.expand()
+                            },
+                            onPlayPause = { playerController.togglePlayPause() },
+                            onClose = {
+                                isPipDismissed = true
+                            }
                         )
+                    } else {
+                        androidx.activity.compose.BackHandler(
+                            enabled = (
+                                sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.EXPANDED ||
+                                    sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.HALF_EXPANDED
+                            )
+                        ) {
+                            if (!sheetState.isGestureLocked) {
+                                sheetViewModel.collapse()
+                            }
+                        }
+
+                        val exactDockHeight =
+                            if (isBottomBar && showBottomBar) {
+                                WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 100.dp
+                            } else {
+                                0.dp
+                            }
+
+                        com.deepeye.musicpro.ui.player.AnchoredMiniPlayer(
+                            sheetState = sheetState,
+                            onExpand = { sheetViewModel.expand() },
+                            onCollapse = { sheetViewModel.collapse() },
+                            onHalfExpand = { sheetViewModel.halfExpand() },
+                            onNext = { sheetViewModel.nextTrack() },
+                            onPrev = { sheetViewModel.previousTrack() },
+                            onPlayPause = { sheetViewModel.togglePlayPause() },
+                            bottomBarHeight = exactDockHeight,
+                        ) {
+                            Box(
+                                modifier =
+                                    Modifier.fillMaxSize().hazeEffect(
+                                        state = hazeState,
+                                        style =
+                                            dev.chrisbanes.haze.HazeStyle(
+                                                blurRadius = 20.dp,
+                                                tint =
+                                                    dev.chrisbanes.haze.HazeTint(
+                                                        androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.2f)
+                                                    ),
+                                                noiseFactor = 0f
+                                            )
+                                    ),
+                            ) {
+                                com.deepeye.musicpro.ui.player.NowPlayingScreen(
+                                    windowSizeClass = windowSizeClass,
+                                    onNavigateBack = {
+                                        fullscreenMode.exit()
+                                        sheetViewModel.collapse()
+                                    },
+                                    onNavigateToV4A = {
+                                        sheetViewModel.collapse()
+                                        navController.navigate(Routes.DSP.route)
+                                    },
+                                    onNavigateToSettings = {
+                                        sheetViewModel.collapse()
+                                        navController.navigate(Routes.Settings.route)
+                                    },
+                                    onNavigateToAccount = {
+                                        sheetViewModel.collapse()
+                                        navController.navigate(Routes.YouTubeLogin.route)
+                                    },
+                                )
+                            }
+                        }
                     }
                 }
-            }
-        
-        // Overlay AnchoredMiniPlayer or Floating In-App Video PiP
-        if (playerState.currentItem != null) {
-            var isPipDismissed by remember(playerState.currentSong?.id, playerState.currentItem?.id) { mutableStateOf(false) }
-
-            val isVideo = playerState.isVideo
-            val isPlayerExpanded = sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.EXPANDED ||
-                sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.HALF_EXPANDED
-            val isPipActive = !fullscreenMode.isFullscreen && !isPlayerExpanded && isVideo && !isInPipMode && !isPipDismissed
-
-            if (isPipActive) {
-                val stablePlayer = remember(playerController.player) {
-                    com.deepeye.musicpro.ui.components.StablePlayerHolder(playerController.player)
-                }
-                com.deepeye.musicpro.ui.player.FloatingVideoPipOverlay(
-                    playerHolder = stablePlayer,
-                    playerState = playerState,
-                    onExpandFullscreen = {
-                        isPipDismissed = false
-                        fullscreenMode.enter()
-                        sheetViewModel.expand()
-                    },
-                    onPlayPause = { playerController.togglePlayPause() },
-                    onClose = {
-                        isPipDismissed = true
-                    }
-                )
-            } else {
-                androidx.activity.compose.BackHandler(
-                    enabled = (sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.EXPANDED ||
-                        sheetState.anchor == com.deepeye.musicpro.ui.player.MiniSheetAnchor.HALF_EXPANDED)
-                ) {
-                    if (!sheetState.isGestureLocked) {
-                        sheetViewModel.collapse()
-                    }
-                }
-
-                val exactDockHeight = if (isBottomBar && showBottomBar) {
-                    WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 100.dp
-                } else {
-                    0.dp
-                }
-
-                com.deepeye.musicpro.ui.player.AnchoredMiniPlayer(
-                    sheetState = sheetState,
-                    onExpand = { sheetViewModel.expand() },
-                    onCollapse = { sheetViewModel.collapse() },
-                    onHalfExpand = { sheetViewModel.halfExpand() },
-                    onNext = { sheetViewModel.nextTrack() },
-                    onPrev = { sheetViewModel.previousTrack() },
-                    onPlayPause = { sheetViewModel.togglePlayPause() },
-                    bottomBarHeight = exactDockHeight,
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize().hazeEffect(state = hazeState, style = dev.chrisbanes.haze.HazeStyle(blurRadius = 20.dp, tint = dev.chrisbanes.haze.HazeTint(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.2f)), noiseFactor = 0f)),
-                    ) {
-                        com.deepeye.musicpro.ui.player.NowPlayingScreen(
-                            windowSizeClass = windowSizeClass,
-                            onNavigateBack = {
-                                fullscreenMode.exit()
-                                sheetViewModel.collapse()
-                            },
-                            onNavigateToV4A = {
-                                sheetViewModel.collapse()
-                                navController.navigate(Routes.DSP.route)
-                            },
-                            onNavigateToSettings = {
-                                sheetViewModel.collapse()
-                                navController.navigate(Routes.Settings.route)
-                            },
-                            onNavigateToAccount = {
-                                sheetViewModel.collapse()
-                                navController.navigate(Routes.YouTubeLogin.route)
-                            },
-                        )
-                    }
-                }
-            }
-        }
-        } // end of Spatial Background Box
+            } // end of Spatial Background Box
         } // end CompositionLocalProvider
     } // end ProvideViewportScale
 }

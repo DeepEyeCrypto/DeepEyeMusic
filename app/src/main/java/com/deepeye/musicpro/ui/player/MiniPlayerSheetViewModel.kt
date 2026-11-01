@@ -13,32 +13,32 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MiniPlayerSheetViewModel
-@Inject
-constructor(
-    private val playerController: PlayerController,
-) : ViewModel() {
-    private val _state = MutableStateFlow(MiniPlayerSheetState())
-    val state = _state.asStateFlow()
+    @Inject
+    constructor(
+        private val playerController: PlayerController,
+    ) : ViewModel() {
+        private val _state = MutableStateFlow(MiniPlayerSheetState())
+        val state = _state.asStateFlow()
 
-    fun expand() {
-        _state.update { it.copy(anchor = MiniSheetAnchor.EXPANDED) }
+        fun expand() {
+            _state.update { it.copy(anchor = MiniSheetAnchor.EXPANDED) }
+        }
+
+        fun collapse() {
+            _state.update { it.copy(anchor = MiniSheetAnchor.COLLAPSED) }
+        }
+
+        fun halfExpand() {
+            _state.update { it.copy(anchor = MiniSheetAnchor.HALF_EXPANDED) }
+        }
+
+        fun nextTrack() = playerController.next()
+
+        fun previousTrack() = playerController.previous()
+
+        fun togglePlayPause() = playerController.togglePlayPause()
+
+        fun setGestureLocked(locked: Boolean) {
+            _state.update { it.copy(isGestureLocked = locked) }
+        }
     }
-
-    fun collapse() {
-        _state.update { it.copy(anchor = MiniSheetAnchor.COLLAPSED) }
-    }
-
-    fun halfExpand() {
-        _state.update { it.copy(anchor = MiniSheetAnchor.HALF_EXPANDED) }
-    }
-
-    fun nextTrack() = playerController.next()
-
-    fun previousTrack() = playerController.previous()
-
-    fun togglePlayPause() = playerController.togglePlayPause()
-
-    fun setGestureLocked(locked: Boolean) {
-        _state.update { it.copy(isGestureLocked = locked) }
-    }
-}

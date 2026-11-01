@@ -4,9 +4,6 @@
 package com.deepeye.musicpro.ui.home
 
 import android.net.Uri
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,7 +12,6 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +20,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,15 +50,16 @@ import com.deepeye.musicpro.ui.util.evenCarouselCardWidth
 import com.deepeye.musicpro.ui.util.minTouchTarget
 import java.util.Calendar
 
-private val MoodFilters = listOf(
-    "All",
-    "⚡ Energize",
-    "🌌 Chill & Relax",
-    "🎧 Studio Hi-Fi",
-    "🔥 Trending",
-    "📻 Focus & Flow",
-    "🌙 Night Drive"
-)
+private val MoodFilters =
+    listOf(
+        "All",
+        "⚡ Energize",
+        "🌌 Chill & Relax",
+        "🎧 Studio Hi-Fi",
+        "🔥 Trending",
+        "📻 Focus & Flow",
+        "🌙 Night Drive"
+    )
 
 @Composable
 fun HomeTopBar(
@@ -73,10 +69,11 @@ fun HomeTopBar(
     val greeting = remember { getDynamicGreeting() }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = CardGeometry.ScreenGutter, vertical = 8.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = CardGeometry.ScreenGutter, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -97,11 +94,12 @@ fun HomeTopBar(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Box(
-                    modifier = Modifier
-                        .size(9.dp)
-                        .clip(CircleShape)
-                        .background(NeonCyan)
-                        .shadow(8.dp, CircleShape, spotColor = NeonCyan)
+                    modifier =
+                        Modifier
+                            .size(9.dp)
+                            .clip(CircleShape)
+                            .background(NeonCyan)
+                            .shadow(8.dp, CircleShape, spotColor = NeonCyan)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
@@ -110,9 +108,10 @@ fun HomeTopBar(
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 1.sp,
                     color = GlowOrange,
-                    modifier = Modifier
-                        .background(GlowOrange.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 4.dp, vertical = 1.dp)
+                    modifier =
+                        Modifier
+                            .background(GlowOrange.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 4.dp, vertical = 1.dp)
                 )
             }
             Spacer(modifier = Modifier.height(2.dp))
@@ -131,12 +130,13 @@ fun HomeTopBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF131722).copy(alpha = 0.85f))
-                    .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
-                    .clickable(onClick = onSearchClick),
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF131722).copy(alpha = 0.85f))
+                        .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
+                        .clickable(onClick = onSearchClick),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -148,12 +148,13 @@ fun HomeTopBar(
             }
 
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF131722).copy(alpha = 0.85f))
-                    .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
-                    .clickable(onClick = onSettingsClick),
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF131722).copy(alpha = 0.85f))
+                        .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
+                        .clickable(onClick = onSettingsClick),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -187,14 +188,16 @@ fun HomeScreen(
     // third of the landscape row empty, which is the dead space being removed.
     // maxWidth is read through BoxWithConstraints below, so nothing is guessed.
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val cardWidth = evenCarouselCardWidth(
-            availableWidth = maxWidth,
-            minItemWidth = CardGeometry.Compact.minWidth,
-        )
-        val quickColumns = adaptiveColumnCount(
-            availableWidth = maxWidth,
-            minItemWidth = 200.dp,
-        )
+        val cardWidth =
+            evenCarouselCardWidth(
+                availableWidth = maxWidth,
+                minItemWidth = CardGeometry.Compact.minWidth,
+            )
+        val quickColumns =
+            adaptiveColumnCount(
+                availableWidth = maxWidth,
+                minItemWidth = 200.dp,
+            )
 
         Scaffold(
             topBar = {
@@ -205,249 +208,275 @@ fun HomeScreen(
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
-        LazyColumn(
-            state = listState,
-            contentPadding = PaddingValues(
-                top = paddingValues.calculateTopPadding(),
-                bottom = 90.dp // mini-player and nav-bar safe inset
-            ),
-            modifier = Modifier
-                .fillMaxSize()
-                .premiumScrollHaptics(listState)
-        ) {
-            // 1. Mood / Vibe Filter Flow (No side scroll)
-            item {
-                OptIn(ExperimentalLayoutApi::class)
-                FlowRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = CardGeometry.ScreenGutter,
-                            vertical = 4.dp
-                        ),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    MoodFilters.forEachIndexed { index, mood ->
-                        val isSelected = selectedMoodIndex == index
-                        val bgBrush = if (isSelected) {
-                            Brush.horizontalGradient(listOf(NeonCyan.copy(alpha = 0.35f), ElectricViolet.copy(alpha = 0.45f)))
-                        } else {
-                            Brush.horizontalGradient(listOf(Color(0xFF131722).copy(alpha = 0.85f), Color(0xFF131722).copy(alpha = 0.85f)))
-                        }
-                        val borderColor = if (isSelected) NeonCyan else Color.White.copy(alpha = 0.18f)
-                        val textColor = if (isSelected) Color.White else Color.White.copy(alpha = 0.75f)
-
-                        Box(
-                            modifier = Modifier
-                                .heightIn(min = 36.dp)
-                                .clip(RoundedCornerShape(18.dp))
-                                .background(bgBrush)
-                                .border(if (isSelected) 1.5.dp else 1.dp, borderColor, RoundedCornerShape(18.dp))
-                                .clickable { selectedMoodIndex = index }
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = mood,
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = textColor,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            // 2. Quick-Play dense grid. The column count follows the viewport so
-            // this fills the width on a landscape phone, instead of stretching two
-            // comically wide rows across 891dp.
-            recs?.perfectForNow?.items?.take(8)?.takeIf { it.isNotEmpty() }?.let { quickItems ->
+            LazyColumn(
+                state = listState,
+                contentPadding =
+                    PaddingValues(
+                        top = paddingValues.calculateTopPadding(),
+                        bottom = 90.dp // mini-player and nav-bar safe inset
+                    ),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .premiumScrollHaptics(listState)
+            ) {
+                // 1. Mood / Vibe Filter Flow (No side scroll)
                 item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = CardGeometry.ScreenGutter)
+                    OptIn(ExperimentalLayoutApi::class)
+                    FlowRow(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = CardGeometry.ScreenGutter,
+                                    vertical = 4.dp
+                                ),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        quickItems.chunked(quickColumns).forEach { rowItems ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 3.dp),
-                                horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing)
-                            ) {
-                                rowItems.forEach { video ->
-                                    QuickGridItem(
-                                        video = video,
-                                        modifier = Modifier.weight(1f),
-                                        onClick = {
-                                            playMusic(video, quickItems, playerViewModel, onNavigateToNowPlaying)
-                                        }
+                        MoodFilters.forEachIndexed { index, mood ->
+                            val isSelected = selectedMoodIndex == index
+                            val bgBrush =
+                                if (isSelected) {
+                                    Brush.horizontalGradient(
+                                        listOf(NeonCyan.copy(alpha = 0.35f), ElectricViolet.copy(alpha = 0.45f))
+                                    )
+                                } else {
+                                    Brush.horizontalGradient(
+                                        listOf(
+                                            Color(0xFF131722).copy(alpha = 0.85f),
+                                            Color(0xFF131722).copy(alpha = 0.85f)
+                                        )
                                     )
                                 }
-                                // Pad a short final row so its cards keep the same
-                                // width as every other row instead of stretching.
-                                repeat(quickColumns - rowItems.size) {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
+                            val borderColor = if (isSelected) NeonCyan else Color.White.copy(alpha = 0.18f)
+                            val textColor = if (isSelected) Color.White else Color.White.copy(alpha = 0.75f)
+
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .heightIn(min = 36.dp)
+                                        .clip(RoundedCornerShape(18.dp))
+                                        .background(bgBrush)
+                                        .border(
+                                            if (isSelected) 1.5.dp else 1.dp,
+                                            borderColor,
+                                            RoundedCornerShape(18.dp)
+                                        )
+                                        .clickable { selectedMoodIndex = index }
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = mood,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = textColor,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
                     }
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-            }
 
-            // 3. Featured Cinematic Hero Banner
-            item {
-                FeaturedHeroBanner(
-                    onPlayMix = {
-                        recs?.perfectForNow?.items?.firstOrNull()?.let { firstVideo ->
-                            playMusic(firstVideo, recs?.perfectForNow?.items ?: emptyList(), playerViewModel, onNavigateToNowPlaying)
-                        }
-                    }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            // 4. Pull-to-refresh / background sync progress line
-            if (isRefreshing && recs != null) {
-                item {
-                    LinearProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 4.dp)
-                            .clip(RoundedCornerShape(2.dp)),
-                        color = NeonCyan,
-                        trackColor = Color.White.copy(alpha = 0.08f)
-                    )
-                }
-            }
-
-            // 5. Error & Retry State
-            if (recs == null && error != null) {
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "Connection Offline",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.error,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = error ?: "Check network and tap to reload recommendations.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.7f),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = { viewModel.loadRecommendations() },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = NeonCyan,
-                                contentColor = Color.Black
-                            ),
-                            shape = RoundedCornerShape(12.dp)
+                // 2. Quick-Play dense grid. The column count follows the viewport so
+                // this fills the width on a landscape phone, instead of stretching two
+                // comically wide rows across 891dp.
+                recs?.perfectForNow?.items?.take(8)?.takeIf { it.isNotEmpty() }?.let { quickItems ->
+                    item {
+                        Column(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = CardGeometry.ScreenGutter)
                         ) {
-                            Text("Retry", fontWeight = FontWeight.Bold)
+                            quickItems.chunked(quickColumns).forEach { rowItems ->
+                                Row(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 3.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing)
+                                ) {
+                                    rowItems.forEach { video ->
+                                        QuickGridItem(
+                                            video = video,
+                                            modifier = Modifier.weight(1f),
+                                            onClick = {
+                                                playMusic(video, quickItems, playerViewModel, onNavigateToNowPlaying)
+                                            }
+                                        )
+                                    }
+                                    // Pad a short final row so its cards keep the same
+                                    // width as every other row instead of stretching.
+                                    repeat(quickColumns - rowItems.size) {
+                                        Spacer(modifier = Modifier.weight(1f))
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(10.dp))
+                    }
+                }
+
+                // 3. Featured Cinematic Hero Banner
+                item {
+                    FeaturedHeroBanner(
+                        onPlayMix = {
+                            recs?.perfectForNow?.items?.firstOrNull()?.let { firstVideo ->
+                                playMusic(
+                                    firstVideo,
+                                    recs?.perfectForNow?.items ?: emptyList(),
+                                    playerViewModel,
+                                    onNavigateToNowPlaying
+                                )
+                            }
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // 4. Pull-to-refresh / background sync progress line
+                if (isRefreshing && recs != null) {
+                    item {
+                        LinearProgressIndicator(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 4.dp)
+                                    .clip(RoundedCornerShape(2.dp)),
+                            color = NeonCyan,
+                            trackColor = Color.White.copy(alpha = 0.08f)
+                        )
+                    }
+                }
+
+                // 5. Error & Retry State
+                if (recs == null && error != null) {
+                    item {
+                        Column(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "Connection Offline",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = error ?: "Check network and tap to reload recommendations.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White.copy(alpha = 0.7f),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { viewModel.loadRecommendations() },
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = NeonCyan,
+                                        contentColor = Color.Black
+                                    ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Retry", fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
+
+                // 6. Recommendation Carousels
+                recs?.let { result ->
+                    // Because You Listened
+                    items(result.becauseYouListened, key = { "byl-${it.title}" }) { row ->
+                        ModernRecommendationRow(
+                            row = row,
+                            cardWidth = cardWidth,
+                            accentColor = NeonCyan,
+                            onVideoClick = { video ->
+                                playMusic(video, row.items, playerViewModel, onNavigateToNowPlaying)
+                            }
+                        )
+                    }
+
+                    // Perfect for right now
+                    item(key = "perfect-for-now") {
+                        ModernRecommendationRow(
+                            row = result.perfectForNow,
+                            cardWidth = cardWidth,
+                            accentColor = GlowOrange,
+                            isHighlighted = true,
+                            onVideoClick = { video ->
+                                playMusic(video, result.perfectForNow.items, playerViewModel, onNavigateToNowPlaying)
+                            }
+                        )
+                    }
+
+                    // Favorite artists
+                    items(result.favoriteArtists, key = { "fav-${it.title}" }) { row ->
+                        ModernRecommendationRow(
+                            row = row,
+                            cardWidth = cardWidth,
+                            accentColor = ElectricViolet,
+                            onVideoClick = { video ->
+                                playMusic(video, row.items, playerViewModel, onNavigateToNowPlaying)
+                            }
+                        )
+                    }
+
+                    // Trending
+                    item(key = "trending-row") {
+                        ModernRecommendationRow(
+                            row = result.trending,
+                            cardWidth = cardWidth,
+                            accentColor = NeonCyan,
+                            onVideoClick = { video ->
+                                playMusic(video, result.trending.items, playerViewModel, onNavigateToNowPlaying)
+                            }
+                        )
+                    }
+
+                    // Genre dives
+                    items(result.genreDive, key = { "genre-${it.title}" }) { row ->
+                        ModernRecommendationRow(
+                            row = row,
+                            cardWidth = cardWidth,
+                            accentColor = GlowTeal,
+                            onVideoClick = { video ->
+                                playMusic(video, row.items, playerViewModel, onNavigateToNowPlaying)
+                            }
+                        )
+                    }
+
+                    // Hidden gems
+                    item(key = "hidden-gems") {
+                        ModernRecommendationRow(
+                            row = result.hiddenGems,
+                            cardWidth = cardWidth,
+                            accentColor = GlowOrange,
+                            isHighlighted = true,
+                            onVideoClick = { video ->
+                                playMusic(video, result.hiddenGems.items, playerViewModel, onNavigateToNowPlaying)
+                            }
+                        )
+                    }
+                }
+
+                // Loading Shimmer Skeletons
+                if (isRefreshing && recs == null) {
+                    items(4) {
+                        ShimmerRecommendationRow(cardWidth = cardWidth)
+                    }
+                }
             }
-
-            // 6. Recommendation Carousels
-            recs?.let { result ->
-                // Because You Listened
-                items(result.becauseYouListened, key = { "byl-${it.title}" }) { row ->
-                    ModernRecommendationRow(
-                        row = row,
-                        cardWidth = cardWidth,
-                        accentColor = NeonCyan,
-                        onVideoClick = { video ->
-                            playMusic(video, row.items, playerViewModel, onNavigateToNowPlaying)
-                        }
-                    )
-                }
-
-                // Perfect for right now
-                item(key = "perfect-for-now") {
-                    ModernRecommendationRow(
-                        row = result.perfectForNow,
-                        cardWidth = cardWidth,
-                        accentColor = GlowOrange,
-                        isHighlighted = true,
-                        onVideoClick = { video ->
-                            playMusic(video, result.perfectForNow.items, playerViewModel, onNavigateToNowPlaying)
-                        }
-                    )
-                }
-
-                // Favorite artists
-                items(result.favoriteArtists, key = { "fav-${it.title}" }) { row ->
-                    ModernRecommendationRow(
-                        row = row,
-                        cardWidth = cardWidth,
-                        accentColor = ElectricViolet,
-                        onVideoClick = { video ->
-                            playMusic(video, row.items, playerViewModel, onNavigateToNowPlaying)
-                        }
-                    )
-                }
-
-                // Trending
-                item(key = "trending-row") {
-                    ModernRecommendationRow(
-                        row = result.trending,
-                        cardWidth = cardWidth,
-                        accentColor = NeonCyan,
-                        onVideoClick = { video ->
-                            playMusic(video, result.trending.items, playerViewModel, onNavigateToNowPlaying)
-                        }
-                    )
-                }
-
-                // Genre dives
-                items(result.genreDive, key = { "genre-${it.title}" }) { row ->
-                    ModernRecommendationRow(
-                        row = row,
-                        cardWidth = cardWidth,
-                        accentColor = GlowTeal,
-                        onVideoClick = { video ->
-                            playMusic(video, row.items, playerViewModel, onNavigateToNowPlaying)
-                        }
-                    )
-                }
-
-                // Hidden gems
-                item(key = "hidden-gems") {
-                    ModernRecommendationRow(
-                        row = result.hiddenGems,
-                        cardWidth = cardWidth,
-                        accentColor = GlowOrange,
-                        isHighlighted = true,
-                        onVideoClick = { video ->
-                            playMusic(video, result.hiddenGems.items, playerViewModel, onNavigateToNowPlaying)
-                        }
-                    )
-                }
-            }
-
-            // Loading Shimmer Skeletons
-            if (isRefreshing && recs == null) {
-                items(4) {
-                    ShimmerRecommendationRow(cardWidth = cardWidth)
-                }
-            }
-        }
         }
     }
 }
@@ -459,26 +488,29 @@ private fun QuickGridItem(
     onClick: () -> Unit = {}
 ) {
     Box(
-        modifier = modifier
-            .heightIn(min = 52.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF131722).copy(alpha = 0.85f))
-            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
+        modifier =
+            modifier
+                .heightIn(min = 52.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFF131722).copy(alpha = 0.85f))
+                .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                .clickable(onClick = onClick)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 52.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
                 model = "https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg",
                 contentDescription = video.title,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp))
+                modifier =
+                    Modifier
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp))
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -488,37 +520,43 @@ private fun QuickGridItem(
                 color = Color.White,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp)
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
             )
         }
     }
 }
 
 @Composable
-private fun FeaturedHeroBanner(
-    onPlayMix: () -> Unit = {}
-) {
+private fun FeaturedHeroBanner(onPlayMix: () -> Unit = {}) {
     GlassCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = CardGeometry.ScreenGutter),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = CardGeometry.ScreenGutter),
         tintColor = ElectricViolet.copy(alpha = 0.2f),
         cornerRadius = 12.dp,
         refractionHeight = 0.35f
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(NeonCyan.copy(alpha = 0.25f), ElectricViolet.copy(alpha = 0.18f), Color.Transparent),
-                        center = androidx.compose.ui.geometry.Offset(200f, 100f),
-                        radius = 600f
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.radialGradient(
+                            colors =
+                                listOf(
+                                    NeonCyan.copy(alpha = 0.25f),
+                                    ElectricViolet.copy(alpha = 0.18f),
+                                    Color.Transparent
+                                ),
+                            center = androidx.compose.ui.geometry.Offset(200f, 100f),
+                            radius = 600f
+                        )
                     )
-                )
-                .padding(12.dp)
+                    .padding(12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -569,12 +607,13 @@ private fun FeaturedHeroBanner(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(NeonCyan)
-                        .shadow(8.dp, CircleShape, spotColor = NeonCyan)
-                        .clickable(onClick = onPlayMix),
+                    modifier =
+                        Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(NeonCyan)
+                            .shadow(8.dp, CircleShape, spotColor = NeonCyan)
+                            .clickable(onClick = onPlayMix),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -597,10 +636,11 @@ fun RecommendationRowUI(
     onVideoClick: (VideoItem) -> Unit,
 ) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val cardWidth = evenCarouselCardWidth(
-            availableWidth = maxWidth,
-            minItemWidth = CardGeometry.Compact.minWidth,
-        )
+        val cardWidth =
+            evenCarouselCardWidth(
+                availableWidth = maxWidth,
+                minItemWidth = CardGeometry.Compact.minWidth,
+            )
         ModernRecommendationRow(
             row = row,
             cardWidth = cardWidth,
@@ -622,24 +662,27 @@ fun ModernRecommendationRow(
     if (row.items.isEmpty()) return
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
     ) {
         // Row Header
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = CardGeometry.ScreenGutter),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = CardGeometry.ScreenGutter),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(accentColor)
+                    modifier =
+                        Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(accentColor)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Column {
@@ -668,13 +711,14 @@ fun ModernRecommendationRow(
             }
 
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .minTouchTarget()
-                    .clip(CircleShape)
-                    .background(Color(0xFF131722).copy(alpha = 0.85f))
-                    .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
-                    .clickable { /* View all */ },
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .minTouchTarget()
+                        .clip(CircleShape)
+                        .background(Color(0xFF131722).copy(alpha = 0.85f))
+                        .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                        .clickable { /* View all */ },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -692,9 +736,10 @@ fun ModernRecommendationRow(
         val columns = if (cardWidth > 200.dp) 3 else 2
         val displayedItems = row.items.take(4)
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = CardGeometry.ScreenGutter),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = CardGeometry.ScreenGutter),
             verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing)
         ) {
             displayedItems.chunked(columns).forEach { chunk ->
@@ -729,42 +774,46 @@ fun ModernVideoCard(
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by androidx.compose.animation.core.animateFloatAsState(
         targetValue = if (isPressed) 0.94f else 1f,
-        animationSpec = androidx.compose.animation.core.spring(
-            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
-            stiffness = androidx.compose.animation.core.Spring.StiffnessLow
-        ),
+        animationSpec =
+            androidx.compose.animation.core.spring(
+                dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+            ),
         label = "cardPressScale"
     )
 
-    val finalModifier = if (cardWidth != Dp.Unspecified && cardWidth > 0.dp) {
-        modifier.width(cardWidth)
-    } else {
-        modifier
-    }
+    val finalModifier =
+        if (cardWidth != Dp.Unspecified && cardWidth > 0.dp) {
+            modifier.width(cardWidth)
+        } else {
+            modifier
+        }
 
     Column(
-        modifier = finalModifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            )
+        modifier =
+            finalModifier
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick
+                )
     ) {
         // Thumbnail Card
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                // Geometry from CardGeometry (SSOT). 16:9 rather than 1:1: these
-                // are YouTube video frames, and a square crop both crops the
-                // subject and costs ~44% more vertical space per card.
-                .aspectRatio(CardGeometry.Video.aspectRatio)
-                .clip(CardGeometry.Video.shape)
-                .background(Color(0xFF131722).copy(alpha = 0.85f))
-                .border(1.dp, Color.White.copy(alpha = 0.15f), CardGeometry.Video.shape)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    // Geometry from CardGeometry (SSOT). 16:9 rather than 1:1: these
+                    // are YouTube video frames, and a square crop both crops the
+                    // subject and costs ~44% more vertical space per card.
+                    .aspectRatio(CardGeometry.Video.aspectRatio)
+                    .clip(CardGeometry.Video.shape)
+                    .background(Color(0xFF131722).copy(alpha = 0.85f))
+                    .border(1.dp, Color.White.copy(alpha = 0.15f), CardGeometry.Video.shape)
         ) {
             AsyncImage(
                 model = "https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg",
@@ -775,24 +824,26 @@ fun ModernVideoCard(
 
             // Bottom Gradient Overlay for readability
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f)),
-                            startY = 100f
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f)),
+                                startY = 100f
+                            )
                         )
-                    )
             )
 
             // Duration Pill Badge
             if (video.duration.isNotBlank()) {
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(6.dp)
-                        .background(Color.Black.copy(alpha = 0.85f), RoundedCornerShape(5.dp))
-                        .padding(horizontal = 5.dp, vertical = 2.dp)
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(6.dp)
+                            .background(Color.Black.copy(alpha = 0.85f), RoundedCornerShape(5.dp))
+                            .padding(horizontal = 5.dp, vertical = 2.dp)
                 ) {
                     Text(
                         text = video.duration,
@@ -836,14 +887,16 @@ fun ModernVideoCard(
 @Composable
 fun ShimmerRecommendationRow(cardWidth: Dp = CardGeometry.Video.minWidth) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = CardGeometry.ScreenGutter),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = CardGeometry.ScreenGutter),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -852,9 +905,10 @@ fun ShimmerRecommendationRow(cardWidth: Dp = CardGeometry.Video.minWidth) {
         Spacer(Modifier.height(10.dp))
         val columns = if (cardWidth > 200.dp) 3 else 2
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = CardGeometry.ScreenGutter),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = CardGeometry.ScreenGutter),
             verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing)
         ) {
             Row(
@@ -877,16 +931,17 @@ private fun playMusic(
     playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel,
     onNavigateToNowPlaying: () -> Unit,
 ) {
-    val mediaItems = contextList.map {
-        MediaItem.Remote(
-            id = it.videoId,
-            title = it.title,
-            artist = it.artist,
-            artworkUri = Uri.parse("https://i.ytimg.com/vi/${it.videoId}/hqdefault.jpg"),
-            duration = 180000L,
-            isVideo = true,
-        )
-    }
+    val mediaItems =
+        contextList.map {
+            MediaItem.Remote(
+                id = it.videoId,
+                title = it.title,
+                artist = it.artist,
+                artworkUri = Uri.parse("https://i.ytimg.com/vi/${it.videoId}/hqdefault.jpg"),
+                duration = 180000L,
+                isVideo = true,
+            )
+        }
     val index = contextList.indexOfFirst { it.videoId == video.videoId }
     playerViewModel.setQueue(mediaItems, if (index >= 0) index else 0)
     onNavigateToNowPlaying()

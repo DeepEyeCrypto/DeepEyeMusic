@@ -59,28 +59,31 @@ fun GlassOmnibox(
     val bgAlpha = if (isFocused) 0.14f else 0.08f
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .clip(RoundedCornerShape(28.dp))
-            .background(
-                Brush.horizontalGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = bgAlpha),
-                        Color(0xFF7B3FE4).copy(alpha = bgAlpha * 0.4f),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clip(RoundedCornerShape(28.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        colors =
+                            listOf(
+                                Color.White.copy(alpha = bgAlpha),
+                                Color(0xFF7B3FE4).copy(alpha = bgAlpha * 0.4f),
+                            )
                     )
                 )
-            )
-            .border(
-                width = 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(28.dp),
-            ),
+                .border(
+                    width = 1.dp,
+                    color = borderColor,
+                    shape = RoundedCornerShape(28.dp),
+                ),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
@@ -95,10 +98,11 @@ fun GlassOmnibox(
             TextField(
                 value = query,
                 onValueChange = onQueryChange,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .onFocusChanged { isFocused = it.isFocused },
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .onFocusChanged { isFocused = it.isFocused },
                 placeholder = {
                     Text(
                         text = placeholder,
@@ -107,28 +111,31 @@ fun GlassOmnibox(
                         fontWeight = FontWeight.Normal,
                     )
                 },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    cursorColor = Color(0xFF7B3FE4),
-                ),
+                colors =
+                    TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color(0xFF7B3FE4),
+                    ),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        focusManager.clearFocus()
-                        onSearch()
-                    },
-                ),
+                keyboardActions =
+                    KeyboardActions(
+                        onSearch = {
+                            focusManager.clearFocus()
+                            onSearch()
+                        },
+                    ),
                 singleLine = true,
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = Color.White,
-                    fontWeight = FontWeight.Normal,
-                ),
+                textStyle =
+                    MaterialTheme.typography.bodyLarge.copy(
+                        color = Color.White,
+                        fontWeight = FontWeight.Normal,
+                    ),
             )
 
             if (query.isNotEmpty()) {

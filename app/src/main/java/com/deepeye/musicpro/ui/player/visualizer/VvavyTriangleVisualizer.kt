@@ -37,10 +37,10 @@ import kotlin.math.min
 import kotlin.math.sin
 
 // ── Palette (vvavy.io triangle mode) ─────────────────────────────────────────
-val VvavyCyan    = Color(0xFF00E5FF)
+val VvavyCyan = Color(0xFF00E5FF)
 val VvavyMagenta = Color(0xFFFF1493)
 private val VvavyWhite = Color(0xFFFFFFFF)
-val VvavyBg      = Color(0xFF090B10)
+val VvavyBg = Color(0xFF090B10)
 
 // ── Particle Spark Pool for Beat Burst ────────────────────────────────────────
 private data class SparkParticle(
@@ -58,7 +58,14 @@ private class SparkParticlePool(val capacity: Int = 64) {
     val particles = Array(capacity) { SparkParticle() }
     private var head = 0
 
-    fun emit(x: Float, y: Float, speed: Float, angle: Float, color: Color, size: Float = 3f) {
+    fun emit(
+        x: Float,
+        y: Float,
+        speed: Float,
+        angle: Float,
+        color: Color,
+        size: Float = 3f
+    ) {
         val p = particles[head % capacity]
         head++
         p.x = x
@@ -71,7 +78,10 @@ private class SparkParticlePool(val capacity: Int = 64) {
         p.color = color
     }
 
-    fun updateAndDraw(drawScope: DrawScope, dt: Float) {
+    fun updateAndDraw(
+        drawScope: DrawScope,
+        dt: Float
+    ) {
         for (p in particles) {
             if (p.life > 0f) {
                 p.x += p.vx * dt
@@ -177,19 +187,22 @@ fun VvavyTriangleVisualizer(
 
         // ── 1. Background Ambient Atmosphere ────────────────────────────────
         drawRect(
-            brush = Brush.verticalGradient(
-                listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
-            )
+            brush =
+                Brush.verticalGradient(
+                    listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
+                )
         )
         drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    accentColor.copy(alpha = 0.08f + bass * 0.07f),
-                    accentColor.copy(alpha = 0f)
+            brush =
+                Brush.radialGradient(
+                    colors =
+                        listOf(
+                            accentColor.copy(alpha = 0.08f + bass * 0.07f),
+                            accentColor.copy(alpha = 0f)
+                        ),
+                    center = Offset(cx, cy),
+                    radius = baseRadius * 2.2f
                 ),
-                center = Offset(cx, cy),
-                radius = baseRadius * 2.2f
-            ),
             radius = baseRadius * 2.2f,
             center = Offset(cx, cy)
         )
@@ -225,7 +238,8 @@ fun VvavyTriangleVisualizer(
                 val px = geometryEngine.projX[i * 3 + 0]
                 val py = geometryEngine.projY[i * 3 + 0]
                 sparkPool.emit(
-                    x = px, y = py,
+                    x = px,
+                    y = py,
                     speed = 250f + bass * 300f,
                     angle = (i * 1.618f) % (2f * PI.toFloat()),
                     color = if (i % 2 == 0) VvavyCyan else VvavyMagenta,
@@ -236,14 +250,20 @@ fun VvavyTriangleVisualizer(
             // Chromatic Aberration (Cyan / Magenta split)
             if (chromaShift > 3f) {
                 drawProjectedTriPath(
-                    geometryEngine, i, triPath,
-                    shiftX = -chromaShift * 0.5f, shiftY = 0f,
+                    geometryEngine,
+                    i,
+                    triPath,
+                    shiftX = -chromaShift * 0.5f,
+                    shiftY = 0f,
                     color = VvavyCyan.copy(alpha = 0.35f + edgeGlow * 0.3f),
                     strokeWidth = strokeWidth * 0.7f
                 )
                 drawProjectedTriPath(
-                    geometryEngine, i, triPath,
-                    shiftX = chromaShift * 0.5f, shiftY = 0f,
+                    geometryEngine,
+                    i,
+                    triPath,
+                    shiftX = chromaShift * 0.5f,
+                    shiftY = 0f,
                     color = VvavyMagenta.copy(alpha = 0.35f + edgeGlow * 0.3f),
                     strokeWidth = strokeWidth * 0.7f
                 )
@@ -254,8 +274,11 @@ fun VvavyTriangleVisualizer(
             val coreColor = lerp3(accentColor, VvavyCyan, VvavyWhite, depthT).copy(alpha = 0.55f + edgeGlow * 0.45f)
 
             drawProjectedTriPath(
-                geometryEngine, i, triPath,
-                shiftX = 0f, shiftY = 0f,
+                geometryEngine,
+                i,
+                triPath,
+                shiftX = 0f,
+                shiftY = 0f,
                 color = coreColor,
                 strokeWidth = strokeWidth
             )
@@ -277,15 +300,17 @@ fun VvavyTriangleVisualizer(
 
         val bloomR = baseRadius * (1.4f + bass * 0.7f)
         drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    accentColor.copy(alpha = 0.18f + bass * 0.22f),
-                    VvavyMagenta.copy(alpha = 0.04f + highMid * 0.06f),
-                    Color.Transparent
+            brush =
+                Brush.radialGradient(
+                    colors =
+                        listOf(
+                            accentColor.copy(alpha = 0.18f + bass * 0.22f),
+                            VvavyMagenta.copy(alpha = 0.04f + highMid * 0.06f),
+                            Color.Transparent
+                        ),
+                    center = Offset(cx, cy),
+                    radius = bloomR
                 ),
-                center = Offset(cx, cy),
-                radius = bloomR
-            ),
             radius = bloomR,
             center = Offset(cx, cy)
         )
@@ -295,11 +320,15 @@ fun VvavyTriangleVisualizer(
 // ── Rotation helper: applies Euler rotations to all tri vertices in-place ──────
 private fun rotateGeometryInPlace(
     engine: VvavyGeometryEngine,
-    yaw: Float, pitch: Float, roll: Float,
+    yaw: Float,
+    pitch: Float,
+    roll: Float,
     bassBoost: Float
 ) {
-    val cosYaw = cos(yaw); val sinYaw = sin(yaw)
-    val cosPitch = cos(pitch); val sinPitch = sin(pitch)
+    val cosYaw = cos(yaw)
+    val sinYaw = sin(yaw)
+    val cosPitch = cos(pitch)
+    val sinPitch = sin(pitch)
     val cosRoll = cos(roll * (1f + bassBoost * 0.4f))
     val sinRoll = sin(roll * (1f + bassBoost * 0.4f))
 
@@ -314,26 +343,34 @@ private fun rotateGeometryInPlace(
 
 private fun rotateVertex(
     v: com.deepeye.musicpro.ui.player.visualizer.vvavy.VvavyVertex,
-    cosYaw: Float, sinYaw: Float,
-    cosPitch: Float, sinPitch: Float,
-    cosRoll: Float, sinRoll: Float
+    cosYaw: Float,
+    sinYaw: Float,
+    cosPitch: Float,
+    sinPitch: Float,
+    cosRoll: Float,
+    sinRoll: Float
 ) {
-    var x = v.x; var y = v.y; var z = v.z
+    var x = v.x
+    var y = v.y
+    var z = v.z
 
     // Yaw (Y-axis)
     val x1 = x * cosYaw + z * sinYaw
     val z1 = -x * sinYaw + z * cosYaw
-    x = x1; z = z1
+    x = x1
+    z = z1
 
     // Pitch (X-axis)
     val y2 = y * cosPitch - z * sinPitch
     val z2 = y * sinPitch + z * cosPitch
-    y = y2; z = z2
+    y = y2
+    z = z2
 
     // Roll (Z-axis)
     val x3 = x * cosRoll - y * sinRoll
     val y3 = x * sinRoll + y * cosRoll
-    x = x3; y = y3
+    x = x3
+    y = y3
 
     v.x = x
     v.y = y
@@ -344,7 +381,8 @@ private fun DrawScope.drawProjectedTriPath(
     engine: VvavyGeometryEngine,
     idx: Int,
     path: Path,
-    shiftX: Float, shiftY: Float,
+    shiftX: Float,
+    shiftY: Float,
     color: Color,
     strokeWidth: Float
 ) {
@@ -368,22 +406,27 @@ private fun DrawScope.drawProjectedTriPath(
 }
 
 /** Linear-interpolate between 3 colors based on t in [0,1] */
-private fun lerp3(a: Color, b: Color, c: Color, t: Float): Color {
+private fun lerp3(
+    a: Color,
+    b: Color,
+    c: Color,
+    t: Float
+): Color {
     val t2 = t.coerceIn(0f, 1f)
     return if (t2 < 0.5f) {
         val s = t2 * 2f
         Color(
-            red   = a.red   * (1f - s) + b.red   * s,
+            red = a.red * (1f - s) + b.red * s,
             green = a.green * (1f - s) + b.green * s,
-            blue  = a.blue  * (1f - s) + b.blue  * s,
+            blue = a.blue * (1f - s) + b.blue * s,
             alpha = 1f
         )
     } else {
         val s = (t2 - 0.5f) * 2f
         Color(
-            red   = b.red   * (1f - s) + c.red   * s,
+            red = b.red * (1f - s) + c.red * s,
             green = b.green * (1f - s) + c.green * s,
-            blue  = b.blue  * (1f - s) + c.blue  * s,
+            blue = b.blue * (1f - s) + c.blue * s,
             alpha = 1f
         )
     }

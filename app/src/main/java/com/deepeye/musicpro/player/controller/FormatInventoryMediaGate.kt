@@ -20,7 +20,6 @@ package com.deepeye.musicpro.player.controller
  * regardless of position bucket).
  */
 class FormatInventoryMediaGate {
-
     private companion object {
         /** Coarse position bucket (ms); recoveries may restore with up to 30s drift. */
         const val POSITION_BUCKET_MS = 30_000L
@@ -33,7 +32,10 @@ class FormatInventoryMediaGate {
      * never force a corruption-triggering reset). The returned key is safe to compare and
      * may be logged only via [hashCode] to avoid exposing any media identity.
      */
-    fun materializeMediaKey(mediaId: String?, positionMs: Long): String? {
+    fun materializeMediaKey(
+        mediaId: String?,
+        positionMs: Long
+    ): String? {
         if (mediaId.isNullOrBlank()) return null
         val bucket = positionMs.coerceAtLeast(0L) / POSITION_BUCKET_MS
         return "$mediaId#$bucket"
@@ -44,7 +46,10 @@ class FormatInventoryMediaGate {
      * the authoritative resolver catalog, forcing a stale-inventory reset before merging.
      * Null or blank keys never force a reset (fail safe).
      */
-    fun shouldReset(existingMediaKey: String?, incomingMediaKey: String?): Boolean {
+    fun shouldReset(
+        existingMediaKey: String?,
+        incomingMediaKey: String?
+    ): Boolean {
         if (existingMediaKey.isNullOrBlank()) return false
         if (incomingMediaKey.isNullOrBlank()) return false
         return existingMediaKey != incomingMediaKey

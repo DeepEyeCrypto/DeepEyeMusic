@@ -3,7 +3,6 @@
 
 package com.deepeye.musicpro.ui.components
 
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.annotation.SuppressLint
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -20,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -28,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 private const val YOUTUBE_WEBVIEW_TAG = "YouTubeVideoPlayer"
 internal const val YOUTUBE_WEBVIEW_BASE_URL = "https://www.youtube.com/"
@@ -138,7 +137,11 @@ fun YouTubeVideoPlayer(
                     val htmlContent = getYouTubeHtmlTemplate(videoId, startSec, muteWebViewAudio)
                     android.util.Log.i(
                         YOUTUBE_WEBVIEW_TAG,
-                        "initial_load videoId=$videoId startSec=$startSec muteWebViewAudio=$muteWebViewAudio baseUrl=$YOUTUBE_WEBVIEW_BASE_URL embedUrl=${buildYouTubeEmbedUrl(videoId, startSec, muteWebViewAudio)}",
+                        "initial_load videoId=$videoId startSec=$startSec muteWebViewAudio=$muteWebViewAudio baseUrl=$YOUTUBE_WEBVIEW_BASE_URL embedUrl=${buildYouTubeEmbedUrl(
+                            videoId,
+                            startSec,
+                            muteWebViewAudio
+                        )}",
                     )
                     webView.loadDataWithBaseURL(
                         YOUTUBE_WEBVIEW_BASE_URL,
@@ -212,14 +215,14 @@ fun YouTubeVideoPlayer(
         if (hasNetworkError) {
             Box(
                 modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.8f))
-                    .clickable {
-                        // Retry logic: clear error and force reload by wiping state
-                        state.networkError.value = false
-                        state.videoId = null
-                    },
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.8f))
+                        .clickable {
+                            // Retry logic: clear error and force reload by wiping state
+                            state.networkError.value = false
+                            state.videoId = null
+                        },
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -345,9 +348,11 @@ fun createYouTubeWebView(context: android.content.Context): WebView {
                     val state = view?.tag as? YouTubePlayerState
                     val isMainFrameFailure = request?.isForMainFrame == true
                     if (isMainFrameFailure &&
-                        (error?.errorCode == android.webkit.WebViewClient.ERROR_HOST_LOOKUP ||
-                            error?.errorCode == android.webkit.WebViewClient.ERROR_CONNECT ||
-                            error?.errorCode == android.webkit.WebViewClient.ERROR_TIMEOUT)
+                        (
+                            error?.errorCode == android.webkit.WebViewClient.ERROR_HOST_LOOKUP ||
+                                error?.errorCode == android.webkit.WebViewClient.ERROR_CONNECT ||
+                                error?.errorCode == android.webkit.WebViewClient.ERROR_TIMEOUT
+                        )
                     ) {
                         state?.networkError?.value = true
                     }
@@ -526,13 +531,18 @@ class YouTubePlayerState(
     var lastSentPosition: Long = -1L,
     var lastUpdateTime: Long = -1L,
     var lastSeekTime: Long = 0L,
-    val networkError: kotlinx.coroutines.flow.MutableStateFlow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(
-        false
-    ),
-    val webViewCurrentTime: kotlinx.coroutines.flow.MutableStateFlow<Long> = kotlinx.coroutines.flow.MutableStateFlow(
-        0L
-    ),
-    val webViewDuration: kotlinx.coroutines.flow.MutableStateFlow<Long> = kotlinx.coroutines.flow.MutableStateFlow(0L),
+    val networkError: kotlinx.coroutines.flow.MutableStateFlow<Boolean> =
+        kotlinx.coroutines.flow.MutableStateFlow(
+            false
+        ),
+    val webViewCurrentTime: kotlinx.coroutines.flow.MutableStateFlow<Long> =
+        kotlinx.coroutines.flow.MutableStateFlow(
+            0L
+        ),
+    val webViewDuration: kotlinx.coroutines.flow.MutableStateFlow<Long> =
+        kotlinx.coroutines.flow.MutableStateFlow(
+            0L
+        ),
 )
 
 class WebAppInterface(private val state: YouTubePlayerState) {

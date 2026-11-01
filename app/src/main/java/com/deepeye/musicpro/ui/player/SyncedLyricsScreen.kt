@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.SyncDisabled
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,7 +34,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deepeye.musicpro.domain.model.Lyrics
-import com.deepeye.musicpro.domain.model.LyricsLine
 import com.deepeye.musicpro.ui.theme.NeonCyan
 
 /**
@@ -74,9 +72,10 @@ fun SyncedLyricsScreen(
     }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Transparent)
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(Color.Transparent)
     ) {
         if (lyrics == null || lyrics.lines.isEmpty()) {
             // Empty / Loading State
@@ -102,12 +101,13 @@ fun SyncedLyricsScreen(
         } else {
             LazyColumn(
                 state = listState,
-                contentPadding = PaddingValues(
-                    top = configuration.screenHeightDp.dp / 3,
-                    bottom = configuration.screenHeightDp.dp / 2,
-                    start = 24.dp,
-                    end = 24.dp
-                ),
+                contentPadding =
+                    PaddingValues(
+                        top = configuration.screenHeightDp.dp / 3,
+                        bottom = configuration.screenHeightDp.dp / 2,
+                        start = 24.dp,
+                        end = 24.dp
+                    ),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -118,8 +118,22 @@ fun SyncedLyricsScreen(
                     val isActive = lyrics.isSynced && index == activeLineIndex
                     val isPast = lyrics.isSynced && index < activeLineIndex
 
-                    val targetScale = if (isActive) 1.12f else if (isPast) 0.94f else 0.90f
-                    val targetAlpha = if (isActive) 1.0f else if (isPast) 0.55f else 0.35f
+                    val targetScale =
+                        if (isActive) {
+                            1.12f
+                        } else if (isPast) {
+                            0.94f
+                        } else {
+                            0.90f
+                        }
+                    val targetAlpha =
+                        if (isActive) {
+                            1.0f
+                        } else if (isPast) {
+                            0.55f
+                        } else {
+                            0.35f
+                        }
 
                     val scale by animateFloatAsState(
                         targetValue = targetScale,
@@ -159,10 +173,11 @@ fun SyncedLyricsScreen(
         if (onDismiss != null) {
             IconButton(
                 onClick = onDismiss,
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(16.dp)
-                    .align(Alignment.TopEnd)
+                modifier =
+                    Modifier
+                        .statusBarsPadding()
+                        .padding(16.dp)
+                        .align(Alignment.TopEnd)
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
@@ -185,30 +200,32 @@ private fun KineticLyricLineRow(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
-            )
-            .padding(vertical = 6.dp, horizontal = 8.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                this.alpha = alpha
-            },
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onClick
+                )
+                .padding(vertical = 6.dp, horizontal = 8.dp)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    this.alpha = alpha
+                },
         contentAlignment = Alignment.CenterStart
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.headlineMedium.copy(
-                fontSize = if (isActive) 26.sp else 22.sp,
-                fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Medium,
-                lineHeight = if (isActive) 34.sp else 30.sp,
-                letterSpacing = (-0.3).sp
-            ),
+            style =
+                MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = if (isActive) 26.sp else 22.sp,
+                    fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Medium,
+                    lineHeight = if (isActive) 34.sp else 30.sp,
+                    letterSpacing = (-0.3).sp
+                ),
             color = textColor,
             textAlign = TextAlign.Start
         )

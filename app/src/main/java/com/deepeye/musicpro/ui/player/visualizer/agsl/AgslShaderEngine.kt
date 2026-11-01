@@ -45,7 +45,8 @@ object AgslShaderEngine {
         var source = rawGlsl
 
         // 0. Inject comprehensive WebGL polyfill header at top
-        val webglPolyfill = """
+        val webglPolyfill =
+            """
             // === WEBGL POLYFILL HEADER (AGSL COMPATIBILITY) ===
             // mod() overloads for Mali/Adreno consistency
             float mod(float x, float y) { return x - y * floor(x / y); }
@@ -62,7 +63,7 @@ object AgslShaderEngine {
             float2 correctFragCoord(float2 fragCoord) {
                 return float2(fragCoord.x, iResolution.y - fragCoord.y);
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // Prepend polyfill only if neither the float nor float2 overload exists.
         // A shader supplying its own float overload must not receive a duplicate.
@@ -90,14 +91,16 @@ object AgslShaderEngine {
 
         // 3. Transpile texture lookups to shader.eval()
         // texture(iChannel0, uv) -> iChannel0.eval((uv) * float2(256.0, 1.0))
-        source = source.replace(
-            Regex("""texture\s*\(\s*iChannel0\s*,\s*([^)]+)\)"""),
-            "iChannel0.eval(($1) * float2(256.0, 1.0))"
-        )
-        source = source.replace(
-            Regex("""texture2D\s*\(\s*iChannel0\s*,\s*([^)]+)\)"""),
-            "iChannel0.eval(($1) * float2(256.0, 1.0))"
-        )
+        source =
+            source.replace(
+                Regex("""texture\s*\(\s*iChannel0\s*,\s*([^)]+)\)"""),
+                "iChannel0.eval(($1) * float2(256.0, 1.0))"
+            )
+        source =
+            source.replace(
+                Regex("""texture2D\s*\(\s*iChannel0\s*,\s*([^)]+)\)"""),
+                "iChannel0.eval(($1) * float2(256.0, 1.0))"
+            )
 
         // 4. Prepend standard uniforms if not already present
         if (!source.contains("uniform float2 iResolution")) {
@@ -105,7 +108,8 @@ object AgslShaderEngine {
         }
 
         // 5. Wrap mainImage → main conversion with Y-axis correction injection
-        val mainImageRegex = Regex("""void\s+mainImage\s*\(\s*out\s+float4\s+(\w+)\s*,\s*in\s+float2\s+(\w+)\s*\)\s*\{""")
+        val mainImageRegex =
+            Regex("""void\s+mainImage\s*\(\s*out\s+float4\s+(\w+)\s*,\s*in\s+float2\s+(\w+)\s*\)\s*\{""")
         val match = mainImageRegex.find(source)
         if (match != null) {
             val fragColorVar = match.groupValues[1]
@@ -113,17 +117,21 @@ object AgslShaderEngine {
 
             // Replace the function signature and inject Y-correction at function start
             // Use Input suffix to avoid shadowing the parameter name
-            source = source.replace(match.value, "half4 main(float2 ${fragCoordVar}Input) {\n" +
-                    "        // Y-axis inversion for WebGL→Compose coordinate compatibility\n" +
-                    "        float2 correctCoord = float2(${fragCoordVar}Input.x, iResolution.y - ${fragCoordVar}Input.y);\n" +
-                    "        float2 $fragCoordVar = correctCoord;\n" +
-                    "        float4 ${fragColorVar} = float4(0.0);")
+            source =
+                source.replace(
+                    match.value,
+                    "half4 main(float2 ${fragCoordVar}Input) {\n" +
+                        "        // Y-axis inversion for WebGL→Compose coordinate compatibility\n" +
+                        "        float2 correctCoord = float2(${fragCoordVar}Input.x, iResolution.y - ${fragCoordVar}Input.y);\n" +
+                        "        float2 $fragCoordVar = correctCoord;\n" +
+                        "        float4 $fragColorVar = float4(0.0);"
+                )
 
             // Replace trailing closing brace with return
             val lastBrace = source.lastIndexOf('}')
             if (lastBrace != -1) {
                 val prefix = source.substring(0, lastBrace)
-                source = "$prefix\n        return half4(${fragColorVar});\n}"
+                source = "$prefix\n        return half4($fragColorVar);\n}"
             }
         }
 
@@ -137,18 +145,23 @@ object AgslShaderEngine {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun compileShader(rawGlsl: String): Result<RuntimeShader> {
         return runCatching {
-            val agslSource = if (rawGlsl.contains("half4 main(float2")) {
-                if (!rawGlsl.contains("uniform float2 iResolution")) {
-                    "$AGSL_STANDARD_UNIFORMS\n$rawGlsl"
+            val agslSource =
+                if (rawGlsl.contains("half4 main(float2")) {
+                    if (!rawGlsl.contains("uniform float2 iResolution")) {
+                        "$AGSL_STANDARD_UNIFORMS\n$rawGlsl"
+                    } else {
+                        rawGlsl
+                    }
                 } else {
-                    rawGlsl
+                    transpileGlslToAgsl(rawGlsl)
                 }
-            } else {
-                transpileGlslToAgsl(rawGlsl)
-            }
             RuntimeShader(agslSource)
         }.onFailure { err ->
-            Log.e(TAG, "[AgslShaderEngine] Shader compilation failed: ${err.message}\nSource preview:\n${rawGlsl.take(500)}", err)
+            Log.e(
+                TAG,
+                "[AgslShaderEngine] Shader compilation failed: ${err.message}\nSource preview:\n${rawGlsl.take(500)}",
+                err
+            )
         }
     }
 }

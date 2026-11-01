@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.test.core.app.ApplicationProvider
-import com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
 import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.Song
 import com.deepeye.musicpro.dsp.engine.DSPEngine
@@ -36,8 +35,14 @@ import org.robolectric.annotation.Config
 class PlayerControllerTest {
     private val player = mockk<ExoPlayer>(relaxed = true)
     private val queueManager = QueueManager()
-    private val sourceResolverManager = mockk<com.deepeye.musicpro.domain.resolver.SourceResolverManager>(relaxed = true)
-    private val audioVisualizerManager = mockk<com.deepeye.musicpro.ui.player.visualizer.agsl.AudioVisualizerManager>(relaxed = true)
+    private val sourceResolverManager =
+        mockk<com.deepeye.musicpro.domain.resolver.SourceResolverManager>(
+            relaxed = true
+        )
+    private val audioVisualizerManager =
+        mockk<com.deepeye.musicpro.ui.player.visualizer.agsl.AudioVisualizerManager>(
+            relaxed = true
+        )
     private val historyRepository = mockk<com.deepeye.musicpro.domain.repository.HistoryRepository>(relaxed = true)
     private val audioSessionManager = mockk<com.deepeye.musicpro.dsp.session.AudioSessionManager>(relaxed = true)
     private val dspEngine = mockk<DSPEngine>(relaxed = true)

@@ -110,10 +110,10 @@ fun QueueItemRow(
             model = "https://img.youtube.com/vi/${item.videoId}/hqdefault.jpg",
             contentDescription = null,
             modifier =
-            Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color.White.copy(alpha = 0.08f)),
+                Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color.White.copy(alpha = 0.08f)),
         )
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {

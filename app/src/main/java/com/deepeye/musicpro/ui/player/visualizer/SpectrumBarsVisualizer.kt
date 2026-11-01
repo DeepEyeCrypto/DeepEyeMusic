@@ -75,16 +75,18 @@ fun SpectrumBarsVisualizer(
 
         // Soft translucent scrim to allow ambient artwork to glow through
         drawRect(
-            brush = Brush.verticalGradient(
-                listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
-            )
+            brush =
+                Brush.verticalGradient(
+                    listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
+                )
         )
         drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(primaryColor.copy(alpha = 0.18f + bass * 0.15f), Color.Transparent),
-                center = Offset(w / 2f, centerY),
-                radius = max(w, h) * 0.6f
-            ),
+            brush =
+                Brush.radialGradient(
+                    colors = listOf(primaryColor.copy(alpha = 0.18f + bass * 0.15f), Color.Transparent),
+                    center = Offset(w / 2f, centerY),
+                    radius = max(w, h) * 0.6f
+                ),
             radius = max(w, h) * 0.6f,
             center = Offset(w / 2f, centerY)
         )
@@ -111,27 +113,31 @@ fun SpectrumBarsVisualizer(
             val botY = centerY
 
             drawRoundRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        secondaryColor.copy(alpha = 0.30f + treble * 0.5f),
-                        primaryColor.copy(alpha = 0.95f)
+                brush =
+                    Brush.verticalGradient(
+                        colors =
+                            listOf(
+                                secondaryColor.copy(alpha = 0.30f + treble * 0.5f),
+                                primaryColor.copy(alpha = 0.95f)
+                            ),
+                        startY = topY,
+                        endY = botY
                     ),
-                    startY = topY,
-                    endY = botY
-                ),
                 topLeft = Offset(x, topY),
                 size = Size(barWidth, barH),
                 cornerRadius = radius
             )
             drawRoundRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        primaryColor.copy(alpha = 0.95f),
-                        secondaryColor.copy(alpha = 0.30f + treble * 0.5f)
+                brush =
+                    Brush.verticalGradient(
+                        colors =
+                            listOf(
+                                primaryColor.copy(alpha = 0.95f),
+                                secondaryColor.copy(alpha = 0.30f + treble * 0.5f)
+                            ),
+                        startY = botY,
+                        endY = botY + barH
                     ),
-                    startY = botY,
-                    endY = botY + barH
-                ),
                 topLeft = Offset(x, botY),
                 size = Size(barWidth, barH),
                 cornerRadius = radius

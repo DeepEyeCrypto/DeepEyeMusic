@@ -14,8 +14,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -49,169 +49,173 @@ data class AppSettings(
 
 @Singleton
 class SettingsDataStore
-@Inject
-constructor(
-    @ApplicationContext private val context: Context,
-) {
-    companion object {
-        private val KEY_THEME = stringPreferencesKey("theme_mode")
-        private val KEY_DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
-        private val KEY_AMOLED = booleanPreferencesKey("amoled_mode")
-        private val KEY_CROSSFADE = intPreferencesKey("crossfade_duration")
-        private val KEY_SAMPLE_RATE = intPreferencesKey("sample_rate")
-        private val KEY_BIT_DEPTH = intPreferencesKey("bit_depth")
-        private val KEY_AUTO_SCAN = booleanPreferencesKey("auto_scan")
-        private val KEY_SHOW_VISUALIZER = booleanPreferencesKey("show_visualizer")
-        private val KEY_AUTOPLAY_ON_CELLULAR = booleanPreferencesKey("is_cellular_autoplay_enabled")
-        private val KEY_YT_ACCESS_TOKEN = stringPreferencesKey("yt_access_token")
-        private val KEY_YT_REFRESH_TOKEN = stringPreferencesKey("yt_refresh_token")
-        private val KEY_YT_TOKEN_EXPIRES_AT = longPreferencesKey("yt_token_expires_at")
-        private val KEY_YT_USER_NAME = stringPreferencesKey("yt_user_name")
-        private val KEY_YT_USER_AVATAR = stringPreferencesKey("yt_user_avatar")
-        private val KEY_YT_USER_EMAIL = stringPreferencesKey("yt_user_email")
-    }
-
-    val settings: Flow<AppSettings> =
-        context.dataStore.data.map { prefs ->
-            AppSettings(
-                themeMode =
-                try {
-                    ThemeMode.valueOf(prefs[KEY_THEME] ?: "DARK")
-                } catch (_: Exception) {
-                    ThemeMode.DARK
-                },
-                dynamicColor = prefs[KEY_DYNAMIC_COLOR] ?: false,
-                amoledMode = prefs[KEY_AMOLED] ?: false,
-                crossfadeDuration = prefs[KEY_CROSSFADE] ?: 0,
-                sampleRate = prefs[KEY_SAMPLE_RATE] ?: 44100,
-                bitDepth = prefs[KEY_BIT_DEPTH] ?: 16,
-                autoScanOnLaunch = prefs[KEY_AUTO_SCAN] ?: true,
-                showVisualizer = prefs[KEY_SHOW_VISUALIZER] ?: true,
-                autoplayOnCellular = prefs[KEY_AUTOPLAY_ON_CELLULAR] ?: false,
-                youtubeAccessToken = prefs[KEY_YT_ACCESS_TOKEN],
-                youtubeRefreshToken = prefs[KEY_YT_REFRESH_TOKEN],
-                youtubeTokenExpiresAtEpochSec = prefs[KEY_YT_TOKEN_EXPIRES_AT],
-                youtubeUserName = prefs[KEY_YT_USER_NAME],
-                youtubeUserAvatar = prefs[KEY_YT_USER_AVATAR],
-                youtubeUserEmail = prefs[KEY_YT_USER_EMAIL],
-            )
-        }
-
-    suspend fun setThemeMode(mode: ThemeMode) {
-        context.dataStore.edit { it[KEY_THEME] = mode.name }
-    }
-
-    suspend fun setDynamicColor(enabled: Boolean) {
-        context.dataStore.edit { it[KEY_DYNAMIC_COLOR] = enabled }
-    }
-
-    suspend fun setCrossfadeDuration(seconds: Int) {
-        context.dataStore.edit { it[KEY_CROSSFADE] = seconds }
-    }
-
-    suspend fun setSampleRate(rate: Int) {
-        context.dataStore.edit { it[KEY_SAMPLE_RATE] = rate }
-    }
-
-    suspend fun setBitDepth(depth: Int) {
-        context.dataStore.edit { it[KEY_BIT_DEPTH] = depth }
-    }
-
-    suspend fun setAutoScan(enabled: Boolean) {
-        context.dataStore.edit { it[KEY_AUTO_SCAN] = enabled }
-    }
-
-    suspend fun setShowVisualizer(enabled: Boolean) {
-        context.dataStore.edit { it[KEY_SHOW_VISUALIZER] = enabled }
-    }
-
-    suspend fun setAutoplayOnCellular(enabled: Boolean) {
-        context.dataStore.edit { it[KEY_AUTOPLAY_ON_CELLULAR] = enabled }
-    }
-
-    suspend fun setAmoledMode(enabled: Boolean) {
-        context.dataStore.edit { it[KEY_AMOLED] = enabled }
-    }
-
-    // ── Backup & Restore ──
-    suspend fun exportToJson(): String {
-        val gson = com.google.gson.Gson()
-        val currentSettings = settings.first()
-        // Backup/restore covers UI preferences only. OAuth tokens, token expiry,
-        // and account profile fields are secrets or account-scoped state and must
-        // never be written to an exportable file.
-        val redacted =
-            currentSettings.copy(
-                youtubeAccessToken = null,
-                youtubeRefreshToken = null,
-                youtubeTokenExpiresAtEpochSec = null,
-                youtubeUserName = null,
-                youtubeUserAvatar = null,
-                youtubeUserEmail = null,
-            )
-        return gson.toJson(redacted)
-    }
-
-    suspend fun importFromJson(jsonString: String) {
-        try {
-            val gson = com.google.gson.Gson()
-            val imported = gson.fromJson(jsonString, AppSettings::class.java)
-            
-            context.dataStore.edit { prefs ->
-                prefs[KEY_THEME] = imported.themeMode.name
-                prefs[KEY_DYNAMIC_COLOR] = imported.dynamicColor
-                prefs[KEY_AMOLED] = imported.amoledMode
-                prefs[KEY_CROSSFADE] = imported.crossfadeDuration
-                prefs[KEY_SAMPLE_RATE] = imported.sampleRate
-                prefs[KEY_BIT_DEPTH] = imported.bitDepth
-                prefs[KEY_AUTO_SCAN] = imported.autoScanOnLaunch
-                prefs[KEY_SHOW_VISUALIZER] = imported.showVisualizer
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("SettingsDataStore", "Failed to restore settings", e)
-        }
-    }
-
-    /**
-     * Persists an OAuth token pair plus optional absolute expiry.
-     *
-     * @param expiresAtEpochSec absolute access-token expiry (epoch seconds), as
-     * computed by [com.deepeye.musicpro.domain.auth.TokenExpiry.computeExpiresAt].
-     * Null = unknown (legacy callers, or provider omitted `expires_in`).
-     * Defaults to null so existing call sites keep compiling unchanged.
-     */
-    suspend fun setYouTubeTokens(
-        accessToken: String,
-        refreshToken: String?,
-        expiresAtEpochSec: Long? = null,
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
     ) {
-        context.dataStore.edit { prefs ->
-            if (accessToken.isEmpty()) {
-                prefs.remove(KEY_YT_ACCESS_TOKEN)
-                prefs.remove(KEY_YT_REFRESH_TOKEN)
-                prefs.remove(KEY_YT_TOKEN_EXPIRES_AT)
-                prefs.remove(KEY_YT_USER_NAME)
-                prefs.remove(KEY_YT_USER_AVATAR)
-                prefs.remove(KEY_YT_USER_EMAIL)
-            } else {
-                prefs[KEY_YT_ACCESS_TOKEN] = accessToken
-                if (refreshToken != null) {
-                    prefs[KEY_YT_REFRESH_TOKEN] = refreshToken
+        companion object {
+            private val KEY_THEME = stringPreferencesKey("theme_mode")
+            private val KEY_DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
+            private val KEY_AMOLED = booleanPreferencesKey("amoled_mode")
+            private val KEY_CROSSFADE = intPreferencesKey("crossfade_duration")
+            private val KEY_SAMPLE_RATE = intPreferencesKey("sample_rate")
+            private val KEY_BIT_DEPTH = intPreferencesKey("bit_depth")
+            private val KEY_AUTO_SCAN = booleanPreferencesKey("auto_scan")
+            private val KEY_SHOW_VISUALIZER = booleanPreferencesKey("show_visualizer")
+            private val KEY_AUTOPLAY_ON_CELLULAR = booleanPreferencesKey("is_cellular_autoplay_enabled")
+            private val KEY_YT_ACCESS_TOKEN = stringPreferencesKey("yt_access_token")
+            private val KEY_YT_REFRESH_TOKEN = stringPreferencesKey("yt_refresh_token")
+            private val KEY_YT_TOKEN_EXPIRES_AT = longPreferencesKey("yt_token_expires_at")
+            private val KEY_YT_USER_NAME = stringPreferencesKey("yt_user_name")
+            private val KEY_YT_USER_AVATAR = stringPreferencesKey("yt_user_avatar")
+            private val KEY_YT_USER_EMAIL = stringPreferencesKey("yt_user_email")
+        }
+
+        val settings: Flow<AppSettings> =
+            context.dataStore.data.map { prefs ->
+                AppSettings(
+                    themeMode =
+                        try {
+                            ThemeMode.valueOf(prefs[KEY_THEME] ?: "DARK")
+                        } catch (_: Exception) {
+                            ThemeMode.DARK
+                        },
+                    dynamicColor = prefs[KEY_DYNAMIC_COLOR] ?: false,
+                    amoledMode = prefs[KEY_AMOLED] ?: false,
+                    crossfadeDuration = prefs[KEY_CROSSFADE] ?: 0,
+                    sampleRate = prefs[KEY_SAMPLE_RATE] ?: 44100,
+                    bitDepth = prefs[KEY_BIT_DEPTH] ?: 16,
+                    autoScanOnLaunch = prefs[KEY_AUTO_SCAN] ?: true,
+                    showVisualizer = prefs[KEY_SHOW_VISUALIZER] ?: true,
+                    autoplayOnCellular = prefs[KEY_AUTOPLAY_ON_CELLULAR] ?: false,
+                    youtubeAccessToken = prefs[KEY_YT_ACCESS_TOKEN],
+                    youtubeRefreshToken = prefs[KEY_YT_REFRESH_TOKEN],
+                    youtubeTokenExpiresAtEpochSec = prefs[KEY_YT_TOKEN_EXPIRES_AT],
+                    youtubeUserName = prefs[KEY_YT_USER_NAME],
+                    youtubeUserAvatar = prefs[KEY_YT_USER_AVATAR],
+                    youtubeUserEmail = prefs[KEY_YT_USER_EMAIL],
+                )
+            }
+
+        suspend fun setThemeMode(mode: ThemeMode) {
+            context.dataStore.edit { it[KEY_THEME] = mode.name }
+        }
+
+        suspend fun setDynamicColor(enabled: Boolean) {
+            context.dataStore.edit { it[KEY_DYNAMIC_COLOR] = enabled }
+        }
+
+        suspend fun setCrossfadeDuration(seconds: Int) {
+            context.dataStore.edit { it[KEY_CROSSFADE] = seconds }
+        }
+
+        suspend fun setSampleRate(rate: Int) {
+            context.dataStore.edit { it[KEY_SAMPLE_RATE] = rate }
+        }
+
+        suspend fun setBitDepth(depth: Int) {
+            context.dataStore.edit { it[KEY_BIT_DEPTH] = depth }
+        }
+
+        suspend fun setAutoScan(enabled: Boolean) {
+            context.dataStore.edit { it[KEY_AUTO_SCAN] = enabled }
+        }
+
+        suspend fun setShowVisualizer(enabled: Boolean) {
+            context.dataStore.edit { it[KEY_SHOW_VISUALIZER] = enabled }
+        }
+
+        suspend fun setAutoplayOnCellular(enabled: Boolean) {
+            context.dataStore.edit { it[KEY_AUTOPLAY_ON_CELLULAR] = enabled }
+        }
+
+        suspend fun setAmoledMode(enabled: Boolean) {
+            context.dataStore.edit { it[KEY_AMOLED] = enabled }
+        }
+
+        // ── Backup & Restore ──
+        suspend fun exportToJson(): String {
+            val gson = com.google.gson.Gson()
+            val currentSettings = settings.first()
+            // Backup/restore covers UI preferences only. OAuth tokens, token expiry,
+            // and account profile fields are secrets or account-scoped state and must
+            // never be written to an exportable file.
+            val redacted =
+                currentSettings.copy(
+                    youtubeAccessToken = null,
+                    youtubeRefreshToken = null,
+                    youtubeTokenExpiresAtEpochSec = null,
+                    youtubeUserName = null,
+                    youtubeUserAvatar = null,
+                    youtubeUserEmail = null,
+                )
+            return gson.toJson(redacted)
+        }
+
+        suspend fun importFromJson(jsonString: String) {
+            try {
+                val gson = com.google.gson.Gson()
+                val imported = gson.fromJson(jsonString, AppSettings::class.java)
+
+                context.dataStore.edit { prefs ->
+                    prefs[KEY_THEME] = imported.themeMode.name
+                    prefs[KEY_DYNAMIC_COLOR] = imported.dynamicColor
+                    prefs[KEY_AMOLED] = imported.amoledMode
+                    prefs[KEY_CROSSFADE] = imported.crossfadeDuration
+                    prefs[KEY_SAMPLE_RATE] = imported.sampleRate
+                    prefs[KEY_BIT_DEPTH] = imported.bitDepth
+                    prefs[KEY_AUTO_SCAN] = imported.autoScanOnLaunch
+                    prefs[KEY_SHOW_VISUALIZER] = imported.showVisualizer
                 }
-                if (expiresAtEpochSec != null) {
-                    prefs[KEY_YT_TOKEN_EXPIRES_AT] = expiresAtEpochSec
-                } else {
+            } catch (e: Exception) {
+                android.util.Log.e("SettingsDataStore", "Failed to restore settings", e)
+            }
+        }
+
+        /**
+         * Persists an OAuth token pair plus optional absolute expiry.
+         *
+         * @param expiresAtEpochSec absolute access-token expiry (epoch seconds), as
+         * computed by [com.deepeye.musicpro.domain.auth.TokenExpiry.computeExpiresAt].
+         * Null = unknown (legacy callers, or provider omitted `expires_in`).
+         * Defaults to null so existing call sites keep compiling unchanged.
+         */
+        suspend fun setYouTubeTokens(
+            accessToken: String,
+            refreshToken: String?,
+            expiresAtEpochSec: Long? = null,
+        ) {
+            context.dataStore.edit { prefs ->
+                if (accessToken.isEmpty()) {
+                    prefs.remove(KEY_YT_ACCESS_TOKEN)
+                    prefs.remove(KEY_YT_REFRESH_TOKEN)
                     prefs.remove(KEY_YT_TOKEN_EXPIRES_AT)
+                    prefs.remove(KEY_YT_USER_NAME)
+                    prefs.remove(KEY_YT_USER_AVATAR)
+                    prefs.remove(KEY_YT_USER_EMAIL)
+                } else {
+                    prefs[KEY_YT_ACCESS_TOKEN] = accessToken
+                    if (refreshToken != null) {
+                        prefs[KEY_YT_REFRESH_TOKEN] = refreshToken
+                    }
+                    if (expiresAtEpochSec != null) {
+                        prefs[KEY_YT_TOKEN_EXPIRES_AT] = expiresAtEpochSec
+                    } else {
+                        prefs.remove(KEY_YT_TOKEN_EXPIRES_AT)
+                    }
                 }
             }
         }
-    }
 
-    suspend fun setYouTubeProfile(name: String?, avatarUrl: String?, email: String?) {
-        context.dataStore.edit { prefs ->
-            if (name != null) prefs[KEY_YT_USER_NAME] = name else prefs.remove(KEY_YT_USER_NAME)
-            if (avatarUrl != null) prefs[KEY_YT_USER_AVATAR] = avatarUrl else prefs.remove(KEY_YT_USER_AVATAR)
-            if (email != null) prefs[KEY_YT_USER_EMAIL] = email else prefs.remove(KEY_YT_USER_EMAIL)
+        suspend fun setYouTubeProfile(
+            name: String?,
+            avatarUrl: String?,
+            email: String?
+        ) {
+            context.dataStore.edit { prefs ->
+                if (name != null) prefs[KEY_YT_USER_NAME] = name else prefs.remove(KEY_YT_USER_NAME)
+                if (avatarUrl != null) prefs[KEY_YT_USER_AVATAR] = avatarUrl else prefs.remove(KEY_YT_USER_AVATAR)
+                if (email != null) prefs[KEY_YT_USER_EMAIL] = email else prefs.remove(KEY_YT_USER_EMAIL)
+            }
         }
     }
-}

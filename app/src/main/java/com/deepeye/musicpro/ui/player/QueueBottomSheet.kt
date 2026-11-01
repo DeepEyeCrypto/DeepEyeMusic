@@ -3,9 +3,6 @@
 
 package com.deepeye.musicpro.ui.player
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,7 +20,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -76,15 +72,17 @@ fun QueueBottomSheet(
         tintColor = dominantColor.copy(alpha = 0.25f)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
         ) {
             // Header Bar
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 14.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -143,9 +141,10 @@ fun QueueBottomSheet(
 
             if (queue.isEmpty()) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -166,10 +165,11 @@ fun QueueBottomSheet(
             } else {
                 LazyColumn(
                     state = listState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .premiumScrollHaptics(listState),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .premiumScrollHaptics(listState),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(bottom = 32.dp)
                 ) {
@@ -181,27 +181,38 @@ fun QueueBottomSheet(
 
                         Surface(
                             shape = RoundedCornerShape(14.dp),
-                            color = if (isCurrent) dominantColor.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.05f),
-                            border = BorderStroke(
-                                1.dp,
-                                if (isCurrent) NeonCyan.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.08f)
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onTrackSelected(index) }
+                            color =
+                                if (isCurrent) {
+                                    dominantColor.copy(
+                                        alpha = 0.22f
+                                    )
+                                } else {
+                                    Color.White.copy(alpha = 0.05f)
+                                },
+                            border =
+                                BorderStroke(
+                                    1.dp,
+                                    if (isCurrent) NeonCyan.copy(alpha = 0.7f) else Color.White.copy(alpha = 0.08f)
+                                ),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onTrackSelected(index) }
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 // Track artwork
                                 Box(
-                                    modifier = Modifier
-                                        .size(46.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(Color.Black.copy(alpha = 0.5f))
+                                    modifier =
+                                        Modifier
+                                            .size(46.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Color.Black.copy(alpha = 0.5f))
                                 ) {
                                     AsyncImage(
                                         model = item.artworkUri,
@@ -212,9 +223,10 @@ fun QueueBottomSheet(
 
                                     if (isCurrent && playerState.isPlaying) {
                                         Box(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .background(Color.Black.copy(alpha = 0.45f)),
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxSize()
+                                                    .background(Color.Black.copy(alpha = 0.45f)),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             MiniVisualizerBar(

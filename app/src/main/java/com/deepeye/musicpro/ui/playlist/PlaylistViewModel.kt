@@ -16,26 +16,29 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlaylistViewModel
-@Inject
-constructor(
-    private val repository: PlaylistRepository,
-) : ViewModel() {
-    private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
-    val playlists: StateFlow<List<Playlist>> = _playlists.asStateFlow()
+    @Inject
+    constructor(
+        private val repository: PlaylistRepository,
+    ) : ViewModel() {
+        private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
+        val playlists: StateFlow<List<Playlist>> = _playlists.asStateFlow()
 
-    init {
-        viewModelScope.launch { repository.getAllPlaylists().collect { _playlists.value = it } }
-    }
+        init {
+            viewModelScope.launch { repository.getAllPlaylists().collect { _playlists.value = it } }
+        }
 
-    fun createPlaylist(name: String) {
-        viewModelScope.launch { repository.createPlaylist(name) }
-    }
+        fun createPlaylist(name: String) {
+            viewModelScope.launch { repository.createPlaylist(name) }
+        }
 
-    fun deletePlaylist(id: Long) {
-        viewModelScope.launch { repository.deletePlaylist(id) }
-    }
+        fun deletePlaylist(id: Long) {
+            viewModelScope.launch { repository.deletePlaylist(id) }
+        }
 
-    fun addSongToPlaylist(playlistId: Long, songId: Long) {
-        viewModelScope.launch { repository.addSongToPlaylist(playlistId, songId) }
+        fun addSongToPlaylist(
+            playlistId: Long,
+            songId: Long
+        ) {
+            viewModelScope.launch { repository.addSongToPlaylist(playlistId, songId) }
+        }
     }
-}

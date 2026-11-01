@@ -5,7 +5,6 @@ package com.deepeye.musicpro.player.controller
 
 import com.deepeye.musicpro.player.format.DeepEyeFormat
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
 
 /**
  * Pure functional policy for merging SmartTube inventory with Media3 runtime track information.
@@ -32,7 +31,6 @@ data class FormatInventoryMergeResult(
 )
 
 class FormatInventoryMergePolicy {
-
     /**
      * Merges existing (SmartTube) inventory with incoming (Media3 runtime) inventory.
      *
@@ -56,30 +54,33 @@ class FormatInventoryMergePolicy {
         val preserveVideo = existingVideoRealCount > 1 && incomingVideoRealCount <= 1
         val preserveAudio = existingAudioRealCount > 1 && incomingAudioRealCount <= 1
 
-        val mergedVideo = if (preserveVideo) {
-            existingVideo
-        } else if (incomingVideoRealCount > 1) {
-            incomingVideo
-        } else {
-            existingVideo
-        }
+        val mergedVideo =
+            if (preserveVideo) {
+                existingVideo
+            } else if (incomingVideoRealCount > 1) {
+                incomingVideo
+            } else {
+                existingVideo
+            }
 
-        val mergedAudio = if (preserveAudio) {
-            existingAudio
-        } else if (incomingAudioRealCount > 1) {
-            incomingAudio
-        } else {
-            existingAudio
-        }
+        val mergedAudio =
+            if (preserveAudio) {
+                existingAudio
+            } else if (incomingAudioRealCount > 1) {
+                incomingAudio
+            } else {
+                existingAudio
+            }
 
-        val reason = buildDecisionReason(
-            preserveVideo = preserveVideo,
-            preserveAudio = preserveAudio,
-            existingVideoRealCount = existingVideoRealCount,
-            existingAudioRealCount = existingAudioRealCount,
-            incomingVideoRealCount = incomingVideoRealCount,
-            incomingAudioRealCount = incomingAudioRealCount
-        )
+        val reason =
+            buildDecisionReason(
+                preserveVideo = preserveVideo,
+                preserveAudio = preserveAudio,
+                existingVideoRealCount = existingVideoRealCount,
+                existingAudioRealCount = existingAudioRealCount,
+                incomingVideoRealCount = incomingVideoRealCount,
+                incomingAudioRealCount = incomingAudioRealCount
+            )
 
         return FormatInventoryMergeResult(
             videoFormats = mergedVideo,
@@ -97,8 +98,7 @@ class FormatInventoryMergePolicy {
     /**
      * Counts non-Auto formats in a list.
      */
-    private fun countRealFormats(formats: ImmutableList<DeepEyeFormat>): Int =
-        formats.count { !it.isAuto }
+    private fun countRealFormats(formats: ImmutableList<DeepEyeFormat>): Int = formats.count { !it.isAuto }
 
     /**
      * Builds a human-readable decision reason for logging and debugging.
@@ -114,19 +114,31 @@ class FormatInventoryMergePolicy {
         val parts = mutableListOf<String>()
 
         if (preserveVideo) {
-            parts.add("preserve_rich_smarttube_video(existing=$existingVideoRealCount vs incoming=$incomingVideoRealCount)")
+            parts.add(
+                "preserve_rich_smarttube_video(existing=$existingVideoRealCount vs incoming=$incomingVideoRealCount)"
+            )
         } else if (incomingVideoRealCount > 1) {
-            parts.add("adopt_richer_incoming_video(existing=$existingVideoRealCount vs incoming=$incomingVideoRealCount)")
+            parts.add(
+                "adopt_richer_incoming_video(existing=$existingVideoRealCount vs incoming=$incomingVideoRealCount)"
+            )
         } else {
-            parts.add("keep_existing_video_fallback(existing=$existingVideoRealCount vs incoming=$incomingVideoRealCount)")
+            parts.add(
+                "keep_existing_video_fallback(existing=$existingVideoRealCount vs incoming=$incomingVideoRealCount)"
+            )
         }
 
         if (preserveAudio) {
-            parts.add("preserve_rich_smarttube_audio(existing=$existingAudioRealCount vs incoming=$incomingAudioRealCount)")
+            parts.add(
+                "preserve_rich_smarttube_audio(existing=$existingAudioRealCount vs incoming=$incomingAudioRealCount)"
+            )
         } else if (incomingAudioRealCount > 1) {
-            parts.add("adopt_richer_incoming_audio(existing=$existingAudioRealCount vs incoming=$incomingAudioRealCount)")
+            parts.add(
+                "adopt_richer_incoming_audio(existing=$existingAudioRealCount vs incoming=$incomingAudioRealCount)"
+            )
         } else {
-            parts.add("keep_existing_audio_fallback(existing=$existingAudioRealCount vs incoming=$incomingAudioRealCount)")
+            parts.add(
+                "keep_existing_audio_fallback(existing=$existingAudioRealCount vs incoming=$incomingAudioRealCount)"
+            )
         }
 
         return parts.joinToString(" | ")

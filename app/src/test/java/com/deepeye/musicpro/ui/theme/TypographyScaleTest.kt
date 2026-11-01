@@ -15,24 +15,24 @@ import org.junit.Test
  * make a silent regression loud at build time instead.
  */
 class TypographyScaleTest {
-
-    private val styles: Map<String, TextStyle> = mapOf(
-        "displayLarge" to AppTypography.displayLarge,
-        "displayMedium" to AppTypography.displayMedium,
-        "displaySmall" to AppTypography.displaySmall,
-        "headlineLarge" to AppTypography.headlineLarge,
-        "headlineMedium" to AppTypography.headlineMedium,
-        "headlineSmall" to AppTypography.headlineSmall,
-        "titleLarge" to AppTypography.titleLarge,
-        "titleMedium" to AppTypography.titleMedium,
-        "titleSmall" to AppTypography.titleSmall,
-        "bodyLarge" to AppTypography.bodyLarge,
-        "bodyMedium" to AppTypography.bodyMedium,
-        "bodySmall" to AppTypography.bodySmall,
-        "labelLarge" to AppTypography.labelLarge,
-        "labelMedium" to AppTypography.labelMedium,
-        "labelSmall" to AppTypography.labelSmall,
-    )
+    private val styles: Map<String, TextStyle> =
+        mapOf(
+            "displayLarge" to AppTypography.displayLarge,
+            "displayMedium" to AppTypography.displayMedium,
+            "displaySmall" to AppTypography.displaySmall,
+            "headlineLarge" to AppTypography.headlineLarge,
+            "headlineMedium" to AppTypography.headlineMedium,
+            "headlineSmall" to AppTypography.headlineSmall,
+            "titleLarge" to AppTypography.titleLarge,
+            "titleMedium" to AppTypography.titleMedium,
+            "titleSmall" to AppTypography.titleSmall,
+            "bodyLarge" to AppTypography.bodyLarge,
+            "bodyMedium" to AppTypography.bodyMedium,
+            "bodySmall" to AppTypography.bodySmall,
+            "labelLarge" to AppTypography.labelLarge,
+            "labelMedium" to AppTypography.labelMedium,
+            "labelSmall" to AppTypography.labelSmall,
+        )
 
     @Test
     fun `no type style falls below the legibility floor`() {
@@ -68,41 +68,48 @@ class TypographyScaleTest {
         // 12sp — because labels carry button and chip text that must stay
         // legible, while body text gets its own ladder. Asserting a single
         // ascending order across all 15 styles would fail on a correct scale.
-        val ramps = mapOf(
-            "display" to listOf(
-                AppTypography.displaySmall,
-                AppTypography.displayMedium,
-                AppTypography.displayLarge,
-            ),
-            "headline" to listOf(
-                AppTypography.headlineSmall,
-                AppTypography.headlineMedium,
-                AppTypography.headlineLarge,
-            ),
-            "title" to listOf(
-                AppTypography.titleSmall,
-                AppTypography.titleMedium,
-                AppTypography.titleLarge,
-            ),
-            "body" to listOf(
-                AppTypography.bodySmall,
-                AppTypography.bodyMedium,
-                AppTypography.bodyLarge,
-            ),
-            "label" to listOf(
-                AppTypography.labelSmall,
-                AppTypography.labelMedium,
-                AppTypography.labelLarge,
-            ),
-        )
+        val ramps =
+            mapOf(
+                "display" to
+                    listOf(
+                        AppTypography.displaySmall,
+                        AppTypography.displayMedium,
+                        AppTypography.displayLarge,
+                    ),
+                "headline" to
+                    listOf(
+                        AppTypography.headlineSmall,
+                        AppTypography.headlineMedium,
+                        AppTypography.headlineLarge,
+                    ),
+                "title" to
+                    listOf(
+                        AppTypography.titleSmall,
+                        AppTypography.titleMedium,
+                        AppTypography.titleLarge,
+                    ),
+                "body" to
+                    listOf(
+                        AppTypography.bodySmall,
+                        AppTypography.bodyMedium,
+                        AppTypography.bodyLarge,
+                    ),
+                "label" to
+                    listOf(
+                        AppTypography.labelSmall,
+                        AppTypography.labelMedium,
+                        AppTypography.labelLarge,
+                    ),
+            )
 
-        val violations: List<String> = ramps.flatMap { (name, ramp) ->
-            ramp.zipWithNext()
-                .filter { (smaller, larger) -> larger.fontSize.value < smaller.fontSize.value }
-                .map { (smaller, larger) ->
-                    "$name: ${smaller.fontSize.value}sp -> ${larger.fontSize.value}sp"
-                }
-        }
+        val violations: List<String> =
+            ramps.flatMap { (name, ramp) ->
+                ramp.zipWithNext()
+                    .filter { (smaller, larger) -> larger.fontSize.value < smaller.fontSize.value }
+                    .map { (smaller, larger) ->
+                        "$name: ${smaller.fontSize.value}sp -> ${larger.fontSize.value}sp"
+                    }
+            }
         assertTrue("non-monotonic steps: $violations", violations.isEmpty())
     }
 
@@ -133,10 +140,11 @@ class TypographyScaleTest {
         val zoom = UiScale.zoomFor(isLandscape = true)
         ZoomState.update(zoom)
 
-        val violations = styles.filterValues { style ->
-            scaledFontSize(style.fontSize.value) * zoom <
-                UiScale.MinReadableFontSize - 1e-3f
-        }.keys
+        val violations =
+            styles.filterValues { style ->
+                scaledFontSize(style.fontSize.value) * zoom <
+                    UiScale.MinReadableFontSize - 1e-3f
+            }.keys
 
         ZoomState.reset()
 
@@ -161,7 +169,9 @@ class TypographyScaleTest {
     fun `the legibility floor is exactly twelve sp`() {
         assertEquals(
             "the readability floor is a spec constant, not a tunable",
-            12f, UiScale.MinReadableFontSize, 0f
+            12f,
+            UiScale.MinReadableFontSize,
+            0f
         )
     }
 

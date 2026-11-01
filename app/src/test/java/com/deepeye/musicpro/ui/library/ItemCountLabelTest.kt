@@ -13,7 +13,6 @@ import org.junit.Test
  * which reads as a defect to users. The tiles are pluralised, not templated.
  */
 class ItemCountLabelTest {
-
     @Test
     fun `zero uses the plural form`() {
         assertEquals("0 items", itemCountLabel(0))

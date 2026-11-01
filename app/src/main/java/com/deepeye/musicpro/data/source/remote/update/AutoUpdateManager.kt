@@ -4,15 +4,14 @@
 package com.deepeye.musicpro.data.source.remote.update
 
 import android.content.Context
-import android.util.Log
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.deepeye.musicpro.BuildConfig
+import com.deepeye.musicpro.ui.update.MarkdownLiteDecoder
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -29,7 +28,6 @@ import okhttp3.Request
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
-import com.deepeye.musicpro.ui.update.MarkdownLiteDecoder
 
 sealed class UpdateState {
     object Idle : UpdateState()
@@ -53,284 +51,297 @@ sealed class UpdateState {
 
 @Singleton
 class AutoUpdateManager
-@Inject
-constructor(
-    @ApplicationContext private val context: Context,
-    private val okHttpClient: OkHttpClient,
-    private val gson: Gson,
-) {
-    private val IS_MOCK_MODE = false
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+        private val okHttpClient: OkHttpClient,
+        private val gson: Gson,
+    ) {
+        private val IS_MOCK_MODE = false
 
-    private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
-    val updateState: StateFlow<UpdateState> = _updateState.asStateFlow()
+        private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Idle)
+        val updateState: StateFlow<UpdateState> = _updateState.asStateFlow()
 
-            private var latestUpdateVersion: String = ""
-    private var progressJob: Job? = null
-    private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
+        private var latestUpdateVersion: String = ""
+        private var progressJob: Job? = null
+        private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
 
-    
-    
-    fun checkForUpdate() {
-        if (_updateState.value is UpdateState.Checking) return
-        _updateState.value = UpdateState.Checking
+        fun checkForUpdate() {
+            if (_updateState.value is UpdateState.Checking) return
+            _updateState.value = UpdateState.Checking
 
-        if (IS_MOCK_MODE) {
-            scope.launch {
-                delay(1500)
-                val currentVersion = BuildConfig.VERSION_NAME.substringBefore("-").trim()
-                if (isNewerVersion("2.0.0", currentVersion)) {
-                    _updateState.value =
-                        UpdateState.UpdateAvailable(
-                            version = "2.0.0",
-                            apkUrl = "https://github.com/deepeye/DeepEyeMusicPro/releases/download/v2.0.0/DeepEyeMusicPro-v2.0.0.apk",
-                            releaseNotes = "Mock Update for Verification\n- Glassmorphic Banner\n- Premium auto-update flow\n- Real-time progress bar",
-                        )
-                } else {
-                    _updateState.value = UpdateState.UpToDate
-                }
-            }
-            return
-        }
-
-        scope.launch {
-            try {
-                val request =
-                    Request.Builder()
-                        .url("https://api.github.com/repos/DeepEyeCrypto/DeepEyeMusic/releases/latest")
-                        .header("User-Agent", "DeepEyeMusicPro-App")
-                        .build()
-
-                val response = kotlinx.coroutines.withTimeoutOrNull(15000L) {
-                    okHttpClient.newCall(request).execute()
-                }
-
-                if (response == null) {
-                    _updateState.value = UpdateState.Error("Update check timed out")
-                    return@launch
-                }
-
-                response.use { 
-                    if (!it.isSuccessful) {
-                        val errMsg = if (it.code == 403) {
-                            "GitHub rate limit exceeded. Please try again shortly."
-                        } else {
-                            "Failed to fetch release (HTTP ${it.code})"
-                        }
-                        _updateState.value = UpdateState.Error(errMsg)
-                        return@launch
-                    }
-
-                    val bodyString = it.body?.string() ?: throw Exception("Empty response body")
-                    val json = gson.fromJson(bodyString, JsonObject::class.java)
-                    val tagName = json.getAsJsonPrimitive("tag_name")?.asString ?: throw Exception("tag_name not found")
-                    val latestVersion = tagName.removePrefix("v").trim()
-                    val body = json.getAsJsonPrimitive("body")?.asString ?: ""
-
-                    val assetsArray = json.getAsJsonArray("assets") ?: throw Exception("No assets found")
-                    var apkUrl: String? = null
-                    var bestRank = -1
-                    for (i in 0 until assetsArray.size()) {
-                        val asset = assetsArray.get(i).asJsonObject
-                        val name = asset.getAsJsonPrimitive("name")?.asString ?: ""
-                        val downloadUrl = asset.getAsJsonPrimitive("browser_download_url")?.asString
-                        if (downloadUrl != null && name.endsWith(".apk", ignoreCase = true)) {
-                            val rank = when {
-                                name.startsWith("DeepEyeMusicPro", ignoreCase = true) -> 2
-                                name.contains("release", ignoreCase = true) -> 1
-                                else -> 0
-                            }
-                            if (rank > bestRank) {
-                                bestRank = rank
-                                apkUrl = downloadUrl
-                            }
-                        }
-                    }
-
-                    if (apkUrl == null) {
-                        _updateState.value = UpdateState.Error("No APK file found in the latest release assets")
-                        return@launch
-                    }
-
+            if (IS_MOCK_MODE) {
+                scope.launch {
+                    delay(1500)
                     val currentVersion = BuildConfig.VERSION_NAME.substringBefore("-").trim()
-                    if (isNewerVersion(latestVersion, currentVersion)) {
+                    if (isNewerVersion("2.0.0", currentVersion)) {
                         _updateState.value =
                             UpdateState.UpdateAvailable(
-                                version = latestVersion,
-                                apkUrl = apkUrl,
-                                releaseNotes = MarkdownLiteDecoder.decode(body),
+                                version = "2.0.0",
+                                apkUrl = "https://github.com/deepeye/DeepEyeMusicPro/releases/download/v2.0.0/DeepEyeMusicPro-v2.0.0.apk",
+                                releaseNotes = "Mock Update for Verification\n- Glassmorphic Banner\n- Premium auto-update flow\n- Real-time progress bar",
                             )
                     } else {
                         _updateState.value = UpdateState.UpToDate
-                        delay(4000)
-                        if (_updateState.value is UpdateState.UpToDate) {
-                            _updateState.value = UpdateState.Idle
-                        }
                     }
                 }
-            } catch (e: Exception) {
-                _updateState.value = UpdateState.Error(e.message ?: "Unknown error checking for updates")
-                delay(4000)
-                if (_updateState.value is UpdateState.Error) {
-                    _updateState.value = UpdateState.Idle
-                }
+                return
             }
-        }
-    }
 
-    fun downloadUpdate(
-        apkUrl: String,
-        version: String,
-    ) {
-        if (IS_MOCK_MODE) {
-            latestUpdateVersion = version
-            _updateState.value = UpdateState.Downloading(0f, 0L, 50_000_000L)
             scope.launch {
-                for (progress in 1..10) {
-                    delay(200)
-                    val p = progress / 10f
-                    _updateState.value = UpdateState.Downloading(p, (p * 50_000_000L).toLong(), 50_000_000L)
-                }
-                val dummyFile =
-                    File(
-                        context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
-                        "DeepEyeMusicPro-$version.apk"
-                    )
-                if (!dummyFile.exists()) dummyFile.createNewFile()
-                _updateState.value = UpdateState.Downloaded(dummyFile, version)
-            }
-            return
-        }
+                try {
+                    val request =
+                        Request.Builder()
+                            .url("https://api.github.com/repos/DeepEyeCrypto/DeepEyeMusic/releases/latest")
+                            .header("User-Agent", "DeepEyeMusicPro-App")
+                            .build()
 
-        scope.launch(Dispatchers.IO) {
-            try {
-                latestUpdateVersion = version
-                _updateState.value = UpdateState.Downloading(0f, 0L, 0L)
+                    val response =
+                        kotlinx.coroutines.withTimeoutOrNull(15000L) {
+                            okHttpClient.newCall(request).execute()
+                        }
 
-                val file = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "DeepEyeMusicPro-$version.apk")
-                if (file.exists()) {
-                    file.delete()
-                }
+                    if (response == null) {
+                        _updateState.value = UpdateState.Error("Update check timed out")
+                        return@launch
+                    }
 
-                val request = Request.Builder().url(apkUrl).build()
-                val response = okHttpClient.newCall(request).execute()
+                    response.use {
+                        if (!it.isSuccessful) {
+                            val errMsg =
+                                if (it.code == 403) {
+                                    "GitHub rate limit exceeded. Please try again shortly."
+                                } else {
+                                    "Failed to fetch release (HTTP ${it.code})"
+                                }
+                            _updateState.value = UpdateState.Error(errMsg)
+                            return@launch
+                        }
 
-                if (!response.isSuccessful) {
-                    _updateState.value = UpdateState.Error("Download failed (HTTP ${response.code})")
-                    return@launch
-                }
+                        val bodyString = it.body?.string() ?: throw Exception("Empty response body")
+                        val json = gson.fromJson(bodyString, JsonObject::class.java)
+                        val tagName = json.getAsJsonPrimitive("tag_name")?.asString ?: throw Exception("tag_name not found")
+                        val latestVersion = tagName.removePrefix("v").trim()
+                        val body = json.getAsJsonPrimitive("body")?.asString ?: ""
 
-                val body = response.body
-                if (body == null) {
-                    _updateState.value = UpdateState.Error("Empty response body")
-                    return@launch
-                }
-
-                val contentLength = body.contentLength()
-                body.byteStream().use { input ->
-                    file.outputStream().use { output ->
-                        val buffer = ByteArray(8 * 1024)
-                        var bytesCopied = 0L
-                        var bytes = input.read(buffer)
-                        var lastEmitTime = System.currentTimeMillis()
-                        
-                        while (bytes >= 0) {
-                            output.write(buffer, 0, bytes)
-                            bytesCopied += bytes
-                            
-                            val currentTime = System.currentTimeMillis()
-                            if (contentLength > 0 && currentTime - lastEmitTime > 80) {
-                                val progress = (bytesCopied.toFloat() / contentLength.toFloat()).coerceIn(0f, 1f)
-                                _updateState.value = UpdateState.Downloading(progress, bytesCopied, contentLength)
-                                lastEmitTime = currentTime
+                        val assetsArray = json.getAsJsonArray("assets") ?: throw Exception("No assets found")
+                        var apkUrl: String? = null
+                        var bestRank = -1
+                        for (i in 0 until assetsArray.size()) {
+                            val asset = assetsArray.get(i).asJsonObject
+                            val name = asset.getAsJsonPrimitive("name")?.asString ?: ""
+                            val downloadUrl = asset.getAsJsonPrimitive("browser_download_url")?.asString
+                            if (downloadUrl != null && name.endsWith(".apk", ignoreCase = true)) {
+                                val rank =
+                                    when {
+                                        name.startsWith("DeepEyeMusicPro", ignoreCase = true) -> 2
+                                        name.contains("release", ignoreCase = true) -> 1
+                                        else -> 0
+                                    }
+                                if (rank > bestRank) {
+                                    bestRank = rank
+                                    apkUrl = downloadUrl
+                                }
                             }
-                            bytes = input.read(buffer)
+                        }
+
+                        if (apkUrl == null) {
+                            _updateState.value = UpdateState.Error("No APK file found in the latest release assets")
+                            return@launch
+                        }
+
+                        val currentVersion = BuildConfig.VERSION_NAME.substringBefore("-").trim()
+                        if (isNewerVersion(latestVersion, currentVersion)) {
+                            _updateState.value =
+                                UpdateState.UpdateAvailable(
+                                    version = latestVersion,
+                                    apkUrl = apkUrl,
+                                    releaseNotes = MarkdownLiteDecoder.decode(body),
+                                )
+                        } else {
+                            _updateState.value = UpdateState.UpToDate
+                            delay(4000)
+                            if (_updateState.value is UpdateState.UpToDate) {
+                                _updateState.value = UpdateState.Idle
+                            }
                         }
                     }
+                } catch (e: Exception) {
+                    _updateState.value = UpdateState.Error(e.message ?: "Unknown error checking for updates")
+                    delay(4000)
+                    if (_updateState.value is UpdateState.Error) {
+                        _updateState.value = UpdateState.Idle
+                    }
                 }
-                
-                _updateState.value = UpdateState.Downloaded(file, version)
+            }
+        }
+
+        fun downloadUpdate(
+            apkUrl: String,
+            version: String,
+        ) {
+            if (IS_MOCK_MODE) {
+                latestUpdateVersion = version
+                _updateState.value = UpdateState.Downloading(0f, 0L, 50_000_000L)
+                scope.launch {
+                    for (progress in 1..10) {
+                        delay(200)
+                        val p = progress / 10f
+                        _updateState.value = UpdateState.Downloading(p, (p * 50_000_000L).toLong(), 50_000_000L)
+                    }
+                    val dummyFile =
+                        File(
+                            context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+                            "DeepEyeMusicPro-$version.apk"
+                        )
+                    if (!dummyFile.exists()) dummyFile.createNewFile()
+                    _updateState.value = UpdateState.Downloaded(dummyFile, version)
+                }
+                return
+            }
+
+            scope.launch(Dispatchers.IO) {
+                try {
+                    latestUpdateVersion = version
+                    _updateState.value = UpdateState.Downloading(0f, 0L, 0L)
+
+                    val file =
+                        File(
+                            context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+                            "DeepEyeMusicPro-$version.apk"
+                        )
+                    if (file.exists()) {
+                        file.delete()
+                    }
+
+                    val request = Request.Builder().url(apkUrl).build()
+                    val response = okHttpClient.newCall(request).execute()
+
+                    if (!response.isSuccessful) {
+                        _updateState.value = UpdateState.Error("Download failed (HTTP ${response.code})")
+                        return@launch
+                    }
+
+                    val body = response.body
+                    if (body == null) {
+                        _updateState.value = UpdateState.Error("Empty response body")
+                        return@launch
+                    }
+
+                    val contentLength = body.contentLength()
+                    body.byteStream().use { input ->
+                        file.outputStream().use { output ->
+                            val buffer = ByteArray(8 * 1024)
+                            var bytesCopied = 0L
+                            var bytes = input.read(buffer)
+                            var lastEmitTime = System.currentTimeMillis()
+
+                            while (bytes >= 0) {
+                                output.write(buffer, 0, bytes)
+                                bytesCopied += bytes
+
+                                val currentTime = System.currentTimeMillis()
+                                if (contentLength > 0 && currentTime - lastEmitTime > 80) {
+                                    val progress = (bytesCopied.toFloat() / contentLength.toFloat()).coerceIn(0f, 1f)
+                                    _updateState.value = UpdateState.Downloading(progress, bytesCopied, contentLength)
+                                    lastEmitTime = currentTime
+                                }
+                                bytes = input.read(buffer)
+                            }
+                        }
+                    }
+
+                    _updateState.value = UpdateState.Downloaded(file, version)
+                } catch (e: Exception) {
+                    _updateState.value = UpdateState.Error("Failed to download: ${e.message}")
+                }
+            }
+        }
+
+        fun canRequestPackageInstalls(): Boolean {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.packageManager.canRequestPackageInstalls()
+            } else {
+                true
+            }
+        }
+
+        fun openUnknownAppSourcesSettings() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val intent =
+                    Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                context.startActivity(intent)
+            }
+        }
+
+        fun installApk(file: File) {
+            try {
+                if (!file.exists()) {
+                    _updateState.value = UpdateState.Error("Installation file does not exist")
+                    return
+                }
+
+                if (!canRequestPackageInstalls()) {
+                    openUnknownAppSourcesSettings()
+                    return
+                }
+
+                val uri =
+                    FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.provider",
+                        file,
+                    )
+                val intent =
+                    Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(uri, "application/vnd.android.package-archive")
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    }
+
+                // Explicitly grant URI permission to all potential package installers
+                val resInfoList =
+                    context.packageManager.queryIntentActivities(
+                        intent,
+                        android.content.pm.PackageManager.MATCH_DEFAULT_ONLY
+                    )
+                for (resolveInfo in resInfoList) {
+                    val pkgName = resolveInfo.activityInfo.packageName
+                    context.grantUriPermission(
+                        pkgName,
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+                }
+
+                context.startActivity(intent)
             } catch (e: Exception) {
-                _updateState.value = UpdateState.Error("Failed to download: ${e.message}")
+                _updateState.value = UpdateState.Error("Failed to start installation: ${e.message}")
             }
         }
-    }
 
-    fun canRequestPackageInstalls(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.packageManager.canRequestPackageInstalls()
-        } else {
-            true
+        fun resetState() {
+            _updateState.value = UpdateState.Idle
         }
-    }
 
-    fun openUnknownAppSourcesSettings() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val intent =
-                Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
-                    data = Uri.parse("package:${context.packageName}")
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-            context.startActivity(intent)
-        }
-    }
-
-    fun installApk(file: File) {
-        try {
-            if (!file.exists()) {
-                _updateState.value = UpdateState.Error("Installation file does not exist")
-                return
+        internal fun isNewerVersion(
+            latest: String,
+            current: String,
+        ): Boolean {
+            val l = latest.split(".").map { it.toIntOrNull() ?: 0 }
+            val c = current.split(".").map { it.toIntOrNull() ?: 0 }
+            val maxLen = maxOf(l.size, c.size)
+            for (i in 0 until maxLen) {
+                val li = l.getOrNull(i) ?: 0
+                val ci = c.getOrNull(i) ?: 0
+                if (li > ci) return true
+                if (li < ci) return false
             }
-
-            if (!canRequestPackageInstalls()) {
-                openUnknownAppSourcesSettings()
-                return
-            }
-
-            val uri =
-                FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.provider",
-                    file,
-                )
-            val intent =
-                Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(uri, "application/vnd.android.package-archive")
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                }
-            
-            // Explicitly grant URI permission to all potential package installers
-            val resInfoList = context.packageManager.queryIntentActivities(intent, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY)
-            for (resolveInfo in resInfoList) {
-                val pkgName = resolveInfo.activityInfo.packageName
-                context.grantUriPermission(pkgName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            }
-            
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            _updateState.value = UpdateState.Error("Failed to start installation: ${e.message}")
+            return false
         }
     }
-
-    fun resetState() {
-        _updateState.value = UpdateState.Idle
-    }
-
-    internal fun isNewerVersion(
-        latest: String,
-        current: String,
-    ): Boolean {
-        val l = latest.split(".").map { it.toIntOrNull() ?: 0 }
-        val c = current.split(".").map { it.toIntOrNull() ?: 0 }
-        val maxLen = maxOf(l.size, c.size)
-        for (i in 0 until maxLen) {
-            val li = l.getOrNull(i) ?: 0
-            val ci = c.getOrNull(i) ?: 0
-            if (li > ci) return true
-            if (li < ci) return false
-        }
-        return false
-    }
-}

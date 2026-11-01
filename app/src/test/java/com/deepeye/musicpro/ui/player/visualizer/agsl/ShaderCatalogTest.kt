@@ -13,20 +13,25 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ShaderCatalogTest {
-
     /** Uniforms every studio scene must declare for the dispatcher contract. */
-    private val requiredUniforms = listOf(
-        "iResolution", "iTime", "iTimeDelta", "iMouse",
-        "iAudioBass", "iAudioMids", "iAudioTreble", "iAudioEnergy",
-        "iBeatPulse", "iSceneTransition", "iIntensity", "iAspect"
-    )
+    private val requiredUniforms =
+        listOf(
+            "iResolution", "iTime", "iTimeDelta", "iMouse",
+            "iAudioBass", "iAudioMids", "iAudioTreble", "iAudioEnergy",
+            "iBeatPulse", "iSceneTransition", "iIntensity", "iAspect"
+        )
 
     /** Strings that must NEVER appear (proprietary VVavy markers). */
-    private val forbiddenStrings = listOf(
-        "vvavy", "VVavy", "VVAVY",
-        "liquid-carbon-plasma", "centroid-crystalline-tunnel",
-        "aura-orb-hyper-geometric", "the-infinite-grid"
-    )
+    private val forbiddenStrings =
+        listOf(
+            "vvavy",
+            "VVavy",
+            "VVAVY",
+            "liquid-carbon-plasma",
+            "centroid-crystalline-tunnel",
+            "aura-orb-hyper-geometric",
+            "the-infinite-grid"
+        )
 
     @Test
     fun `catalog exposes exactly the three studio scenes`() {

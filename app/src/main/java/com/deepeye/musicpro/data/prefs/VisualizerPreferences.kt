@@ -36,44 +36,47 @@ data class VisualizerPrefs(
  * high-frequency render parameters, not account/exportable app settings.
  */
 @Singleton
-class VisualizerPreferences @Inject
-constructor(
-    @ApplicationContext private val context: Context
-) {
-    companion object {
-        const val MIN_INTENSITY = 0.5f
-        const val MAX_INTENSITY = 1.5f
+class VisualizerPreferences
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context
+    ) {
+        companion object {
+            const val MIN_INTENSITY = 0.5f
+            const val MAX_INTENSITY = 1.5f
 
-        private val KEY_SCENE = stringPreferencesKey("visualizer_scene")
-        private val KEY_INTENSITY = floatPreferencesKey("visualizer_intensity")
-        private val KEY_REDUCED_MOTION = booleanPreferencesKey("visualizer_reduced_motion")
-    }
-
-    val prefs: Flow<VisualizerPrefs> = context.visualizerDataStore.data
-        // A corrupt/unreadable prefs file must not take the player down with it.
-        .catch { cause ->
-            if (cause is IOException) emit(emptyPreferences()) else throw cause
-        }
-        .map { p ->
-            VisualizerPrefs(
-                sceneId = runCatching { VisualizerSceneId.valueOf(p[KEY_SCENE].orEmpty()) }
-                    .getOrDefault(VisualizerSceneId.LIQUID_PLASMA),
-                // Clamp on read: a hand-edited or out-of-range value must not
-                // produce a degenerate scale factor in the render loop.
-                intensity = (p[KEY_INTENSITY] ?: 1.0f).coerceIn(MIN_INTENSITY, MAX_INTENSITY),
-                reducedMotion = p[KEY_REDUCED_MOTION] ?: false
-            )
+            private val KEY_SCENE = stringPreferencesKey("visualizer_scene")
+            private val KEY_INTENSITY = floatPreferencesKey("visualizer_intensity")
+            private val KEY_REDUCED_MOTION = booleanPreferencesKey("visualizer_reduced_motion")
         }
 
-    suspend fun setScene(id: VisualizerSceneId) {
-        context.visualizerDataStore.edit { it[KEY_SCENE] = id.name }
-    }
+        val prefs: Flow<VisualizerPrefs> =
+            context.visualizerDataStore.data
+                // A corrupt/unreadable prefs file must not take the player down with it.
+                .catch { cause ->
+                    if (cause is IOException) emit(emptyPreferences()) else throw cause
+                }
+                .map { p ->
+                    VisualizerPrefs(
+                        sceneId =
+                            runCatching { VisualizerSceneId.valueOf(p[KEY_SCENE].orEmpty()) }
+                                .getOrDefault(VisualizerSceneId.LIQUID_PLASMA),
+                        // Clamp on read: a hand-edited or out-of-range value must not
+                        // produce a degenerate scale factor in the render loop.
+                        intensity = (p[KEY_INTENSITY] ?: 1.0f).coerceIn(MIN_INTENSITY, MAX_INTENSITY),
+                        reducedMotion = p[KEY_REDUCED_MOTION] ?: false
+                    )
+                }
 
-    suspend fun setIntensity(value: Float) {
-        context.visualizerDataStore.edit { it[KEY_INTENSITY] = value.coerceIn(MIN_INTENSITY, MAX_INTENSITY) }
-    }
+        suspend fun setScene(id: VisualizerSceneId) {
+            context.visualizerDataStore.edit { it[KEY_SCENE] = id.name }
+        }
 
-    suspend fun setReducedMotion(enabled: Boolean) {
-        context.visualizerDataStore.edit { it[KEY_REDUCED_MOTION] = enabled }
+        suspend fun setIntensity(value: Float) {
+            context.visualizerDataStore.edit { it[KEY_INTENSITY] = value.coerceIn(MIN_INTENSITY, MAX_INTENSITY) }
+        }
+
+        suspend fun setReducedMotion(enabled: Boolean) {
+            context.visualizerDataStore.edit { it[KEY_REDUCED_MOTION] = enabled }
+        }
     }
-}

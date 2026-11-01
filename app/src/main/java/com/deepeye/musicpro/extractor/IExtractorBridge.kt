@@ -42,14 +42,29 @@ data class ExtractorStreamResult(
 )
 
 interface IExtractorBridge {
-    suspend fun initBridge(downloader: Any) 
+    suspend fun initBridge(downloader: Any)
+
     suspend fun searchVideosFirstPage(query: String): ExtractorSearchResultPage
-    suspend fun searchVideosNextPage(query: String, nextPageUrl: String): ExtractorSearchResultPage
+
+    suspend fun searchVideosNextPage(
+        query: String,
+        nextPageUrl: String
+    ): ExtractorSearchResultPage
+
     suspend fun getTrending(): List<ExtractorVideoItem>
+
     suspend fun searchMusic(query: String): List<ExtractorMusicItem>
-    suspend fun extractStream(videoId: String, preferVideo: Boolean): ExtractorStreamResult?
+
+    suspend fun extractStream(
+        videoId: String,
+        preferVideo: Boolean
+    ): ExtractorStreamResult?
+
     suspend fun getRelatedMusic(videoId: String): List<ExtractorMusicItem>
+
     suspend fun getRelatedVideos(videoId: String): List<ExtractorVideoItem>
+
     suspend fun getShorts(): List<ExtractorVideoItem>
+
     suspend fun getSearchSuggestions(query: String): List<String>
 }

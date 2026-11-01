@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.crossfade
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
-import kotlin.math.absoluteValue
 import com.deepeye.musicpro.ui.components.bouncyClickable
+import kotlin.math.absoluteValue
 
 @Composable
 fun VideoCard(
@@ -32,34 +32,39 @@ fun VideoCard(
     modifier: Modifier = Modifier.width(300.dp),
 ) {
     Card(
-        modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
-            .bouncyClickable(
-                downScale = 0.95f,
-                onClick = { onClick(item) }
-            ),
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(20.dp))
+                .bouncyClickable(
+                    downScale = 0.95f,
+                    onClick = { onClick(item) }
+                ),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF131722).copy(alpha = 0.85f)
-        ),
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.dp,
-            color = Color(0x22FFFFFF)
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = Color(0xFF131722).copy(alpha = 0.85f)
+            ),
+        border =
+            androidx.compose.foundation.BorderStroke(
+                width = 1.dp,
+                color = Color(0x22FFFFFF)
+            )
     ) {
         Column {
             // 16:9 Thumbnail Poster
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9f)
+                        .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
             ) {
                 AsyncImage(
-                    model = coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
-                        .data(item.thumbnailUrl)
-                        .crossfade(true)
-                        .build(),
+                    model =
+                        coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                            .data(item.thumbnailUrl)
+                            .crossfade(true)
+                            .build(),
                     contentDescription = item.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
@@ -67,41 +72,54 @@ fun VideoCard(
 
                 // Bottom vignette gradient
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.Black.copy(alpha = 0.75f)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors =
+                                        listOf(
+                                            Color.Transparent,
+                                            Color.Black.copy(alpha = 0.75f)
+                                        )
                                 )
                             )
-                        )
                 )
 
                 // Quality Badge Pill (Top-Left)
-                val quality = remember(item.id) {
-                    val hash = item.id.hashCode().absoluteValue
-                    when {
-                        item.isLive -> "LIVE"
-                        hash % 3 == 0 -> "4K"
-                        hash % 3 == 1 -> "HDR"
-                        else -> "1080P"
+                val quality =
+                    remember(item.id) {
+                        val hash = item.id.hashCode().absoluteValue
+                        when {
+                            item.isLive -> "LIVE"
+                            hash % 3 == 0 -> "4K"
+                            hash % 3 == 1 -> "HDR"
+                            else -> "1080P"
+                        }
                     }
-                }
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(10.dp)
-                        .background(
-                            if (quality == "LIVE") Color(0xFFFF0033) else Color.Black.copy(alpha = 0.85f),
-                            RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .padding(10.dp)
+                            .background(
+                                if (quality == "LIVE") Color(0xFFFF0033) else Color.Black.copy(alpha = 0.85f),
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = quality,
-                        color = if (quality == "4K") Color(0xFFFF3D00) else if (quality == "HDR") Color(0xFF00E676) else Color(0xFF00E5FF),
+                        color =
+                            if (quality == "4K") {
+                                Color(
+                                    0xFFFF3D00
+                                )
+                            } else if (quality == "HDR") {
+                                Color(0xFF00E676)
+                            } else {
+                                Color(0xFF00E5FF)
+                            },
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -110,11 +128,12 @@ fun VideoCard(
                 // Duration Badge Pill (Bottom-Right)
                 if (!item.isLive && item.duration > 0) {
                     Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(10.dp)
-                            .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                        modifier =
+                            Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(10.dp)
+                                .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = item.duration.formatDuration(),
@@ -129,27 +148,31 @@ fun VideoCard(
 
             // Metadata with premium typography
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
                 verticalAlignment = Alignment.Top,
             ) {
                 // Channel Avatar (Coil AsyncImage, clipped to a circle) — left of the
                 // title/metadata column. Falls back to the YouTube hqdefault thumbnail
                 // derived from the video id when the parser did not surface an avatar.
-                val avatarModel = item.channelAvatarUrl.ifBlank {
-                    "https://i.ytimg.com/vi/${item.id}/default.jpg"
-                }
+                val avatarModel =
+                    item.channelAvatarUrl.ifBlank {
+                        "https://i.ytimg.com/vi/${item.id}/default.jpg"
+                    }
                 AsyncImage(
-                    model = coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
-                        .data(avatarModel)
-                        .crossfade(true)
-                        .build(),
+                    model =
+                        coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                            .data(avatarModel)
+                            .crossfade(true)
+                            .build(),
                     contentDescription = item.channelName,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color(0x22FFFFFF)),
+                    modifier =
+                        Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x22FFFFFF)),
                     contentScale = ContentScale.Crop,
                 )
 
@@ -171,11 +194,12 @@ fun VideoCard(
 
                     // Metadata row — "[Channel] • [Views] • [Publish Time]" in a single
                     // bodySmall line with a muted color, matching YouTube parity.
-                    val metaParts = buildList {
-                        if (item.channelName.isNotBlank()) add(item.channelName)
-                        if (item.viewCount > 0) add(item.viewCount.formatCountShort())
-                        if (item.uploadDate.isNotBlank()) add(item.uploadDate)
-                    }
+                    val metaParts =
+                        buildList {
+                            if (item.channelName.isNotBlank()) add(item.channelName)
+                            if (item.viewCount > 0) add(item.viewCount.formatCountShort())
+                            if (item.uploadDate.isNotBlank()) add(item.uploadDate)
+                        }
                     if (metaParts.isNotEmpty()) {
                         Text(
                             text = metaParts.joinToString(" • "),

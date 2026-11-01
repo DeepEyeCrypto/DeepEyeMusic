@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.deepeye.musicpro.ui.theme.ContentBounds
-import com.deepeye.musicpro.updates.ChangelogEntry
 import com.deepeye.musicpro.ui.theme.ProvideAppZoom
+import com.deepeye.musicpro.updates.ChangelogEntry
 
 // Brand colors
 private val TealGlow = Color(0xFF00D2FF)
@@ -58,185 +58,185 @@ fun ChangelogDialog(
     Dialog(
         onDismissRequest = onDismiss,
         properties =
-        DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false,
-        ),
+            DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false,
+            ),
     ) {
         // Dialogs get their own window and therefore their own density; without
         // this the card renders at system scale while the screen behind it is
         // zoomed. See ProvideAppZoom for the measured evidence.
         ProvideAppZoom {
-        // The card is clamped to the viewport, which is what makes the action
-        // row reachable.
-        //
-        // `weight(1f, fill = false)` on the body alone does NOT do this. A Column
-        // with an unbounded max height measures a `fill = false` weighted child at
-        // its own natural height, so the body grew to fit every changelog entry
-        // and the `heightIn(max = 420.dp)` that used to sit on it was itself
-        // larger than a 360dp-tall landscape viewport (720px / density 2.0).
-        // Nothing ever engaged the scroll, and "Later" / "Got it" ended up ~240dp
-        // below the fold, unclickable.
-        //
-        // Bounding the card gives the Column a finite budget, so the weighted body
-        // is measured against the space the header and buttons leave behind and
-        // scrolls within it. Title and buttons stay pinned because they are
-        // non-weighted siblings.
-        //
-        // `usePlatformDefaultWidth = false` makes the dialog window MATCH_PARENT,
-        // so the window height is the screen height. LocalConfiguration is
-        // per-context and is unaffected by [ProvideAppZoom]'s density override,
-        // so it still reports the true unzoomed height here.
-        val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-        val dialogMaxHeight =
-            (screenHeight - DialogVerticalMargin).coerceAtLeast(MinDialogCardHeight)
-        // Outer Box exists solely to centre the capped dialog.
-        //
-        // `usePlatformDefaultWidth = false` makes the Dialog window fill the
-        // screen and places its content at the *top start*. Once the card stops
-        // stretching to 92% of the viewport it would otherwise sit hard against
-        // the left edge with all of its margin on one side only.
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Box(
-            modifier =
-            Modifier
-                // Bounded, not raw `fillMaxWidth(0.92f)`. A percentage of an
-                // ~890dp landscape viewport is still ~820dp, so the dialog ran
-                // nearly the full width of the screen and every release-note
-                // line stretched to a single short sentence 800dp wide.
-                //
-                // `widthIn` first, then the percentage fill: this way the
-                // percentage is applied to the *capped* width, so the dialog is
-                // 92% of 560dp on a wide viewport and 92% of the screen on a
-                // narrow one. Reversing the order would let the percentage
-                // override the cap.
-                .widthIn(max = ContentBounds.dialog)
-                .fillMaxWidth(0.92f)
-                // Must precede `.clip`/`.background` so the clamp bounds the
-                // card, not just its painted edges.
-                .heightIn(max = dialogMaxHeight)
-                .clip(RoundedCornerShape(28.dp))
-                .background(
-                    Brush.verticalGradient(
-                        listOf(SurfaceCard, SurfaceDark),
-                    ),
-                )
-                .border(
-                    1.dp,
-                    Brush.linearGradient(
-                        listOf(TealGlow.copy(alpha = 0.25f), PurpleGlow.copy(alpha = 0.15f)),
-                    ),
-                    RoundedCornerShape(28.dp),
-                ),
-        ) {
-            Column(
-                modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-            ) {
-                // ── Header ──
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+            // The card is clamped to the viewport, which is what makes the action
+            // row reachable.
+            //
+            // `weight(1f, fill = false)` on the body alone does NOT do this. A Column
+            // with an unbounded max height measures a `fill = false` weighted child at
+            // its own natural height, so the body grew to fit every changelog entry
+            // and the `heightIn(max = 420.dp)` that used to sit on it was itself
+            // larger than a 360dp-tall landscape viewport (720px / density 2.0).
+            // Nothing ever engaged the scroll, and "Later" / "Got it" ended up ~240dp
+            // below the fold, unclickable.
+            //
+            // Bounding the card gives the Column a finite budget, so the weighted body
+            // is measured against the space the header and buttons leave behind and
+            // scrolls within it. Title and buttons stay pinned because they are
+            // non-weighted siblings.
+            //
+            // `usePlatformDefaultWidth = false` makes the dialog window MATCH_PARENT,
+            // so the window height is the screen height. LocalConfiguration is
+            // per-context and is unaffected by [ProvideAppZoom]'s density override,
+            // so it still reports the true unzoomed height here.
+            val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+            val dialogMaxHeight =
+                (screenHeight - DialogVerticalMargin).coerceAtLeast(MinDialogCardHeight)
+            // Outer Box exists solely to centre the capped dialog.
+            //
+            // `usePlatformDefaultWidth = false` makes the Dialog window fill the
+            // screen and places its content at the *top start*. Once the card stops
+            // stretching to 92% of the viewport it would otherwise sit hard against
+            // the left edge with all of its margin on one side only.
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier =
+                        Modifier
+                            // Bounded, not raw `fillMaxWidth(0.92f)`. A percentage of an
+                            // ~890dp landscape viewport is still ~820dp, so the dialog ran
+                            // nearly the full width of the screen and every release-note
+                            // line stretched to a single short sentence 800dp wide.
+                            //
+                            // `widthIn` first, then the percentage fill: this way the
+                            // percentage is applied to the *capped* width, so the dialog is
+                            // 92% of 560dp on a wide viewport and 92% of the screen on a
+                            // narrow one. Reversing the order would let the percentage
+                            // override the cap.
+                            .widthIn(max = ContentBounds.dialog)
+                            .fillMaxWidth(0.92f)
+                            // Must precede `.clip`/`.background` so the clamp bounds the
+                            // card, not just its painted edges.
+                            .heightIn(max = dialogMaxHeight)
+                            .clip(RoundedCornerShape(28.dp))
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(SurfaceCard, SurfaceDark),
+                                ),
+                            )
+                            .border(
+                                1.dp,
+                                Brush.linearGradient(
+                                    listOf(TealGlow.copy(alpha = 0.25f), PurpleGlow.copy(alpha = 0.15f)),
+                                ),
+                                RoundedCornerShape(28.dp),
+                            ),
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Rounded.NewReleases,
-                            contentDescription = null,
-                            tint = TealGlow,
-                            modifier = Modifier.size(28.dp),
-                        )
-                        Spacer(Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                "What's New",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = TextPrimary,
-                            )
-                            Text(
-                                "Updated features and fixes",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = TextMuted,
-                            )
+                    Column(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                    ) {
+                        // ── Header ──
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Rounded.NewReleases,
+                                    contentDescription = null,
+                                    tint = TealGlow,
+                                    modifier = Modifier.size(28.dp),
+                                )
+                                Spacer(Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        "What's New",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextPrimary,
+                                    )
+                                    Text(
+                                        "Updated features and fixes",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TextMuted,
+                                    )
+                                }
+                            }
+                            IconButton(onClick = onLater) {
+                                Icon(
+                                    Icons.Rounded.Close,
+                                    contentDescription = "Close",
+                                    tint = TextSecondary,
+                                )
+                            }
                         }
-                    }
-                    IconButton(onClick = onLater) {
-                        Icon(
-                            Icons.Rounded.Close,
-                            contentDescription = "Close",
-                            tint = TextSecondary,
-                        )
-                    }
-                }
 
-                Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(16.dp))
 
-                // ── Scrollable Changelog ──
-                LazyColumn(
-                    // `weight(1f, fill = false)` — take only what the header and
-                    // the action row leave over, and no more than that.
-                    //
-                    // The `heightIn(max = 420.dp)` that used to sit here is gone.
-                    // 420.dp is *larger than the entire landscape viewport* this
-                    // dialog ships on (360dp = 720px / density 2.0), so it never
-                    // clamped anything; the body simply grew to fit every entry
-                    // and pushed "Later" / "Got it" roughly 240dp below the fold,
-                    // where they could not be tapped. A hardcoded dp cap cannot be
-                    // right across portrait, landscape and split-screen anyway.
-                    //
-                    // Weighting is the structural form of the same idea: the
-                    // siblings above and below are measured first, so the body is
-                    // measured against the leftover budget, bounded by the card's
-                    // own `heightIn(max = dialogMaxHeight)`. A LazyColumn already
-                    // clamps to the constraint it is measured with, so no explicit
-                    // cap is needed here.
-                    modifier = Modifier.weight(1f, fill = false),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(entries) { entry ->
-                        ChangelogReleaseCard(entry)
-                    }
-                }
+                        // ── Scrollable Changelog ──
+                        LazyColumn(
+                            // `weight(1f, fill = false)` — take only what the header and
+                            // the action row leave over, and no more than that.
+                            //
+                            // The `heightIn(max = 420.dp)` that used to sit here is gone.
+                            // 420.dp is *larger than the entire landscape viewport* this
+                            // dialog ships on (360dp = 720px / density 2.0), so it never
+                            // clamped anything; the body simply grew to fit every entry
+                            // and pushed "Later" / "Got it" roughly 240dp below the fold,
+                            // where they could not be tapped. A hardcoded dp cap cannot be
+                            // right across portrait, landscape and split-screen anyway.
+                            //
+                            // Weighting is the structural form of the same idea: the
+                            // siblings above and below are measured first, so the body is
+                            // measured against the leftover budget, bounded by the card's
+                            // own `heightIn(max = dialogMaxHeight)`. A LazyColumn already
+                            // clamps to the constraint it is measured with, so no explicit
+                            // cap is needed here.
+                            modifier = Modifier.weight(1f, fill = false),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(entries) { entry ->
+                                ChangelogReleaseCard(entry)
+                            }
+                        }
 
-                Spacer(Modifier.height(20.dp))
+                        Spacer(Modifier.height(20.dp))
 
-                // ── Action Buttons ──
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = onLater,
-                        shape = RoundedCornerShape(14.dp),
-                        colors =
-                        ButtonDefaults.outlinedButtonColors(
-                            contentColor = TextSecondary,
-                        ),
-                    ) {
-                        Text("Later")
-                    }
+                        // ── Action Buttons ──
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            OutlinedButton(
+                                modifier = Modifier.weight(1f),
+                                onClick = onLater,
+                                shape = RoundedCornerShape(14.dp),
+                                colors =
+                                    ButtonDefaults.outlinedButtonColors(
+                                        contentColor = TextSecondary,
+                                    ),
+                            ) {
+                                Text("Later")
+                            }
 
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        onClick = onDismiss,
-                        shape = RoundedCornerShape(14.dp),
-                        colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = TealGlow,
-                            contentColor = Color.Black,
-                        ),
-                    ) {
-                        Text("Got it", fontWeight = FontWeight.Bold)
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                onClick = onDismiss,
+                                shape = RoundedCornerShape(14.dp),
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = TealGlow,
+                                        contentColor = Color.Black,
+                                    ),
+                            ) {
+                                Text("Got it", fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                 }
             }
-        }
-        }
         }
     }
 }
@@ -245,26 +245,26 @@ fun ChangelogDialog(
 fun ChangelogReleaseCard(entry: ChangelogEntry) {
     Column(
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(
-                if (entry.highlight) {
-                    TealGlow.copy(alpha = 0.08f)
-                } else {
-                    Color.White.copy(alpha = 0.03f)
-                },
-            )
-            .border(
-                1.dp,
-                if (entry.highlight) {
-                    TealGlow.copy(alpha = 0.2f)
-                } else {
-                    Color.White.copy(alpha = 0.06f)
-                },
-                RoundedCornerShape(18.dp),
-            )
-            .padding(14.dp),
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(18.dp))
+                .background(
+                    if (entry.highlight) {
+                        TealGlow.copy(alpha = 0.08f)
+                    } else {
+                        Color.White.copy(alpha = 0.03f)
+                    },
+                )
+                .border(
+                    1.dp,
+                    if (entry.highlight) {
+                        TealGlow.copy(alpha = 0.2f)
+                    } else {
+                        Color.White.copy(alpha = 0.06f)
+                    },
+                    RoundedCornerShape(18.dp),
+                )
+                .padding(14.dp),
     ) {
         // Version + Title row
         Row(verticalAlignment = Alignment.CenterVertically) {

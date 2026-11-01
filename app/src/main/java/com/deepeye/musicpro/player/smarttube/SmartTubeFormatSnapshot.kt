@@ -38,12 +38,14 @@ data class SmartTubeFormatSnapshot(
     val lastError: String? = null
 ) {
     val activeVideoFormat: DeepEyePlaybackFormat?
-        get() = videoFormats.firstOrNull { it.isSelected }
-            ?: videoFormats.firstOrNull { it.stableId == currentVideoFormatId }
-            ?: videoFormats.firstOrNull { it.isDefault }
+        get() =
+            videoFormats.firstOrNull { it.isSelected }
+                ?: videoFormats.firstOrNull { it.stableId == currentVideoFormatId }
+                ?: videoFormats.firstOrNull { it.isDefault }
 
     val activeAudioFormat: DeepEyePlaybackFormat?
-        get() = audioFormats.firstOrNull { it.isSelected }
-            ?: audioFormats.firstOrNull { it.stableId == currentAudioFormatId }
-            ?: audioFormats.firstOrNull { it.isDefault }
+        get() =
+            audioFormats.firstOrNull { it.isSelected }
+                ?: audioFormats.firstOrNull { it.stableId == currentAudioFormatId }
+                ?: audioFormats.firstOrNull { it.isDefault }
 }

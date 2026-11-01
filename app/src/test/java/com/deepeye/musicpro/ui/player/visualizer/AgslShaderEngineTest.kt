@@ -10,15 +10,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AgslShaderEngineTest {
-
     @Test
     fun transpileGlslToAgsl_translatesMainImageSignature() {
-        val glsl = """
+        val glsl =
+            """
             void mainImage(out vec4 fragColor, in vec2 fragCoord) {
                 vec2 uv = fragCoord.xy / iResolution.xy;
                 fragColor = vec4(uv.x, uv.y, 0.0, 1.0);
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val agsl = AgslShaderEngine.transpileGlslToAgsl(glsl)
 
@@ -35,13 +35,14 @@ class AgslShaderEngineTest {
 
     @Test
     fun transpileGlslToAgsl_translatesTextureLookupsToShaderEval() {
-        val glsl = """
+        val glsl =
+            """
             void mainImage(out vec4 fragColor, in vec2 fragCoord) {
                 vec2 uv = fragCoord.xy / iResolution.xy;
                 vec4 audio = texture(iChannel0, vec2(uv.x, 0.0));
                 fragColor = audio;
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val agsl = AgslShaderEngine.transpileGlslToAgsl(glsl)
 
@@ -51,12 +52,13 @@ class AgslShaderEngineTest {
 
     @Test
     fun transpileGlslToAgsl_stripsPrecisionSpecifiers() {
-        val glsl = """
+        val glsl =
+            """
             precision highp float;
             void mainImage(out vec4 fragColor, in vec2 fragCoord) {
                 fragColor = vec4(1.0);
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val agsl = AgslShaderEngine.transpileGlslToAgsl(glsl)
 
@@ -65,11 +67,12 @@ class AgslShaderEngineTest {
 
     @Test
     fun transpileGlslToAgsl_injectsModPolyfill() {
-        val glsl = """
+        val glsl =
+            """
             void mainImage(out vec4 fragColor, in vec2 fragCoord) {
                 fragColor = vec4(1.0);
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val agsl = AgslShaderEngine.transpileGlslToAgsl(glsl)
 
@@ -79,11 +82,12 @@ class AgslShaderEngineTest {
 
     @Test
     fun transpileGlslToAgsl_injectsYAxisInversion() {
-        val glsl = """
+        val glsl =
+            """
             void mainImage(out vec4 fragColor, in vec2 fragCoord) {
                 fragColor = vec4(1.0);
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val agsl = AgslShaderEngine.transpileGlslToAgsl(glsl)
 
@@ -94,12 +98,13 @@ class AgslShaderEngineTest {
     @Test
     fun transpileGlslToAgsl_doesNotDuplicateFixes() {
         // If shader already has mod polyfill, don't duplicate
-        val glsl = """
+        val glsl =
+            """
             float mod(float x, float y) { return x - y * floor(x / y); }
             void mainImage(out vec4 fragColor, in vec2 fragCoord) {
                 fragColor = vec4(1.0);
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val agsl = AgslShaderEngine.transpileGlslToAgsl(glsl)
 
@@ -111,12 +116,13 @@ class AgslShaderEngineTest {
     @Test
     fun transpileGlslToAgsl_preservesExistingUniforms() {
         // Shader that already has uniforms should not get duplicates
-        val glsl = """
+        val glsl =
+            """
             uniform float2 iResolution;
             void mainImage(out vec4 fragColor, in vec2 fragCoord) {
                 fragColor = vec4(1.0);
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val agsl = AgslShaderEngine.transpileGlslToAgsl(glsl)
 

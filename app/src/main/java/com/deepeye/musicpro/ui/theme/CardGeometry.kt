@@ -39,7 +39,6 @@ import androidx.compose.ui.unit.dp
  *   be narrower than the card it is asked to hold.
  */
 object CardGeometry {
-
     /**
      * Line height of the Continue Listening title, in reference sp.
      *
@@ -81,13 +80,14 @@ object CardGeometry {
      * [CardSpacing].
      */
     val Video: VideoCard
-        get() = VideoCard(
-            aspectRatio = 16f / 9f,
-            minWidth = 140.dp,
-            cornerRadius = 10.dp,
-            contentPadding = 6.dp,
-            titleMaxLines = 2,
-        )
+        get() =
+            VideoCard(
+                aspectRatio = 16f / 9f,
+                minWidth = 140.dp,
+                cornerRadius = 10.dp,
+                contentPadding = 6.dp,
+                titleMaxLines = 2,
+            )
 
     /**
      * 1:1 square music card — Spotify-style discovery rails.
@@ -96,13 +96,14 @@ object CardGeometry {
      * no letterboxed frame to crop), hence a lower [Video.minWidth] floor.
      */
     val Music: MusicCard
-        get() = MusicCard(
-            aspectRatio = 1f,
-            minWidth = 124.dp,
-            cornerRadius = 12.dp,
-            contentPadding = 8.dp,
-            titleMaxLines = 2,
-        )
+        get() =
+            MusicCard(
+                aspectRatio = 1f,
+                minWidth = 124.dp,
+                cornerRadius = 12.dp,
+                contentPadding = 8.dp,
+                titleMaxLines = 2,
+            )
 
     /**
      * Compact horizontal list row — "Continue Listening".
@@ -133,28 +134,30 @@ object CardGeometry {
      * [ContinueListeningGeometry.minHeight] documents the arithmetic.
      */
     val ContinueListening: ContinueListeningGeometry
-        get() = ContinueListeningGeometry(
-            height = 64.dp,
-            maxWidth = 220.dp,
-            cornerRadius = 12.dp,
-            artworkSize = 52.dp,
-            contentPadding = 6.dp,
-            titleMaxLines = 2,
-            titleLineHeightSp = TitleLineHeightSp,
-            subtitleLineHeightSp = SubtitleLineHeightSp,
-            titleToSubtitleGap = 2.dp,
-        )
+        get() =
+            ContinueListeningGeometry(
+                height = 64.dp,
+                maxWidth = 220.dp,
+                cornerRadius = 12.dp,
+                artworkSize = 52.dp,
+                contentPadding = 6.dp,
+                titleMaxLines = 2,
+                titleLineHeightSp = TitleLineHeightSp,
+                subtitleLineHeightSp = SubtitleLineHeightSp,
+                titleToSubtitleGap = 2.dp,
+            )
 
     /**
      * Dense two-line widget — Home quick-play tiles and generic compact rows.
      */
     val Compact: CompactCard
-        get() = CompactCard(
-            minWidth = 124.dp,
-            cornerRadius = 8.dp,
-            height = 44.dp,
-            contentPadding = 6.dp,
-        )
+        get() =
+            CompactCard(
+                minWidth = 124.dp,
+                cornerRadius = 8.dp,
+                height = 44.dp,
+                contentPadding = 6.dp,
+            )
 }
 
 /**
@@ -252,13 +255,14 @@ data class ContinueListeningGeometry(
      * whole point of consumers passing this as a `min`.
      */
     val minHeight: Dp
-        get() = maxOf(
-            height,
-            scaledFontSize(titleLineHeightSp).dp * titleMaxLines +
-                titleToSubtitleGap +
-                scaledFontSize(subtitleLineHeightSp).dp +
-                contentPadding * 2,
-        )
+        get() =
+            maxOf(
+                height,
+                scaledFontSize(titleLineHeightSp).dp * titleMaxLines +
+                    titleToSubtitleGap +
+                    scaledFontSize(subtitleLineHeightSp).dp +
+                    contentPadding * 2,
+            )
 }
 
 /**

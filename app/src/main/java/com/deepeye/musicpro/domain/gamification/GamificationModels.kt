@@ -6,13 +6,13 @@ package com.deepeye.musicpro.domain.gamification
 import java.time.Instant
 
 enum class AchievementRequirement {
-    SONGS_LISTENED_100,      // "Music Guru" badge
-    STREAK_30_DAYS,          // "Super Listener" badge
-    GENRES_EXPLORED_5,       // "Genre Explorer" badge
-    PLAYLISTS_CREATED_10,    // "Playlist Master" badge
-    SONGS_SHARED_10,         // "Social Sharer" badge
-    LISTENING_HOURS_50,      // "Music Enthusiast" badge
-    DAILY_GOAL_7_DAYS,       // "Consistent Listener" badge
+    SONGS_LISTENED_100, // "Music Guru" badge
+    STREAK_30_DAYS, // "Super Listener" badge
+    GENRES_EXPLORED_5, // "Genre Explorer" badge
+    PLAYLISTS_CREATED_10, // "Playlist Master" badge
+    SONGS_SHARED_10, // "Social Sharer" badge
+    LISTENING_HOURS_50, // "Music Enthusiast" badge
+    DAILY_GOAL_7_DAYS, // "Consistent Listener" badge
 }
 
 data class UserAchievement(

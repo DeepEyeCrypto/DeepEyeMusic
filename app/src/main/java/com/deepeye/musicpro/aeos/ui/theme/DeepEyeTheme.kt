@@ -10,12 +10,13 @@ private val NeonTeal = Color(0xFF14B8A6)
 private val DarkObsidian = Color(0xFF09090B)
 private val TranslucentGlass = Color(0x33FFFFFF)
 
-private val AeosDarkColorScheme = darkColorScheme(
-    primary = NeonTeal,
-    background = DarkObsidian,
-    surface = DeepCyberBlue,
-    surfaceVariant = TranslucentGlass
-)
+private val AeosDarkColorScheme =
+    darkColorScheme(
+        primary = NeonTeal,
+        background = DarkObsidian,
+        surface = DeepCyberBlue,
+        surfaceVariant = TranslucentGlass
+    )
 
 @Composable
 fun DeepEyeTheme(content: @Composable () -> Unit) {

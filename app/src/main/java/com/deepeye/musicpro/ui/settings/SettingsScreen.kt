@@ -5,8 +5,6 @@ package com.deepeye.musicpro.ui.settings
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import kotlinx.coroutines.launch
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -33,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -42,12 +38,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.deepeye.musicpro.data.prefs.AppSettings
 import com.deepeye.musicpro.data.prefs.ThemeMode
 import com.deepeye.musicpro.data.source.remote.update.UpdateState
 import com.deepeye.musicpro.diagnostics.research.YtResearchDebugCard
 import com.deepeye.musicpro.ui.theme.AppAlertDialog
 import com.deepeye.musicpro.ui.theme.boundedContent
+import kotlinx.coroutines.launch
 
 private val neonCyan = Color(0xFF00E5FF)
 private val darkSurface = Color(0xFF131722).copy(alpha = 0.85f)
@@ -208,18 +204,20 @@ fun SettingsScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Transparent)
-            .statusBarsPadding()
-            .navigationBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color.Transparent)
+                .statusBarsPadding()
+                .navigationBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Global Header Bar (Automotive 64.dp minimum touch targets)
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
@@ -232,11 +230,12 @@ fun SettingsScreen(
                             onNavigateBack()
                         }
                     },
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(darkSurface)
-                        .border(1.dp, glassBorder, CircleShape)
+                    modifier =
+                        Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(darkSurface)
+                            .border(1.dp, glassBorder, CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -259,10 +258,11 @@ fun SettingsScreen(
                         )
                         Spacer(Modifier.width(8.dp))
                         Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(neonCyan)
+                            modifier =
+                                Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(neonCyan)
                         )
                     }
                     Text(
@@ -281,17 +281,28 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(20.dp),
                         color = Color(0x2200E676),
                         border = BorderStroke(1.5.dp, Color(0xFF00E676)),
-                        modifier = Modifier
-                            .heightIn(min = 48.dp)
-                            .clickable { showYouTubeDisconnectConfirm = true }
+                        modifier =
+                            Modifier
+                                .heightIn(min = 48.dp)
+                                .clickable { showYouTubeDisconnectConfirm = true }
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF00E676), modifier = Modifier.size(20.dp))
+                            Icon(
+                                Icons.Default.CheckCircle,
+                                null,
+                                tint = Color(0xFF00E676),
+                                modifier = Modifier.size(20.dp)
+                            )
                             Spacer(Modifier.width(8.dp))
-                            Text("YouTube Active", color = Color(0xFF00E676), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                "YouTube Active",
+                                color = Color(0xFF00E676),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 } else {
@@ -300,8 +311,9 @@ fun SettingsScreen(
                         shape = RoundedCornerShape(20.dp),
                         color = Color(0x2200E5FF),
                         border = BorderStroke(1.5.dp, Color(0x3300E5FF)),
-                        modifier = Modifier
-                            .heightIn(min = 48.dp)
+                        modifier =
+                            Modifier
+                                .heightIn(min = 48.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -309,7 +321,12 @@ fun SettingsScreen(
                         ) {
                             Icon(Icons.Default.Lock, null, tint = Color(0xFF00E5FF), modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text("Ghost Mode", color = Color(0xFF00E5FF), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                "Ghost Mode",
+                                color = Color(0xFF00E5FF),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
@@ -320,15 +337,17 @@ fun SettingsScreen(
             // Official Google Material 3 Adaptive Master-Detail Scaffold
             NavigableListDetailPaneScaffold(
                 navigator = navigator,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                 listPane = {
                     AnimatedPane(modifier = Modifier.preferredWidth(350.dp)) {
                         LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(end = 8.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(end = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(SettingCategory.values()) { category ->
@@ -348,9 +367,10 @@ fun SettingsScreen(
                 detailPane = {
                     AnimatedPane(modifier = Modifier.fillMaxSize()) {
                         Surface(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(24.dp)),
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(24.dp)),
                             color = darkSurface,
                             border = BorderStroke(1.dp, glassBorder),
                             shape = RoundedCornerShape(24.dp)
@@ -383,29 +403,33 @@ private fun MasterCategoryItem(
     onClick: () -> Unit
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 72.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 72.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .clickable(onClick = onClick),
         color = if (isSelected) Color(0x3300E5FF) else darkSurface,
-        border = BorderStroke(
-            width = if (isSelected) 1.5.dp else 1.dp,
-            color = if (isSelected) neonCyan else glassBorder
-        ),
+        border =
+            BorderStroke(
+                width = if (isSelected) 1.5.dp else 1.dp,
+                color = if (isSelected) neonCyan else glassBorder
+            ),
         shape = RoundedCornerShape(20.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 14.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(if (isSelected) Color(0x3300E5FF) else Color(0x14FFFFFF)),
+                modifier =
+                    Modifier
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (isSelected) Color(0x3300E5FF) else Color(0x14FFFFFF)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -450,9 +474,10 @@ private fun SettingsDetailPane(
     val settings = uiState.settings
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         // Detail Header
@@ -465,10 +490,11 @@ private fun SettingsDetailPane(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0x3300E5FF)),
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0x3300E5FF)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -505,10 +531,11 @@ private fun SettingsDetailPane(
             // and its trailing rows were pushed out of the pane where they could
             // neither be seen nor scrolled to. weight() gives it only the
             // remaining height, so it scrolls within the pane.
-            modifier = Modifier
-                .weight(1f)
-                .align(Alignment.CenterHorizontally)
-                .boundedContent(),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .align(Alignment.CenterHorizontally)
+                    .boundedContent(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
@@ -516,7 +543,12 @@ private fun SettingsDetailPane(
                 SettingCategory.APPEARANCE -> {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            Text("Theme Preset", color = Color.White.copy(0.7f), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                "Theme Preset",
+                                color = Color.White.copy(0.7f),
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -585,10 +617,11 @@ private fun SettingsDetailPane(
 
                             Surface(
                                 onClick = onNavigateToVisualizerStudio,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(min = 64.dp)
-                                    .clip(RoundedCornerShape(18.dp)),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 64.dp)
+                                        .clip(RoundedCornerShape(18.dp)),
                                 color = Color(0x28FF007F),
                                 border = BorderStroke(1.dp, neonCyan),
                                 shape = RoundedCornerShape(18.dp)
@@ -620,10 +653,11 @@ private fun SettingsDetailPane(
 
                             Surface(
                                 onClick = onNavigateToAEOS,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(min = 64.dp)
-                                    .clip(RoundedCornerShape(18.dp)),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 64.dp)
+                                        .clip(RoundedCornerShape(18.dp)),
                                 color = Color(0x2800E5FF),
                                 border = BorderStroke(1.dp, neonCyan),
                                 shape = RoundedCornerShape(18.dp)
@@ -639,7 +673,12 @@ private fun SettingsDetailPane(
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold
                                     )
-                                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = neonCyan, modifier = Modifier.size(24.dp))
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.ArrowForward,
+                                        null,
+                                        tint = neonCyan,
+                                        modifier = Modifier.size(24.dp)
+                                    )
                                 }
                             }
                         }
@@ -659,30 +698,49 @@ private fun SettingsDetailPane(
 
                             // Manual Check Button
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(min = 68.dp)
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .background(darkSurface)
-                                    .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
-                                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 68.dp)
+                                        .clip(RoundedCornerShape(18.dp))
+                                        .background(darkSurface)
+                                        .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
+                                        .padding(horizontal = 18.dp, vertical = 14.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                                    Text("Check Subscriptions Now", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                    Text("Scans subscribed channels for new uploads immediately", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
+                                    Text(
+                                        "Check Subscriptions Now",
+                                        color = Color.White,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        "Scans subscribed channels for new uploads immediately",
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        fontSize = 13.sp
+                                    )
                                 }
                                 Button(
                                     onClick = {
                                         viewModel.triggerSubscriptionCheckNow(context)
-                                        android.widget.Toast.makeText(context, "Scanning subscriptions for new uploads...", android.widget.Toast.LENGTH_SHORT).show()
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            "Scanning subscriptions for new uploads...",
+                                            android.widget.Toast.LENGTH_SHORT
+                                        ).show()
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = neonCyan),
                                     shape = RoundedCornerShape(14.dp),
                                     modifier = Modifier.heightIn(min = 48.dp)
                                 ) {
-                                    Text("Check Now", color = Color(0xFF090B10), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        "Check Now",
+                                        color = Color(0xFF090B10),
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                             }
                         }
@@ -693,19 +751,29 @@ private fun SettingsDetailPane(
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             // Rescan Button
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(min = 68.dp)
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .background(darkSurface)
-                                    .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
-                                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 68.dp)
+                                        .clip(RoundedCornerShape(18.dp))
+                                        .background(darkSurface)
+                                        .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
+                                        .padding(horizontal = 18.dp, vertical = 14.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                                    Text("Rescan Local Tracks", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                    Text("Scan device storage for newly added audio files", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
+                                    Text(
+                                        "Rescan Local Tracks",
+                                        color = Color.White,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        "Scan device storage for newly added audio files",
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        fontSize = 13.sp
+                                    )
                                 }
                                 IconButton(
                                     onClick = { viewModel.rescanLibrary() },
@@ -713,36 +781,60 @@ private fun SettingsDetailPane(
                                     modifier = Modifier.size(52.dp)
                                 ) {
                                     if (uiState.isRescanningLibrary) {
-                                        CircularProgressIndicator(modifier = Modifier.size(24.dp), color = neonCyan, strokeWidth = 2.5.dp)
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = neonCyan,
+                                            strokeWidth = 2.5.dp
+                                        )
                                     } else {
-                                        Icon(Icons.Default.Refresh, "Rescan", tint = neonCyan, modifier = Modifier.size(28.dp))
+                                        Icon(
+                                            Icons.Default.Refresh,
+                                            "Rescan",
+                                            tint = neonCyan,
+                                            modifier = Modifier.size(28.dp)
+                                        )
                                     }
                                 }
                             }
 
                             // Clear Cache Button
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(min = 68.dp)
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .background(darkSurface)
-                                    .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
-                                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 68.dp)
+                                        .clip(RoundedCornerShape(18.dp))
+                                        .background(darkSurface)
+                                        .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
+                                        .padding(horizontal = 18.dp, vertical = 14.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                                    Text("Clear Artwork Cache", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                                    Text("Frees internal image cache memory", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
+                                    Text(
+                                        "Clear Artwork Cache",
+                                        color = Color.White,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        "Frees internal image cache memory",
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        fontSize = 13.sp
+                                    )
                                 }
                                 OutlinedButton(
                                     onClick = {
                                         try {
                                             context.cacheDir.deleteRecursively()
                                             context.cacheDir.mkdirs()
-                                            android.widget.Toast.makeText(context, "Cache Cleared", android.widget.Toast.LENGTH_SHORT).show()
-                                        } catch (_: Exception) {}
+                                            android.widget.Toast.makeText(
+                                                context,
+                                                "Cache Cleared",
+                                                android.widget.Toast.LENGTH_SHORT
+                                            ).show()
+                                        } catch (_: Exception) {
+                                        }
                                     },
                                     shape = RoundedCornerShape(14.dp),
                                     border = BorderStroke(1.dp, glassBorder),
@@ -757,30 +849,41 @@ private fun SettingsDetailPane(
                 SettingCategory.UPDATES -> {
                     item {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 72.dp)
-                                .clip(RoundedCornerShape(18.dp))
-                                .background(darkSurface)
-                                .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
-                                .padding(horizontal = 18.dp, vertical = 14.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 72.dp)
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(darkSurface)
+                                    .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
+                                    .padding(horizontal = 18.dp, vertical = 14.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                                Text("DeepEye Music Pro", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                                Text("Version v${com.deepeye.musicpro.BuildConfig.VERSION_NAME} • Build ${com.deepeye.musicpro.BuildConfig.VERSION_CODE}", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
+                                Text(
+                                    "DeepEye Music Pro",
+                                    color = Color.White,
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    "Version v${com.deepeye.musicpro.BuildConfig.VERSION_NAME} • Build ${com.deepeye.musicpro.BuildConfig.VERSION_CODE}",
+                                    color = Color.White.copy(alpha = 0.6f),
+                                    fontSize = 13.sp
+                                )
                             }
-                            
+
                             val isChecking = uiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.Checking
                             val isUpToDate = uiState.updateState is com.deepeye.musicpro.data.source.remote.update.UpdateState.UpToDate
-                            
+
                             Button(
                                 onClick = { viewModel.checkForUpdate() },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isUpToDate) Color(0xFF00E676) else neonCyan,
-                                    disabledContainerColor = neonCyan.copy(alpha = 0.5f)
-                                ),
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = if (isUpToDate) Color(0xFF00E676) else neonCyan,
+                                        disabledContainerColor = neonCyan.copy(alpha = 0.5f)
+                                    ),
                                 shape = RoundedCornerShape(14.dp),
                                 enabled = !isChecking,
                                 modifier = Modifier.heightIn(min = 48.dp)
@@ -792,11 +895,26 @@ private fun SettingsDetailPane(
                                         modifier = Modifier.size(18.dp)
                                     )
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Checking...", color = Color(0xFF090B10), fontWeight = FontWeight.Black, fontSize = 14.sp)
+                                    Text(
+                                        "Checking...",
+                                        color = Color(0xFF090B10),
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 14.sp
+                                    )
                                 } else if (isUpToDate) {
-                                    Text("Latest Version ✓", color = Color(0xFF090B10), fontWeight = FontWeight.Black, fontSize = 14.sp)
+                                    Text(
+                                        "Latest Version ✓",
+                                        color = Color(0xFF090B10),
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 14.sp
+                                    )
                                 } else {
-                                    Text("Check Updates", color = Color(0xFF090B10), fontWeight = FontWeight.Black, fontSize = 14.sp)
+                                    Text(
+                                        "Check Updates",
+                                        color = Color(0xFF090B10),
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 14.sp
+                                    )
                                 }
                             }
                         }
@@ -820,16 +938,22 @@ private fun SettingsDetailPane(
                                 shape = RoundedCornerShape(20.dp),
                                 border = BorderStroke(1.dp, glassBorder)
                             ) {
-                                Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                                Column(
+                                    modifier = Modifier.padding(18.dp),
+                                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                                ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Box(
-                                            modifier = Modifier
-                                                .size(48.dp)
-                                                .clip(CircleShape)
-                                                .background(if (isSignedIn) Color(0x3300E5FF) else Color(0x14FFFFFF)),
+                                            modifier =
+                                                Modifier
+                                                    .size(48.dp)
+                                                    .clip(CircleShape)
+                                                    .background(
+                                                        if (isSignedIn) Color(0x3300E5FF) else Color(0x14FFFFFF)
+                                                    ),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Icon(
@@ -858,15 +982,27 @@ private fun SettingsDetailPane(
                                     if (isSignedIn) {
                                         Button(
                                             onClick = onRequestSignOut,
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.15f),
-                                                contentColor = MaterialTheme.colorScheme.error
-                                            ),
-                                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
+                                            colors =
+                                                ButtonDefaults.buttonColors(
+                                                    containerColor =
+                                                        MaterialTheme.colorScheme.error.copy(
+                                                            alpha = 0.15f
+                                                        ),
+                                                    contentColor = MaterialTheme.colorScheme.error
+                                                ),
+                                            border =
+                                                BorderStroke(
+                                                    1.dp,
+                                                    MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
+                                                ),
                                             shape = RoundedCornerShape(14.dp),
                                             modifier = Modifier.fillMaxWidth().height(48.dp)
                                         ) {
-                                            Icon(Icons.AutoMirrored.Filled.Logout, null, modifier = Modifier.size(18.dp))
+                                            Icon(
+                                                Icons.AutoMirrored.Filled.Logout,
+                                                null,
+                                                modifier = Modifier.size(18.dp)
+                                            )
                                             Spacer(Modifier.width(8.dp))
                                             Text("Sign Out", fontWeight = FontWeight.Bold)
                                         }
@@ -880,16 +1016,26 @@ private fun SettingsDetailPane(
                                             border = BorderStroke(1.dp, Color(0x22FFFFFF))
                                         ) {
                                             Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(48.dp)
-                                                    .padding(horizontal = 16.dp),
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .height(48.dp)
+                                                        .padding(horizontal = 16.dp),
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 horizontalArrangement = Arrangement.Center
                                             ) {
-                                                Icon(Icons.Default.Lock, null, tint = Color(0xFFFFD700), modifier = Modifier.size(18.dp))
+                                                Icon(
+                                                    Icons.Default.Lock,
+                                                    null,
+                                                    tint = Color(0xFFFFD700),
+                                                    modifier = Modifier.size(18.dp)
+                                                )
                                                 Spacer(Modifier.width(8.dp))
-                                                Text("Ghost Mode · No account required", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                                                Text(
+                                                    "Ghost Mode · No account required",
+                                                    color = Color.White.copy(alpha = 0.8f),
+                                                    fontWeight = FontWeight.Bold
+                                                )
                                             }
                                         }
                                     }
@@ -909,24 +1055,47 @@ private fun SettingsDetailPane(
                                 modifier = Modifier.fillMaxWidth(),
                                 color = darkSurface,
                                 shape = RoundedCornerShape(20.dp),
-                                border = BorderStroke(1.dp, if (settings.youtubeAccessToken != null) Color(0x3300E676) else glassBorder)
+                                border =
+                                    BorderStroke(
+                                        1.dp,
+                                        if (settings.youtubeAccessToken != null) Color(0x3300E676) else glassBorder
+                                    )
                             ) {
-                                Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                                Column(
+                                    modifier = Modifier.padding(18.dp),
+                                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                                ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Box(
-                                            modifier = Modifier
-                                                .size(48.dp)
-                                                .clip(CircleShape)
-                                                .background(if (settings.youtubeAccessToken != null) Color(0x2600E676) else Color(0x22FF4444)),
+                                            modifier =
+                                                Modifier
+                                                    .size(48.dp)
+                                                    .clip(CircleShape)
+                                                    .background(
+                                                        if (settings.youtubeAccessToken != null) {
+                                                            Color(
+                                                                0x2600E676
+                                                            )
+                                                        } else {
+                                                            Color(0x22FF4444)
+                                                        }
+                                                    ),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Icon(
                                                 imageVector = if (settings.youtubeAccessToken != null) Icons.Default.CheckCircle else Icons.Default.PlayCircle,
                                                 contentDescription = null,
-                                                tint = if (settings.youtubeAccessToken != null) Color(0xFF00E676) else Color(0xFFFF4444),
+                                                tint =
+                                                    if (settings.youtubeAccessToken != null) {
+                                                        Color(
+                                                            0xFF00E676
+                                                        )
+                                                    } else {
+                                                        Color(0xFFFF4444)
+                                                    },
                                                 modifier = Modifier.size(28.dp)
                                             )
                                         }
@@ -949,10 +1118,11 @@ private fun SettingsDetailPane(
                                     if (settings.youtubeAccessToken != null) {
                                         Button(
                                             onClick = { viewModel.logoutYouTube() },
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0x22FF5252),
-                                                contentColor = Color(0xFFFF5252)
-                                            ),
+                                            colors =
+                                                ButtonDefaults.buttonColors(
+                                                    containerColor = Color(0x22FF5252),
+                                                    contentColor = Color(0xFFFF5252)
+                                                ),
                                             border = BorderStroke(1.dp, Color(0x55FF5252)),
                                             shape = RoundedCornerShape(14.dp),
                                             modifier = Modifier.fillMaxWidth().height(48.dp)
@@ -971,16 +1141,26 @@ private fun SettingsDetailPane(
                                             border = BorderStroke(1.dp, Color(0x22FFFFFF))
                                         ) {
                                             Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(48.dp)
-                                                    .padding(horizontal = 16.dp),
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .height(48.dp)
+                                                        .padding(horizontal = 16.dp),
                                                 verticalAlignment = Alignment.CenterVertically,
                                                 horizontalArrangement = Arrangement.Center
                                             ) {
-                                                Icon(Icons.Default.Lock, null, tint = Color(0xFFFFD700), modifier = Modifier.size(18.dp))
+                                                Icon(
+                                                    Icons.Default.Lock,
+                                                    null,
+                                                    tint = Color(0xFFFFD700),
+                                                    modifier = Modifier.size(18.dp)
+                                                )
                                                 Spacer(Modifier.width(8.dp))
-                                                Text("Ghost Mode · Anonymous session", color = Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+                                                Text(
+                                                    "Ghost Mode · Anonymous session",
+                                                    color = Color.White.copy(alpha = 0.8f),
+                                                    fontWeight = FontWeight.Bold
+                                                )
                                             }
                                         }
                                     }
@@ -1004,10 +1184,11 @@ fun ThemeModeChip(
     onClick: () -> Unit
 ) {
     Surface(
-        modifier = modifier
-            .heightIn(min = 56.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick),
+        modifier =
+            modifier
+                .heightIn(min = 56.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .clickable(onClick = onClick),
         color = if (isSelected) neonCyan else darkSurface,
         border = BorderStroke(1.5.dp, if (isSelected) neonCyan else glassBorder),
         shape = RoundedCornerShape(14.dp)
@@ -1034,13 +1215,14 @@ fun SettingSwitchRow(
     onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 68.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(darkSurface)
-            .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
-            .padding(horizontal = 18.dp, vertical = 14.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 68.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(darkSurface)
+                .border(1.dp, glassBorder, RoundedCornerShape(18.dp))
+                .padding(horizontal = 18.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -1052,12 +1234,13 @@ fun SettingSwitchRow(
             checked = isChecked,
             onCheckedChange = onCheckedChange,
             modifier = Modifier.scale(1.35f),
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = neonCyan,
-                checkedTrackColor = Color(0x4400E5FF),
-                uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = Color(0x1AFFFFFF)
-            )
+            colors =
+                SwitchDefaults.colors(
+                    checkedThumbColor = neonCyan,
+                    checkedTrackColor = Color(0x4400E5FF),
+                    uncheckedThumbColor = Color.White,
+                    uncheckedTrackColor = Color(0x1AFFFFFF)
+                )
         )
     }
 }

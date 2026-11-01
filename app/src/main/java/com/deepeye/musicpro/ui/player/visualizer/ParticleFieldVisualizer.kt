@@ -117,23 +117,26 @@ fun ParticleFieldVisualizer(
 
         // Soft translucent scrim to allow ambient artwork to glow through
         drawRect(
-            brush = Brush.verticalGradient(
-                listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
-            )
+            brush =
+                Brush.verticalGradient(
+                    listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
+                )
         )
 
         // Bass-driven central bloom.
         val bloomR = unit * (0.7f + bass * 0.35f)
         drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    primaryColor.copy(alpha = 0.14f + bass * 0.16f),
-                    secondaryColor.copy(alpha = 0.06f),
-                    Color.Transparent
+            brush =
+                Brush.radialGradient(
+                    colors =
+                        listOf(
+                            primaryColor.copy(alpha = 0.14f + bass * 0.16f),
+                            secondaryColor.copy(alpha = 0.06f),
+                            Color.Transparent
+                        ),
+                    center = Offset(cx, cy),
+                    radius = bloomR
                 ),
-                center = Offset(cx, cy),
-                radius = bloomR
-            ),
             radius = bloomR,
             center = Offset(cx, cy)
         )

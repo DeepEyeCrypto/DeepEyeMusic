@@ -42,9 +42,10 @@ fun NowPlayingVisualizerOverlay(
     )
 
     // Spring-animated bar heights for natural physical feel
-    val animatedHeights = remember(barCount) {
-        List(barCount) { Animatable(0f) }
-    }
+    val animatedHeights =
+        remember(barCount) {
+            List(barCount) { Animatable(0f) }
+        }
 
     val scope = rememberCoroutineScope()
 
@@ -59,36 +60,41 @@ fun NowPlayingVisualizerOverlay(
             scope.launch {
                 animatedHeights[i].animateTo(
                     targetValue = targetHeight,
-                    animationSpec = spring(
-                        dampingRatio = 0.55f, // ~15 damping equivalent
-                        stiffness = 300f,
-                    )
+                    animationSpec =
+                        spring(
+                            dampingRatio = 0.55f, // ~15 damping equivalent
+                            stiffness = 300f,
+                        )
                 )
             }
         }
     }
 
-    val visualizerGradient = remember(dominantColor) {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.85f),
-                dominantColor.copy(alpha = 0.6f),
-                Color.Transparent,
-            ),
-        )
-    }
+    val visualizerGradient =
+        remember(dominantColor) {
+            Brush.verticalGradient(
+                colors =
+                    listOf(
+                        Color.White.copy(alpha = 0.85f),
+                        dominantColor.copy(alpha = 0.6f),
+                        Color.Transparent,
+                    ),
+            )
+        }
 
-    val waveGlow = remember(dominantColor) {
-        Brush.verticalGradient(
-            colors = listOf(dominantColor.copy(alpha = 0.25f), Color.Transparent),
-        )
-    }
+    val waveGlow =
+        remember(dominantColor) {
+            Brush.verticalGradient(
+                colors = listOf(dominantColor.copy(alpha = 0.25f), Color.Transparent),
+            )
+        }
 
     Canvas(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(140.dp)
-            .alpha(alpha),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(140.dp)
+                .alpha(alpha),
     ) {
         val barWidth = size.width / (barCount * 2.5f)
         val gap = barWidth * 0.7f
@@ -125,12 +131,13 @@ fun NowPlayingVisualizerOverlay(
             }
 
             // Fill under the wave
-            val waveFill = Path().apply {
-                addPath(path)
-                lineTo(size.width, size.height)
-                lineTo(0f, size.height)
-                close()
-            }
+            val waveFill =
+                Path().apply {
+                    addPath(path)
+                    lineTo(size.width, size.height)
+                    lineTo(0f, size.height)
+                    close()
+                }
             drawPath(path = waveFill, brush = waveGlow)
 
             // Glowing wave stroke

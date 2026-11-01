@@ -1,6 +1,5 @@
 package com.deepeye.musicpro.ui.playlist
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,9 +20,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deepeye.musicpro.domain.model.Playlist
 import com.deepeye.musicpro.ui.theme.AppAlertDialog
+import com.deepeye.musicpro.ui.theme.ElectricViolet
 import com.deepeye.musicpro.ui.theme.TextPrimary
 import com.deepeye.musicpro.ui.theme.TextSecondary
-import com.deepeye.musicpro.ui.theme.ElectricViolet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,9 +41,10 @@ fun PlaylistSelectionBottomSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
         ) {
             Text(
                 text = "Save to Playlist",
@@ -56,11 +56,12 @@ fun PlaylistSelectionBottomSheet(
 
             // Create new playlist option
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable { showCreateDialog = true }
-                    .padding(16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { showCreateDialog = true }
+                        .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -83,11 +84,12 @@ fun PlaylistSelectionBottomSheet(
             LazyColumn {
                 items(playlists) { playlist ->
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onPlaylistSelected(playlist) }
-                            .padding(16.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { onPlaylistSelected(playlist) }
+                                .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
@@ -120,12 +122,13 @@ fun PlaylistSelectionBottomSheet(
                     onValueChange = { newPlaylistName = it },
                     label = { Text("Playlist Name") },
                     singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedBorderColor = ElectricViolet,
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.2f)
-                    )
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedBorderColor = ElectricViolet,
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.2f)
+                        )
                 )
             },
             confirmButton = {

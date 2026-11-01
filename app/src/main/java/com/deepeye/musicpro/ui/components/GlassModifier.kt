@@ -21,19 +21,21 @@ fun Modifier.glassCard(
     gradientTop: Color = Color(0xFF1E1E1E).copy(alpha = 0.7f),
     gradientBottom: Color = Color(0xFF141414).copy(alpha = 0.7f),
     cornerRadius: Dp = 16.dp
-): Modifier = composed {
-    this
-        .shadow(elevation, RoundedCornerShape(cornerRadius), clip = false)
-        .background(
-            brush = Brush.verticalGradient(
-                colors = listOf(gradientTop, gradientBottom)
-            ),
-            shape = RoundedCornerShape(cornerRadius)
-        )
-        .border(
-            width = 1.dp,
-            color = borderColor,
-            shape = RoundedCornerShape(cornerRadius)
-        )
-        .clip(RoundedCornerShape(cornerRadius))
-}
+): Modifier =
+    composed {
+        this
+            .shadow(elevation, RoundedCornerShape(cornerRadius), clip = false)
+            .background(
+                brush =
+                    Brush.verticalGradient(
+                        colors = listOf(gradientTop, gradientBottom)
+                    ),
+                shape = RoundedCornerShape(cornerRadius)
+            )
+            .border(
+                width = 1.dp,
+                color = borderColor,
+                shape = RoundedCornerShape(cornerRadius)
+            )
+            .clip(RoundedCornerShape(cornerRadius))
+    }

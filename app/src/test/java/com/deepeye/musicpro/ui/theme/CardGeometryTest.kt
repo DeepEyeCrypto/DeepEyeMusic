@@ -23,7 +23,6 @@ import org.junit.Test
  * it: they fail the build rather than shipping a janky screen.
  */
 class CardGeometryTest {
-
     /**
      * The engine holds process-wide mutable state by design, so any test that
      * moves the viewport must restore it or it leaks into later tests and
@@ -137,11 +136,15 @@ class CardGeometryTest {
         val effectiveWidth = landscapePhoneWidth * zoom
 
         val videoColumns =
-            ((effectiveWidth + CardGeometry.CardSpacing) /
-                (CardGeometry.Video.minWidth + CardGeometry.CardSpacing)).toInt()
+            (
+                (effectiveWidth + CardGeometry.CardSpacing) /
+                    (CardGeometry.Video.minWidth + CardGeometry.CardSpacing)
+            ).toInt()
         val musicColumns =
-            ((effectiveWidth + CardGeometry.CardSpacing) /
-                (CardGeometry.Music.minWidth + CardGeometry.CardSpacing)).toInt()
+            (
+                (effectiveWidth + CardGeometry.CardSpacing) /
+                    (CardGeometry.Music.minWidth + CardGeometry.CardSpacing)
+            ).toInt()
 
         assertTrue(
             "Video.minWidth (${CardGeometry.Video.minWidth}) must fit at least 4 " +
@@ -184,7 +187,9 @@ class CardGeometryTest {
         assertEquals(
             "authored geometry must be exactly what CardGeometry declares, " +
                 "no per-viewport factor",
-            64f, authoredHeight.value, 0.01f
+            64f,
+            authoredHeight.value,
+            0.01f
         )
         assertTrue(
             "the global zoom must actually compact geometry in landscape, " +

@@ -10,7 +10,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DSPPresetTest {
-
     @Test
     fun testAllTenPresetsPresent() {
         assertEquals(10, DSPPreset.entries.size)

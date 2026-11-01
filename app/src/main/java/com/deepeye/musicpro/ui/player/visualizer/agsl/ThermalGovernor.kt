@@ -51,12 +51,13 @@ enum class ThermalTier(
          * Unknown / future statuses fall back to [THROTTLED] (fail safe: protect
          * the hardware when the platform reports something we do not model).
          */
-        fun fromStatus(status: Int): ThermalTier = when (status) {
-            PowerManager.THERMAL_STATUS_NONE,
-            PowerManager.THERMAL_STATUS_LIGHT -> FULL
-            PowerManager.THERMAL_STATUS_MODERATE -> CAPPED
-            else -> THROTTLED
-        }
+        fun fromStatus(status: Int): ThermalTier =
+            when (status) {
+                PowerManager.THERMAL_STATUS_NONE,
+                PowerManager.THERMAL_STATUS_LIGHT -> FULL
+                PowerManager.THERMAL_STATUS_MODERATE -> CAPPED
+                else -> THROTTLED
+            }
     }
 }
 
@@ -82,9 +83,10 @@ fun rememberThermalTier(): State<ThermalTier> {
         var listener: PowerManager.OnThermalStatusChangedListener? = null
 
         if (powerManager != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val thermalListener = PowerManager.OnThermalStatusChangedListener { status ->
-                tierFlow.value = ThermalTier.fromStatus(status)
-            }
+            val thermalListener =
+                PowerManager.OnThermalStatusChangedListener { status ->
+                    tierFlow.value = ThermalTier.fromStatus(status)
+                }
             listener = thermalListener
             // Seed with the current status before subscribing so the first
             // composed frame already reflects real device heat.
@@ -92,15 +94,16 @@ fun rememberThermalTier(): State<ThermalTier> {
             powerManager.addThermalStatusListener(thermalListener)
         }
 
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME &&
-                powerManager != null &&
-                listener != null &&
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-            ) {
-                tierFlow.value = ThermalTier.fromStatus(powerManager.currentThermalStatus)
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME &&
+                    powerManager != null &&
+                    listener != null &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+                ) {
+                    tierFlow.value = ThermalTier.fromStatus(powerManager.currentThermalStatus)
+                }
             }
-        }
         lifecycleOwner.lifecycle.addObserver(observer)
 
         onDispose {

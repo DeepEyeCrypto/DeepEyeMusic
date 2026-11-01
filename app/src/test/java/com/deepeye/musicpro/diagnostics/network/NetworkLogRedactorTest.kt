@@ -3,9 +3,9 @@
 
 package com.deepeye.musicpro.diagnostics.network
 
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.MediaType.Companion.toMediaType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -18,7 +18,6 @@ import org.junit.Test
  * never appears in the redacted output. No real tokens are used.
  */
 class NetworkLogRedactorTest {
-
     // ── Fake secret fixtures (never real credentials) ──────────────────────
     private val fakeBearerToken = "Bearer test-secret-token"
     private val fakeSapisidCookie = "SAPISID=fake-cookie"
@@ -102,27 +101,30 @@ class NetworkLogRedactorTest {
 
     @Test
     fun `authMode derives scheme without reading token`() {
-        val bearer = Request.Builder()
-            .url("https://www.youtube.com/youtubei/v1/browse")
-            .addHeader("Authorization", fakeBearerToken)
-            .build()
+        val bearer =
+            Request.Builder()
+                .url("https://www.youtube.com/youtubei/v1/browse")
+                .addHeader("Authorization", fakeBearerToken)
+                .build()
         assertEquals(AuthMode.OAUTH, NetworkLogRedactor.authMode(bearer))
         assertTrue(NetworkLogRedactor.hasAuthHeader(bearer))
 
-        val none = Request.Builder()
-            .url("https://www.youtube.com/youtubei/v1/browse")
-            .build()
+        val none =
+            Request.Builder()
+                .url("https://www.youtube.com/youtubei/v1/browse")
+                .build()
         assertEquals(AuthMode.NONE, NetworkLogRedactor.authMode(none))
         assertFalse(NetworkLogRedactor.hasAuthHeader(none))
     }
 
     @Test
     fun `headerNames never returns values`() {
-        val req = Request.Builder()
-            .url("https://www.youtube.com/youtubei/v1/browse")
-            .addHeader("Authorization", fakeBearerToken)
-            .addHeader("Cookie", fakeSapisidCookie)
-            .build()
+        val req =
+            Request.Builder()
+                .url("https://www.youtube.com/youtubei/v1/browse")
+                .addHeader("Authorization", fakeBearerToken)
+                .addHeader("Cookie", fakeSapisidCookie)
+                .build()
         val names = NetworkLogRedactor.headerNames(req)
         assertTrue(names.contains("Authorization"))
         assertTrue(names.contains("Cookie"))
@@ -132,25 +134,27 @@ class NetworkLogRedactorTest {
 
     @Test
     fun `networkEvent toRedactedLine contains no secret values`() {
-        val req = Request.Builder()
-            .url("https://www.youtube.com/youtubei/v1/browse")
-            .addHeader("Authorization", fakeBearerToken)
-            .addHeader("Cookie", fakeSapisidCookie)
-            .addHeader("X-YouTube-Client-Version", "7.20210614.03.00")
-            .post("{\"browseId\":\"FEmusic_home\"}".toRequestBody("application/json".toMediaType()))
-            .build()
+        val req =
+            Request.Builder()
+                .url("https://www.youtube.com/youtubei/v1/browse")
+                .addHeader("Authorization", fakeBearerToken)
+                .addHeader("Cookie", fakeSapisidCookie)
+                .addHeader("X-YouTube-Client-Version", "7.20210614.03.00")
+                .post("{\"browseId\":\"FEmusic_home\"}".toRequestBody("application/json".toMediaType()))
+                .build()
 
-        val event = NetworkLogRedactor.buildEvent(
-            request = req,
-            response = null,
-            elapsedMs = 123L,
-            retryCount = 0,
-            fallbackReason = FallbackReason.NONE,
-            parserResultCount = 12,
-            playlistIdType = PlaylistIdType.NONE,
-            clientName = KnownClientName.TVHTML5,
-            responseBodyBytes = 4096L
-        )
+        val event =
+            NetworkLogRedactor.buildEvent(
+                request = req,
+                response = null,
+                elapsedMs = 123L,
+                retryCount = 0,
+                fallbackReason = FallbackReason.NONE,
+                parserResultCount = 12,
+                playlistIdType = PlaylistIdType.NONE,
+                clientName = KnownClientName.TVHTML5,
+                responseBodyBytes = 4096L
+            )
         val line = event.toRedactedLine()
 
         // Structural, non-sensitive signals are present.

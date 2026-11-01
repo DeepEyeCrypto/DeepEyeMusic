@@ -40,37 +40,42 @@ class AudioRouteReceiver : BroadcastReceiver() {
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             val devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
-            val hasUsb = devices.any {
-                it.type == android.media.AudioDeviceInfo.TYPE_USB_DEVICE ||
-                it.type == android.media.AudioDeviceInfo.TYPE_USB_ACCESSORY ||
-                it.type == android.media.AudioDeviceInfo.TYPE_USB_HEADSET
-            }
-            val hasWired = devices.any {
-                it.type == android.media.AudioDeviceInfo.TYPE_WIRED_HEADSET ||
-                it.type == android.media.AudioDeviceInfo.TYPE_WIRED_HEADPHONES
-            }
-            val hasBluetooth = devices.any {
-                it.type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP
-            }
+            val hasUsb =
+                devices.any {
+                    it.type == android.media.AudioDeviceInfo.TYPE_USB_DEVICE ||
+                        it.type == android.media.AudioDeviceInfo.TYPE_USB_ACCESSORY ||
+                        it.type == android.media.AudioDeviceInfo.TYPE_USB_HEADSET
+                }
+            val hasWired =
+                devices.any {
+                    it.type == android.media.AudioDeviceInfo.TYPE_WIRED_HEADSET ||
+                        it.type == android.media.AudioDeviceInfo.TYPE_WIRED_HEADPHONES
+                }
+            val hasBluetooth =
+                devices.any {
+                    it.type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP
+                }
 
-            route = when {
-                hasUsb -> AudioRoute.USB_AUDIO
-                hasWired -> AudioRoute.WIRED_HEADSET
-                hasBluetooth -> AudioRoute.BLUETOOTH_A2DP
-                else -> AudioRoute.SPEAKER
-            }
+            route =
+                when {
+                    hasUsb -> AudioRoute.USB_AUDIO
+                    hasWired -> AudioRoute.WIRED_HEADSET
+                    hasBluetooth -> AudioRoute.BLUETOOTH_A2DP
+                    else -> AudioRoute.SPEAKER
+                }
         } else {
-            route = when (intent.action) {
-                AudioManager.ACTION_HEADSET_PLUG -> {
-                    val state = intent.getIntExtra("state", 0)
-                    if (state == 1) AudioRoute.WIRED_HEADSET else AudioRoute.SPEAKER
+            route =
+                when (intent.action) {
+                    AudioManager.ACTION_HEADSET_PLUG -> {
+                        val state = intent.getIntExtra("state", 0)
+                        if (state == 1) AudioRoute.WIRED_HEADSET else AudioRoute.SPEAKER
+                    }
+                    BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED -> {
+                        val state = intent.getIntExtra(BluetoothProfile.EXTRA_STATE, BluetoothProfile.STATE_DISCONNECTED)
+                        if (state == BluetoothProfile.STATE_CONNECTED) AudioRoute.BLUETOOTH_A2DP else AudioRoute.SPEAKER
+                    }
+                    else -> AudioRoute.UNKNOWN
                 }
-                BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED -> {
-                    val state = intent.getIntExtra(BluetoothProfile.EXTRA_STATE, BluetoothProfile.STATE_DISCONNECTED)
-                    if (state == BluetoothProfile.STATE_CONNECTED) AudioRoute.BLUETOOTH_A2DP else AudioRoute.SPEAKER
-                }
-                else -> AudioRoute.UNKNOWN
-            }
         }
 
         val presetName =

@@ -42,30 +42,33 @@ import kotlin.math.roundToInt
 
 @HiltViewModel
 class DownloadsViewModel
-@Inject
-constructor(
-    private val downloadManager: MusicDownloadManager,
-    private val libraryRepository: LibraryRepository,
-) : ViewModel() {
-    val activeDownloadStates: StateFlow<Map<Long, DownloadProgressState>> =
-        downloadManager.activeDownloadStates
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+    @Inject
+    constructor(
+        private val downloadManager: MusicDownloadManager,
+        private val libraryRepository: LibraryRepository,
+    ) : ViewModel() {
+        val activeDownloadStates: StateFlow<Map<Long, DownloadProgressState>> =
+            downloadManager.activeDownloadStates
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    val completedDownloads: StateFlow<List<LibraryItem>> =
-        libraryRepository.observeLibraryHome()
-            .map { it.downloads }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        val completedDownloads: StateFlow<List<LibraryItem>> =
+            libraryRepository.observeLibraryHome()
+                .map { it.downloads }
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun cancelDownload(downloadId: Long) {
-        downloadManager.cancelDownload(downloadId)
-    }
+        fun cancelDownload(downloadId: Long) {
+            downloadManager.cancelDownload(downloadId)
+        }
 
-    fun deleteDownload(context: android.content.Context, videoId: String) {
-        viewModelScope.launch {
-            libraryRepository.deleteDownload(context, videoId)
+        fun deleteDownload(
+            context: android.content.Context,
+            videoId: String
+        ) {
+            viewModelScope.launch {
+                libraryRepository.deleteDownload(context, videoId)
+            }
         }
     }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,13 +86,13 @@ fun DownloadsScreen(
         containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
                         text = "Downloads",
                         color = Color.White,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
-                    ) 
+                    )
                 },
                 navigationIcon = {
                     IconButton(
@@ -97,25 +100,27 @@ fun DownloadsScreen(
                         modifier = Modifier.size(52.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             modifier = Modifier.size(24.dp)
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White,
-                ),
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White,
+                    ),
             )
         },
     ) { padding ->
         if (activeDownloadStates.isEmpty() && completedDownloads.isEmpty()) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(padding),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -136,9 +141,10 @@ fun DownloadsScreen(
             }
         } else {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(padding),
                 contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 180.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
@@ -156,15 +162,17 @@ fun DownloadsScreen(
                         val downloadState = entry.value
                         val item = downloadState.item
                         Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFF131722).copy(alpha = 0.85f)
-                            ),
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor = Color(0xFF131722).copy(alpha = 0.85f)
+                                ),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
                             ) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -184,13 +192,14 @@ fun DownloadsScreen(
                                             maxLines = 1,
                                         )
                                         val pct = (downloadState.progress * 100f).roundToInt().coerceIn(0, 100)
-                                        val subtitle = if (downloadState.totalBytes > 0) {
-                                            val dlMb = downloadState.bytesDownloaded / (1024f * 1024f)
-                                            val totMb = downloadState.totalBytes / (1024f * 1024f)
-                                            String.format("%d%% • %.1f MB / %.1f MB", pct, dlMb, totMb)
-                                        } else {
-                                            "Downloading..."
-                                        }
+                                        val subtitle =
+                                            if (downloadState.totalBytes > 0) {
+                                                val dlMb = downloadState.bytesDownloaded / (1024f * 1024f)
+                                                val totMb = downloadState.totalBytes / (1024f * 1024f)
+                                                String.format("%d%% • %.1f MB / %.1f MB", pct, dlMb, totMb)
+                                            } else {
+                                                "Downloading..."
+                                            }
                                         Text(
                                             text = subtitle,
                                             color = Color(0xFF00E5FF),
@@ -202,8 +211,8 @@ fun DownloadsScreen(
                                         modifier = Modifier.size(52.dp)
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Close, 
-                                            contentDescription = "Cancel", 
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Cancel",
                                             tint = Color.White.copy(alpha = 0.6f),
                                             modifier = Modifier.size(24.dp)
                                         )
@@ -213,10 +222,11 @@ fun DownloadsScreen(
                                     Spacer(modifier = Modifier.height(8.dp))
                                     LinearProgressIndicator(
                                         progress = { downloadState.progress.coerceIn(0f, 1f) },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(4.dp)
-                                            .clip(RoundedCornerShape(2.dp)),
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .height(4.dp)
+                                                .clip(RoundedCornerShape(2.dp)),
                                         color = Color(0xFF00E5FF),
                                         trackColor = Color.White.copy(alpha = 0.1f)
                                     )
@@ -233,10 +243,11 @@ fun DownloadsScreen(
                             color = Color.White,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(
-                                top = if (activeDownloadStates.isNotEmpty()) 16.dp else 0.dp,
-                                bottom = 8.dp
-                            )
+                            modifier =
+                                Modifier.padding(
+                                    top = if (activeDownloadStates.isNotEmpty()) 16.dp else 0.dp,
+                                    bottom = 8.dp
+                                )
                         )
                     }
                     items(completedDownloads, key = { it.id }) { item ->
@@ -255,16 +266,18 @@ fun DownloadsScreen(
                                 )
                                 onNavigateToNowPlaying()
                             },
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFF131722).copy(alpha = 0.85f)
-                            ),
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor = Color(0xFF131722).copy(alpha = 0.85f)
+                                ),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .defaultMinSize(minHeight = 64.dp)
-                                    .padding(16.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .defaultMinSize(minHeight = 64.dp)
+                                        .padding(16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Icon(

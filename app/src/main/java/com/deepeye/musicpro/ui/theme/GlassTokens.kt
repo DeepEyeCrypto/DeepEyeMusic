@@ -37,7 +37,7 @@ object GlassTokens {
     const val ShadowAlpha = 0.08f // Soft but visible
 
     // Noise - keeps the premium frosted glass texture
-    const val NoiseFactor = 0.05f 
+    const val NoiseFactor = 0.05f
 
     // Refraction (AGSL)
     val RefractionHeight = 8.dp

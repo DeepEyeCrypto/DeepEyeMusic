@@ -93,15 +93,15 @@ fun AppAlertDialog(
                 color = containerColor,
                 tonalElevation = tonalElevation,
                 modifier =
-                modifier
-                    .widthIn(min = DialogMinWidth, max = DialogMaxWidth)
-                    .minimumInteractiveComponentSize(),
+                    modifier
+                        .widthIn(min = DialogMinWidth, max = DialogMaxWidth)
+                        .minimumInteractiveComponentSize(),
             ) {
                 Column(modifier = Modifier.padding(DialogPadding)) {
                     if (icon != null) {
                         Box(
                             modifier =
-                            Modifier.fillMaxWidth().padding(bottom = SlotBottomPadding),
+                                Modifier.fillMaxWidth().padding(bottom = SlotBottomPadding),
                             contentAlignment = Alignment.Center,
                         ) {
                             CompositionLocalProvider(LocalContentColor provides iconContentColor) {
@@ -112,7 +112,7 @@ fun AppAlertDialog(
                     if (title != null) {
                         Box(
                             modifier =
-                            Modifier.fillMaxWidth().padding(bottom = SlotBottomPadding),
+                                Modifier.fillMaxWidth().padding(bottom = SlotBottomPadding),
                         ) {
                             CompositionLocalProvider(LocalContentColor provides titleContentColor) {
                                 title()
@@ -122,7 +122,7 @@ fun AppAlertDialog(
                     if (text != null) {
                         Box(
                             modifier =
-                            Modifier.fillMaxWidth().padding(bottom = SlotBottomPadding),
+                                Modifier.fillMaxWidth().padding(bottom = SlotBottomPadding),
                         ) {
                             CompositionLocalProvider(LocalContentColor provides textContentColor) {
                                 text()
@@ -132,7 +132,7 @@ fun AppAlertDialog(
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement =
-                        Arrangement.spacedBy(ButtonsMainAxisSpacing, Alignment.End),
+                            Arrangement.spacedBy(ButtonsMainAxisSpacing, Alignment.End),
                         verticalArrangement = Arrangement.spacedBy(ButtonsCrossAxisSpacing),
                     ) {
                         CompositionLocalProvider(LocalContentColor provides buttonContentColor) {

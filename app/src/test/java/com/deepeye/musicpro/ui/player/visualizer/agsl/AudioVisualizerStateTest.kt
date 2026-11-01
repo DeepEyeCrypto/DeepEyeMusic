@@ -14,7 +14,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AudioVisualizerStateTest {
-
     private companion object {
         /** 1 frame at 60 Hz in nanoseconds. */
         const val FRAME_NANOS = 16_666_667L
@@ -147,7 +146,10 @@ class AudioVisualizerStateTest {
         val state = smoother.update(rawBands, FloatArray(0), 1f, nowNanos = 1L)
         // First frame snaps — but the snap must not carry NaN/Infinity.
         assertTrue("bass from NaN (${state.bass}) must be finite", state.bass.isFinite())
-        assertTrue("mids from +Inf (${state.mids}) must be finite and clamped", state.mids.isFinite() && state.mids <= AudioVisualizerState.MAX_BAND)
+        assertTrue(
+            "mids from +Inf (${state.mids}) must be finite and clamped",
+            state.mids.isFinite() && state.mids <= AudioVisualizerState.MAX_BAND
+        )
         assertTrue("treble from NaN (${state.treble}) must be finite", state.treble.isFinite())
     }
 
@@ -191,10 +193,11 @@ class AudioVisualizerStateTest {
 
         // Then decay with quiet input: pulse must fall back toward zero.
         rawBands.fill(0f)
-        val decayed = (1..30).fold(hit) { acc, i ->
-            t += FRAME_NANOS
-            smoother.update(rawBands, FloatArray(0), 1f, nowNanos = t)
-        }
+        val decayed =
+            (1..30).fold(hit) { acc, i ->
+                t += FRAME_NANOS
+                smoother.update(rawBands, FloatArray(0), 1f, nowNanos = t)
+            }
         assertTrue(
             "beat pulse (${decayed.beatPulse}) must decay below the hit (${hit.beatPulse})",
             decayed.beatPulse < hit.beatPulse

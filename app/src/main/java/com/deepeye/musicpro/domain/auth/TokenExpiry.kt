@@ -12,7 +12,6 @@ package com.deepeye.musicpro.domain.auth
  * from here — callers must log only booleans/enums.
  */
 object TokenExpiry {
-
     /**
      * Safety margin subtracted before treating a token as expired, absorbing
      * client/server clock skew. Configurable per call site for tests.
@@ -32,7 +31,10 @@ object TokenExpiry {
      * non-positive) — callers must then follow the explicit unknown-expiry path
      * (use token as-is; rely on 401 rescue). Never invents an expiry.
      */
-    fun computeExpiresAt(nowEpochSec: Long, expiresInSec: Long?): Long? {
+    fun computeExpiresAt(
+        nowEpochSec: Long,
+        expiresInSec: Long?
+    ): Long? {
         if (expiresInSec == null || expiresInSec <= 0) return null
         val bounded = expiresInSec.coerceAtMost(MAX_EXPIRES_IN_SEC)
         return nowEpochSec + bounded

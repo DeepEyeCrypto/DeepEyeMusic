@@ -80,16 +80,18 @@ fun WaveformVisualizer(
 
         // Soft translucent scrim to allow ambient artwork to glow through
         drawRect(
-            brush = Brush.verticalGradient(
-                listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
-            )
+            brush =
+                Brush.verticalGradient(
+                    listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
+                )
         )
         drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(primaryColor.copy(alpha = 0.08f + bass * 0.10f), Color.Transparent),
-                center = Offset(w / 2f, centerY),
-                radius = maxOf(w, h) * 0.55f
-            ),
+            brush =
+                Brush.radialGradient(
+                    colors = listOf(primaryColor.copy(alpha = 0.08f + bass * 0.10f), Color.Transparent),
+                    center = Offset(w / 2f, centerY),
+                    radius = maxOf(w, h) * 0.55f
+                ),
             radius = maxOf(w, h) * 0.55f,
             center = Offset(w / 2f, centerY)
         )
@@ -126,8 +128,9 @@ fun WaveformVisualizer(
 
             drawPath(
                 path = path,
-                color = lerpAccentToWhite(if (age % 2 == 0) primaryColor else secondaryColor, ageT)
-                    .copy(alpha = 0.06f + ageT * (0.35f + mid * 0.35f + peak * 0.2f)),
+                color =
+                    lerpAccentToWhite(if (age % 2 == 0) primaryColor else secondaryColor, ageT)
+                        .copy(alpha = 0.06f + ageT * (0.35f + mid * 0.35f + peak * 0.2f)),
                 style = Stroke(width = 1f + ageT * (1.2f + treble * 1.6f))
             )
         }
@@ -142,9 +145,10 @@ fun WaveformVisualizer(
         }
         drawPath(
             path = path,
-            brush = Brush.horizontalGradient(
-                colors = listOf(primaryColor.copy(alpha = 0.35f), Color.White.copy(alpha = 0.95f))
-            ),
+            brush =
+                Brush.horizontalGradient(
+                    colors = listOf(primaryColor.copy(alpha = 0.35f), Color.White.copy(alpha = 0.95f))
+                ),
             style = Stroke(width = 2f + peak * 2.5f)
         )
 
@@ -158,7 +162,10 @@ fun WaveformVisualizer(
     }
 }
 
-private fun lerpAccentToWhite(accent: Color, t: Float): Color {
+private fun lerpAccentToWhite(
+    accent: Color,
+    t: Float
+): Color {
     val k = t.coerceIn(0f, 1f)
     return Color(
         red = accent.red + (1f - accent.red) * k * 0.7f,

@@ -20,8 +20,8 @@ android {
         applicationId = "com.deepeye.musicpro"
         minSdk = 24
         targetSdk = 35
-        versionCode = 30108
-        versionName = "3.0.1.98"
+        versionCode = 30109
+        versionName = "3.0.1.99"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -114,16 +114,17 @@ android {
         abortOnError = false
         checkDependencies = false
         ignoreTestSources = true
-        disable += listOf(
-            "FrequentlyChangingValue",
-            "NullSafeMutableLiveData",
-            // AGP 8.7.3's bundled androidx.compose.runtime.lint detectors were compiled
-            // against an older Kotlin/UAST and crash with IncompatibleClassChangeError
-            // under Kotlin 2.1.10, aborting lintAnalyzeDebug regardless of abortOnError.
-            // Disable the known-crashing detectors until AGP/Kotlin are aligned.
-            "RememberInComposition",
-            "AutoboxingStateCreation"
-        )
+        disable +=
+            listOf(
+                "FrequentlyChangingValue",
+                "NullSafeMutableLiveData",
+                // AGP 8.7.3's bundled androidx.compose.runtime.lint detectors were compiled
+                // against an older Kotlin/UAST and crash with IncompatibleClassChangeError
+                // under Kotlin 2.1.10, aborting lintAnalyzeDebug regardless of abortOnError.
+                // Disable the known-crashing detectors until AGP/Kotlin are aligned.
+                "RememberInComposition",
+                "AutoboxingStateCreation"
+            )
     }
 
     detekt {
@@ -182,7 +183,7 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
-    
+
     // Biometric Authentication
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("com.valentinilk.shimmer:compose-shimmer:1.3.0")
@@ -231,8 +232,6 @@ dependencies {
     implementation(libs.androidx.browser)
     implementation(libs.security.crypto)
 
-
-
     // LeakCanary (debug only)
     // debugImplementation(libs.leakcanary)
 
@@ -265,7 +264,7 @@ dependencies {
     // "Package targetSdkVersion=35 > maxSdkVersion=34".
     testImplementation(libs.robolectric)
     testImplementation("org.json:json:20231013")
-    
+
     // Instrumented tests
     androidTestImplementation("androidx.test:core:1.6.1")
     androidTestImplementation("androidx.test:runner:1.6.1")
@@ -273,7 +272,7 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation("androidx.test.espresso:espresso-contrib:3.6.1")
     androidTestImplementation("org.mockito:mockito-android:5.7.0")
-    
+
     // Compose Testing
     testImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.test.manifest)

@@ -112,7 +112,12 @@ class AudioFrameInterpolator(
          * One exponential smoothing step. Rising values use [TAU_ATTACK] (punchy),
          * falling values use the caller's release constant (smooth tail).
          */
-        private fun approach(current: Float, target: Float, tauRelease: Float, dt: Float): Float {
+        private fun approach(
+            current: Float,
+            target: Float,
+            tauRelease: Float,
+            dt: Float
+        ): Float {
             val tau = if (target > current) minOf(TAU_ATTACK, tauRelease) else tauRelease
             val alpha = 1f - exp(-dt / tau)
             return current + (target - current) * alpha

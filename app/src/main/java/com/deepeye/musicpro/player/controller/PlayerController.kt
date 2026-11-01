@@ -4,45 +4,39 @@
 package com.deepeye.musicpro.player.controller
 
 import android.net.Uri
-import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import com.deepeye.musicpro.data.source.remote.youtube.YoutubeRemoteDataSource
-import com.deepeye.musicpro.data.db.AppDatabase
-import com.deepeye.musicpro.data.prefs.dspDataStore
 import com.deepeye.musicpro.domain.model.MediaItem
-import com.deepeye.musicpro.domain.model.toMedia3Item
 import com.deepeye.musicpro.domain.model.PlayerState
+import com.deepeye.musicpro.domain.model.toMedia3Item
 import com.deepeye.musicpro.domain.resolver.SourceResolverManager
 import com.deepeye.musicpro.player.queue.QueueManager
+import com.deepeye.musicpro.player.recovery.PlaybackRecoveryCoordinator
+import com.deepeye.musicpro.player.recovery.PlaybackRecoveryError
+import com.deepeye.musicpro.player.recovery.PlaybackRecoveryErrorMapper
+import com.deepeye.musicpro.player.recovery.PlaybackRecoverySnapshot
+import com.deepeye.musicpro.player.recovery.SmartTubeSourceRefreshUseCase
+import com.deepeye.musicpro.player.recovery.StreamRecoveryPolicy
 import com.deepeye.musicpro.player.smarttube.SmartTubePlaybackFormatRepository
 import com.deepeye.musicpro.player.smarttube.toDeepEyeFormat
-import com.deepeye.musicpro.player.recovery.PlaybackRecoveryCoordinator
-import com.deepeye.musicpro.player.recovery.PlaybackRecoveryErrorMapper
-import com.deepeye.musicpro.player.recovery.PlaybackRecoveryError
-import com.deepeye.musicpro.player.recovery.PlaybackRecoverySnapshot
-import com.deepeye.musicpro.player.recovery.StreamRecoveryPolicy
-import com.deepeye.musicpro.player.recovery.SmartTubeSourceRefreshUseCase
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.collections.immutable.toImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
-import androidx.media3.common.MediaItem as Media3Item
 
 /**
  * Controller for the media player.
@@ -51,380 +45,424 @@ import androidx.media3.common.MediaItem as Media3Item
 @Singleton
 @OptIn(kotlinx.coroutines.FlowPreview::class)
 class PlayerController
-@Inject
-constructor(
-    val player: ExoPlayer,
-    private val queueManager: QueueManager,
-    private val sourceResolverManager: SourceResolverManager,
-    private val audioSessionManager: com.deepeye.musicpro.dsp.session.AudioSessionManager,
-    private val audioVisualizerManager: com.deepeye.musicpro.ui.player.visualizer.agsl.AudioVisualizerManager,
-    private val dspEngine: com.deepeye.musicpro.dsp.engine.DSPEngine,
-    private val historyRepository: com.deepeye.musicpro.domain.repository.HistoryRepository,
-    private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
-    private val musicRepository: com.deepeye.musicpro.domain.repository.MusicRepository,
-    private val autoplayRepository: com.deepeye.musicpro.domain.autoplay.AutoplayRepository,
-    private val sleepTimerManager: dagger.Lazy<com.deepeye.musicpro.player.timer.SleepTimerManager>,
-    private val playbackPathEnforcer: com.deepeye.musicpro.diagnostics.PlaybackPathEnforcer,
-    private val audioSessionGuardian: com.deepeye.musicpro.diagnostics.AudioSessionGuardian,
-    private val forensics: com.deepeye.musicpro.diagnostics.ExoPlayerForensics,
-    private val lyricsRepository: com.deepeye.musicpro.domain.lyrics.LyricsRepository,
-    private val dspProfileManager: com.deepeye.musicpro.dsp.profile.DspProfileManager,
-    private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
-    private val tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor,
-    private val dspController: com.deepeye.musicpro.dsp.controller.DSPController,
-    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
-    val qualitySelectionEngine: com.deepeye.musicpro.player.format.QualitySelectionEngine = com.deepeye.musicpro.player.format.QualitySelectionEngine(com.deepeye.musicpro.player.format.DeviceCodecCapabilities()),
-    val deviceCodecCapabilities: com.deepeye.musicpro.player.format.DeviceCodecCapabilities = com.deepeye.musicpro.player.format.DeviceCodecCapabilities(),
-    val smartTubePlaybackFormatRepository: SmartTubePlaybackFormatRepository = SmartTubePlaybackFormatRepository(),
-    val streamRecoveryPolicy: StreamRecoveryPolicy = StreamRecoveryPolicy(),
-    val playbackRecoveryErrorMapper: PlaybackRecoveryErrorMapper = PlaybackRecoveryErrorMapper(),
-    val playbackRecoveryCoordinator: PlaybackRecoveryCoordinator = PlaybackRecoveryCoordinator(
-        refreshUseCase = SmartTubeSourceRefreshUseCase(sourceResolverManager),
-        policy = streamRecoveryPolicy,
-        smartTubePlaybackFormatRepository = smartTubePlaybackFormatRepository,
-        dspProfileManager = dspProfileManager,
-        dspEngine = dspEngine,
-        context = context
-    ),
-) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    @Inject
+    constructor(
+        val player: ExoPlayer,
+        private val queueManager: QueueManager,
+        private val sourceResolverManager: SourceResolverManager,
+        private val audioSessionManager: com.deepeye.musicpro.dsp.session.AudioSessionManager,
+        private val audioVisualizerManager: com.deepeye.musicpro.ui.player.visualizer.agsl.AudioVisualizerManager,
+        private val dspEngine: com.deepeye.musicpro.dsp.engine.DSPEngine,
+        private val historyRepository: com.deepeye.musicpro.domain.repository.HistoryRepository,
+        private val libraryRepository: com.deepeye.musicpro.domain.repository.library.LibraryRepository,
+        private val musicRepository: com.deepeye.musicpro.domain.repository.MusicRepository,
+        private val autoplayRepository: com.deepeye.musicpro.domain.autoplay.AutoplayRepository,
+        private val sleepTimerManager: dagger.Lazy<com.deepeye.musicpro.player.timer.SleepTimerManager>,
+        private val playbackPathEnforcer: com.deepeye.musicpro.diagnostics.PlaybackPathEnforcer,
+        private val audioSessionGuardian: com.deepeye.musicpro.diagnostics.AudioSessionGuardian,
+        private val forensics: com.deepeye.musicpro.diagnostics.ExoPlayerForensics,
+        private val lyricsRepository: com.deepeye.musicpro.domain.lyrics.LyricsRepository,
+        private val dspProfileManager: com.deepeye.musicpro.dsp.profile.DspProfileManager,
+        private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
+        private val tubeSimulatorProcessor: com.deepeye.musicpro.dsp.processor.TubeSimulatorProcessor,
+        private val dspController: com.deepeye.musicpro.dsp.controller.DSPController,
+        @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
+        val qualitySelectionEngine: com.deepeye.musicpro.player.format.QualitySelectionEngine =
+            com.deepeye.musicpro.player.format.QualitySelectionEngine(
+                com.deepeye.musicpro.player.format.DeviceCodecCapabilities()
+            ),
+        val deviceCodecCapabilities: com.deepeye.musicpro.player.format.DeviceCodecCapabilities = com.deepeye.musicpro.player.format.DeviceCodecCapabilities(),
+        val smartTubePlaybackFormatRepository: SmartTubePlaybackFormatRepository = SmartTubePlaybackFormatRepository(),
+        val streamRecoveryPolicy: StreamRecoveryPolicy = StreamRecoveryPolicy(),
+        val playbackRecoveryErrorMapper: PlaybackRecoveryErrorMapper = PlaybackRecoveryErrorMapper(),
+        val playbackRecoveryCoordinator: PlaybackRecoveryCoordinator =
+            PlaybackRecoveryCoordinator(
+                refreshUseCase = SmartTubeSourceRefreshUseCase(sourceResolverManager),
+                policy = streamRecoveryPolicy,
+                smartTubePlaybackFormatRepository = smartTubePlaybackFormatRepository,
+                dspProfileManager = dspProfileManager,
+                dspEngine = dspEngine,
+                context = context
+            ),
+    ) {
+        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
-    private val formatInventoryMergePolicy = FormatInventoryMergePolicy()
-    private val formatInventoryMediaGate = FormatInventoryMediaGate()
+        private val formatInventoryMergePolicy = FormatInventoryMergePolicy()
+        private val formatInventoryMediaGate = FormatInventoryMediaGate()
 
-    private val _playerState = MutableStateFlow(PlayerState())
-    val playerState: StateFlow<PlayerState> = _playerState.asStateFlow()
+        private val _playerState = MutableStateFlow(PlayerState())
+        val playerState: StateFlow<PlayerState> = _playerState.asStateFlow()
 
-    private val _autoplayState = MutableStateFlow(com.deepeye.musicpro.domain.autoplay.AutoplayState())
-    val autoplayState: StateFlow<com.deepeye.musicpro.domain.autoplay.AutoplayState> = _autoplayState.asStateFlow()
+        private val _autoplayState = MutableStateFlow(com.deepeye.musicpro.domain.autoplay.AutoplayState())
+        val autoplayState: StateFlow<com.deepeye.musicpro.domain.autoplay.AutoplayState> = _autoplayState.asStateFlow()
 
-    val diagnostics: StateFlow<com.deepeye.musicpro.player.format.PlaybackDiagnostics> = _playerState
-        .map { getPlaybackDiagnostics() }
-        .stateIn(
-            scope = scope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = getPlaybackDiagnostics()
-        )
-
-    private var positionUpdateJob: Job? = null
-    private var playJob: Job? = null
-    private var stablePlaybackResetJob: Job? = null
-    private var visualizerAttachJob: Job? = null
-    private val playMutex = Mutex()
-    private var lastSkippedSegment: com.deepeye.musicpro.domain.model.SponsorSegment? = null
-
-    // Taste profile analytics tracking variables
-    private var currentTrackId: String? = null
-    private var totalPlayTimeCurrentTrack: Long = 0L
-    private var lastPlaybackStateTime: Long = 0L
-    // ISOLATION-OMEGA: local repeat guard removed; InnerTube dictates the queue.
-    private var playRetryCount = 0
-    private var prefetchedTrackId: String? = null
-    private var isPrefetchingNextTrack: Boolean = false
-    // AUTOPLAY-DEBUG-OMEGA: atomic prefetch guard (100ms poller fibrillation fix).
-    private val prefetchGuard = java.util.concurrent.atomic.AtomicBoolean(false)
-
-    var isBackgroundPlaybackEnabled = false
-
-    fun enableBackgroundPlayback(enable: Boolean) {
-        isBackgroundPlaybackEnabled = enable
-    }
-
-    init {
-        // Register diagnostics
-        playbackPathEnforcer.registerPlayer(player)
-        audioSessionGuardian.startMonitoring(player)
-        audioSessionManager.attachToPlayer(player)
-        player.addAnalyticsListener(forensics)
-        player.addAnalyticsListener(androidx.media3.exoplayer.util.EventLogger("EventLogger"))
-
-        // Sync recovery coordinator state to PlayerState
-        scope.launch {
-            playbackRecoveryCoordinator.isRecovering.collectLatest { recovering ->
-                updateState { it.copy(isRecovering = recovering) }
-            }
-        }
-        scope.launch {
-            playbackRecoveryCoordinator.recoveryMessage.collectLatest { msg ->
-                updateState { it.copy(recoveryMessage = msg) }
-            }
-        }
-
-        // Initial load of global DSP profile so DSP works before opening DSP screen
-        scope.launch {
-            try {
-                // Try resolving global profile
-                val profile = dspProfileManager.resolveProfile("*", "*")
-                if (profile == null) {
-                    // Try applying empty profile so default params are set
-                    dspProfileManager.loadAndApplyProfile("*")
-                } else {
-                    dspProfileManager.loadAndApplyProfile("*")
-                }
-                
-            } catch (e: Exception) {
-                android.util.Log.e("PlayerController", "Failed to init DSP profile", e)
-            }
-        }
-
-        // Configure software processors from DSPEngine params
-        scope.launch {
-            dspEngine.currentParams.collectLatest { params ->
-                tubeSimulatorProcessor.setConfig(
-                    enabled = params.enabled && params.tubeEnabled,
-                    mode = params.tubeMode,
-                    drivePercent = params.tubeDrive
+        val diagnostics: StateFlow<com.deepeye.musicpro.player.format.PlaybackDiagnostics> =
+            _playerState
+                .map { getPlaybackDiagnostics() }
+                .stateIn(
+                    scope = scope,
+                    started = SharingStarted.WhileSubscribed(5000),
+                    initialValue = getPlaybackDiagnostics()
                 )
+
+        private var positionUpdateJob: Job? = null
+        private var playJob: Job? = null
+        private var stablePlaybackResetJob: Job? = null
+        private var visualizerAttachJob: Job? = null
+        private val playMutex = Mutex()
+        private var lastSkippedSegment: com.deepeye.musicpro.domain.model.SponsorSegment? = null
+
+        // Taste profile analytics tracking variables
+        private var currentTrackId: String? = null
+        private var totalPlayTimeCurrentTrack: Long = 0L
+        private var lastPlaybackStateTime: Long = 0L
+
+        // ISOLATION-OMEGA: local repeat guard removed; InnerTube dictates the queue.
+        private var playRetryCount = 0
+        private var prefetchedTrackId: String? = null
+        private var isPrefetchingNextTrack: Boolean = false
+
+        // AUTOPLAY-DEBUG-OMEGA: atomic prefetch guard (100ms poller fibrillation fix).
+        private val prefetchGuard = java.util.concurrent.atomic.AtomicBoolean(false)
+
+        var isBackgroundPlaybackEnabled = false
+
+        fun enableBackgroundPlayback(enable: Boolean) {
+            isBackgroundPlaybackEnabled = enable
+        }
+
+        init {
+            // Register diagnostics
+            playbackPathEnforcer.registerPlayer(player)
+            audioSessionGuardian.startMonitoring(player)
+            audioSessionManager.attachToPlayer(player)
+            player.addAnalyticsListener(forensics)
+            player.addAnalyticsListener(androidx.media3.exoplayer.util.EventLogger("EventLogger"))
+
+            // Sync recovery coordinator state to PlayerState
+            scope.launch {
+                playbackRecoveryCoordinator.isRecovering.collectLatest { recovering ->
+                    updateState { it.copy(isRecovering = recovering) }
+                }
             }
-        }
+            scope.launch {
+                playbackRecoveryCoordinator.recoveryMessage.collectLatest { msg ->
+                    updateState { it.copy(recoveryMessage = msg) }
+                }
+            }
 
-        // --- Queue Snapshotting (decoupled for performance) ---
-        // 1. Queue CONTENT changes → full Gson serialization (debounced 1s to survive rapid reordering)
-        scope.launch {
-            queueManager.queue
-                .debounce(1000L)
-                .collectLatest { queue ->
-                    if (queue.isNotEmpty()) {
-                        try {
-                            val gson = com.google.gson.Gson()
-                            val json = gson.toJson(queue)
-                            val index = queueManager.currentIndex.value
-                            historyRepository.saveQueueSnapshot(json, index)
-                        } catch (e: Exception) {
-                            android.util.Log.e("PlayerController", "Failed to snapshot queue", e)
-                        }
-                    }
-                }
-        }
-        // 2. Index-only changes → lightweight SQL UPDATE (no JSON serialization)
-        scope.launch {
-            queueManager.currentIndex
-                .collectLatest { index ->
-                    if (index >= 0 && queueManager.queue.value.isNotEmpty()) {
-                        try {
-                            historyRepository.updateQueueIndex(index)
-                        } catch (e: Exception) {
-                            android.util.Log.e("PlayerController", "Failed to update queue index", e)
-                        }
-                    }
-                }
-        }
-        
-        // 3. Sync to PlayerState (so UI can observe the actual queue)
-        scope.launch {
-            kotlinx.coroutines.flow.combine(queueManager.queue, queueManager.currentIndex) { q, idx -> Pair(q, idx) }
-                .collectLatest { (q, idx) ->
-                    updateState { it.copy(queue = q.toImmutableList(), currentIndex = idx) }
-                }
-        }
-
-        player.addListener(
-            object : Player.Listener {
-                override fun onIsPlayingChanged(isPlaying: Boolean) {
-                    updateState { it.copy(isPlaying = isPlaying) }
-                    if (isPlaying) {
-                        startPositionUpdates()
-                        lastPlaybackStateTime = System.currentTimeMillis()
+            // Initial load of global DSP profile so DSP works before opening DSP screen
+            scope.launch {
+                try {
+                    // Try resolving global profile
+                    val profile = dspProfileManager.resolveProfile("*", "*")
+                    if (profile == null) {
+                        // Try applying empty profile so default params are set
+                        dspProfileManager.loadAndApplyProfile("*")
                     } else {
-                        stopPositionUpdates()
-                        if (currentTrackId != null) {
-                            totalPlayTimeCurrentTrack += System.currentTimeMillis() - lastPlaybackStateTime
-                            syncCurrentProgressToDatabaseAndCloud()
-                        }
+                        dspProfileManager.loadAndApplyProfile("*")
                     }
+                } catch (e: Exception) {
+                    android.util.Log.e("PlayerController", "Failed to init DSP profile", e)
                 }
+            }
 
-                override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
-                    stablePlaybackResetJob?.cancel()
-                    val newMediaId = mediaItem?.mediaId
-                    if (newMediaId != null && newMediaId != currentTrackId) {
-                        android.util.Log.i("PlayerController", "onMediaItemTransition: Gapless transition to mediaId=$newMediaId, reason=$reason")
-                        currentTrackId = newMediaId
-                        totalPlayTimeCurrentTrack = 0L
-                        lastPlaybackStateTime = System.currentTimeMillis()
-                        lastSkippedSegment = null
-                        prefetchedTrackId = null
+            // Configure software processors from DSPEngine params
+            scope.launch {
+                dspEngine.currentParams.collectLatest { params ->
+                    tubeSimulatorProcessor.setConfig(
+                        enabled = params.enabled && params.tubeEnabled,
+                        mode = params.tubeMode,
+                        drivePercent = params.tubeDrive
+                    )
+                }
+            }
 
-                        // AUTOPLAY-OMEGA: this is the single choke point that fires on EVERY
-                        // track change (gapless prefetch, manual skip, emergency autoplay).
-                        // Record the newly-started track into the recent session history so the
-                        // AutoplayRepository loop guard has an accurate window to exclude from
-                        // the next /next fetch — otherwise InnerTube's short up-next cycles
-                        // (A→B→A) repeat forever during prefetched-batch playback, where the
-                        // combine-flow/emergency history writers never run.
-                        _autoplayState.update { state ->
-                            state.copy(history = (state.history + newMediaId).takeLast(50))
-                        }
-
-                        val queueItem = queueManager.jumpToId(newMediaId)
-                        if (queueItem != null) {
-                            updateState { cur ->
-                                cur.copy(
-                                    currentItem = queueItem,
-                                    currentSong = (queueItem as? MediaItem.Local)?.song,
-                                    isVideo = queueItem is MediaItem.Remote && queueItem.isVideo,
-                                    isLoading = false,
-                                    isPlaying = player.isPlaying
-                                )
-                            }
-                        } else {
-                            val title = mediaItem.mediaMetadata.title?.toString() ?: "YouTube Track"
-                            val artist = mediaItem.mediaMetadata.artist?.toString() ?: "Unknown Artist"
-                            val artworkUri = mediaItem.mediaMetadata.artworkUri
-                            val newItem = MediaItem.Remote(
-                                id = newMediaId,
-                                title = title,
-                                artist = artist,
-                                artworkUri = artworkUri ?: Uri.parse("https://img.youtube.com/vi/$newMediaId/hqdefault.jpg"),
-                                duration = 0L,
-                                isVideo = false
-                            )
-                            updateState { cur ->
-                                cur.copy(
-                                    currentItem = newItem,
-                                    currentSong = null,
-                                    isVideo = false,
-                                    isLoading = false,
-                                    isPlaying = player.isPlaying
-                                )
-                            }
-                        }
-
-                        val isVideo = (queueItem as? MediaItem.Remote)?.isVideo == true
-                        val trackParams = player.trackSelectionParameters.buildUpon()
-                            .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, !isVideo)
-                            .build()
-                        player.trackSelectionParameters = trackParams
-
-                        scope.launch {
+            // --- Queue Snapshotting (decoupled for performance) ---
+            // 1. Queue CONTENT changes → full Gson serialization (debounced 1s to survive rapid reordering)
+            scope.launch {
+                queueManager.queue
+                    .debounce(1000L)
+                    .collectLatest { queue ->
+                        if (queue.isNotEmpty()) {
                             try {
-                                dspProfileManager.loadAndApplyProfile(newMediaId)
+                                val gson = com.google.gson.Gson()
+                                val json = gson.toJson(queue)
+                                val index = queueManager.currentIndex.value
+                                historyRepository.saveQueueSnapshot(json, index)
                             } catch (e: Exception) {
-                                android.util.Log.e("PlayerController", "Failed to load DSP profile on transition for $newMediaId", e)
+                                android.util.Log.e("PlayerController", "Failed to snapshot queue", e)
                             }
                         }
                     }
-                }
-
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    when (playbackState) {
-                        Player.STATE_BUFFERING -> {
-                            updateState { it.copy(isLoading = true) }
-                        }
-                        Player.STATE_READY -> {
-                            updateState { it.copy(isLoading = false) }
-                            playRetryCount = 0
-                            val activeId = currentTrackId ?: player.currentMediaItem?.mediaId
-                            if (activeId != null) {
-                                stablePlaybackResetJob?.cancel()
-                                stablePlaybackResetJob = scope.launch {
-                                    delay(StreamRecoveryPolicy.STABLE_PLAYBACK_RESET_MS)
-                                    if (player.playbackState == Player.STATE_READY && (currentTrackId == activeId || player.currentMediaItem?.mediaId == activeId)) {
-                                        playbackRecoveryCoordinator.recordSuccessfulPlayback(activeId)
-                                        android.util.Log.d("DeepEyeRecovery", "event=budget_reset mediaKeyHash=${activeId.hashCode()} reason=stable_playback_reached")
-                                    }
-                                }
+            }
+            // 2. Index-only changes → lightweight SQL UPDATE (no JSON serialization)
+            scope.launch {
+                queueManager.currentIndex
+                    .collectLatest { index ->
+                        if (index >= 0 && queueManager.queue.value.isNotEmpty()) {
+                            try {
+                                historyRepository.updateQueueIndex(index)
+                            } catch (e: Exception) {
+                                android.util.Log.e("PlayerController", "Failed to update queue index", e)
                             }
-                            // Force DSP re-attach since the AudioTrack has been created
-                            audioSessionManager.forceReattach()
-
-                            // ── SYNAPSE-OMEGA: bind the zero-alloc FFT engine to the live audio session ──
-                            // The audioSessionId is valid once STATE_READY is reached (AudioTrack
-                            // exists). Defer briefly so MediaTek HALs finish AudioTrack init — the
-                            // same 300ms guard AudioSessionManager uses — then attach.
-                            visualizerAttachJob?.cancel()
-                            visualizerAttachJob = scope.launch {
-                                delay(VISUALIZER_ATTACH_DELAY_MS)
-                                val sessionId = player.audioSessionId
-                                if (sessionId != androidx.media3.common.C.AUDIO_SESSION_ID_UNSET) {
-                                    val ok = audioVisualizerManager.attachToAudioSession(sessionId)
-                                    android.util.Log.i(
-                                        "PlayerController",
-                                        "event=visualizer_fft_attach sessionId=$sessionId result=$ok"
-                                    )
-                                } else {
-                                    android.util.Log.w(
-                                        "PlayerController",
-                                        "event=visualizer_fft_attach_skipped reason=unset_audio_session"
-                                    )
-                                }
-                            }
-                        }
-                        Player.STATE_ENDED -> {
-                            stablePlaybackResetJob?.cancel()
-                            // Release the native Visualizer to prevent JNI leaks when playback ends.
-                            visualizerAttachJob?.cancel()
-                            audioVisualizerManager.detach()
-                            android.util.Log.d("PlayerController", "event=visualizer_fft_detach reason=state_ended")
-                            onTrackEnded()
                         }
                     }
-                }
+            }
 
-                override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                    stablePlaybackResetJob?.cancel()
-                    android.util.Log.e("PlayerController", "ExoPlayer Error: code=${error.errorCode} (${error.errorCodeName}), message=${error.message}", error)
-                    updateState { it.copy(isLoading = false) }
+            // 3. Sync to PlayerState (so UI can observe the actual queue)
+            scope.launch {
+                kotlinx.coroutines.flow.combine(
+                    queueManager.queue,
+                    queueManager.currentIndex
+                ) { q, idx -> Pair(q, idx) }
+                    .collectLatest { (q, idx) ->
+                        updateState { it.copy(queue = q.toImmutableList(), currentIndex = idx) }
+                    }
+            }
 
-                    val currentItem = playerState.value.currentItem
-                    val snapshot = captureRecoverySnapshot()
+            player.addListener(
+                object : Player.Listener {
+                    override fun onIsPlayingChanged(isPlaying: Boolean) {
+                        updateState { it.copy(isPlaying = isPlaying) }
+                        if (isPlaying) {
+                            startPositionUpdates()
+                            lastPlaybackStateTime = System.currentTimeMillis()
+                        } else {
+                            stopPositionUpdates()
+                            if (currentTrackId != null) {
+                                totalPlayTimeCurrentTrack += System.currentTimeMillis() - lastPlaybackStateTime
+                                syncCurrentProgressToDatabaseAndCloud()
+                            }
+                        }
+                    }
 
-                    if (snapshot != null && currentItem is MediaItem.Remote) {
-                        val recoveryError = playbackRecoveryErrorMapper.map(error)
-                        val attemptCount = if (playbackRecoveryCoordinator.canRecover(snapshot.mediaId)) 0 else 1
-                        if (streamRecoveryPolicy.shouldRecover(recoveryError, attemptCount)) {
+                    override fun onMediaItemTransition(
+                        mediaItem: androidx.media3.common.MediaItem?,
+                        reason: Int
+                    ) {
+                        stablePlaybackResetJob?.cancel()
+                        val newMediaId = mediaItem?.mediaId
+                        if (newMediaId != null && newMediaId != currentTrackId) {
+                            android.util.Log.i(
+                                "PlayerController",
+                                "onMediaItemTransition: Gapless transition to mediaId=$newMediaId, reason=$reason"
+                            )
+                            currentTrackId = newMediaId
+                            totalPlayTimeCurrentTrack = 0L
+                            lastPlaybackStateTime = System.currentTimeMillis()
+                            lastSkippedSegment = null
+                            prefetchedTrackId = null
+
+                            // AUTOPLAY-OMEGA: this is the single choke point that fires on EVERY
+                            // track change (gapless prefetch, manual skip, emergency autoplay).
+                            // Record the newly-started track into the recent session history so the
+                            // AutoplayRepository loop guard has an accurate window to exclude from
+                            // the next /next fetch — otherwise InnerTube's short up-next cycles
+                            // (A→B→A) repeat forever during prefetched-batch playback, where the
+                            // combine-flow/emergency history writers never run.
+                            _autoplayState.update { state ->
+                                state.copy(history = (state.history + newMediaId).takeLast(50))
+                            }
+
+                            val queueItem = queueManager.jumpToId(newMediaId)
+                            if (queueItem != null) {
+                                updateState { cur ->
+                                    cur.copy(
+                                        currentItem = queueItem,
+                                        currentSong = (queueItem as? MediaItem.Local)?.song,
+                                        isVideo = queueItem is MediaItem.Remote && queueItem.isVideo,
+                                        isLoading = false,
+                                        isPlaying = player.isPlaying
+                                    )
+                                }
+                            } else {
+                                val title = mediaItem.mediaMetadata.title?.toString() ?: "YouTube Track"
+                                val artist = mediaItem.mediaMetadata.artist?.toString() ?: "Unknown Artist"
+                                val artworkUri = mediaItem.mediaMetadata.artworkUri
+                                val newItem =
+                                    MediaItem.Remote(
+                                        id = newMediaId,
+                                        title = title,
+                                        artist = artist,
+                                        artworkUri = artworkUri ?: Uri.parse("https://img.youtube.com/vi/$newMediaId/hqdefault.jpg"),
+                                        duration = 0L,
+                                        isVideo = false
+                                    )
+                                updateState { cur ->
+                                    cur.copy(
+                                        currentItem = newItem,
+                                        currentSong = null,
+                                        isVideo = false,
+                                        isLoading = false,
+                                        isPlaying = player.isPlaying
+                                    )
+                                }
+                            }
+
+                            val isVideo = (queueItem as? MediaItem.Remote)?.isVideo == true
+                            val trackParams =
+                                player.trackSelectionParameters.buildUpon()
+                                    .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, !isVideo)
+                                    .build()
+                            player.trackSelectionParameters = trackParams
+
                             scope.launch {
-                                val result = playbackRecoveryCoordinator.recover(
-                                    error = recoveryError,
-                                    snapshot = snapshot,
-                                    player = player,
-                                    onApplyState = { refreshedItem, restoredPos, wasPlaying, fallbackReason ->
-                                        updateState { cur ->
-                                            val vFormats = smartTubePlaybackFormatRepository.snapshot.value.videoFormats.map { it.toDeepEyeFormat() }
-                                            val aFormats = smartTubePlaybackFormatRepository.snapshot.value.audioFormats.map { it.toDeepEyeFormat() }
-                                            cur.copy(
-                                                currentItem = refreshedItem,
-                                                isPlaying = wasPlaying,
-                                                isLoading = false,
-                                                position = restoredPos,
-                                                availableVideoFormats = if (vFormats.isNotEmpty()) vFormats.toImmutableList() else cur.availableVideoFormats,
-                                                availableAudioFormats = if (aFormats.isNotEmpty()) aFormats.toImmutableList() else cur.availableAudioFormats,
-                                                selectedVideoFormat = vFormats.firstOrNull { it.id == smartTubePlaybackFormatRepository.snapshot.value.currentVideoFormatId } ?: cur.selectedVideoFormat,
-                                                selectedAudioFormat = aFormats.firstOrNull { it.id == smartTubePlaybackFormatRepository.snapshot.value.currentAudioFormatId } ?: cur.selectedAudioFormat
+                                try {
+                                    dspProfileManager.loadAndApplyProfile(newMediaId)
+                                } catch (e: Exception) {
+                                    android.util.Log.e(
+                                        "PlayerController",
+                                        "Failed to load DSP profile on transition for $newMediaId",
+                                        e
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        when (playbackState) {
+                            Player.STATE_BUFFERING -> {
+                                updateState { it.copy(isLoading = true) }
+                            }
+                            Player.STATE_READY -> {
+                                updateState { it.copy(isLoading = false) }
+                                playRetryCount = 0
+                                val activeId = currentTrackId ?: player.currentMediaItem?.mediaId
+                                if (activeId != null) {
+                                    stablePlaybackResetJob?.cancel()
+                                    stablePlaybackResetJob =
+                                        scope.launch {
+                                            delay(StreamRecoveryPolicy.STABLE_PLAYBACK_RESET_MS)
+                                            if (player.playbackState == Player.STATE_READY && (currentTrackId == activeId || player.currentMediaItem?.mediaId == activeId)) {
+                                                playbackRecoveryCoordinator.recordSuccessfulPlayback(activeId)
+                                                android.util.Log.d("DeepEyeRecovery", "event=budget_reset mediaKeyHash=${activeId.hashCode()} reason=stable_playback_reached")
+                                            }
+                                        }
+                                }
+                                // Force DSP re-attach since the AudioTrack has been created
+                                audioSessionManager.forceReattach()
+
+                                // ── SYNAPSE-OMEGA: bind the zero-alloc FFT engine to the live audio session ──
+                                // The audioSessionId is valid once STATE_READY is reached (AudioTrack
+                                // exists). Defer briefly so MediaTek HALs finish AudioTrack init — the
+                                // same 300ms guard AudioSessionManager uses — then attach.
+                                visualizerAttachJob?.cancel()
+                                visualizerAttachJob =
+                                    scope.launch {
+                                        delay(VISUALIZER_ATTACH_DELAY_MS)
+                                        val sessionId = player.audioSessionId
+                                        if (sessionId != androidx.media3.common.C.AUDIO_SESSION_ID_UNSET) {
+                                            val ok = audioVisualizerManager.attachToAudioSession(sessionId)
+                                            android.util.Log.i(
+                                                "PlayerController",
+                                                "event=visualizer_fft_attach sessionId=$sessionId result=$ok"
+                                            )
+                                        } else {
+                                            android.util.Log.w(
+                                                "PlayerController",
+                                                "event=visualizer_fft_attach_skipped reason=unset_audio_session"
                                             )
                                         }
                                     }
-                                )
-                                if (!result.recovered) {
-                                    android.util.Log.w("PlayerController", "Recovery failed: ${result.safeReason}. Advancing to next track...")
-                                    kotlinx.coroutines.delay(1000)
-                                    next()
-                                }
                             }
-                            return
+                            Player.STATE_ENDED -> {
+                                stablePlaybackResetJob?.cancel()
+                                // Release the native Visualizer to prevent JNI leaks when playback ends.
+                                visualizerAttachJob?.cancel()
+                                audioVisualizerManager.detach()
+                                android.util.Log.d("PlayerController", "event=visualizer_fft_detach reason=state_ended")
+                                onTrackEnded()
+                            }
                         }
                     }
 
-                    scope.launch {
-                        if (currentItem is MediaItem.Remote && playRetryCount < 2) {
-                            playRetryCount++
-                            android.util.Log.w("PlayerController", "Retrying playMedia for remote track: ${currentItem.title} (Attempt $playRetryCount/2)")
-                            kotlinx.coroutines.delay(500L * playRetryCount)
-                            playMedia(currentItem, isRetry = true, seekPosition = player.currentPosition.coerceAtLeast(0))
-                        } else {
-                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                android.widget.Toast.makeText(
-                                    context,
-                                    "Unable to play this media right now.",
-                                    android.widget.Toast.LENGTH_SHORT,
-                                ).show()
+                    override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                        stablePlaybackResetJob?.cancel()
+                        android.util.Log.e(
+                            "PlayerController",
+                            "ExoPlayer Error: code=${error.errorCode} (${error.errorCodeName}), message=${error.message}",
+                            error
+                        )
+                        updateState { it.copy(isLoading = false) }
+
+                        val currentItem = playerState.value.currentItem
+                        val snapshot = captureRecoverySnapshot()
+
+                        if (snapshot != null && currentItem is MediaItem.Remote) {
+                            val recoveryError = playbackRecoveryErrorMapper.map(error)
+                            val attemptCount = if (playbackRecoveryCoordinator.canRecover(snapshot.mediaId)) 0 else 1
+                            if (streamRecoveryPolicy.shouldRecover(recoveryError, attemptCount)) {
+                                scope.launch {
+                                    val result =
+                                        playbackRecoveryCoordinator.recover(
+                                            error = recoveryError,
+                                            snapshot = snapshot,
+                                            player = player,
+                                            onApplyState = { refreshedItem, restoredPos, wasPlaying, fallbackReason ->
+                                                updateState { cur ->
+                                                    val vFormats = smartTubePlaybackFormatRepository.snapshot.value.videoFormats.map { it.toDeepEyeFormat() }
+                                                    val aFormats = smartTubePlaybackFormatRepository.snapshot.value.audioFormats.map { it.toDeepEyeFormat() }
+                                                    cur.copy(
+                                                        currentItem = refreshedItem,
+                                                        isPlaying = wasPlaying,
+                                                        isLoading = false,
+                                                        position = restoredPos,
+                                                        availableVideoFormats = if (vFormats.isNotEmpty()) vFormats.toImmutableList() else cur.availableVideoFormats,
+                                                        availableAudioFormats = if (aFormats.isNotEmpty()) aFormats.toImmutableList() else cur.availableAudioFormats,
+                                                        selectedVideoFormat =
+                                                            vFormats.firstOrNull {
+                                                                it.id == smartTubePlaybackFormatRepository.snapshot.value.currentVideoFormatId
+                                                            } ?: cur.selectedVideoFormat,
+                                                        selectedAudioFormat =
+                                                            aFormats.firstOrNull {
+                                                                it.id == smartTubePlaybackFormatRepository.snapshot.value.currentAudioFormatId
+                                                            } ?: cur.selectedAudioFormat
+                                                    )
+                                                }
+                                            }
+                                        )
+                                    if (!result.recovered) {
+                                        android.util.Log.w(
+                                            "PlayerController",
+                                            "Recovery failed: ${result.safeReason}. Advancing to next track..."
+                                        )
+                                        kotlinx.coroutines.delay(1000)
+                                        next()
+                                    }
+                                }
+                                return
                             }
-                            kotlinx.coroutines.delay(500)
-                            playRetryCount = 0
-                            next()
+                        }
+
+                        scope.launch {
+                            if (currentItem is MediaItem.Remote && playRetryCount < 2) {
+                                playRetryCount++
+                                android.util.Log.w(
+                                    "PlayerController",
+                                    "Retrying playMedia for remote track: ${currentItem.title} (Attempt $playRetryCount/2)"
+                                )
+                                kotlinx.coroutines.delay(500L * playRetryCount)
+                                playMedia(
+                                    currentItem,
+                                    isRetry = true,
+                                    seekPosition = player.currentPosition.coerceAtLeast(0)
+                                )
+                            } else {
+                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        "Unable to play this media right now.",
+                                        android.widget.Toast.LENGTH_SHORT,
+                                    ).show()
+                                }
+                                kotlinx.coroutines.delay(500)
+                                playRetryCount = 0
+                                next()
+                            }
                         }
                     }
-                }
 
                     override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
                         // Extract runtime inventory from Media3 tracks. Auto rows (isAuto=true) are
@@ -436,26 +474,35 @@ constructor(
 
                         // Auto-lock Full HD 1080p if currently playing lower resolution in BALANCED mode
                         if (_playerState.value.qualityPreset == com.deepeye.musicpro.player.format.QualityPreset.BALANCED) {
-                            val has1080p = tracks.groups.any { group ->
-                                group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO &&
-                                (0 until group.length).any { group.getTrackFormat(it).height == 1080 }
-                            }
-                            val is1080pSelected = tracks.groups.any { group ->
-                                group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO &&
-                                (0 until group.length).any { group.isTrackSelected(it) && group.getTrackFormat(it).height == 1080 }
-                            }
+                            val has1080p =
+                                tracks.groups.any { group ->
+                                    group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO &&
+                                        (0 until group.length).any { group.getTrackFormat(it).height == 1080 }
+                                }
+                            val is1080pSelected =
+                                tracks.groups.any { group ->
+                                    group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO &&
+                                        (0 until group.length).any { group.isTrackSelected(it) && group.getTrackFormat(it).height == 1080 }
+                                }
                             if (has1080p && !is1080pSelected) {
                                 for (group in tracks.groups) {
                                     if (group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO) {
                                         for (tIdx in 0 until group.length) {
                                             val tf = group.getTrackFormat(tIdx)
                                             if (tf.height == 1080) {
-                                                val override1080 = androidx.media3.common.TrackSelectionOverride(group.mediaTrackGroup, tIdx)
+                                                val override1080 =
+                                                    androidx.media3.common.TrackSelectionOverride(
+                                                        group.mediaTrackGroup,
+                                                        tIdx
+                                                    )
                                                 val b = player.trackSelectionParameters.buildUpon()
                                                 b.clearOverridesOfType(androidx.media3.common.C.TRACK_TYPE_VIDEO)
                                                 b.addOverride(override1080)
                                                 player.trackSelectionParameters = b.build()
-                                                android.util.Log.i("DeepEyeHQ", "event=auto_locked_1080p_override id=${tf.id} bitrate=${tf.bitrate}")
+                                                android.util.Log.i(
+                                                    "DeepEyeHQ",
+                                                    "event=auto_locked_1080p_override id=${tf.id} bitrate=${tf.bitrate}"
+                                                )
                                                 break
                                             }
                                         }
@@ -464,1253 +511,1453 @@ constructor(
                             }
                         }
 
-                    val vFormat = player.videoFormat
-                    val aFormat = player.audioFormat
+                        val vFormat = player.videoFormat
+                        val aFormat = player.audioFormat
 
-                    updateState { cur ->
-                        // --- Stale-inventory reset gate (media identity check) ---
-                        // SmartTube resolver inventory is authoritative ONLY for the media item it
-                        // was resolved for. If Media3 now reports tracks that belong to a different
-                        // item (e.g. a sparse muxed fallback replaced the expected stream), reset the
-                        // stale catalog to loading/empty BEFORE merging, so item B never shows item A's
-                        // format list while B is still resolving. Fail-safe: null keys never reset.
-                        val incomingMediaId = player.currentMediaItem?.mediaId
-                        val gate = formatInventoryMediaGate
-                        val existingKey = gate.materializeMediaKey(cur.currentItem?.id, cur.position)
-                        val incomingKey = gate.materializeMediaKey(incomingMediaId, player.currentPosition.coerceAtLeast(0))
-                        val inventoryReset = if (gate.shouldReset(existingKey, incomingKey)) {
-                            android.util.Log.i(
-                                "DeepEyeHQ",
-                                "event=format_inventory_reset mediaOp=stale_existing vs incoming reason=media_transition"
-                            )
-                            true
-                        } else {
-                            false
-                        }
-                        val mergeBaseV = if (inventoryReset) persistentListOf() else cur.availableVideoFormats
-                        val mergeBaseA = if (inventoryReset) persistentListOf() else cur.availableAudioFormats
-
-                        // --- Merge SmartTube inventory with Media3 runtime inventory ---
-                        val result = formatInventoryMergePolicy.merge(
-                            existingVideo = mergeBaseV,
-                            existingAudio = mergeBaseA,
-                            incomingVideo = vFormats,
-                            incomingAudio = aFormats
-                        )
-                        android.util.Log.d(
-                            "DeepEyeHQ",
-                            "event=format_inventory_merged existingV=${result.existingRealVideo} incomingV=${result.incomingRealVideo} " +
-                                "existingA=${result.existingRealAudio} incomingA=${result.incomingRealAudio} preserveV=${result.preserveExistingVideoInventory} " +
-                                "preserveA=${result.preserveExistingAudioInventory} reason=${result.decisionReason}"
-                        )
-
-                        cur.copy(
-                            availableVideoFormats = result.videoFormats,
-                            availableAudioFormats = result.audioFormats,
-                            selectedVideoFormat = selV ?: cur.selectedVideoFormat,
-                            selectedAudioFormat = selA ?: cur.selectedAudioFormat,
-                            activeVideoDecoderName = vFormat?.sampleMimeType?.let { mime -> deviceCodecCapabilities.getCodecDisplayName(mime, vFormat.codecs ?: "") } ?: cur.activeVideoDecoderName,
-                            activeAudioDecoderName = aFormat?.sampleMimeType?.let { mime -> deviceCodecCapabilities.getCodecDisplayName(mime, aFormat.codecs ?: "") } ?: cur.activeAudioDecoderName,
-                        )
-                    }
-                }
-
-                override fun onPositionDiscontinuity(
-                    oldPosition: Player.PositionInfo,
-                    newPosition: Player.PositionInfo,
-                    reason: Int,
-                ) {
-                    if (reason == Player.DISCONTINUITY_REASON_SEEK) {
-                        val currentPos = player.currentPosition.coerceAtLeast(0)
-                        updateState {
-                            it.copy(
-                                position = currentPos,
-                                duration = player.duration.coerceAtLeast(0),
-                            )
-                        }
-                    }
-                }
-            }
-        )
-        // --- URL prefetch cache (prefetch next 3 queue tracks) ---
-        scope.launch {
-            kotlinx.coroutines.flow.combine(queueManager.queue, queueManager.currentIndex) { q, idx -> Pair(q, idx) }
-                .collectLatest { (q, idx) ->
-                    if (q.isNotEmpty() && idx >= 0) {
-                        // Launch a single IO coroutine to sequentially prefetch to avoid mutex contention
-                        scope.launch(Dispatchers.IO) {
-                            for (i in 1..3) {
-                                val nextIdx = idx + i
-                                if (nextIdx in q.indices) {
-                                    val item = q[nextIdx]
-                                    if (item is MediaItem.Remote && (item.streamUri == null || item.streamUri == Uri.EMPTY)) {
-                                        try {
-                                            android.util.Log.d("PlayerController", "Queue prefetcher: Resolving stream URL for track: ${item.title} (${item.id})")
-                                            sourceResolverManager.resolve(item.id, item.isVideo)
-                                        } catch (e: Exception) {
-                                            android.util.Log.w("PlayerController", "Queue prefetcher failed for ${item.id}: ${e.message}")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-        }
-        
-        // --- Infinite Autoplay Prefetch ---
-        scope.launch {
-            kotlinx.coroutines.flow.combine(queueManager.queue, queueManager.currentIndex) { q, idx -> Pair(q, idx) }
-                .collectLatest { (q, idx) ->
-                    // Change 4 — Do not append autoplay candidates when repeat mode will keep
-                    // cycling the existing queue indefinitely.
-                    val repeatMode = queueManager.repeatMode.value
-                    if (repeatMode == com.deepeye.musicpro.domain.model.RepeatMode.ONE ||
-                        repeatMode == com.deepeye.musicpro.domain.model.RepeatMode.ALL) return@collectLatest
-
-                    if (q.isNotEmpty() && idx >= q.size - 2 && playerState.value.autoplayEnabled) {
-                        val current = q.getOrNull(idx)
-                        if (current != null && !_autoplayState.value.isGenerating) {
-                            _autoplayState.update { it.copy(isGenerating = true) }
-                            android.util.Log.d("AutoplayEngine", "Infinite Prefetch Triggered. Current Queue Size: ${q.size}, Index: $idx. Seed: ${current.title}")
-                            try {
-                                val activeArtists = q.map { it.artist }
-                                val candidates = withContext(Dispatchers.IO) {
-                                    autoplayRepository.generateNextQueue(current, _autoplayState.value, activeArtists)
-                                }
-                                if (candidates.isNotEmpty()) {
-                                    val mediaItems = candidates.map { c ->
-                                        MediaItem.Remote(
-                                            id = c.videoId,
-                                            title = c.title,
-                                            artist = c.artist,
-                                            artworkUri = android.net.Uri.parse("https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg"),
-                                            isVideo = (current as? MediaItem.Remote)?.isVideo ?: false,
-                                            duration = 0L,
-                                        )
-                                    }
-                                    queueManager.addItems(mediaItems)
-                                    // ISOLATION-OMEGA: InnerTube dictates repeats; keep
-                                    // only the display history (takeLast 50), no sessionHistory/blacklist shaping.
-                                    _autoplayState.update { state ->
-                                        state.copy(
-                                            history = (state.history + (current.id)).takeLast(50),
-                                            lastGeneratedAt = System.currentTimeMillis()
-                                        )
-                                    }
+                        updateState { cur ->
+                            // --- Stale-inventory reset gate (media identity check) ---
+                            // SmartTube resolver inventory is authoritative ONLY for the media item it
+                            // was resolved for. If Media3 now reports tracks that belong to a different
+                            // item (e.g. a sparse muxed fallback replaced the expected stream), reset the
+                            // stale catalog to loading/empty BEFORE merging, so item B never shows item A's
+                            // format list while B is still resolving. Fail-safe: null keys never reset.
+                            val incomingMediaId = player.currentMediaItem?.mediaId
+                            val gate = formatInventoryMediaGate
+                            val existingKey = gate.materializeMediaKey(cur.currentItem?.id, cur.position)
+                            val incomingKey =
+                                gate.materializeMediaKey(
+                                    incomingMediaId,
+                                    player.currentPosition.coerceAtLeast(0)
+                                )
+                            val inventoryReset =
+                                if (gate.shouldReset(existingKey, incomingKey)) {
+                                    android.util.Log.i(
+                                        "DeepEyeHQ",
+                                        "event=format_inventory_reset mediaOp=stale_existing vs incoming reason=media_transition"
+                                    )
+                                    true
                                 } else {
-                                    android.util.Log.w("AutoplayEngine", "Prefetch returned empty candidates! Queue might halt if not handled.")
+                                    false
                                 }
-                            } catch (e: Exception) {
-                                android.util.Log.e("AutoplayEngine", "Failed to generate next tracks", e)
-                            } finally {
-                                _autoplayState.update { it.copy(isGenerating = false) }
+                            val mergeBaseV = if (inventoryReset) persistentListOf() else cur.availableVideoFormats
+                            val mergeBaseA = if (inventoryReset) persistentListOf() else cur.availableAudioFormats
+
+                            // --- Merge SmartTube inventory with Media3 runtime inventory ---
+                            val result =
+                                formatInventoryMergePolicy.merge(
+                                    existingVideo = mergeBaseV,
+                                    existingAudio = mergeBaseA,
+                                    incomingVideo = vFormats,
+                                    incomingAudio = aFormats
+                                )
+                            android.util.Log.d(
+                                "DeepEyeHQ",
+                                "event=format_inventory_merged existingV=${result.existingRealVideo} incomingV=${result.incomingRealVideo} " +
+                                    "existingA=${result.existingRealAudio} incomingA=${result.incomingRealAudio} preserveV=${result.preserveExistingVideoInventory} " +
+                                    "preserveA=${result.preserveExistingAudioInventory} reason=${result.decisionReason}"
+                            )
+
+                            cur.copy(
+                                availableVideoFormats = result.videoFormats,
+                                availableAudioFormats = result.audioFormats,
+                                selectedVideoFormat = selV ?: cur.selectedVideoFormat,
+                                selectedAudioFormat = selA ?: cur.selectedAudioFormat,
+                                activeVideoDecoderName =
+                                    vFormat?.sampleMimeType?.let {
+                                            mime ->
+                                        deviceCodecCapabilities.getCodecDisplayName(mime, vFormat.codecs ?: "")
+                                    } ?: cur.activeVideoDecoderName,
+                                activeAudioDecoderName =
+                                    aFormat?.sampleMimeType?.let {
+                                            mime ->
+                                        deviceCodecCapabilities.getCodecDisplayName(mime, aFormat.codecs ?: "")
+                                    } ?: cur.activeAudioDecoderName,
+                            )
+                        }
+                    }
+
+                    override fun onPositionDiscontinuity(
+                        oldPosition: Player.PositionInfo,
+                        newPosition: Player.PositionInfo,
+                        reason: Int,
+                    ) {
+                        if (reason == Player.DISCONTINUITY_REASON_SEEK) {
+                            val currentPos = player.currentPosition.coerceAtLeast(0)
+                            updateState {
+                                it.copy(
+                                    position = currentPos,
+                                    duration = player.duration.coerceAtLeast(0),
+                                )
                             }
                         }
                     }
                 }
-        }
-    }
-
-    val nowPlaying = playerState.map { it.currentItem }
-
-    fun playMedia(item: MediaItem, isRetry: Boolean = false, seekPosition: Long = 0L) {
-        android.util.Log.d("PlayerController", "playMedia called with item: $item, isRetry: $isRetry, seekPosition: $seekPosition")
-
-        stablePlaybackResetJob?.cancel()
-        playJob?.cancel()
-        playJob =
+            )
+            // --- URL prefetch cache (prefetch next 3 queue tracks) ---
             scope.launch {
-                try {
-                    if (!isRetry) {
-                        playRetryCount = 0
-                    }
-
-                    val oldCurrentItem = _playerState.value.currentItem
-                    // Immediately pause old track and show new track info with loading spinner
-                    player.pause()
-                    updateState { it.copy(
-                        isLoading = true, 
-                        currentItem = item, 
-                        isPlaying = false,
-                        isVideo = item is MediaItem.Remote && item.isVideo
-                    ) }
-
-                    val finalItem =
-                        when (item) {
-                            is MediaItem.Local -> item
-                            is MediaItem.Remote -> {
-                                android.util.Log.d("PlayerController", "Remote item: ${item.title}, id: ${item.id}, streamUri: ${item.streamUri}")
-                                if (item.streamUri == null || item.streamUri == Uri.EMPTY || isRetry) {
-                                    android.util.Log.d("PlayerController", "streamUri needs resolution, fetching getStreamUrl (forceRefresh=$isRetry)...")
-                                    
-                                    val resolvedSource = sourceResolverManager.resolveSource(item.id, item.isVideo, forceRefresh = isRetry)
-                                    ensureActive()
-                                    android.util.Log.d("PlayerController", "First extraction fetched: ${resolvedSource?.url}")
-
-                                    // Reciprocal stream fallbacks:
-                                    //  - Audio-only item failed with video request (preferVideo=true returns
-                                    //    DASH/HLS even for audio-only items) -> retry with preferVideo=false.
-                                    //  - Video item failed with preferVideo=true -> retry with preferVideo=false
-                                    //    so ExoPlayer at least gets a playable audio stream; the shared WebView
-                                    //    player renders the video track in the hybrid architecture.
-                                    var finalResolvedSource = resolvedSource
-                                    if (finalResolvedSource == null && !item.isVideo) {
-                                        android.util.Log.d("PlayerController", "Audio stream extraction failed. Retrying with video DASH/HLS stream fallback...")
-                                        finalResolvedSource = sourceResolverManager.resolveSource(item.id, true, forceRefresh = isRetry)
-                                        ensureActive()
-                                        android.util.Log.d("PlayerController", "Fallback video extraction fetched: ${finalResolvedSource?.url}")
-                                    } else if (finalResolvedSource == null && item.isVideo) {
-                                        android.util.Log.w("PlayerController", "Video stream extraction failed for ${item.title}. Retrying with audio-only stream fallback...")
-                                        finalResolvedSource = sourceResolverManager.resolveSource(item.id, false, forceRefresh = isRetry)
-                                        ensureActive()
-                                        android.util.Log.d("PlayerController", "Fallback audio-only extraction fetched: ${finalResolvedSource?.url}")
-                                    }
-
-                                    val finalUrl = finalResolvedSource?.url
-                                    if (finalResolvedSource != null) {
-                                        android.util.Log.d("DeepEyeHQ", "event=controller_received_formats videoCount=${finalResolvedSource.videoFormats.size} audioCount=${finalResolvedSource.audioFormats.size} queueSize=${queueManager.queue.value.size}")
-                                        if (finalResolvedSource.videoFormats.isNotEmpty() || finalResolvedSource.audioFormats.isNotEmpty()) {
-                                            smartTubePlaybackFormatRepository.setFormats(
-                                                mediaKey = item.id,
-                                                videoFormats = finalResolvedSource.videoFormats,
-                                                audioFormats = finalResolvedSource.audioFormats,
-                                                dashManifestUrl = finalResolvedSource.dashManifestUrl,
-                                                hlsManifestUrl = finalResolvedSource.hlsManifestUrl
-                                            )
-                                            val vFmts = finalResolvedSource.videoFormats.mapIndexed { idx, f -> f.toDeepEyeFormat(groupIndex = 0, trackIndex = idx) }
-                                            val aFmts = finalResolvedSource.audioFormats.mapIndexed { idx, f -> f.toDeepEyeFormat(groupIndex = 1, trackIndex = idx) }
-                                            val autoVideo = com.deepeye.musicpro.player.format.DeepEyeFormat(
-                                                id = "video_auto",
-                                                groupIndex = -1,
-                                                trackIndex = -1,
-                                                type = com.deepeye.musicpro.player.format.FormatType.VIDEO,
-                                                mimeType = "video/adaptive",
-                                                codecName = "Adaptive Auto",
-                                                qualityLabel = "Auto",
-                                                isAuto = true,
-                                                isSelected = true
-                                            )
-                                            val autoAudio = com.deepeye.musicpro.player.format.DeepEyeFormat(
-                                                id = "audio_auto",
-                                                groupIndex = -1,
-                                                trackIndex = -1,
-                                                type = com.deepeye.musicpro.player.format.FormatType.AUDIO,
-                                                mimeType = "audio/adaptive",
-                                                codecName = "Auto (Highest Quality)",
-                                                qualityLabel = "Auto",
-                                                isAuto = true,
-                                                isSelected = true
-                                            )
-                                            val fullVFmts = if (vFmts.isNotEmpty()) listOf(autoVideo) + vFmts else emptyList()
-                                            val fullAFmts = if (aFmts.isNotEmpty()) listOf(autoAudio) + aFmts else emptyList()
-                                            updateState {
-                                                it.copy(
-                                                    availableVideoFormats = fullVFmts.toImmutableList(),
-                                                    availableAudioFormats = fullAFmts.toImmutableList()
+                kotlinx.coroutines.flow.combine(
+                    queueManager.queue,
+                    queueManager.currentIndex
+                ) { q, idx -> Pair(q, idx) }
+                    .collectLatest { (q, idx) ->
+                        if (q.isNotEmpty() && idx >= 0) {
+                            // Launch a single IO coroutine to sequentially prefetch to avoid mutex contention
+                            scope.launch(Dispatchers.IO) {
+                                for (i in 1..3) {
+                                    val nextIdx = idx + i
+                                    if (nextIdx in q.indices) {
+                                        val item = q[nextIdx]
+                                        if (item is MediaItem.Remote && (item.streamUri == null || item.streamUri == Uri.EMPTY)) {
+                                            try {
+                                                android.util.Log.d(
+                                                    "PlayerController",
+                                                    "Queue prefetcher: Resolving stream URL for track: ${item.title} (${item.id})"
+                                                )
+                                                sourceResolverManager.resolve(item.id, item.isVideo)
+                                            } catch (e: Exception) {
+                                                android.util.Log.w(
+                                                    "PlayerController",
+                                                    "Queue prefetcher failed for ${item.id}: ${e.message}"
                                                 )
                                             }
                                         }
                                     }
+                                }
+                            }
+                        }
+                    }
+            }
 
-                                    val streamToPlay = finalUrl
-                                        ?: finalResolvedSource?.hlsManifestUrl
-                                        ?: finalResolvedSource?.dashManifestUrl
+            // --- Infinite Autoplay Prefetch ---
+            scope.launch {
+                kotlinx.coroutines.flow.combine(
+                    queueManager.queue,
+                    queueManager.currentIndex
+                ) { q, idx -> Pair(q, idx) }
+                    .collectLatest { (q, idx) ->
+                        // Change 4 — Do not append autoplay candidates when repeat mode will keep
+                        // cycling the existing queue indefinitely.
+                        val repeatMode = queueManager.repeatMode.value
+                        if (repeatMode == com.deepeye.musicpro.domain.model.RepeatMode.ONE ||
+                            repeatMode == com.deepeye.musicpro.domain.model.RepeatMode.ALL
+                        ) {
+                            return@collectLatest
+                        }
 
-                                    if (streamToPlay != null) {
-                                        // Keep the original isVideo flag so the UI renders the correct surface
-                                        // (shared WebView for video items) while ExoPlayer plays the stream's audio.
-                                        item.copy(
-                                            streamUri = Uri.parse(streamToPlay),
-                                            isVideo = item.isVideo,
-                                        )
-                                    } else {
-                                        if (item.isVideo) {
-                                            // IMPORTANT: Never hand ExoPlayer a watch-page HTML URL — ExoPlayer
-                                            // cannot parse HTML and throws UnrecognizedInputFormatException
-                                            // (Source error), then the Smart Recovery retries 3x and skips.
-                                            android.util.Log.e("PlayerController", "All stream extraction attempts failed for video ${item.title} (${item.id}).")
-                                            withContext(Dispatchers.Main) {
-                                                android.widget.Toast.makeText(
-                                                    context,
-                                                    "Failed to extract stream for ${item.title}",
-                                                    android.widget.Toast.LENGTH_SHORT,
-                                                ).show()
-                                            }
-                                            throw Exception("Failed to extract stream for ${item.id}")
-                                        } else {
-                                            android.util.Log.e("PlayerController", "All stream extraction attempts failed for ${item.title}! Audio extraction failed.")
-                                            withContext(Dispatchers.Main) {
-                                                android.widget.Toast.makeText(
-                                                    context,
-                                                    "Failed to extract audio stream for ${item.title}",
-                                                    android.widget.Toast.LENGTH_SHORT,
-                                                ).show()
-                                            }
-                                            throw Exception("Failed to extract stream for ${item.id}")
+                        if (q.isNotEmpty() && idx >= q.size - 2 && playerState.value.autoplayEnabled) {
+                            val current = q.getOrNull(idx)
+                            if (current != null && !_autoplayState.value.isGenerating) {
+                                _autoplayState.update { it.copy(isGenerating = true) }
+                                android.util.Log.d(
+                                    "AutoplayEngine",
+                                    "Infinite Prefetch Triggered. Current Queue Size: ${q.size}, Index: $idx. Seed: ${current.title}"
+                                )
+                                try {
+                                    val activeArtists = q.map { it.artist }
+                                    val candidates =
+                                        withContext(Dispatchers.IO) {
+                                            autoplayRepository.generateNextQueue(
+                                                current,
+                                                _autoplayState.value,
+                                                activeArtists
+                                            )
                                         }
+                                    if (candidates.isNotEmpty()) {
+                                        val mediaItems =
+                                            candidates.map { c ->
+                                                MediaItem.Remote(
+                                                    id = c.videoId,
+                                                    title = c.title,
+                                                    artist = c.artist,
+                                                    artworkUri =
+                                                        android.net.Uri.parse(
+                                                            "https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg"
+                                                        ),
+                                                    isVideo = (current as? MediaItem.Remote)?.isVideo ?: false,
+                                                    duration = 0L,
+                                                )
+                                            }
+                                        queueManager.addItems(mediaItems)
+                                        // ISOLATION-OMEGA: InnerTube dictates repeats; keep
+                                        // only the display history (takeLast 50), no sessionHistory/blacklist shaping.
+                                        _autoplayState.update { state ->
+                                            state.copy(
+                                                history = (state.history + (current.id)).takeLast(50),
+                                                lastGeneratedAt = System.currentTimeMillis()
+                                            )
+                                        }
+                                    } else {
+                                        android.util.Log.w(
+                                            "AutoplayEngine",
+                                            "Prefetch returned empty candidates! Queue might halt if not handled."
+                                        )
                                     }
-                                } else {
-                                    item
+                                } catch (e: Exception) {
+                                    android.util.Log.e("AutoplayEngine", "Failed to generate next tracks", e)
+                                } finally {
+                                    _autoplayState.update { it.copy(isGenerating = false) }
                                 }
                             }
                         }
-
-                    ensureActive()
-
-                    // Fetch SponsorBlock segments asynchronously so we don't block playback startup
-                    val isVideoItem = finalItem is MediaItem.Remote && finalItem.isVideo
-                    
-                    if (isVideoItem) {
-                        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                            try {
-                                val encodedCategories = java.net.URLEncoder.encode("[\"sponsor\",\"selfpromo\",\"interaction\",\"intro\",\"outro\",\"preview\"]", "UTF-8")
-                                val url = java.net.URI("https://sponsor.ajay.app/api/skipSegments?videoID=${finalItem.id}&categories=$encodedCategories").toURL()
-                                val connection = url.openConnection() as java.net.HttpURLConnection
-                                connection.requestMethod = "GET"
-                                connection.connectTimeout = 3000
-                                connection.readTimeout = 3000
-                                if (connection.responseCode == 200) {
-                                    val jsonStr = connection.inputStream.bufferedReader().use { it.readText() }
-                                    val jsonArray = org.json.JSONArray(jsonStr)
-                                    val list = mutableListOf<com.deepeye.musicpro.domain.model.SponsorSegment>()
-                                    for (i in 0 until jsonArray.length()) {
-                                        val obj = jsonArray.getJSONObject(i)
-                                        val segmentArray = obj.getJSONArray("segment")
-                                        val startMs = (segmentArray.getDouble(0) * 1000).toLong()
-                                        val endMs = (segmentArray.getDouble(1) * 1000).toLong()
-                                        val category = obj.getString("category")
-                                        list.add(com.deepeye.musicpro.domain.model.SponsorSegment(startMs, endMs, category))
-                                    }
-                                    android.util.Log.d("SponsorBlock", "Found ${list.size} segments for ${finalItem.id}")
-                                    // Update state with fetched segments once they arrive
-                                    updateState { it.copy(sponsorSegments = list.toImmutableList()) }
-                                }
-                            } catch (e: Exception) {
-                                android.util.Log.e("SponsorBlock", "Failed to fetch segments asynchronously", e)
-                            }
-                        }
                     }
+            }
+        }
 
-                    // Fetch lyrics asynchronously
-                    scope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                        try {
-                            val lyrics = lyricsRepository.getLyricsForTrack(finalItem.title, finalItem.artist)
-                            updateState { it.copy(currentLyrics = lyrics) }
-                        } catch (e: Exception) {
-                            android.util.Log.e("LyricsEngine", "Failed to fetch lyrics", e)
-                            updateState { it.copy(currentLyrics = null) }
-                        }
-                    }
-                    playMutex.withLock {
-                        if (currentTrackId != null) {
-                            recordCurrentTrackPlayStatsLocked(finishedSuccessfully = false)
-                        }
-                        currentTrackId = finalItem.id
-                        totalPlayTimeCurrentTrack = 0L
-                        lastPlaybackStateTime = System.currentTimeMillis()
-                        lastSkippedSegment = null // Reset SponsorBlock state for new track
+        val nowPlaying = playerState.map { it.currentItem }
 
-                        val media3Item = finalItem.toMedia3Item()
-                        if (media3Item.localConfiguration?.uri == Uri.EMPTY || media3Item.localConfiguration?.uri == null) {
-                            android.util.Log.e("PlayerController", "Cannot play: Stream URI is empty")
-                            scope.launch { delay(1000); next() }
-                            return@withLock
+        fun playMedia(
+            item: MediaItem,
+            isRetry: Boolean = false,
+            seekPosition: Long = 0L
+        ) {
+            android.util.Log.d(
+                "PlayerController",
+                "playMedia called with item: $item, isRetry: $isRetry, seekPosition: $seekPosition"
+            )
+
+            stablePlaybackResetJob?.cancel()
+            playJob?.cancel()
+            playJob =
+                scope.launch {
+                    try {
+                        if (!isRetry) {
+                            playRetryCount = 0
                         }
 
-                        val isVideo = finalItem is MediaItem.Remote && finalItem.isVideo
-                        val trackParams = player.trackSelectionParameters.buildUpon()
-                            .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, !isVideo)
-                            .build()
-                        player.trackSelectionParameters = trackParams
-
-                        player.setMediaItem(media3Item)
-                        if (seekPosition > 0L) {
-                            android.util.Log.d("PlayerController", "Seeking player to position: $seekPosition")
-                            player.seekTo(seekPosition)
-                        }
-                        player.prepare()
-                        player.play()
-
-                        // Load per-track DSP Profile for the new track
-                        scope.launch {
-                            try {
-                                dspProfileManager.loadAndApplyProfile(finalItem.id)
-                            } catch (e: Exception) {
-                                android.util.Log.e("PlayerController", "Failed to load DSP profile for track ${finalItem.id}", e)
-                            }
-                        }
-
-                        // Media3 automatically promotes MediaSessionService to foreground when playback starts,
-                        // so we don't need to manually start it (which causes crashes on Android 12+ from background).
-
+                        val oldCurrentItem = _playerState.value.currentItem
+                        // Immediately pause old track and show new track info with loading spinner
+                        player.pause()
                         updateState {
                             it.copy(
-                                currentItem = finalItem,
-                                currentSong = (finalItem as? MediaItem.Local)?.song,
-                                isVideo = finalItem is MediaItem.Remote && finalItem.isVideo,
-                                isLoading = false,
-                                sponsorSegments = if (finalItem.id != oldCurrentItem?.id) {
-                                    persistentListOf()
-                                } else {
-                                    _playerState.value.sponsorSegments
-                                },
+                                isLoading = true,
+                                currentItem = item,
+                                isPlaying = false,
+                                isVideo = item is MediaItem.Remote && item.isVideo
                             )
                         }
-                    }
-                } catch (e: CancellationException) {
-                    android.util.Log.d("PlayerController", "playMedia cancelled for item: ${item.title}")
-                } catch (e: Exception) {
-                    android.util.Log.e("PlayerController", "Exception in playMedia: ${e.message}", e)
-                    updateState { it.copy(isLoading = false) }
-                }
-            }
-    }
 
-    fun setQueue(
-        items: List<MediaItem>,
-        startIndex: Int = 0,
-    ) {
-        queueManager.setQueue(items, startIndex)
-        val firstItem = items.getOrNull(startIndex)
-        if (firstItem != null) {
-            playMedia(firstItem)
-        }
-    }
+                        val finalItem =
+                            when (item) {
+                                is MediaItem.Local -> item
+                                is MediaItem.Remote -> {
+                                    android.util.Log.d("PlayerController", "Remote item: ${item.title}, id: ${item.id}, streamUri: ${item.streamUri}")
+                                    if (item.streamUri == null || item.streamUri == Uri.EMPTY || isRetry) {
+                                        android.util.Log.d("PlayerController", "streamUri needs resolution, fetching getStreamUrl (forceRefresh=$isRetry)...")
 
-    /**
-     * Append a single item to the end of the current playback queue.
-     * Used by "Add to queue" actions (search results, library rows).
-     * Playback continues unaffected; the queue snapshot is updated automatically.
-     */
-    fun addToQueue(item: MediaItem) {
-        queueManager.addItems(listOf(item))
-    }
+                                        val resolvedSource = sourceResolverManager.resolveSource(item.id, item.isVideo, forceRefresh = isRetry)
+                                        ensureActive()
+                                        android.util.Log.d("PlayerController", "First extraction fetched: ${resolvedSource?.url}")
 
-    fun playQueueItem(index: Int) {
-        val item = queueManager.jumpTo(index)
-        if (item != null) {
-            playMedia(item)
-        }
-    }
+                                        // Reciprocal stream fallbacks:
+                                        //  - Audio-only item failed with video request (preferVideo=true returns
+                                        //    DASH/HLS even for audio-only items) -> retry with preferVideo=false.
+                                        //  - Video item failed with preferVideo=true -> retry with preferVideo=false
+                                        //    so ExoPlayer at least gets a playable audio stream; the shared WebView
+                                        //    player renders the video track in the hybrid architecture.
+                                        var finalResolvedSource = resolvedSource
+                                        if (finalResolvedSource == null && !item.isVideo) {
+                                            android.util.Log.d("PlayerController", "Audio stream extraction failed. Retrying with video DASH/HLS stream fallback...")
+                                            finalResolvedSource = sourceResolverManager.resolveSource(item.id, true, forceRefresh = isRetry)
+                                            ensureActive()
+                                            android.util.Log.d("PlayerController", "Fallback video extraction fetched: ${finalResolvedSource?.url}")
+                                        } else if (finalResolvedSource == null && item.isVideo) {
+                                            android.util.Log.w("PlayerController", "Video stream extraction failed for ${item.title}. Retrying with audio-only stream fallback...")
+                                            finalResolvedSource = sourceResolverManager.resolveSource(item.id, false, forceRefresh = isRetry)
+                                            ensureActive()
+                                            android.util.Log.d("PlayerController", "Fallback audio-only extraction fetched: ${finalResolvedSource?.url}")
+                                        }
 
-    fun moveQueueItem(fromIndex: Int, toIndex: Int) {
-        queueManager.moveItem(fromIndex, toIndex)
-    }
+                                        val finalUrl = finalResolvedSource?.url
+                                        if (finalResolvedSource != null) {
+                                            android.util.Log.d("DeepEyeHQ", "event=controller_received_formats videoCount=${finalResolvedSource.videoFormats.size} audioCount=${finalResolvedSource.audioFormats.size} queueSize=${queueManager.queue.value.size}")
+                                            if (finalResolvedSource.videoFormats.isNotEmpty() || finalResolvedSource.audioFormats.isNotEmpty()) {
+                                                smartTubePlaybackFormatRepository.setFormats(
+                                                    mediaKey = item.id,
+                                                    videoFormats = finalResolvedSource.videoFormats,
+                                                    audioFormats = finalResolvedSource.audioFormats,
+                                                    dashManifestUrl = finalResolvedSource.dashManifestUrl,
+                                                    hlsManifestUrl = finalResolvedSource.hlsManifestUrl
+                                                )
+                                                val vFmts =
+                                                    finalResolvedSource.videoFormats.mapIndexed {
+                                                            idx,
+                                                            f ->
+                                                        f.toDeepEyeFormat(groupIndex = 0, trackIndex = idx)
+                                                    }
+                                                val aFmts =
+                                                    finalResolvedSource.audioFormats.mapIndexed {
+                                                            idx,
+                                                            f ->
+                                                        f.toDeepEyeFormat(groupIndex = 1, trackIndex = idx)
+                                                    }
+                                                val autoVideo =
+                                                    com.deepeye.musicpro.player.format.DeepEyeFormat(
+                                                        id = "video_auto",
+                                                        groupIndex = -1,
+                                                        trackIndex = -1,
+                                                        type = com.deepeye.musicpro.player.format.FormatType.VIDEO,
+                                                        mimeType = "video/adaptive",
+                                                        codecName = "Adaptive Auto",
+                                                        qualityLabel = "Auto",
+                                                        isAuto = true,
+                                                        isSelected = true
+                                                    )
+                                                val autoAudio =
+                                                    com.deepeye.musicpro.player.format.DeepEyeFormat(
+                                                        id = "audio_auto",
+                                                        groupIndex = -1,
+                                                        trackIndex = -1,
+                                                        type = com.deepeye.musicpro.player.format.FormatType.AUDIO,
+                                                        mimeType = "audio/adaptive",
+                                                        codecName = "Auto (Highest Quality)",
+                                                        qualityLabel = "Auto",
+                                                        isAuto = true,
+                                                        isSelected = true
+                                                    )
+                                                val fullVFmts = if (vFmts.isNotEmpty()) listOf(autoVideo) + vFmts else emptyList()
+                                                val fullAFmts = if (aFmts.isNotEmpty()) listOf(autoAudio) + aFmts else emptyList()
+                                                updateState {
+                                                    it.copy(
+                                                        availableVideoFormats = fullVFmts.toImmutableList(),
+                                                        availableAudioFormats = fullAFmts.toImmutableList()
+                                                    )
+                                                }
+                                            }
+                                        }
 
-    fun removeQueueItem(index: Int) {
-        val wasPlaying = index == queueManager.currentIndex.value
-        queueManager.removeItem(index)
-        if (wasPlaying) {
-            val nextItem = queueManager.currentItem
-            if (nextItem != null) {
-                playMedia(nextItem)
-            } else {
-                player.stop()
-                updateState { it.copy(currentItem = null, isPlaying = false, isLoading = false) }
-            }
-        }
-    }
+                                        val streamToPlay =
+                                            finalUrl
+                                                ?: finalResolvedSource?.hlsManifestUrl
+                                                ?: finalResolvedSource?.dashManifestUrl
 
-    fun clearQueue() {
-        queueManager.clearQueue()
-    }
-
-    val currentQueue = queueManager.queue
-    val currentQueueIndex = queueManager.currentIndex
-
-    
-    fun updateLikeState(isLiked: Boolean, isDisliked: Boolean) {
-        _playerState.update { it.copy(isLiked = isLiked, isDisliked = isDisliked) }
-    }
-
-    fun togglePlayPause() {
-        if (player.isPlaying) player.pause() else player.play()
-    }
-
-    fun setPlaybackSpeed(speed: Float) {
-        player.setPlaybackSpeed(speed)
-        updateState { it.copy(playbackSpeed = speed) }
-    }
-
-    fun seekTo(positionMs: Long) {
-        player.seekTo(positionMs)
-    }
-
-    fun setVideoQuality(quality: String) {
-        val maxHeight = when (quality.lowercase().substringBefore(" ")) {
-            "1080p" -> 1080
-            "720p" -> 720
-            "480p" -> 480
-            else -> Integer.MAX_VALUE
-        }
-        val parameters = player.trackSelectionParameters
-            .buildUpon()
-            .setMaxVideoSize(
-                if (maxHeight < Integer.MAX_VALUE) maxHeight * 16 / 9 else Integer.MAX_VALUE,
-                maxHeight
-            )
-            .build()
-        player.trackSelectionParameters = parameters
-        android.util.Log.d("PlayerController", "Natively set video quality constraint: Max height = $maxHeight")
-    }
-
-    fun next() {
-        val trackId = currentTrackId
-        var isTrackSkipped = false
-        if (trackId != null && playerState.value.isPlaying) {
-            val listenMs = totalPlayTimeCurrentTrack + (System.currentTimeMillis() - lastPlaybackStateTime)
-            val item = playerState.value.currentItem
-            val totalMs = playerState.value.duration
-            isTrackSkipped = listenMs < totalMs * 0.9f // Consider it a skip if less than 90% played
-        }
-
-        val nextTrack = queueManager.next()
-        if (nextTrack != null) {
-            playMedia(nextTrack)
-        } else if (playerState.value.autoplayEnabled) {
-            // Queue is empty, trigger Personalized Autoplay
-            val current = playerState.value.currentItem
-            android.util.Log.w(
-                "AutoplayEngine",
-                "Queue empty on next(). Triggering personalized autoplay emergency fallback. Last played: ${current?.title}"
-            )
-            scope.launch {
-                try {
-                    val activeArtists = queueManager.queue.value.map { it.artist }
-                    val candidates =
-                        withContext(Dispatchers.IO) {
-                            autoplayRepository.generateNextQueue(current, _autoplayState.value, activeArtists)
-                        }
-
-                    if (candidates.isEmpty()) {
-                        android.util.Log.w("AutoplayEngine", "No autoplay candidates found. Stopping playback.")
-                        return@launch
-                    }
-
-                    // ISOLATION-OMEGA: direct InnerTube passthrough (same-track guard only).
-                    val validCandidates = candidates.filter {
-                        it.videoId != (current?.id ?: "")
-                    }
-
-                    if (validCandidates.isNotEmpty()) {
-                        android.util.Log.d("AutoplayEngine", "Emergency fallback generated ${validCandidates.size} valid candidates. Appending to queue.")
-                        val mediaItems = validCandidates.map { c ->
-                            MediaItem.Remote(
-                                id = c.videoId,
-                                title = c.title,
-                                artist = c.artist,
-                                artworkUri = android.net.Uri.parse("https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg"),
-                                isVideo = (current as? MediaItem.Remote)?.isVideo ?: false,
-                                duration = 0L,
-                            )
-                        }
-                        
-                        queueManager.addItems(mediaItems)
-                        
-                        val firstCandidate = validCandidates.first()
-                        
-                        _autoplayState.update { state ->
-                            state.copy(
-                                history = (state.history + (current?.id ?: "")).takeLast(50),
-                                skipStreak = if (isTrackSkipped) state.skipStreak + 1 else 0,
-                                lastGeneratedAt = System.currentTimeMillis(),
-                                discoveryMode = firstCandidate.score < 0.4f,
-                                familiarMode = firstCandidate.score >= 0.4f,
-                            )
-                        }
-                        
-                        val nextTrack = queueManager.next()
-                        if (nextTrack != null) {
-                            playMedia(nextTrack)
-                        }
-                    } else {
-                        android.util.Log.w("AutoplayEngine", "Autoplay pool completely exhausted. Halting.")
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.e("AutoplayEngine", "Error during autoplay resolution", e)
-                }
-            }
-        }
-    }
-
-    fun previous() {
-        val prevTrack = queueManager.previous()
-        if (player.currentPosition > 3000 || prevTrack == null) {
-            player.seekTo(0)
-        } else {
-            playMedia(prevTrack)
-        }
-    }
-
-    fun toggleRepeat() {
-        queueManager.toggleRepeatMode()
-    }
-
-    fun toggleShuffle() {
-        queueManager.toggleShuffleMode()
-    }
-
-    fun toggleAutoplay() {
-        updateState { it.copy(autoplayEnabled = !it.autoplayEnabled) }
-    }
-
-    fun setAutoplayMode(mode: com.deepeye.musicpro.domain.autoplay.AutoplayMode) {
-        _autoplayState.update { state ->
-            state.copy(
-                familiarMode = mode == com.deepeye.musicpro.domain.autoplay.AutoplayMode.FAMILIAR,
-                discoveryMode = mode == com.deepeye.musicpro.domain.autoplay.AutoplayMode.DISCOVERY,
-                // Clear pre-fetched queue so next autoplay trigger regenerates with new mode
-                queue = emptyList(),
-            )
-        }
-    }
-
-    fun removeAutoplayQueueItem(videoId: String) {
-        _autoplayState.update { state ->
-            state.copy(queue = state.queue.filter { it.videoId != videoId })
-        }
-    }
-
-    private fun onTrackEnded() {
-        recordCurrentTrackPlayStats(finishedSuccessfully = true)
-        // Honor the "end of current track" sleep-timer option before advancing.
-        // If the timer pauses playback here, the queue does not auto-advance.
-        val timer = sleepTimerManager.get()
-        if (timer.isActive && timer.timeRemainingMs.value == -1L) {
-            timer.onTrackEnded()
-            return
-        }
-        next()
-    }
-
-
-    private fun startPositionUpdates() {
-        positionUpdateJob?.cancel()
-        positionUpdateJob =
-            scope.launch {
-                while (isActive) {
-                    val currentPos = player.currentPosition.coerceAtLeast(0)
-                    val bufferedDuration = player.totalBufferedDuration.coerceAtLeast(0)
-                    val bufferedPct = player.bufferedPercentage
-                    val dur = player.duration.coerceAtLeast(0)
-                    updateState {
-                        it.copy(
-                            position = currentPos,
-                            duration = dur,
-                            bufferedDurationMs = bufferedDuration,
-                            bufferedPercentage = bufferedPct,
-                        )
-                    }
-
-                    // Gapless Auto-Play Proactive Pre-buffering (15s before track end)
-                    if (playerState.value.autoplayEnabled && dur > 20_000L && currentPos >= dur - 15_000L) {
-                        android.util.Log.i(
-                            "AUTOPLAY_DEBUG",
-                            "event=prefetch_trigger pos=$currentPos dur=$dur " +
-                                "remaining=${dur - currentPos} mediaId=${currentTrackId}"
-                        )
-                        checkAndPrefetchNextTrack()
-                    }
-
-                    // SponsorBlock Auto-Skip Logic
-                    val segments = playerState.value.sponsorSegments
-                    if (segments.isNotEmpty()) {
-                        val currentSegment = segments.find { seg ->
-                            currentPos >= seg.startMs && currentPos < seg.endMs && seg != lastSkippedSegment
-                        }
-                        if (currentSegment != null) {
-                            lastSkippedSegment = currentSegment
-                            android.util.Log.d("SponsorBlock", "Auto-skipping ${currentSegment.category} to ${currentSegment.endMs}ms")
-                            player.seekTo(currentSegment.endMs)
-                        }
-                    }
-
-                    delay(100)
-                }
-            }
-    }
-
-    private fun checkAndPrefetchNextTrack() {
-        // AUTOPLAY-DEBUG-OMEGA: atomic guard — the 100ms position poller calls this
-        // every tick inside the 15s window; a plain Boolean races and fires duplicate
-        // /next fetches. compareAndSet makes exactly one prefetch in flight.
-        // Audited: network on Dispatchers.IO, player.addMediaItem on
-        // Dispatchers.Main — no cross-thread ExoPlayer violation.
-        if (!prefetchGuard.compareAndSet(false, true)) {
-            return
-        }
-        isPrefetchingNextTrack = true
-        if (!playerState.value.autoplayEnabled) {
-            android.util.Log.d(
-                "AUTOPLAY_DEBUG",
-                "event=prefetch_guard_blocked isPrefetching=$isPrefetchingNextTrack " +
-                    "autoplayEnabled=${playerState.value.autoplayEnabled}",
-            )
-            isPrefetchingNextTrack = false
-            prefetchGuard.set(false)
-            return
-        }
-        val currentItem = playerState.value.currentItem
-        // OMEGA: Local tracks have no videoId-based radio graph — resolve a Remote
-        // seed via search instead of silently returning (previous early-return
-        // stalled Infinite Radio for on-device libraries).
-        val currentTrack: MediaItem = currentItem ?: run {
-            isPrefetchingNextTrack = false
-            prefetchGuard.set(false)
-            return
-        }
-
-        // Only prefetch if ExoPlayer doesn't already have a next item queued,
-        // and the in-app queue doesn't already have a resolved next item.
-        // Change 5 — also check queueManager.peekNext() to prevent re-firing when
-        // the queue has items that haven't yet been enqueued to ExoPlayer.
-        if (player.mediaItemCount > 1 || queueManager.peekNext() != null) {
-            android.util.Log.d(
-                "AUTOPLAY_DEBUG",
-                "event=prefetch_already_queued mediaItemCount=${player.mediaItemCount} " +
-                    "peekNext=${queueManager.peekNext()?.id} videoId=${currentTrack.id}"
-            )
-            isPrefetchingNextTrack = false
-            prefetchGuard.set(false)
-            return
-        }
-
-        scope.launch {
-            try {
-                // 1. Check if queue has a next track
-                val nextInQueue = queueManager.peekNext()
-                val candidate: MediaItem? = if (nextInQueue != null) {
-                    nextInQueue
-                } else {
-                    // Generate autoplay candidates
-                    val activeArtists = queueManager.queue.value.map { it.artist }
-                    val candidates = withContext(Dispatchers.IO) {
-                        autoplayRepository.generateNextQueue(currentTrack, _autoplayState.value, activeArtists)
-                    }
-                    // ISOLATION-OMEGA: direct InnerTube passthrough (same-track guard only).
-                    val validCandidates = candidates.filter {
-                        it.videoId != currentTrack.id
-                    }
-                    if (validCandidates.isNotEmpty()) {
-                        android.util.Log.i(
-                            "AUTOPLAY_DEBUG",
-                            "event=prefetch_candidates_resolved count=${validCandidates.size} " +
-                                "firstId=${validCandidates.first().videoId} videoId=${currentTrack.id}"
-                        )
-                        val mediaItems = validCandidates.map { c ->
-                            MediaItem.Remote(
-                                id = c.videoId,
-                                title = c.title,
-                                artist = c.artist,
-                                artworkUri = Uri.parse("https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg"),
-                                isVideo = (currentTrack as? MediaItem.Remote)?.isVideo ?: false,
-                                duration = 0L,
-                            )
-                        }
-                        queueManager.addItems(mediaItems)
-                        mediaItems.firstOrNull()
-                    } else null
-                }
-
-                if (candidate == null || candidate.id == currentTrack.id || candidate.id == prefetchedTrackId) return@launch
-
-                // 2. Resolve stream URL on Dispatchers.IO
-                val finalMediaItem: MediaItem? = when (candidate) {
-                    is MediaItem.Local -> candidate
-                    is MediaItem.Remote -> {
-                        if (candidate.streamUri == null || candidate.streamUri == Uri.EMPTY) {
-                            val resolved = withContext(Dispatchers.IO) {
-                                sourceResolverManager.resolveSource(candidate.id, candidate.isVideo, forceRefresh = false)
+                                        if (streamToPlay != null) {
+                                            // Keep the original isVideo flag so the UI renders the correct surface
+                                            // (shared WebView for video items) while ExoPlayer plays the stream's audio.
+                                            item.copy(
+                                                streamUri = Uri.parse(streamToPlay),
+                                                isVideo = item.isVideo,
+                                            )
+                                        } else {
+                                            if (item.isVideo) {
+                                                // IMPORTANT: Never hand ExoPlayer a watch-page HTML URL — ExoPlayer
+                                                // cannot parse HTML and throws UnrecognizedInputFormatException
+                                                // (Source error), then the Smart Recovery retries 3x and skips.
+                                                android.util.Log.e("PlayerController", "All stream extraction attempts failed for video ${item.title} (${item.id}).")
+                                                withContext(Dispatchers.Main) {
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        "Failed to extract stream for ${item.title}",
+                                                        android.widget.Toast.LENGTH_SHORT,
+                                                    ).show()
+                                                }
+                                                throw Exception("Failed to extract stream for ${item.id}")
+                                            } else {
+                                                android.util.Log.e("PlayerController", "All stream extraction attempts failed for ${item.title}! Audio extraction failed.")
+                                                withContext(Dispatchers.Main) {
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        "Failed to extract audio stream for ${item.title}",
+                                                        android.widget.Toast.LENGTH_SHORT,
+                                                    ).show()
+                                                }
+                                                throw Exception("Failed to extract stream for ${item.id}")
+                                            }
+                                        }
+                                    } else {
+                                        item
+                                    }
+                                }
                             }
-                            val url = resolved?.url
-                            if (!url.isNullOrBlank()) {
-                                candidate.copy(streamUri = Uri.parse(url))
-                            } else null
-                        } else candidate
+
+                        ensureActive()
+
+                        // Fetch SponsorBlock segments asynchronously so we don't block playback startup
+                        val isVideoItem = finalItem is MediaItem.Remote && finalItem.isVideo
+
+                        if (isVideoItem) {
+                            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                try {
+                                    val encodedCategories = java.net.URLEncoder.encode("[\"sponsor\",\"selfpromo\",\"interaction\",\"intro\",\"outro\",\"preview\"]", "UTF-8")
+                                    val url = java.net.URI("https://sponsor.ajay.app/api/skipSegments?videoID=${finalItem.id}&categories=$encodedCategories").toURL()
+                                    val connection = url.openConnection() as java.net.HttpURLConnection
+                                    connection.requestMethod = "GET"
+                                    connection.connectTimeout = 3000
+                                    connection.readTimeout = 3000
+                                    if (connection.responseCode == 200) {
+                                        val jsonStr = connection.inputStream.bufferedReader().use { it.readText() }
+                                        val jsonArray = org.json.JSONArray(jsonStr)
+                                        val list = mutableListOf<com.deepeye.musicpro.domain.model.SponsorSegment>()
+                                        for (i in 0 until jsonArray.length()) {
+                                            val obj = jsonArray.getJSONObject(i)
+                                            val segmentArray = obj.getJSONArray("segment")
+                                            val startMs = (segmentArray.getDouble(0) * 1000).toLong()
+                                            val endMs = (segmentArray.getDouble(1) * 1000).toLong()
+                                            val category = obj.getString("category")
+                                            list.add(com.deepeye.musicpro.domain.model.SponsorSegment(startMs, endMs, category))
+                                        }
+                                        android.util.Log.d("SponsorBlock", "Found ${list.size} segments for ${finalItem.id}")
+                                        // Update state with fetched segments once they arrive
+                                        updateState { it.copy(sponsorSegments = list.toImmutableList()) }
+                                    }
+                                } catch (e: Exception) {
+                                    android.util.Log.e("SponsorBlock", "Failed to fetch segments asynchronously", e)
+                                }
+                            }
+                        }
+
+                        // Fetch lyrics asynchronously
+                        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                            try {
+                                val lyrics = lyricsRepository.getLyricsForTrack(finalItem.title, finalItem.artist)
+                                updateState { it.copy(currentLyrics = lyrics) }
+                            } catch (e: Exception) {
+                                android.util.Log.e("LyricsEngine", "Failed to fetch lyrics", e)
+                                updateState { it.copy(currentLyrics = null) }
+                            }
+                        }
+                        playMutex.withLock {
+                            if (currentTrackId != null) {
+                                recordCurrentTrackPlayStatsLocked(finishedSuccessfully = false)
+                            }
+                            currentTrackId = finalItem.id
+                            totalPlayTimeCurrentTrack = 0L
+                            lastPlaybackStateTime = System.currentTimeMillis()
+                            lastSkippedSegment = null // Reset SponsorBlock state for new track
+
+                            val media3Item = finalItem.toMedia3Item()
+                            if (media3Item.localConfiguration?.uri == Uri.EMPTY || media3Item.localConfiguration?.uri == null) {
+                                android.util.Log.e("PlayerController", "Cannot play: Stream URI is empty")
+                                scope.launch {
+                                    delay(1000)
+                                    next()
+                                }
+                                return@withLock
+                            }
+
+                            val isVideo = finalItem is MediaItem.Remote && finalItem.isVideo
+                            val trackParams =
+                                player.trackSelectionParameters.buildUpon()
+                                    .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, !isVideo)
+                                    .build()
+                            player.trackSelectionParameters = trackParams
+
+                            player.setMediaItem(media3Item)
+                            if (seekPosition > 0L) {
+                                android.util.Log.d("PlayerController", "Seeking player to position: $seekPosition")
+                                player.seekTo(seekPosition)
+                            }
+                            player.prepare()
+                            player.play()
+
+                            // Load per-track DSP Profile for the new track
+                            scope.launch {
+                                try {
+                                    dspProfileManager.loadAndApplyProfile(finalItem.id)
+                                } catch (e: Exception) {
+                                    android.util.Log.e("PlayerController", "Failed to load DSP profile for track ${finalItem.id}", e)
+                                }
+                            }
+
+                            // Media3 automatically promotes MediaSessionService to foreground when playback starts,
+                            // so we don't need to manually start it (which causes crashes on Android 12+ from background).
+
+                            updateState {
+                                it.copy(
+                                    currentItem = finalItem,
+                                    currentSong = (finalItem as? MediaItem.Local)?.song,
+                                    isVideo = finalItem is MediaItem.Remote && finalItem.isVideo,
+                                    isLoading = false,
+                                    sponsorSegments =
+                                        if (finalItem.id != oldCurrentItem?.id) {
+                                            persistentListOf()
+                                        } else {
+                                            _playerState.value.sponsorSegments
+                                        },
+                                )
+                            }
+                        }
+                    } catch (e: CancellationException) {
+                        android.util.Log.d("PlayerController", "playMedia cancelled for item: ${item.title}")
+                    } catch (e: Exception) {
+                        android.util.Log.e("PlayerController", "Exception in playMedia: ${e.message}", e)
+                        updateState { it.copy(isLoading = false) }
                     }
                 }
+        }
 
-                if (finalMediaItem == null) return@launch
+        fun setQueue(
+            items: List<MediaItem>,
+            startIndex: Int = 0,
+        ) {
+            queueManager.setQueue(items, startIndex)
+            val firstItem = items.getOrNull(startIndex)
+            if (firstItem != null) {
+                playMedia(firstItem)
+            }
+        }
 
-                // 3. Enqueue to ExoPlayer gaplessly
-                withContext(Dispatchers.Main) {
-                    if (player.mediaItemCount <= 1 && currentTrackId == currentTrack.id) {
-                        val media3Item = finalMediaItem.toMedia3Item()
-                        if (media3Item.localConfiguration?.uri != null && media3Item.localConfiguration?.uri != Uri.EMPTY) {
-                            player.addMediaItem(media3Item)
-                            prefetchedTrackId = finalMediaItem.id
+        /**
+         * Append a single item to the end of the current playback queue.
+         * Used by "Add to queue" actions (search results, library rows).
+         * Playback continues unaffected; the queue snapshot is updated automatically.
+         */
+        fun addToQueue(item: MediaItem) {
+            queueManager.addItems(listOf(item))
+        }
+
+        fun playQueueItem(index: Int) {
+            val item = queueManager.jumpTo(index)
+            if (item != null) {
+                playMedia(item)
+            }
+        }
+
+        fun moveQueueItem(
+            fromIndex: Int,
+            toIndex: Int
+        ) {
+            queueManager.moveItem(fromIndex, toIndex)
+        }
+
+        fun removeQueueItem(index: Int) {
+            val wasPlaying = index == queueManager.currentIndex.value
+            queueManager.removeItem(index)
+            if (wasPlaying) {
+                val nextItem = queueManager.currentItem
+                if (nextItem != null) {
+                    playMedia(nextItem)
+                } else {
+                    player.stop()
+                    updateState { it.copy(currentItem = null, isPlaying = false, isLoading = false) }
+                }
+            }
+        }
+
+        fun clearQueue() {
+            queueManager.clearQueue()
+        }
+
+        val currentQueue = queueManager.queue
+        val currentQueueIndex = queueManager.currentIndex
+
+        fun updateLikeState(
+            isLiked: Boolean,
+            isDisliked: Boolean
+        ) {
+            _playerState.update { it.copy(isLiked = isLiked, isDisliked = isDisliked) }
+        }
+
+        fun togglePlayPause() {
+            if (player.isPlaying) player.pause() else player.play()
+        }
+
+        fun setPlaybackSpeed(speed: Float) {
+            player.setPlaybackSpeed(speed)
+            updateState { it.copy(playbackSpeed = speed) }
+        }
+
+        fun seekTo(positionMs: Long) {
+            player.seekTo(positionMs)
+        }
+
+        fun setVideoQuality(quality: String) {
+            val maxHeight =
+                when (quality.lowercase().substringBefore(" ")) {
+                    "1080p" -> 1080
+                    "720p" -> 720
+                    "480p" -> 480
+                    else -> Integer.MAX_VALUE
+                }
+            val parameters =
+                player.trackSelectionParameters
+                    .buildUpon()
+                    .setMaxVideoSize(
+                        if (maxHeight < Integer.MAX_VALUE) maxHeight * 16 / 9 else Integer.MAX_VALUE,
+                        maxHeight
+                    )
+                    .build()
+            player.trackSelectionParameters = parameters
+            android.util.Log.d("PlayerController", "Natively set video quality constraint: Max height = $maxHeight")
+        }
+
+        fun next() {
+            val trackId = currentTrackId
+            var isTrackSkipped = false
+            if (trackId != null && playerState.value.isPlaying) {
+                val listenMs = totalPlayTimeCurrentTrack + (System.currentTimeMillis() - lastPlaybackStateTime)
+                val item = playerState.value.currentItem
+                val totalMs = playerState.value.duration
+                isTrackSkipped = listenMs < totalMs * 0.9f // Consider it a skip if less than 90% played
+            }
+
+            val nextTrack = queueManager.next()
+            if (nextTrack != null) {
+                playMedia(nextTrack)
+            } else if (playerState.value.autoplayEnabled) {
+                // Queue is empty, trigger Personalized Autoplay
+                val current = playerState.value.currentItem
+                android.util.Log.w(
+                    "AutoplayEngine",
+                    "Queue empty on next(). Triggering personalized autoplay emergency fallback. Last played: ${current?.title}"
+                )
+                scope.launch {
+                    try {
+                        val activeArtists = queueManager.queue.value.map { it.artist }
+                        val candidates =
+                            withContext(Dispatchers.IO) {
+                                autoplayRepository.generateNextQueue(current, _autoplayState.value, activeArtists)
+                            }
+
+                        if (candidates.isEmpty()) {
+                            android.util.Log.w("AutoplayEngine", "No autoplay candidates found. Stopping playback.")
+                            return@launch
+                        }
+
+                        // ISOLATION-OMEGA: direct InnerTube passthrough (same-track guard only).
+                        val validCandidates =
+                            candidates.filter {
+                                it.videoId != (current?.id ?: "")
+                            }
+
+                        if (validCandidates.isNotEmpty()) {
+                            android.util.Log.d(
+                                "AutoplayEngine",
+                                "Emergency fallback generated ${validCandidates.size} valid candidates. Appending to queue."
+                            )
+                            val mediaItems =
+                                validCandidates.map { c ->
+                                    MediaItem.Remote(
+                                        id = c.videoId,
+                                        title = c.title,
+                                        artist = c.artist,
+                                        artworkUri =
+                                            android.net.Uri.parse(
+                                                "https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg"
+                                            ),
+                                        isVideo = (current as? MediaItem.Remote)?.isVideo ?: false,
+                                        duration = 0L,
+                                    )
+                                }
+
+                            queueManager.addItems(mediaItems)
+
+                            val firstCandidate = validCandidates.first()
+
+                            _autoplayState.update { state ->
+                                state.copy(
+                                    history = (state.history + (current?.id ?: "")).takeLast(50),
+                                    skipStreak = if (isTrackSkipped) state.skipStreak + 1 else 0,
+                                    lastGeneratedAt = System.currentTimeMillis(),
+                                    discoveryMode = firstCandidate.score < 0.4f,
+                                    familiarMode = firstCandidate.score >= 0.4f,
+                                )
+                            }
+
+                            val nextTrack = queueManager.next()
+                            if (nextTrack != null) {
+                                playMedia(nextTrack)
+                            }
+                        } else {
+                            android.util.Log.w("AutoplayEngine", "Autoplay pool completely exhausted. Halting.")
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("AutoplayEngine", "Error during autoplay resolution", e)
+                    }
+                }
+            }
+        }
+
+        fun previous() {
+            val prevTrack = queueManager.previous()
+            if (player.currentPosition > 3000 || prevTrack == null) {
+                player.seekTo(0)
+            } else {
+                playMedia(prevTrack)
+            }
+        }
+
+        fun toggleRepeat() {
+            queueManager.toggleRepeatMode()
+        }
+
+        fun toggleShuffle() {
+            queueManager.toggleShuffleMode()
+        }
+
+        fun toggleAutoplay() {
+            updateState { it.copy(autoplayEnabled = !it.autoplayEnabled) }
+        }
+
+        fun setAutoplayMode(mode: com.deepeye.musicpro.domain.autoplay.AutoplayMode) {
+            _autoplayState.update { state ->
+                state.copy(
+                    familiarMode = mode == com.deepeye.musicpro.domain.autoplay.AutoplayMode.FAMILIAR,
+                    discoveryMode = mode == com.deepeye.musicpro.domain.autoplay.AutoplayMode.DISCOVERY,
+                    // Clear pre-fetched queue so next autoplay trigger regenerates with new mode
+                    queue = emptyList(),
+                )
+            }
+        }
+
+        fun removeAutoplayQueueItem(videoId: String) {
+            _autoplayState.update { state ->
+                state.copy(queue = state.queue.filter { it.videoId != videoId })
+            }
+        }
+
+        private fun onTrackEnded() {
+            recordCurrentTrackPlayStats(finishedSuccessfully = true)
+            // Honor the "end of current track" sleep-timer option before advancing.
+            // If the timer pauses playback here, the queue does not auto-advance.
+            val timer = sleepTimerManager.get()
+            if (timer.isActive && timer.timeRemainingMs.value == -1L) {
+                timer.onTrackEnded()
+                return
+            }
+            next()
+        }
+
+        private fun startPositionUpdates() {
+            positionUpdateJob?.cancel()
+            positionUpdateJob =
+                scope.launch {
+                    while (isActive) {
+                        val currentPos = player.currentPosition.coerceAtLeast(0)
+                        val bufferedDuration = player.totalBufferedDuration.coerceAtLeast(0)
+                        val bufferedPct = player.bufferedPercentage
+                        val dur = player.duration.coerceAtLeast(0)
+                        updateState {
+                            it.copy(
+                                position = currentPos,
+                                duration = dur,
+                                bufferedDurationMs = bufferedDuration,
+                                bufferedPercentage = bufferedPct,
+                            )
+                        }
+
+                        // Gapless Auto-Play Proactive Pre-buffering (15s before track end)
+                        if (playerState.value.autoplayEnabled && dur > 20_000L && currentPos >= dur - 15_000L) {
                             android.util.Log.i(
                                 "AUTOPLAY_DEBUG",
-                                "event=prefetch_appended_to_exoplayer nextId=${finalMediaItem.id} " +
-                                    "title=\"${finalMediaItem.title}\" mediaItemCount=${player.mediaItemCount}"
+                                "event=prefetch_trigger pos=$currentPos dur=$dur " +
+                                    "remaining=${dur - currentPos} mediaId=$currentTrackId"
                             )
-                            android.util.Log.i("PlayerController", "Gapless Radio: Pre-buffered next track -> ${finalMediaItem.title} (${finalMediaItem.id})")
-                        } else {
-                            android.util.Log.w(
-                                "AUTOPLAY_DEBUG",
-                                "event=prefetch_append_skipped reason=empty_stream_uri nextId=${finalMediaItem.id}"
-                            )
+                            checkAndPrefetchNextTrack()
                         }
-                    } else {
-                        android.util.Log.d(
-                            "AUTOPLAY_DEBUG",
-                            "event=prefetch_append_skipped reason=state_changed mediaItemCount=${player.mediaItemCount} " +
-                                "currentTrackId=$currentTrackId expected=${currentTrack.id}"
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.w("PlayerController", "Gapless Radio prefetch failed: ${e.message}")
-            } finally {
-                isPrefetchingNextTrack = false
-                prefetchGuard.set(false)
-            }
-        }
-    }
 
-    private fun stopPositionUpdates() {
-        positionUpdateJob?.cancel()
-        positionUpdateJob = null
-    }
-    fun setQualityPreset(preset: com.deepeye.musicpro.player.format.QualityPreset) {
-        updateState { it.copy(qualityPreset = preset) }
-        when (preset) {
-            com.deepeye.musicpro.player.format.QualityPreset.HIGH_QUALITY -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.HIGH_QUALITY)
-            com.deepeye.musicpro.player.format.QualityPreset.ULTRA_HD -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.BEST_COMPATIBLE)
-            com.deepeye.musicpro.player.format.QualityPreset.DATA_SAVER -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.DATA_SAVER)
-            com.deepeye.musicpro.player.format.QualityPreset.BALANCED -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.BALANCED)
-            com.deepeye.musicpro.player.format.QualityPreset.AUTO -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.AUTO)
-            com.deepeye.musicpro.player.format.QualityPreset.CUSTOM -> smartTubePlaybackFormatRepository.setVideoPreset(com.deepeye.musicpro.player.smarttube.VideoQualityPreset.CUSTOM)
-        }
-        val tracks = player.currentTracks
-        val isMultiTrackDASH = tracks.groups.any { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO && it.length > 1 }
-        val snapshot = smartTubePlaybackFormatRepository.snapshot.value
-        val manifestUrl = snapshot.hlsManifestUrl ?: snapshot.dashManifestUrl
-        val currentItem = _playerState.value.currentItem
-        if (!isMultiTrackDASH && manifestUrl != null && currentItem != null && preset != com.deepeye.musicpro.player.format.QualityPreset.AUTO) {
-            scope.launch {
-                try {
-                    val pos = player.currentPosition.coerceAtLeast(0L)
-                    val isPlaying = player.isPlaying
-                    val updatedItem = when (currentItem) {
-                        is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(manifestUrl), isVideo = true)
-                        is MediaItem.Local -> currentItem
-                    }
-                    player.pause()
-                    player.setMediaItem(updatedItem.toMedia3Item())
-                    qualitySelectionEngine.applyPreset(player, preset)
-                    if (pos > 0L) player.seekTo(pos)
-                    player.prepare()
-                    if (isPlaying) player.play()
-                    android.util.Log.i("DeepEyeHQ", "event=preset_switched_manifest manifestUrl=$manifestUrl preset=$preset")
-                } catch (e: Exception) {
-                    android.util.Log.e("DeepEyeHQ", "event=preset_manifest_switch_failed error=${e.message}", e)
-                }
-            }
-        } else {
-            val target1080 = if (preset == com.deepeye.musicpro.player.format.QualityPreset.BALANCED) {
-                var override1080: androidx.media3.common.TrackSelectionOverride? = null
-                for (group in player.currentTracks.groups) {
-                    if (group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO) {
-                        for (tIdx in 0 until group.length) {
-                            val tf = group.getTrackFormat(tIdx)
-                            if (tf.height == 1080) {
-                                override1080 = androidx.media3.common.TrackSelectionOverride(group.mediaTrackGroup, tIdx)
-                                break
+                        // SponsorBlock Auto-Skip Logic
+                        val segments = playerState.value.sponsorSegments
+                        if (segments.isNotEmpty()) {
+                            val currentSegment =
+                                segments.find { seg ->
+                                    currentPos >= seg.startMs && currentPos < seg.endMs && seg != lastSkippedSegment
+                                }
+                            if (currentSegment != null) {
+                                lastSkippedSegment = currentSegment
+                                android.util.Log.d("SponsorBlock", "Auto-skipping ${currentSegment.category} to ${currentSegment.endMs}ms")
+                                player.seekTo(currentSegment.endMs)
                             }
                         }
+
+                        delay(100)
                     }
-                    if (override1080 != null) break
                 }
-                override1080
-            } else null
+        }
 
-            val builder = player.trackSelectionParameters.buildUpon()
-            builder.clearOverridesOfType(androidx.media3.common.C.TRACK_TYPE_VIDEO)
-            if (target1080 != null) {
-                builder.addOverride(target1080)
-            } else {
-                builder.setMinVideoSize(1920, 1080)
-                builder.setMaxVideoSize(1920, 1080)
-                builder.setMaxVideoBitrate(Int.MAX_VALUE)
-                builder.setMaxVideoFrameRate(60)
+        private fun checkAndPrefetchNextTrack() {
+            // AUTOPLAY-DEBUG-OMEGA: atomic guard — the 100ms position poller calls this
+            // every tick inside the 15s window; a plain Boolean races and fires duplicate
+            // /next fetches. compareAndSet makes exactly one prefetch in flight.
+            // Audited: network on Dispatchers.IO, player.addMediaItem on
+            // Dispatchers.Main — no cross-thread ExoPlayer violation.
+            if (!prefetchGuard.compareAndSet(false, true)) {
+                return
             }
-            player.trackSelectionParameters = builder.build()
-        }
-    }
+            isPrefetchingNextTrack = true
+            if (!playerState.value.autoplayEnabled) {
+                android.util.Log.d(
+                    "AUTOPLAY_DEBUG",
+                    "event=prefetch_guard_blocked isPrefetching=$isPrefetchingNextTrack " +
+                        "autoplayEnabled=${playerState.value.autoplayEnabled}",
+                )
+                isPrefetchingNextTrack = false
+                prefetchGuard.set(false)
+                return
+            }
+            val currentItem = playerState.value.currentItem
+            // OMEGA: Local tracks have no videoId-based radio graph — resolve a Remote
+            // seed via search instead of silently returning (previous early-return
+            // stalled Infinite Radio for on-device libraries).
+            val currentTrack: MediaItem =
+                currentItem ?: run {
+                    isPrefetchingNextTrack = false
+                    prefetchGuard.set(false)
+                    return
+                }
 
-    fun setVideoFormat(format: com.deepeye.musicpro.player.format.DeepEyeFormat) {
-        val currentItem = _playerState.value.currentItem
-        android.util.Log.d("DeepEyeHQ", "event=user_select_video_format formatId=${format.id} isAuto=${format.isAuto} label=${format.qualityLabel}")
-        updateState {
-            it.copy(
-                selectedVideoFormat = if (format.isAuto) null else format,
-                qualityPreset = if (format.isAuto) com.deepeye.musicpro.player.format.QualityPreset.AUTO else com.deepeye.musicpro.player.format.QualityPreset.CUSTOM
-            )
-        }
-        smartTubePlaybackFormatRepository.selectVideoFormat(format.id)
-        
-        val tracks = player.currentTracks
-        val hasMatchingVideoTrack = !format.isAuto && tracks.groups.any { group ->
-            group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO &&
-            (0 until group.length).any { tIdx ->
-                val tf = group.getTrackFormat(tIdx)
-                tf.id == format.id || tf.id == format.id.substringAfterLast("_") ||
-                (format.height > 0 && tf.height == format.height)
+            // Only prefetch if ExoPlayer doesn't already have a next item queued,
+            // and the in-app queue doesn't already have a resolved next item.
+            // Change 5 — also check queueManager.peekNext() to prevent re-firing when
+            // the queue has items that haven't yet been enqueued to ExoPlayer.
+            if (player.mediaItemCount > 1 || queueManager.peekNext() != null) {
+                android.util.Log.d(
+                    "AUTOPLAY_DEBUG",
+                    "event=prefetch_already_queued mediaItemCount=${player.mediaItemCount} " +
+                        "peekNext=${queueManager.peekNext()?.id} videoId=${currentTrack.id}"
+                )
+                isPrefetchingNextTrack = false
+                prefetchGuard.set(false)
+                return
+            }
+
+            scope.launch {
+                try {
+                    // 1. Check if queue has a next track
+                    val nextInQueue = queueManager.peekNext()
+                    val candidate: MediaItem? =
+                        if (nextInQueue != null) {
+                            nextInQueue
+                        } else {
+                            // Generate autoplay candidates
+                            val activeArtists = queueManager.queue.value.map { it.artist }
+                            val candidates =
+                                withContext(Dispatchers.IO) {
+                                    autoplayRepository.generateNextQueue(
+                                        currentTrack,
+                                        _autoplayState.value,
+                                        activeArtists
+                                    )
+                                }
+                            // ISOLATION-OMEGA: direct InnerTube passthrough (same-track guard only).
+                            val validCandidates =
+                                candidates.filter {
+                                    it.videoId != currentTrack.id
+                                }
+                            if (validCandidates.isNotEmpty()) {
+                                android.util.Log.i(
+                                    "AUTOPLAY_DEBUG",
+                                    "event=prefetch_candidates_resolved count=${validCandidates.size} " +
+                                        "firstId=${validCandidates.first().videoId} videoId=${currentTrack.id}"
+                                )
+                                val mediaItems =
+                                    validCandidates.map { c ->
+                                        MediaItem.Remote(
+                                            id = c.videoId,
+                                            title = c.title,
+                                            artist = c.artist,
+                                            artworkUri =
+                                                Uri.parse(
+                                                    "https://img.youtube.com/vi/${c.videoId}/hqdefault.jpg"
+                                                ),
+                                            isVideo = (currentTrack as? MediaItem.Remote)?.isVideo ?: false,
+                                            duration = 0L,
+                                        )
+                                    }
+                                queueManager.addItems(mediaItems)
+                                mediaItems.firstOrNull()
+                            } else {
+                                null
+                            }
+                        }
+
+                    if (candidate == null || candidate.id == currentTrack.id || candidate.id == prefetchedTrackId) return@launch
+
+                    // 2. Resolve stream URL on Dispatchers.IO
+                    val finalMediaItem: MediaItem? =
+                        when (candidate) {
+                            is MediaItem.Local -> candidate
+                            is MediaItem.Remote -> {
+                                if (candidate.streamUri == null || candidate.streamUri == Uri.EMPTY) {
+                                    val resolved =
+                                        withContext(Dispatchers.IO) {
+                                            sourceResolverManager.resolveSource(
+                                                candidate.id,
+                                                candidate.isVideo,
+                                                forceRefresh = false
+                                            )
+                                        }
+                                    val url = resolved?.url
+                                    if (!url.isNullOrBlank()) {
+                                        candidate.copy(streamUri = Uri.parse(url))
+                                    } else {
+                                        null
+                                    }
+                                } else {
+                                    candidate
+                                }
+                            }
+                        }
+
+                    if (finalMediaItem == null) return@launch
+
+                    // 3. Enqueue to ExoPlayer gaplessly
+                    withContext(Dispatchers.Main) {
+                        if (player.mediaItemCount <= 1 && currentTrackId == currentTrack.id) {
+                            val media3Item = finalMediaItem.toMedia3Item()
+                            if (media3Item.localConfiguration?.uri != null && media3Item.localConfiguration?.uri != Uri.EMPTY) {
+                                player.addMediaItem(media3Item)
+                                prefetchedTrackId = finalMediaItem.id
+                                android.util.Log.i(
+                                    "AUTOPLAY_DEBUG",
+                                    "event=prefetch_appended_to_exoplayer nextId=${finalMediaItem.id} " +
+                                        "title=\"${finalMediaItem.title}\" mediaItemCount=${player.mediaItemCount}"
+                                )
+                                android.util.Log.i(
+                                    "PlayerController",
+                                    "Gapless Radio: Pre-buffered next track -> ${finalMediaItem.title} (${finalMediaItem.id})"
+                                )
+                            } else {
+                                android.util.Log.w(
+                                    "AUTOPLAY_DEBUG",
+                                    "event=prefetch_append_skipped reason=empty_stream_uri nextId=${finalMediaItem.id}"
+                                )
+                            }
+                        } else {
+                            android.util.Log.d(
+                                "AUTOPLAY_DEBUG",
+                                "event=prefetch_append_skipped reason=state_changed mediaItemCount=${player.mediaItemCount} " +
+                                    "currentTrackId=$currentTrackId expected=${currentTrack.id}"
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w("PlayerController", "Gapless Radio prefetch failed: ${e.message}")
+                } finally {
+                    isPrefetchingNextTrack = false
+                    prefetchGuard.set(false)
+                }
             }
         }
-        val isMultiTrackDASH = tracks.groups.any { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO && it.length > 1 }
-        
-        if (hasMatchingVideoTrack || (format.isAuto && isMultiTrackDASH)) {
-            qualitySelectionEngine.selectVideoFormat(player, format)
-            android.util.Log.i("DeepEyeHQ", "event=video_format_applied_in_player formatId=${format.id} height=${format.height}")
-        } else {
+
+        private fun stopPositionUpdates() {
+            positionUpdateJob?.cancel()
+            positionUpdateJob = null
+        }
+
+        fun setQualityPreset(preset: com.deepeye.musicpro.player.format.QualityPreset) {
+            updateState { it.copy(qualityPreset = preset) }
+            when (preset) {
+                com.deepeye.musicpro.player.format.QualityPreset.HIGH_QUALITY ->
+                    smartTubePlaybackFormatRepository.setVideoPreset(
+                        com.deepeye.musicpro.player.smarttube.VideoQualityPreset.HIGH_QUALITY
+                    )
+                com.deepeye.musicpro.player.format.QualityPreset.ULTRA_HD ->
+                    smartTubePlaybackFormatRepository.setVideoPreset(
+                        com.deepeye.musicpro.player.smarttube.VideoQualityPreset.BEST_COMPATIBLE
+                    )
+                com.deepeye.musicpro.player.format.QualityPreset.DATA_SAVER ->
+                    smartTubePlaybackFormatRepository.setVideoPreset(
+                        com.deepeye.musicpro.player.smarttube.VideoQualityPreset.DATA_SAVER
+                    )
+                com.deepeye.musicpro.player.format.QualityPreset.BALANCED ->
+                    smartTubePlaybackFormatRepository.setVideoPreset(
+                        com.deepeye.musicpro.player.smarttube.VideoQualityPreset.BALANCED
+                    )
+                com.deepeye.musicpro.player.format.QualityPreset.AUTO ->
+                    smartTubePlaybackFormatRepository.setVideoPreset(
+                        com.deepeye.musicpro.player.smarttube.VideoQualityPreset.AUTO
+                    )
+                com.deepeye.musicpro.player.format.QualityPreset.CUSTOM ->
+                    smartTubePlaybackFormatRepository.setVideoPreset(
+                        com.deepeye.musicpro.player.smarttube.VideoQualityPreset.CUSTOM
+                    )
+            }
+            val tracks = player.currentTracks
+            val isMultiTrackDASH = tracks.groups.any { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO && it.length > 1 }
             val snapshot = smartTubePlaybackFormatRepository.snapshot.value
             val manifestUrl = snapshot.hlsManifestUrl ?: snapshot.dashManifestUrl
-            if (manifestUrl != null && currentItem != null) {
+            val currentItem = _playerState.value.currentItem
+            if (!isMultiTrackDASH && manifestUrl != null && currentItem != null && preset != com.deepeye.musicpro.player.format.QualityPreset.AUTO) {
                 scope.launch {
                     try {
                         val pos = player.currentPosition.coerceAtLeast(0L)
                         val isPlaying = player.isPlaying
-                        val updatedItem = when (currentItem) {
-                            is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(manifestUrl), isVideo = true)
-                            is MediaItem.Local -> currentItem
-                        }
+                        val updatedItem =
+                            when (currentItem) {
+                                is MediaItem.Remote ->
+                                    currentItem.copy(
+                                        streamUri = Uri.parse(manifestUrl),
+                                        isVideo = true
+                                    )
+                                is MediaItem.Local -> currentItem
+                            }
                         player.pause()
                         player.setMediaItem(updatedItem.toMedia3Item())
-                        qualitySelectionEngine.selectVideoFormat(player, format)
+                        qualitySelectionEngine.applyPreset(player, preset)
                         if (pos > 0L) player.seekTo(pos)
                         player.prepare()
                         if (isPlaying) player.play()
-                        android.util.Log.i("DeepEyeHQ", "event=video_format_switched_manifest formatId=${format.id} height=${format.height}")
+                        android.util.Log.i(
+                            "DeepEyeHQ",
+                            "event=preset_switched_manifest manifestUrl=$manifestUrl preset=$preset"
+                        )
                     } catch (e: Exception) {
-                        android.util.Log.e("DeepEyeHQ", "event=video_format_manifest_switch_failed error=${e.message}", e)
+                        android.util.Log.e("DeepEyeHQ", "event=preset_manifest_switch_failed error=${e.message}", e)
                     }
                 }
             } else {
+                val target1080 =
+                    if (preset == com.deepeye.musicpro.player.format.QualityPreset.BALANCED) {
+                        var override1080: androidx.media3.common.TrackSelectionOverride? = null
+                        for (group in player.currentTracks.groups) {
+                            if (group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO) {
+                                for (tIdx in 0 until group.length) {
+                                    val tf = group.getTrackFormat(tIdx)
+                                    if (tf.height == 1080) {
+                                        override1080 = androidx.media3.common.TrackSelectionOverride(group.mediaTrackGroup, tIdx)
+                                        break
+                                    }
+                                }
+                            }
+                            if (override1080 != null) break
+                        }
+                        override1080
+                    } else {
+                        null
+                    }
+
+                val builder = player.trackSelectionParameters.buildUpon()
+                builder.clearOverridesOfType(androidx.media3.common.C.TRACK_TYPE_VIDEO)
+                if (target1080 != null) {
+                    builder.addOverride(target1080)
+                } else {
+                    builder.setMinVideoSize(1920, 1080)
+                    builder.setMaxVideoSize(1920, 1080)
+                    builder.setMaxVideoBitrate(Int.MAX_VALUE)
+                    builder.setMaxVideoFrameRate(60)
+                }
+                player.trackSelectionParameters = builder.build()
+            }
+        }
+
+        fun setVideoFormat(format: com.deepeye.musicpro.player.format.DeepEyeFormat) {
+            val currentItem = _playerState.value.currentItem
+            android.util.Log.d(
+                "DeepEyeHQ",
+                "event=user_select_video_format formatId=${format.id} isAuto=${format.isAuto} label=${format.qualityLabel}"
+            )
+            updateState {
+                it.copy(
+                    selectedVideoFormat = if (format.isAuto) null else format,
+                    qualityPreset = if (format.isAuto) com.deepeye.musicpro.player.format.QualityPreset.AUTO else com.deepeye.musicpro.player.format.QualityPreset.CUSTOM
+                )
+            }
+            smartTubePlaybackFormatRepository.selectVideoFormat(format.id)
+
+            val tracks = player.currentTracks
+            val hasMatchingVideoTrack =
+                !format.isAuto &&
+                    tracks.groups.any { group ->
+                        group.type == androidx.media3.common.C.TRACK_TYPE_VIDEO &&
+                            (0 until group.length).any { tIdx ->
+                                val tf = group.getTrackFormat(tIdx)
+                                tf.id == format.id || tf.id == format.id.substringAfterLast("_") ||
+                                    (format.height > 0 && tf.height == format.height)
+                            }
+                    }
+            val isMultiTrackDASH = tracks.groups.any { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO && it.length > 1 }
+
+            if (hasMatchingVideoTrack || (format.isAuto && isMultiTrackDASH)) {
                 qualitySelectionEngine.selectVideoFormat(player, format)
+                android.util.Log.i(
+                    "DeepEyeHQ",
+                    "event=video_format_applied_in_player formatId=${format.id} height=${format.height}"
+                )
+            } else {
+                val snapshot = smartTubePlaybackFormatRepository.snapshot.value
+                val manifestUrl = snapshot.hlsManifestUrl ?: snapshot.dashManifestUrl
+                if (manifestUrl != null && currentItem != null) {
+                    scope.launch {
+                        try {
+                            val pos = player.currentPosition.coerceAtLeast(0L)
+                            val isPlaying = player.isPlaying
+                            val updatedItem =
+                                when (currentItem) {
+                                    is MediaItem.Remote ->
+                                        currentItem.copy(
+                                            streamUri = Uri.parse(manifestUrl),
+                                            isVideo = true
+                                        )
+                                    is MediaItem.Local -> currentItem
+                                }
+                            player.pause()
+                            player.setMediaItem(updatedItem.toMedia3Item())
+                            qualitySelectionEngine.selectVideoFormat(player, format)
+                            if (pos > 0L) player.seekTo(pos)
+                            player.prepare()
+                            if (isPlaying) player.play()
+                            android.util.Log.i(
+                                "DeepEyeHQ",
+                                "event=video_format_switched_manifest formatId=${format.id} height=${format.height}"
+                            )
+                        } catch (e: Exception) {
+                            android.util.Log.e(
+                                "DeepEyeHQ",
+                                "event=video_format_manifest_switch_failed error=${e.message}",
+                                e
+                            )
+                        }
+                    }
+                } else {
+                    qualitySelectionEngine.selectVideoFormat(player, format)
+                }
             }
         }
-    }
 
-    fun setAudioFormat(format: com.deepeye.musicpro.player.format.DeepEyeFormat) {
-        val currentItem = _playerState.value.currentItem
-        android.util.Log.d("DeepEyeHQ", "event=user_select_audio_format formatId=${format.id} isAuto=${format.isAuto} label=${format.qualityLabel}")
-        updateState {
-            it.copy(
-                selectedAudioFormat = if (format.isAuto) null else format
+        fun setAudioFormat(format: com.deepeye.musicpro.player.format.DeepEyeFormat) {
+            val currentItem = _playerState.value.currentItem
+            android.util.Log.d(
+                "DeepEyeHQ",
+                "event=user_select_audio_format formatId=${format.id} isAuto=${format.isAuto} label=${format.qualityLabel}"
+            )
+            updateState {
+                it.copy(
+                    selectedAudioFormat = if (format.isAuto) null else format
+                )
+            }
+            smartTubePlaybackFormatRepository.selectAudioFormat(format.id)
+
+            val tracks = player.currentTracks
+            val hasMatchingAudioTrack =
+                !format.isAuto &&
+                    tracks.groups.any { group ->
+                        group.type == androidx.media3.common.C.TRACK_TYPE_AUDIO &&
+                            (0 until group.length).any { tIdx ->
+                                val tf = group.getTrackFormat(tIdx)
+                                tf.id == format.id || tf.id == format.id.substringAfterLast("_") ||
+                                    tf.bitrate == format.bitrate || (format.bitrate > 0 && Math.abs(tf.bitrate - format.bitrate) < 50000)
+                            }
+                    }
+            val isMultiTrackDASH = tracks.groups.any { it.type == androidx.media3.common.C.TRACK_TYPE_AUDIO && it.length > 1 }
+
+            if (hasMatchingAudioTrack || (format.isAuto && isMultiTrackDASH)) {
+                qualitySelectionEngine.selectAudioFormat(player, format)
+                android.util.Log.i("DeepEyeHQ", "event=audio_format_applied_in_player formatId=${format.id}")
+            } else {
+                val snapshot = smartTubePlaybackFormatRepository.snapshot.value
+                val manifestUrl = snapshot.hlsManifestUrl ?: snapshot.dashManifestUrl
+                if (manifestUrl != null && currentItem != null) {
+                    scope.launch {
+                        try {
+                            val pos = player.currentPosition.coerceAtLeast(0L)
+                            val isPlaying = player.isPlaying
+                            val updatedItem =
+                                when (currentItem) {
+                                    is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(manifestUrl))
+                                    is MediaItem.Local -> currentItem
+                                }
+                            player.pause()
+                            player.setMediaItem(updatedItem.toMedia3Item())
+                            qualitySelectionEngine.selectAudioFormat(player, format)
+                            if (pos > 0L) player.seekTo(pos)
+                            player.prepare()
+                            if (isPlaying) player.play()
+                            android.util.Log.i(
+                                "DeepEyeHQ",
+                                "event=audio_format_switched_manifest formatId=${format.id}"
+                            )
+                        } catch (e: Exception) {
+                            android.util.Log.e(
+                                "DeepEyeHQ",
+                                "event=audio_format_manifest_switch_failed error=${e.message}",
+                                e
+                            )
+                        }
+                    }
+                } else {
+                    qualitySelectionEngine.selectAudioFormat(player, format)
+                }
+            }
+        }
+
+        fun setBufferProfile(profile: com.deepeye.musicpro.player.format.BufferProfile) {
+            updateState { it.copy(bufferProfile = profile) }
+        }
+
+        fun getPlaybackDiagnostics(): com.deepeye.musicpro.player.format.PlaybackDiagnostics {
+            val state = playerState.value
+            val currentItem = state.currentItem
+            val vFormat = player.videoFormat
+            val aFormat = player.audioFormat
+            val isHw = state.selectedVideoFormat?.isHardwareAccelerated ?: true
+
+            return com.deepeye.musicpro.player.format.PlaybackDiagnostics(
+                videoId = (currentItem as? MediaItem.Remote)?.id ?: currentItem?.id ?: "",
+                mediaTitle = currentItem?.title ?: "No Media Active",
+                activeVideoFormat = state.selectedVideoFormat,
+                activeAudioFormat = state.selectedAudioFormat,
+                activeVideoDecoder = state.activeVideoDecoderName.ifEmpty { vFormat?.sampleMimeType ?: "Default Hardware Sink" },
+                activeAudioDecoder = state.activeAudioDecoderName.ifEmpty { aFormat?.sampleMimeType ?: "Opus Low-Latency Sink" },
+                currentPositionMs = state.position,
+                totalDurationMs = state.duration,
+                bufferedPositionMs = player.bufferedPosition.coerceAtLeast(0),
+                bufferedDurationMs = state.bufferedDurationMs,
+                bufferedPercentage = state.bufferedPercentage,
+                playbackSpeed = state.playbackSpeed,
+                estimatedBandwidthBps = state.estimatedBandwidthBps,
+                droppedFrames = state.droppedFrames,
+                qualityPreset = state.qualityPreset,
+                bufferProfile = state.bufferProfile,
+                isHardwareAccelerated = isHw,
+                audioSinkSpec = "48000Hz • 2ch Float32 • Low-Latency DSP",
+                playerStateName =
+                    if (state.isPlaying) {
+                        "PLAYING"
+                    } else if (state.isLoading) {
+                        "BUFFERING"
+                    } else {
+                        "PAUSED"
+                    }
             )
         }
-        smartTubePlaybackFormatRepository.selectAudioFormat(format.id)
-        
-        val tracks = player.currentTracks
-        val hasMatchingAudioTrack = !format.isAuto && tracks.groups.any { group ->
-            group.type == androidx.media3.common.C.TRACK_TYPE_AUDIO &&
-            (0 until group.length).any { tIdx ->
-                val tf = group.getTrackFormat(tIdx)
-                tf.id == format.id || tf.id == format.id.substringAfterLast("_") ||
-                tf.bitrate == format.bitrate || (format.bitrate > 0 && Math.abs(tf.bitrate - format.bitrate) < 50000)
-            }
-        }
-        val isMultiTrackDASH = tracks.groups.any { it.type == androidx.media3.common.C.TRACK_TYPE_AUDIO && it.length > 1 }
-        
-        if (hasMatchingAudioTrack || (format.isAuto && isMultiTrackDASH)) {
-            qualitySelectionEngine.selectAudioFormat(player, format)
-            android.util.Log.i("DeepEyeHQ", "event=audio_format_applied_in_player formatId=${format.id}")
-        } else {
-            val snapshot = smartTubePlaybackFormatRepository.snapshot.value
-            val manifestUrl = snapshot.hlsManifestUrl ?: snapshot.dashManifestUrl
-            if (manifestUrl != null && currentItem != null) {
-                scope.launch {
-                    try {
-                        val pos = player.currentPosition.coerceAtLeast(0L)
-                        val isPlaying = player.isPlaying
-                        val updatedItem = when (currentItem) {
-                            is MediaItem.Remote -> currentItem.copy(streamUri = Uri.parse(manifestUrl))
-                            is MediaItem.Local -> currentItem
-                        }
-                        player.pause()
-                        player.setMediaItem(updatedItem.toMedia3Item())
-                        qualitySelectionEngine.selectAudioFormat(player, format)
-                        if (pos > 0L) player.seekTo(pos)
-                        player.prepare()
-                        if (isPlaying) player.play()
-                        android.util.Log.i("DeepEyeHQ", "event=audio_format_switched_manifest formatId=${format.id}")
-                    } catch (e: Exception) {
-                        android.util.Log.e("DeepEyeHQ", "event=audio_format_manifest_switch_failed error=${e.message}", e)
-                    }
-                }
-            } else {
-                qualitySelectionEngine.selectAudioFormat(player, format)
-            }
-        }
-    }
 
-    fun setBufferProfile(profile: com.deepeye.musicpro.player.format.BufferProfile) {
-        updateState { it.copy(bufferProfile = profile) }
-    }
+        private var isAppInForeground = true
 
-    fun getPlaybackDiagnostics(): com.deepeye.musicpro.player.format.PlaybackDiagnostics {
-        val state = playerState.value
-        val currentItem = state.currentItem
-        val vFormat = player.videoFormat
-        val aFormat = player.audioFormat
-        val isHw = state.selectedVideoFormat?.isHardwareAccelerated ?: true
-
-        return com.deepeye.musicpro.player.format.PlaybackDiagnostics(
-            videoId = (currentItem as? MediaItem.Remote)?.id ?: currentItem?.id ?: "",
-            mediaTitle = currentItem?.title ?: "No Media Active",
-            activeVideoFormat = state.selectedVideoFormat,
-            activeAudioFormat = state.selectedAudioFormat,
-            activeVideoDecoder = state.activeVideoDecoderName.ifEmpty { vFormat?.sampleMimeType ?: "Default Hardware Sink" },
-            activeAudioDecoder = state.activeAudioDecoderName.ifEmpty { aFormat?.sampleMimeType ?: "Opus Low-Latency Sink" },
-            currentPositionMs = state.position,
-            totalDurationMs = state.duration,
-            bufferedPositionMs = player.bufferedPosition.coerceAtLeast(0),
-            bufferedDurationMs = state.bufferedDurationMs,
-            bufferedPercentage = state.bufferedPercentage,
-            playbackSpeed = state.playbackSpeed,
-            estimatedBandwidthBps = state.estimatedBandwidthBps,
-            droppedFrames = state.droppedFrames,
-            qualityPreset = state.qualityPreset,
-            bufferProfile = state.bufferProfile,
-            isHardwareAccelerated = isHw,
-            audioSinkSpec = "48000Hz • 2ch Float32 • Low-Latency DSP",
-            playerStateName = if (state.isPlaying) "PLAYING" else if (state.isLoading) "BUFFERING" else "PAUSED"
-        )
-    }
-
-
-
-
-    private var isAppInForeground = true
-
-    fun setAppInForeground(foreground: Boolean) {
-        isAppInForeground = foreground
-        updateState { it.copy(isAppInForeground = foreground) }
-        if (!foreground) {
-            syncCurrentProgressToDatabaseAndCloud()
-        }
-    }
-
-    private fun syncCurrentProgressToDatabaseAndCloud() {
-        val currentItem = playerState.value.currentItem ?: return
-        val currentId = currentTrackId ?: return
-        val duration = player.duration.coerceAtLeast(0)
-        val currentPos = player.currentPosition.coerceAtLeast(0)
-
-        if (currentPos > 5000) {
-            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                val isVideo = (currentItem as? MediaItem.Remote)?.isVideo == true
-                val source = if (currentItem is MediaItem.Local) "local" else "youtube"
-
-                if (isVideo) {
-                    historyRepository.recordVideoProgress(
-                        videoId = currentId,
-                        title = currentItem.title,
-                        thumbnailUri = currentItem.artworkUri?.toString(),
-                        positionMs = currentPos,
-                        durationMs = duration
-                    )
-                } else {
-                    historyRepository.recordPlayback(
-                        mediaId = currentId,
-                        title = currentItem.title,
-                        artist = currentItem.artist,
-                        album = (currentItem as? MediaItem.Local)?.song?.album ?: "",
-                        artworkUri = currentItem.artworkUri?.toString(),
-                        playDurationMs = currentPos,
-                        totalDurationMs = duration,
-                        source = source
-                    )
-                }
-            }
-        }
-    }
-
-    private fun updateState(transform: (PlayerState) -> PlayerState) {
-        _playerState.update(transform)
-    }
-
-    private fun recordCurrentTrackPlayStats(finishedSuccessfully: Boolean) {
-        scope.launch {
-            playMutex.withLock {
-                recordCurrentTrackPlayStatsLocked(finishedSuccessfully)
-            }
-        }
-    }
-
-    private fun recordCurrentTrackPlayStatsLocked(finishedSuccessfully: Boolean) {
-        val currentItem = playerState.value.currentItem ?: return
-        val currentId = currentTrackId ?: return
-
-        // Accumulate remaining time since last state change if playing
-        if (player.isPlaying) {
-            totalPlayTimeCurrentTrack += System.currentTimeMillis() - lastPlaybackStateTime
-        }
-
-        val duration = player.duration.coerceAtLeast(0)
-        val played = totalPlayTimeCurrentTrack.coerceAtMost(if (duration > 0) duration else Long.MAX_VALUE)
-
-        // Make sure it wasn't a zero-duration glitch
-        if (played > 500) {
-            val source = if (currentItem is MediaItem.Local) "local" else "youtube"
-            val language = getLanguageForMedia(currentItem)
-            val artistId =
-                when (currentItem) {
-                    is MediaItem.Local -> currentItem.song.artistId.toString()
-                    is MediaItem.Remote -> currentItem.artist
-                }
-
-            val event =
-                com.deepeye.musicpro.data.db.PlayEvent(
-                    songId = currentId,
-                    artistId = artistId,
-                    language = language,
-                    playedMs = played,
-                    durationMs = duration,
-                    source = source,
-                )
-
-            scope.launch(Dispatchers.IO) {
-                // Gamification update
-                gamificationEngine.checkAndUpdateStreak()
-                if (duration > 0) {
-                    val ratio = played.toFloat() / duration.toFloat()
-                    gamificationEngine.updateSongCompletion(duration, ratio)
-                    val minutes = (played / 60000).toInt()
-                    gamificationEngine.updateDailyListeningMinutes(minutes)
-                }
-
-                val isVideo = (currentItem as? MediaItem.Remote)?.isVideo == true
-                if (isVideo) {
-                    historyRepository.recordVideoProgress(
-                        videoId = currentId,
-                        title = currentItem.title,
-                        thumbnailUri = currentItem.artworkUri?.toString(),
-                        positionMs = played,
-                        durationMs = duration
-                    )
-                } else {
-                    historyRepository.recordPlayback(
-                        mediaId = currentId,
-                        title = currentItem.title,
-                        artist = currentItem.artist,
-                        album = (currentItem as? MediaItem.Local)?.song?.album ?: "",
-                        artworkUri = currentItem.artworkUri?.toString(),
-                        playDurationMs = played,
-                        totalDurationMs = duration,
-                        source = source
-                    )
-                }
-                
-                libraryRepository.recordRecentPlay(
-                    videoId = currentId,
-                    title = currentItem.title,
-                    artist = currentItem.artist,
-                    artworkUrl = currentItem.artworkUri?.toString()
-                )
+        fun setAppInForeground(foreground: Boolean) {
+            isAppInForeground = foreground
+            updateState { it.copy(isAppInForeground = foreground) }
+            if (!foreground) {
+                syncCurrentProgressToDatabaseAndCloud()
             }
         }
 
-        // Reset variables
-        currentTrackId = null
-        totalPlayTimeCurrentTrack = 0L
-    }
+        private fun syncCurrentProgressToDatabaseAndCloud() {
+            val currentItem = playerState.value.currentItem ?: return
+            val currentId = currentTrackId ?: return
+            val duration = player.duration.coerceAtLeast(0)
+            val currentPos = player.currentPosition.coerceAtLeast(0)
 
-    private fun getLanguageForMedia(item: MediaItem): String {
-        val titleLower = item.title.lowercase()
-        val langs =
-            listOf("hindi", "punjabi", "bhojpuri", "tamil", "telugu", "english", "haryanvi", "bengali", "korean")
-        for (lang in langs) {
-            if (titleLower.contains(lang)) return lang.replaceFirstChar { it.uppercase() }
-        }
-        if (item is MediaItem.Local) {
-            val genreLower = item.song.genre.lowercase()
-            for (lang in langs) {
-                if (genreLower.contains(lang)) return lang.replaceFirstChar { it.uppercase() }
-            }
-            return if (item.song.genre.isNotEmpty()) item.song.genre else "Local"
-        }
-        return "English"
-    }
+            if (currentPos > 5000) {
+                scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    val isVideo = (currentItem as? MediaItem.Remote)?.isVideo == true
+                    val source = if (currentItem is MediaItem.Local) "local" else "youtube"
 
-    fun applyDSPPreset(preset: com.deepeye.musicpro.dsp.model.DSPPreset) {
-        dspController.applyPreset(preset)
-    }
-
-    fun captureRecoverySnapshot(): PlaybackRecoverySnapshot? {
-        val currentItem = _playerState.value.currentItem ?: return null
-        val currentPos = player.currentPosition.coerceAtLeast(0)
-        val dur = player.duration.coerceAtLeast(0)
-        val state = _playerState.value
-        val formatRepoSnap = smartTubePlaybackFormatRepository.snapshot.value
-        val dspParams = dspEngine.currentParams.value
-
-        return PlaybackRecoverySnapshot(
-            mediaId = currentItem.id,
-            title = currentItem.title,
-            isVideo = currentItem is MediaItem.Remote && currentItem.isVideo,
-            queueIndex = queueManager.currentIndex.value,
-            queueSize = queueManager.queue.value.size,
-            positionMs = currentPos,
-            durationMs = dur,
-            wasPlaying = player.isPlaying || state.isPlaying,
-            selectedVideoFormatId = formatRepoSnap.currentVideoFormatId ?: state.selectedVideoFormat?.id,
-            selectedAudioFormatId = formatRepoSnap.currentAudioFormatId ?: state.selectedAudioFormat?.id,
-            qualityMode = state.qualityPreset.name,
-            playbackSpeed = player.playbackParameters.speed,
-            repeatMode = player.repeatMode,
-            shuffleEnabled = player.shuffleModeEnabled,
-            dspEnabled = dspParams.enabled,
-            dspPresetId = dspParams.tubeMode.name,
-            captionsEnabled = false,
-            selectedAudioLanguage = player.trackSelectionParameters.preferredAudioLanguages.firstOrNull()
-        )
-    }
-
-    /**
-     * Debug-only test hook for simulating HTTP 403 stream expiry.
-     */
-    fun simulateStreamExpiryForTesting(): Boolean {
-        val snapshot = captureRecoverySnapshot() ?: return false
-        val simulatedError = PlaybackRecoveryError.HttpStatus(
-            statusCode = 403,
-            safeReason = "DEBUG_SIMULATED_STREAM_EXPIRY"
-        )
-        scope.launch {
-            playbackRecoveryCoordinator.recover(
-                error = simulatedError,
-                snapshot = snapshot,
-                player = player,
-                onApplyState = { refreshedItem, restoredPos, wasPlaying, fallbackReason ->
-                    updateState { cur ->
-                        val vFormats = smartTubePlaybackFormatRepository.snapshot.value.videoFormats.map { it.toDeepEyeFormat() }
-                        val aFormats = smartTubePlaybackFormatRepository.snapshot.value.audioFormats.map { it.toDeepEyeFormat() }
-                        cur.copy(
-                            currentItem = refreshedItem,
-                            isPlaying = wasPlaying,
-                            isLoading = false,
-                            position = restoredPos,
-                            availableVideoFormats = if (vFormats.isNotEmpty()) vFormats.toImmutableList() else cur.availableVideoFormats,
-                            availableAudioFormats = if (aFormats.isNotEmpty()) aFormats.toImmutableList() else cur.availableAudioFormats,
-                            selectedVideoFormat = vFormats.firstOrNull { it.id == smartTubePlaybackFormatRepository.snapshot.value.currentVideoFormatId } ?: cur.selectedVideoFormat,
-                            selectedAudioFormat = aFormats.firstOrNull { it.id == smartTubePlaybackFormatRepository.snapshot.value.currentAudioFormatId } ?: cur.selectedAudioFormat
+                    if (isVideo) {
+                        historyRepository.recordVideoProgress(
+                            videoId = currentId,
+                            title = currentItem.title,
+                            thumbnailUri = currentItem.artworkUri?.toString(),
+                            positionMs = currentPos,
+                            durationMs = duration
+                        )
+                    } else {
+                        historyRepository.recordPlayback(
+                            mediaId = currentId,
+                            title = currentItem.title,
+                            artist = currentItem.artist,
+                            album = (currentItem as? MediaItem.Local)?.song?.album ?: "",
+                            artworkUri = currentItem.artworkUri?.toString(),
+                            playDurationMs = currentPos,
+                            totalDurationMs = duration,
+                            source = source
                         )
                     }
                 }
+            }
+        }
+
+        private fun updateState(transform: (PlayerState) -> PlayerState) {
+            _playerState.update(transform)
+        }
+
+        private fun recordCurrentTrackPlayStats(finishedSuccessfully: Boolean) {
+            scope.launch {
+                playMutex.withLock {
+                    recordCurrentTrackPlayStatsLocked(finishedSuccessfully)
+                }
+            }
+        }
+
+        private fun recordCurrentTrackPlayStatsLocked(finishedSuccessfully: Boolean) {
+            val currentItem = playerState.value.currentItem ?: return
+            val currentId = currentTrackId ?: return
+
+            // Accumulate remaining time since last state change if playing
+            if (player.isPlaying) {
+                totalPlayTimeCurrentTrack += System.currentTimeMillis() - lastPlaybackStateTime
+            }
+
+            val duration = player.duration.coerceAtLeast(0)
+            val played = totalPlayTimeCurrentTrack.coerceAtMost(if (duration > 0) duration else Long.MAX_VALUE)
+
+            // Make sure it wasn't a zero-duration glitch
+            if (played > 500) {
+                val source = if (currentItem is MediaItem.Local) "local" else "youtube"
+                val language = getLanguageForMedia(currentItem)
+                val artistId =
+                    when (currentItem) {
+                        is MediaItem.Local -> currentItem.song.artistId.toString()
+                        is MediaItem.Remote -> currentItem.artist
+                    }
+
+                val event =
+                    com.deepeye.musicpro.data.db.PlayEvent(
+                        songId = currentId,
+                        artistId = artistId,
+                        language = language,
+                        playedMs = played,
+                        durationMs = duration,
+                        source = source,
+                    )
+
+                scope.launch(Dispatchers.IO) {
+                    // Gamification update
+                    gamificationEngine.checkAndUpdateStreak()
+                    if (duration > 0) {
+                        val ratio = played.toFloat() / duration.toFloat()
+                        gamificationEngine.updateSongCompletion(duration, ratio)
+                        val minutes = (played / 60000).toInt()
+                        gamificationEngine.updateDailyListeningMinutes(minutes)
+                    }
+
+                    val isVideo = (currentItem as? MediaItem.Remote)?.isVideo == true
+                    if (isVideo) {
+                        historyRepository.recordVideoProgress(
+                            videoId = currentId,
+                            title = currentItem.title,
+                            thumbnailUri = currentItem.artworkUri?.toString(),
+                            positionMs = played,
+                            durationMs = duration
+                        )
+                    } else {
+                        historyRepository.recordPlayback(
+                            mediaId = currentId,
+                            title = currentItem.title,
+                            artist = currentItem.artist,
+                            album = (currentItem as? MediaItem.Local)?.song?.album ?: "",
+                            artworkUri = currentItem.artworkUri?.toString(),
+                            playDurationMs = played,
+                            totalDurationMs = duration,
+                            source = source
+                        )
+                        // F1: completion taste-signal — feeds listen_events (TasteModelEngine input).
+                        // Skipped = track did not finish OR under 90% completion (same heuristic as
+                        // PlayerController @1090). Video tracks are excluded (isVideo branch above).
+                        val completionRatio =
+                            if (duration > 0) played.toFloat() / duration.toFloat() else 0f
+                        historyRepository.recordListenEvent(
+                            videoId = currentId,
+                            title = currentItem.title,
+                            artist = currentItem.artist,
+                            playDurationMs = played,
+                            totalDurationMs = duration,
+                            wasSkipped = !finishedSuccessfully || completionRatio < 0.9f
+                        )
+                    }
+
+                    libraryRepository.recordRecentPlay(
+                        videoId = currentId,
+                        title = currentItem.title,
+                        artist = currentItem.artist,
+                        artworkUrl = currentItem.artworkUri?.toString()
+                    )
+                }
+            }
+
+            // Reset variables
+            currentTrackId = null
+            totalPlayTimeCurrentTrack = 0L
+        }
+
+        private fun getLanguageForMedia(item: MediaItem): String {
+            val titleLower = item.title.lowercase()
+            val langs =
+                listOf("hindi", "punjabi", "bhojpuri", "tamil", "telugu", "english", "haryanvi", "bengali", "korean")
+            for (lang in langs) {
+                if (titleLower.contains(lang)) return lang.replaceFirstChar { it.uppercase() }
+            }
+            if (item is MediaItem.Local) {
+                val genreLower = item.song.genre.lowercase()
+                for (lang in langs) {
+                    if (genreLower.contains(lang)) return lang.replaceFirstChar { it.uppercase() }
+                }
+                return if (item.song.genre.isNotEmpty()) item.song.genre else "Local"
+            }
+            return "English"
+        }
+
+        fun applyDSPPreset(preset: com.deepeye.musicpro.dsp.model.DSPPreset) {
+            dspController.applyPreset(preset)
+        }
+
+        fun captureRecoverySnapshot(): PlaybackRecoverySnapshot? {
+            val currentItem = _playerState.value.currentItem ?: return null
+            val currentPos = player.currentPosition.coerceAtLeast(0)
+            val dur = player.duration.coerceAtLeast(0)
+            val state = _playerState.value
+            val formatRepoSnap = smartTubePlaybackFormatRepository.snapshot.value
+            val dspParams = dspEngine.currentParams.value
+
+            return PlaybackRecoverySnapshot(
+                mediaId = currentItem.id,
+                title = currentItem.title,
+                isVideo = currentItem is MediaItem.Remote && currentItem.isVideo,
+                queueIndex = queueManager.currentIndex.value,
+                queueSize = queueManager.queue.value.size,
+                positionMs = currentPos,
+                durationMs = dur,
+                wasPlaying = player.isPlaying || state.isPlaying,
+                selectedVideoFormatId = formatRepoSnap.currentVideoFormatId ?: state.selectedVideoFormat?.id,
+                selectedAudioFormatId = formatRepoSnap.currentAudioFormatId ?: state.selectedAudioFormat?.id,
+                qualityMode = state.qualityPreset.name,
+                playbackSpeed = player.playbackParameters.speed,
+                repeatMode = player.repeatMode,
+                shuffleEnabled = player.shuffleModeEnabled,
+                dspEnabled = dspParams.enabled,
+                dspPresetId = dspParams.tubeMode.name,
+                captionsEnabled = false,
+                selectedAudioLanguage = player.trackSelectionParameters.preferredAudioLanguages.firstOrNull()
             )
         }
-        return true
-    }
 
-    companion object {
         /**
-         * Deferred-attach guard for the AGSL FFT engine. MediaTek HALs need the AudioTrack
-         * to be fully initialized before android.media.audiofx.Visualizer can bind, or it
-         * fails with error -3. Mirrors the 300ms delay AudioSessionManager already uses.
+         * Debug-only test hook for simulating HTTP 403 stream expiry.
          */
-        private const val VISUALIZER_ATTACH_DELAY_MS = 300L
+        fun simulateStreamExpiryForTesting(): Boolean {
+            val snapshot = captureRecoverySnapshot() ?: return false
+            val simulatedError =
+                PlaybackRecoveryError.HttpStatus(
+                    statusCode = 403,
+                    safeReason = "DEBUG_SIMULATED_STREAM_EXPIRY"
+                )
+            scope.launch {
+                playbackRecoveryCoordinator.recover(
+                    error = simulatedError,
+                    snapshot = snapshot,
+                    player = player,
+                    onApplyState = { refreshedItem, restoredPos, wasPlaying, fallbackReason ->
+                        updateState { cur ->
+                            val vFormats = smartTubePlaybackFormatRepository.snapshot.value.videoFormats.map { it.toDeepEyeFormat() }
+                            val aFormats = smartTubePlaybackFormatRepository.snapshot.value.audioFormats.map { it.toDeepEyeFormat() }
+                            cur.copy(
+                                currentItem = refreshedItem,
+                                isPlaying = wasPlaying,
+                                isLoading = false,
+                                position = restoredPos,
+                                availableVideoFormats = if (vFormats.isNotEmpty()) vFormats.toImmutableList() else cur.availableVideoFormats,
+                                availableAudioFormats = if (aFormats.isNotEmpty()) aFormats.toImmutableList() else cur.availableAudioFormats,
+                                selectedVideoFormat =
+                                    vFormats.firstOrNull {
+                                        it.id == smartTubePlaybackFormatRepository.snapshot.value.currentVideoFormatId
+                                    } ?: cur.selectedVideoFormat,
+                                selectedAudioFormat =
+                                    aFormats.firstOrNull {
+                                        it.id == smartTubePlaybackFormatRepository.snapshot.value.currentAudioFormatId
+                                    } ?: cur.selectedAudioFormat
+                            )
+                        }
+                    }
+                )
+            }
+            return true
+        }
+
+        companion object {
+            /**
+             * Deferred-attach guard for the AGSL FFT engine. MediaTek HALs need the AudioTrack
+             * to be fully initialized before android.media.audiofx.Visualizer can bind, or it
+             * fails with error -3. Mirrors the 300ms delay AudioSessionManager already uses.
+             */
+            private const val VISUALIZER_ATTACH_DELAY_MS = 300L
+        }
     }
-}

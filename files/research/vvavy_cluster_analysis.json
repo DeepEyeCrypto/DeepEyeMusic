@@ -1,0 +1,959 @@
+{
+  "cluster_counts": {
+    "NEON / RETRO / SYNTHWAVE": 43,
+    "CINEMATIC / ATMOSPHERIC": 126,
+    "ORGANIC / FLUID / SMOKE": 47,
+    "PARTICLE / FIELD": 58,
+    "NATURE / COSMIC": 36,
+    "GEOMETRIC": 32,
+    "MINIMAL / MONOCHROME": 6,
+    "TUNNEL / PORTAL": 45,
+    "KALEIDOSCOPIC / SYMMETRIC": 27,
+    "OTHER": 27,
+    "FRACTAL / ABSTRACT": 9,
+    "TEXT / TYPOGRAPHY": 7
+  },
+  "scene_clusters": {
+    "8bit-showdown": [
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "a-smoke": [
+      "ORGANIC / FLUID / SMOKE"
+    ],
+    "acid-physarum-amoeba": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "anime-counter-scan": [
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "anime-sun-over-mountains": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "aura-orb-hyper-geometric": [
+      "GEOMETRIC",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "bass-punch-camera": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "beat-barrel-roll": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "beat-drop-grid": [
+      "GEOMETRIC",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "beat-freeze": [
+      "CINEMATIC / ATMOSPHERIC",
+      "MINIMAL / MONOCHROME"
+    ],
+    "binary-rain": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "bitless": [
+      "TUNNEL / PORTAL",
+      "PARTICLE / FIELD"
+    ],
+    "blacklight": [
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "bloom-burn": [
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "blue-green-motion": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "brutal-columns": [
+      "NEON / RETRO / SYNTHWAVE",
+      "MINIMAL / MONOCHROME"
+    ],
+    "centroid-crystalline-tunnel": [
+      "TUNNEL / PORTAL",
+      "CINEMATIC / ATMOSPHERIC",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "chopped-liver": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "chromatic-shock-fronts": [
+      "OTHER"
+    ],
+    "cloud-flight": [
+      "OTHER"
+    ],
+    "coastal-landscape": [
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "color-inversion": [
+      "PARTICLE / FIELD"
+    ],
+    "color-vortex-suck": [
+      "TUNNEL / PORTAL"
+    ],
+    "colors": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "complicating-things": [
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "cosmic-gaussian-cloud": [
+      "PARTICLE / FIELD",
+      "NATURE / COSMIC"
+    ],
+    "cotton-candy-sky": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "cozy-apartment-vinyl-session": [
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "crt-lissajous-tunnel": [
+      "TUNNEL / PORTAL",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "crt-physics-engine": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "cyber-punk-punch": [
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "dark-trance-particle-cube": [
+      "GEOMETRIC",
+      "PARTICLE / FIELD",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "Debug": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "deep-house": [
+      "TUNNEL / PORTAL",
+      "FRACTAL / ABSTRACT"
+    ],
+    "deep-house-velvet-drift": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "depth-outline-stage": [
+      "TUNNEL / PORTAL",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "desync-engine": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "disolve": [
+      "ORGANIC / FLUID / SMOKE",
+      "TUNNEL / PORTAL",
+      "FRACTAL / ABSTRACT",
+      "NATURE / COSMIC"
+    ],
+    "dithering": [
+      "OTHER"
+    ],
+    "dragonspine": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "dreamflow": [
+      "ORGANIC / FLUID / SMOKE",
+      "TUNNEL / PORTAL",
+      "PARTICLE / FIELD",
+      "FRACTAL / ABSTRACT",
+      "KALEIDOSCOPIC / SYMMETRIC",
+      "NATURE / COSMIC"
+    ],
+    "drifter": [
+      "OTHER"
+    ],
+    "droste-temple": [
+      "TUNNEL / PORTAL",
+      "CINEMATIC / ATMOSPHERIC",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "dust-meridian": [
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "echo-halo": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "edge-bleed-modulator": [
+      "OTHER"
+    ],
+    "edge-feedback-fold": [
+      "FRACTAL / ABSTRACT"
+    ],
+    "edgeflow-pro": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "edm-escapism": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "EDM Show": [
+      "ORGANIC / FLUID / SMOKE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "eiridan-echo-vision": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "eletric-boundary": [
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "ember-sketch": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "Endless Road": [
+      "TUNNEL / PORTAL",
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "energy-unlocked": [
+      "OTHER"
+    ],
+    "event-horizon-origami": [
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "face-blendshape-cathedral": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "fate-weaver": [
+      "TUNNEL / PORTAL",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "feedback-lab": [
+      "ORGANIC / FLUID / SMOKE",
+      "TUNNEL / PORTAL"
+    ],
+    "fel-portal": [
+      "TUNNEL / PORTAL",
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "film-aura": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "fishbowl-lens-breather": [
+      "OTHER"
+    ],
+    "flame-on": [
+      "OTHER"
+    ],
+    "flow": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "flower-fractal-ripple": [
+      "ORGANIC / FLUID / SMOKE",
+      "TUNNEL / PORTAL",
+      "FRACTAL / ABSTRACT",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "flowmosh": [
+      "ORGANIC / FLUID / SMOKE",
+      "TEXT / TYPOGRAPHY"
+    ],
+    "fluid-simulator": [
+      "ORGANIC / FLUID / SMOKE"
+    ],
+    "focus-rack": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "fractal-symphony-bloom": [
+      "TUNNEL / PORTAL",
+      "FRACTAL / ABSTRACT"
+    ],
+    "frequency-ink-tunnel": [
+      "TUNNEL / PORTAL"
+    ],
+    "fuzz-chorus": [
+      "PARTICLE / FIELD",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "galactic-kaleidoscope": [
+      "GEOMETRIC",
+      "KALEIDOSCOPIC / SYMMETRIC",
+      "NATURE / COSMIC"
+    ],
+    "gaussian-capture-clouds": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "ghostlight-tree": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "NATURE / COSMIC"
+    ],
+    "glass-facets": [
+      "GEOMETRIC"
+    ],
+    "glitch-matrix": [
+      "NEON / RETRO / SYNTHWAVE",
+      "TEXT / TYPOGRAPHY"
+    ],
+    "grid-locked": [
+      "GEOMETRIC",
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "groove": [
+      "ORGANIC / FLUID / SMOKE"
+    ],
+    "guess-what": [
+      "GEOMETRIC",
+      "ORGANIC / FLUID / SMOKE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "hand-sigil-conductor": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "handheld-rumble-camera": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "hey-dj-pick-me": [
+      "CINEMATIC / ATMOSPHERIC",
+      "MINIMAL / MONOCHROME"
+    ],
+    "Hpno Vortex Illusion": [
+      "TUNNEL / PORTAL"
+    ],
+    "hyperion-core": [
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "hyperspace-tunnel": [
+      "TUNNEL / PORTAL",
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "hypno-spiral": [
+      "TUNNEL / PORTAL"
+    ],
+    "sponge-dance-raymarch": [
+      "OTHER"
+    ],
+    "impact-tracker": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "in-da-smoke": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD"
+    ],
+    "in-your-face": [
+      "OTHER"
+    ],
+    "infernal-pressure": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "ink-reverie": [
+      "PARTICLE / FIELD"
+    ],
+    "fractal-orbit-film": [
+      "ORGANIC / FLUID / SMOKE",
+      "FRACTAL / ABSTRACT",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "journey-through-the-divine-mind": [
+      "CINEMATIC / ATMOSPHERIC",
+      "TEXT / TYPOGRAPHY"
+    ],
+    "kaleidoscope-tunnel": [
+      "GEOMETRIC",
+      "TUNNEL / PORTAL",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "kali-neon-horizon": [
+      "TUNNEL / PORTAL",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "kinetic-ghost-flow": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "koi-pond": [
+      "OTHER"
+    ],
+    "kuwahara-beat-painter": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "oil-float": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "lava-lamp-3d": [
+      "OTHER"
+    ],
+    "lets-melt": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "lights-in-motion-history-live": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "liminal-space-folding": [
+      "TUNNEL / PORTAL",
+      "FRACTAL / ABSTRACT",
+      "NEON / RETRO / SYNTHWAVE",
+      "NATURE / COSMIC"
+    ],
+    "liquid-canvas": [
+      "ORGANIC / FLUID / SMOKE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "liquid-glass-residue": [
+      "ORGANIC / FLUID / SMOKE",
+      "CINEMATIC / ATMOSPHERIC",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "liquid-kaleido-feedback": [
+      "ORGANIC / FLUID / SMOKE",
+      "TUNNEL / PORTAL",
+      "PARTICLE / FIELD",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "liquid-memory-capture": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD"
+    ],
+    "liquid-mirror-hush": [
+      "ORGANIC / FLUID / SMOKE",
+      "CINEMATIC / ATMOSPHERIC",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "liquid-resonance": [
+      "GEOMETRIC",
+      "ORGANIC / FLUID / SMOKE",
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "live-pixel-distortion": [
+      "ORGANIC / FLUID / SMOKE"
+    ],
+    "living-stained-glass": [
+      "OTHER"
+    ],
+    "lock-in": [
+      "OTHER"
+    ],
+    "luma-key-beat-backdrop": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "lunar-dragon": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "magnetic-silk": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "main-character": [
+      "CINEMATIC / ATMOSPHERIC",
+      "MINIMAL / MONOCHROME",
+      "TEXT / TYPOGRAPHY"
+    ],
+    "matcha-whisper": [
+      "ORGANIC / FLUID / SMOKE",
+      "TEXT / TYPOGRAPHY"
+    ],
+    "matrix-edge-vision": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "melt-curtain": [
+      "OTHER"
+    ],
+    "memory-spiral": [
+      "TUNNEL / PORTAL"
+    ],
+    "mercury-core": [
+      "ORGANIC / FLUID / SMOKE",
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "mirage": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "mirror-tiles": [
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "morpheus": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD"
+    ],
+    "multi-modal-quantum-reactor": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "mythic-dreamscape": [
+      "PARTICLE / FIELD"
+    ],
+    "neon-fold-odyssey": [
+      "TUNNEL / PORTAL",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "neon-matrix-grid": [
+      "GEOMETRIC",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "neon-plasma-echo": [
+      "ORGANIC / FLUID / SMOKE",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "neon-space-fold": [
+      "TUNNEL / PORTAL",
+      "NEON / RETRO / SYNTHWAVE",
+      "NATURE / COSMIC"
+    ],
+    "neon-spectrogram-cascade": [
+      "NEON / RETRO / SYNTHWAVE",
+      "NATURE / COSMIC"
+    ],
+    "neon-tunnel-kaleidoscope": [
+      "GEOMETRIC",
+      "TUNNEL / PORTAL",
+      "NEON / RETRO / SYNTHWAVE",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "neural-constellation": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "neural-flow": [
+      "ORGANIC / FLUID / SMOKE",
+      "TUNNEL / PORTAL",
+      "PARTICLE / FIELD"
+    ],
+    "object-remix": [
+      "OTHER"
+    ],
+    "optical-flow-rivers": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "orbit-drift-camera": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "overdrive-ripple": [
+      "CINEMATIC / ATMOSPHERIC",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "palette-reactor": [
+      "OTHER"
+    ],
+    "palismpset": [
+      "ORGANIC / FLUID / SMOKE",
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "pan-comet-time-echo": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "parallax-starfields": [
+      "TUNNEL / PORTAL",
+      "PARTICLE / FIELD",
+      "NATURE / COSMIC"
+    ],
+    "particle-accelerator": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "particle-swarm-ballet": [
+      "PARTICLE / FIELD"
+    ],
+    "pixel-time-smear": [
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "pixelated-feedback": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "plasma-orb-lightning": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "point-cloud": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "polar-tilt-grid": [
+      "GEOMETRIC",
+      "PARTICLE / FIELD",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "synced-popart-grid": [
+      "GEOMETRIC",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "portal-pal": [
+      "TUNNEL / PORTAL",
+      "PARTICLE / FIELD",
+      "NATURE / COSMIC"
+    ],
+    "pose-ribbon-choir": [
+      "CINEMATIC / ATMOSPHERIC",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "prism-copies": [
+      "GEOMETRIC",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "prism-starwell": [
+      "GEOMETRIC",
+      "NEON / RETRO / SYNTHWAVE",
+      "NATURE / COSMIC"
+    ],
+    "prismatic-kaleidoscope": [
+      "GEOMETRIC",
+      "ORGANIC / FLUID / SMOKE",
+      "KALEIDOSCOPIC / SYMMETRIC",
+      "NATURE / COSMIC"
+    ],
+    "prismatic-relief": [
+      "GEOMETRIC",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "programmable-time-map": [
+      "CINEMATIC / ATMOSPHERIC",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "psychadelic-trail": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "pulse-warp-tunnel": [
+      "TUNNEL / PORTAL",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "pulsed-ripple-grid": [
+      "GEOMETRIC",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "pumpkin-moon-dance": [
+      "PARTICLE / FIELD"
+    ],
+    "puppeteer-thread-capture": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "push-out": [
+      "TUNNEL / PORTAL"
+    ],
+    "quad-riot": [
+      "GEOMETRIC",
+      "NEON / RETRO / SYNTHWAVE",
+      "KALEIDOSCOPIC / SYMMETRIC",
+      "NATURE / COSMIC"
+    ],
+    "quadrant-split": [
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "radial-landscape": [
+      "GEOMETRIC",
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "rain-reveal": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "rainbow-boost-road": [
+      "PARTICLE / FIELD",
+      "NATURE / COSMIC"
+    ],
+    "rainbow-chaos-stars": [
+      "NATURE / COSMIC"
+    ],
+    "rainbow-rms-energy": [
+      "OTHER"
+    ],
+    "rainwash-echo": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "reaction-diffusion": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "reactive-mask-router": [
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "reactive-motion-trails": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "red-sea-drifter": [
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "retro-broadcast-glitch-punk": [
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "retro-gaming": [
+      "ORGANIC / FLUID / SMOKE",
+      "TUNNEL / PORTAL",
+      "PARTICLE / FIELD",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "retro-windows-dreamscape": [
+      "GEOMETRIC",
+      "ORGANIC / FLUID / SMOKE",
+      "TUNNEL / PORTAL",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "rgb-time-prism": [
+      "GEOMETRIC",
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "ring-runner": [
+      "TUNNEL / PORTAL",
+      "CINEMATIC / ATMOSPHERIC",
+      "MINIMAL / MONOCHROME"
+    ],
+    "rotoscope-echo": [
+      "OTHER"
+    ],
+    "sacred-resonance": [
+      "GEOMETRIC",
+      "ORGANIC / FLUID / SMOKE",
+      "TUNNEL / PORTAL",
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "sailors-sunset": [
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "screenprint-halftone": [
+      "OTHER"
+    ],
+    "serpent-of-harmony": [
+      "OTHER"
+    ],
+    "shearwave": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "shock-wave": [
+      "CINEMATIC / ATMOSPHERIC",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "silver-mirror": [
+      "PARTICLE / FIELD",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "slightly-wavey": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "slow-reggae-portal": [
+      "ORGANIC / FLUID / SMOKE",
+      "TUNNEL / PORTAL",
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "solar-flare": [
+      "ORGANIC / FLUID / SMOKE",
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "sonic-flow": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "sonic-relief": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "sound-weaver": [
+      "TUNNEL / PORTAL",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "spatial-flow": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "spectral-fluid-field": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "spectral-shutters": [
+      "OTHER"
+    ],
+    "spectrum-displace": [
+      "OTHER"
+    ],
+    "spidey-verse": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "spin-contour": [
+      "GEOMETRIC",
+      "TUNNEL / PORTAL"
+    ],
+    "star-traveling": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "stereo-elastic-frame": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "stereo-sway-camera": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "summoning-rings": [
+      "TUNNEL / PORTAL",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "swirling-colors": [
+      "OTHER"
+    ],
+    "tempo-push-pull": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "temporal-feedback-ghost": [
+      "PARTICLE / FIELD"
+    ],
+    "temporal-wobble": [
+      "ORGANIC / FLUID / SMOKE",
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "territory": [
+      "PARTICLE / FIELD"
+    ],
+    "textures": [
+      "TUNNEL / PORTAL",
+      "CINEMATIC / ATMOSPHERIC",
+      "TEXT / TYPOGRAPHY"
+    ],
+    "the-eye": [
+      "OTHER"
+    ],
+    "The Gambler": [
+      "NEON / RETRO / SYNTHWAVE"
+    ],
+    "the-infinite-grid": [
+      "GEOMETRIC",
+      "TUNNEL / PORTAL",
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "lonely-mountain": [
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "the-mountain-range": [
+      "GEOMETRIC",
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "triangle": [
+      "GEOMETRIC",
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "thermal": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "time-loom": [
+      "OTHER"
+    ],
+    "tri-quad-tree": [
+      "GEOMETRIC",
+      "FRACTAL / ABSTRACT",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "triangle-facets": [
+      "GEOMETRIC"
+    ],
+    "tron": [
+      "GEOMETRIC",
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "try-this-one": [
+      "OTHER"
+    ],
+    "twisted-fate": [
+      "GEOMETRIC",
+      "ORGANIC / FLUID / SMOKE",
+      "TUNNEL / PORTAL",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "ukg-skyline-pulse": [
+      "PARTICLE / FIELD",
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "vertigo-pulse-camera": [
+      "CINEMATIC / ATMOSPHERIC",
+      "NATURE / COSMIC"
+    ],
+    "volumetric-led-field": [
+      "PARTICLE / FIELD",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "warped-photo-kaleidoscope": [
+      "GEOMETRIC",
+      "CINEMATIC / ATMOSPHERIC",
+      "MINIMAL / MONOCHROME",
+      "KALEIDOSCOPIC / SYMMETRIC"
+    ],
+    "waveform-orbit-tunnel": [
+      "TUNNEL / PORTAL",
+      "NEON / RETRO / SYNTHWAVE",
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "whip-pan-camera": [
+      "CINEMATIC / ATMOSPHERIC"
+    ],
+    "winamp-hyperspace": [
+      "TUNNEL / PORTAL",
+      "NATURE / COSMIC"
+    ],
+    "word-of-mouth": [
+      "CINEMATIC / ATMOSPHERIC",
+      "TEXT / TYPOGRAPHY"
+    ]
+  },
+  "feasibility": {
+    "GEOMETRIC": "HIGH",
+    "ORGANIC / FLUID / SMOKE": "MEDIUM",
+    "TUNNEL / PORTAL": "MEDIUM",
+    "PARTICLE / FIELD": "LOW",
+    "FRACTAL / ABSTRACT": "HIGH",
+    "NEON / RETRO / SYNTHWAVE": "HIGH",
+    "CINEMATIC / ATMOSPHERIC": "MEDIUM",
+    "MINIMAL / MONOCHROME": "HIGH",
+    "KALEIDOSCOPIC / SYMMETRIC": "HIGH",
+    "TEXT / TYPOGRAPHY": "LOW",
+    "NATURE / COSMIC": "MEDIUM",
+    "OTHER": "LOW"
+  }
+}

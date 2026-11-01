@@ -16,7 +16,6 @@ import org.junit.Test
  * covered structurally here instead of a Hilt compose harness.)
  */
 class LoginRemovalTest {
-
     private val routeNames: Set<String> =
         Routes::class.nestedClasses
             .mapNotNull { it.simpleName }

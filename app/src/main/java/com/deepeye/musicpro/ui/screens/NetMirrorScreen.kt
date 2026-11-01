@@ -3,19 +3,16 @@
 
 package com.deepeye.musicpro.ui.screens
 
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import com.deepeye.musicpro.ui.components.bouncyClickable
@@ -82,12 +80,13 @@ fun NetMirrorScreen(
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             dragHandle = {
                 Box(
-                    modifier = Modifier
-                        .padding(top = 12.dp, bottom = 8.dp)
-                        .width(48.dp)
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(Color.White.copy(alpha = 0.3f))
+                    modifier =
+                        Modifier
+                            .padding(top = 12.dp, bottom = 8.dp)
+                            .width(48.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(Color.White.copy(alpha = 0.3f))
                 )
             }
         ) {
@@ -232,12 +231,13 @@ private fun HeroBanner(
     val bannerHeight = if (isLandscape) 220.dp else 340.dp
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(bannerHeight)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(26.dp))
-            .border(1.dp, glassBorder, RoundedCornerShape(26.dp))
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(bannerHeight)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .clip(RoundedCornerShape(26.dp))
+                .border(1.dp, glassBorder, RoundedCornerShape(26.dp))
     ) {
         AsyncImage(
             model = movie.thumbnailUrl.replace("hqdefault", "maxresdefault"),
@@ -248,26 +248,29 @@ private fun HeroBanner(
 
         // Gradient overlay
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.Black.copy(alpha = 0.5f),
-                            Color(0xFF090B10).copy(alpha = 0.95f)
-                        ),
-                        startY = 80f
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors =
+                                listOf(
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.5f),
+                                    Color(0xFF090B10).copy(alpha = 0.95f)
+                                ),
+                            startY = 80f
+                        )
                     )
-                )
         )
 
         // Banner Content
         Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(24.dp)
-                .fillMaxWidth(),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(24.dp)
+                    .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
@@ -275,17 +278,19 @@ private fun HeroBanner(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Box(
-                    modifier = Modifier
-                        .background(Color(0xFFFF0033), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                    modifier =
+                        Modifier
+                            .background(Color(0xFFFF0033), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text("FEATURED CINEMA", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 }
                 Box(
-                    modifier = Modifier
-                        .background(Color(0x3300E5FF), RoundedCornerShape(8.dp))
-                        .border(1.dp, neonCyan.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                    modifier =
+                        Modifier
+                            .background(Color(0x3300E5FF), RoundedCornerShape(8.dp))
+                            .border(1.dp, neonCyan.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text("4K ULTRA HD", color = neonCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 }
@@ -362,9 +367,10 @@ private fun CategoryRow(
     ) {
         // Category Header Row
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -373,10 +379,11 @@ private fun CategoryRow(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(neonCyan)
+                    modifier =
+                        Modifier
+                            .size(8.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(neonCyan)
                 )
                 Text(
                     text = title,
@@ -385,9 +392,10 @@ private fun CategoryRow(
                     color = Color.White
                 )
                 Box(
-                    modifier = Modifier
-                        .background(Color(0x1AFFFFFF), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                    modifier =
+                        Modifier
+                            .background(Color(0x1AFFFFFF), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Text(
                         text = badge,
@@ -440,10 +448,11 @@ private fun VideoHubMovieCard(
     onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .width(VideoHubMovieCardWidth)
-            .clip(CardGeometry.Video.shape)
-            .bouncyClickable(downScale = 0.95f, onClick = onClick),
+        modifier =
+            Modifier
+                .width(VideoHubMovieCardWidth)
+                .clip(CardGeometry.Video.shape)
+                .bouncyClickable(downScale = 0.95f, onClick = onClick),
         shape = CardGeometry.Video.shape,
         colors = CardDefaults.cardColors(containerColor = darkSurface),
         border = androidx.compose.foundation.BorderStroke(1.dp, glassBorder)
@@ -452,15 +461,16 @@ private fun VideoHubMovieCard(
             // 16:9 Thumbnail Poster — ratio and radius from CardGeometry (SSOT),
             // so VideoCardSkeleton reserves exactly this box.
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(CardGeometry.Video.aspectRatio)
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = CardGeometry.Video.cornerRadius,
-                            topEnd = CardGeometry.Video.cornerRadius,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(CardGeometry.Video.aspectRatio)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = CardGeometry.Video.cornerRadius,
+                                topEnd = CardGeometry.Video.cornerRadius,
+                            )
                         )
-                    )
             ) {
                 AsyncImage(
                     model = movie.thumbnailUrl,
@@ -470,26 +480,29 @@ private fun VideoHubMovieCard(
                 )
 
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.Black.copy(alpha = 0.8f)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors =
+                                        listOf(
+                                            Color.Transparent,
+                                            Color.Black.copy(alpha = 0.8f)
+                                        )
                                 )
                             )
-                        )
                 )
 
                 // Play icon pill overlay
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(22.dp))
-                        .background(Color.Black.copy(alpha = 0.6f))
-                        .border(1.dp, neonCyan.copy(alpha = 0.6f), RoundedCornerShape(22.dp)),
+                    modifier =
+                        Modifier
+                            .align(Alignment.Center)
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(22.dp))
+                            .background(Color.Black.copy(alpha = 0.6f))
+                            .border(1.dp, neonCyan.copy(alpha = 0.6f), RoundedCornerShape(22.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -540,9 +553,10 @@ private fun EpisodePickerSheet(
     onEpisodeClick: (Int) -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -589,9 +603,10 @@ private fun EpisodePickerSheet(
             else -> {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 480.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 480.dp)
                 ) {
                     itemsIndexed(episodes) { index, episode ->
                         Surface(
@@ -608,10 +623,11 @@ private fun EpisodePickerSheet(
                             ) {
                                 Box(
                                     contentAlignment = Alignment.Center,
-                                    modifier = Modifier
-                                        .size(38.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Color(0x3300E5FF))
+                                    modifier =
+                                        Modifier
+                                            .size(38.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Color(0x3300E5FF))
                                 ) {
                                     Text(
                                         text = "${index + 1}",

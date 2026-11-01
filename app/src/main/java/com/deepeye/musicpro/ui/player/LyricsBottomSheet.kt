@@ -29,10 +29,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
@@ -71,15 +68,17 @@ fun LyricsBottomSheet(
         tintColor = dominantColor.copy(alpha = 0.28f)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp)
         ) {
             // Header Bar
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -149,11 +148,12 @@ fun LyricsBottomSheet(
                 exit = fadeOut()
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.08f))
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White.copy(alpha = 0.08f))
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -166,14 +166,16 @@ fun LyricsBottomSheet(
                         value = fontSizeMultiplier,
                         onValueChange = { fontSizeMultiplier = it },
                         valueRange = 0.8f..1.5f,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 16.dp),
-                        colors = SliderDefaults.colors(
-                            thumbColor = NeonCyan,
-                            activeTrackColor = NeonCyan,
-                            inactiveTrackColor = Color.White.copy(alpha = 0.2f)
-                        )
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .padding(horizontal = 16.dp),
+                        colors =
+                            SliderDefaults.colors(
+                                thumbColor = NeonCyan,
+                                activeTrackColor = NeonCyan,
+                                inactiveTrackColor = Color.White.copy(alpha = 0.2f)
+                            )
                     )
                 }
             }
@@ -182,9 +184,10 @@ fun LyricsBottomSheet(
 
             if (lyrics == null || lyrics.lines.isEmpty()) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -205,14 +208,15 @@ fun LyricsBottomSheet(
             } else {
                 val listState = rememberLazyListState()
 
-                val activeIndex = remember(lyrics, playbackPositionMs) {
-                    if (!lyrics.isSynced) {
-                        -1
-                    } else {
-                        val index = lyrics.lines.indexOfLast { it.timestampMs <= playbackPositionMs }
-                        if (index == -1) 0 else index
+                val activeIndex =
+                    remember(lyrics, playbackPositionMs) {
+                        if (!lyrics.isSynced) {
+                            -1
+                        } else {
+                            val index = lyrics.lines.indexOfLast { it.timestampMs <= playbackPositionMs }
+                            if (index == -1) 0 else index
+                        }
                     }
-                }
 
                 // Smoothly auto-scroll to center active line
                 LaunchedEffect(activeIndex) {
@@ -226,10 +230,11 @@ fun LyricsBottomSheet(
 
                 LazyColumn(
                     state = listState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .premiumScrollHaptics(listState),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .premiumScrollHaptics(listState),
                     verticalArrangement = Arrangement.spacedBy(22.dp),
                     contentPadding = PaddingValues(vertical = 40.dp)
                 ) {
@@ -238,12 +243,13 @@ fun LyricsBottomSheet(
                         val isPast = lyrics.isSynced && index < activeIndex
                         val isFuture = lyrics.isSynced && index > activeIndex
 
-                        val targetAlpha = when {
-                            isActive -> 1.0f
-                            isPast -> 0.40f
-                            isFuture -> 0.25f
-                            else -> 0.85f
-                        }
+                        val targetAlpha =
+                            when {
+                                isActive -> 1.0f
+                                isPast -> 0.40f
+                                isFuture -> 0.25f
+                                else -> 0.85f
+                            }
 
                         val targetScale = if (isActive) 1.10f else 0.92f
 
@@ -268,30 +274,32 @@ fun LyricsBottomSheet(
                         val baseFontSize = (if (isActive) 22.sp else 18.sp) * fontSizeMultiplier
 
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .graphicsLayer {
-                                    scaleX = animatedScale
-                                    scaleY = animatedScale
-                                }
-                                .alpha(animatedAlpha)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    if (isActive) dominantColor.copy(alpha = 0.15f) else Color.Transparent
-                                )
-                                .clickable(enabled = lyrics.isSynced) {
-                                    onSeekTo(line.timestampMs)
-                                }
-                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .graphicsLayer {
+                                        scaleX = animatedScale
+                                        scaleY = animatedScale
+                                    }
+                                    .alpha(animatedAlpha)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (isActive) dominantColor.copy(alpha = 0.15f) else Color.Transparent
+                                    )
+                                    .clickable(enabled = lyrics.isSynced) {
+                                        onSeekTo(line.timestampMs)
+                                    }
+                                    .padding(horizontal = 14.dp, vertical = 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = line.text,
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontSize = baseFontSize,
-                                    fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Medium,
-                                    lineHeight = (baseFontSize.value * 1.35f).sp
-                                ),
+                                style =
+                                    MaterialTheme.typography.bodyLarge.copy(
+                                        fontSize = baseFontSize,
+                                        fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Medium,
+                                        lineHeight = (baseFontSize.value * 1.35f).sp
+                                    ),
                                 color = animatedColor,
                                 textAlign = TextAlign.Center
                             )

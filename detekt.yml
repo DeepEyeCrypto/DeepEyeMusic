@@ -1,0 +1,135 @@
+build:
+  maxIssues: 0
+  weights:
+    ComplexMethod: 6
+    ComplexInterface: 12
+    LargeClass: 12
+    LongMethod: 8
+    LongParameterList: 10
+    NestedBlockDepth: 5
+    TooManyFunctions: 15
+    ForbiddenComment: 5
+    FunctionOnlyReturningConstant: 5
+    FunctionNameTooShort: 2
+    MagicNumber: 10
+    MandatoryBracesIfStatements: 5
+    MaxChainedCallsOnSameLine: 6
+    NamedArguments: 4
+    NestedScopeFunctions: 5
+    OptionalAbstractKeyword: 2
+    OptionalUnit: 2
+    ProtectedMemberInFinalClass: 5
+    ReturnCount: 6
+    SpreadOperator: 5
+    TooGenericExceptionCaught: 6
+    UnnecessaryAbstractClass: 5
+    UnnecessaryApply: 2
+    UnnecessaryInheritance: 5
+    UnusedPrivateMember: 3
+    UtilityClassWithPublicConstructor: 5
+    VarCouldBeVal: 4
+    WildcardImport: 5
+  excludes:
+    - '.*/test/.*'
+    - '.*/generated/.*'
+    - '.*/resources/.*'
+    - '.*/scratch/.*'
+    - '.*/build/.*'
+
+style:
+  active:
+    FunctionName: true
+    VariableName: true
+    ClassName: true
+    PackageName: true
+    ComplexMethod: true
+    ComplexInterface: true
+    LargeClass: true
+    LongMethod: true
+    LongParameterList: true
+    NestedBlockDepth: true
+    TooManyFunctions: true
+    ForbiddenComment: true
+    MagicNumber: true
+    MandatoryBracesIfStatements: true
+    MaxChainedCallsOnSameLine: true
+    NamedArguments: true
+    NestedScopeFunctions: true
+    OptionalAbstractKeyword: true
+    OptionalUnit: true
+    ProtectedMemberInFinalClass: true
+    ReturnCount: true
+    SpreadOperator: true
+    TooGenericExceptionCaught: true
+    UnnecessaryAbstractClass: true
+    UnnecessaryApply: true
+    UnnecessaryInheritance: true
+    UnusedPrivateMember: true
+    UtilityClassWithPublicConstructor: true
+    VarCouldBeVal: true
+    WildcardImport: true
+  exceptions:
+    FunctionName:
+      pattern: '^[a-z][a-zA-Z0-9]*(_[a-z][a-zA-Z0-9]*)?$'
+    VariableName:
+      pattern: '^[a-z][a-zA-Z0-9]*$'
+      privateConstantPattern: '^[A-Z][A-Z0-9_]*$'
+    MagicNumber:
+      ignoredNumbers: [-1, 0, 1, 2, 3, 4, 5, 10, 100, 1000]
+      excludedAnnotations: ['Composable']
+
+exceptions:
+  TooGenericExceptionCaught:
+    excludedAnnotations: ['Suppress']
+  MagicNumber:
+    ignoredNumbers: [-1, 0, 1, 2, 3, 4, 5, 10, 100, 1000]
+  UnusedPrivateMember:
+    allowedAnnotations: ['Composable', 'Inject', 'Provides', 'Module', 'InstallIn', 'Singleton']
+
+comments:
+  active: true
+  requires:
+    ForbiddenComment:
+      values: ['TODO:', 'FIXME:', 'HACK:', 'STOP SHIP:']
+    KDoc:
+      includes: ['**/public/**', '**/internal/**']
+      excludes: ['**/test/**', '**/generated/**']
+
+complexity:
+  LongMethod:
+    threshold: 60
+  LongParameterList:
+    threshold: 6
+    ignoreDefaultParameters: true
+    ignoreDataClasses: true
+    ignoreNamedArguments: true
+  ComplexMethod:
+    threshold: 15
+    ignoreSingleWhenExpression: true
+    ignoreSimpleWhenEntries: true
+  LargeClass:
+    threshold: 600
+  NestedBlockDepth:
+    threshold: 4
+
+dependencies:
+  active:
+    PackageWildcardImport: true
+
+unused-code:
+  active:
+    UnusedPrivateMember: true
+    UnusedPublicMember: false
+  excludes:
+    - '.*/test/.*'
+    - '.*/Composable.*'
+
+formatting:
+  indentation: 4
+  lineLength: 120
+  noWildcardImports: true
+  noSemicolons: true
+  noMultipleSpaces: true
+  noTrailingSpaces: true
+  trailingCommaOnCallSite: ALWAYS
+  trailingCommaOnDeclarationSite: ALWAYS

@@ -17,151 +17,162 @@ import javax.inject.Singleton
  */
 @Singleton
 class ContentFetcher
-@Inject
-constructor(
-    private val smartTubeEngine: SmartTubeEngine,
-    private val youtubeDs: Provider<YoutubeRemoteDataSource>,
-) {
-    suspend fun getRelatedVideos(
-        videoId: String,
-        maxResults: Int = 20,
-        isVideo: Boolean = false
-    ): List<VideoItem> = withContext(Dispatchers.IO) {
-        try {
-            // FEL-400: same bare-videoId contract as the primary /next path.
-            val auto = smartTubeEngine.getAlgorithmicNext(videoId)
-            if (auto != null && auto.videoId.isNotBlank()) {
-                val primaryItem = VideoItem(
-                    videoId = auto.videoId,
-                    title = auto.title,
-                    artist = auto.artist,
-                    channelId = "",
-                    duration = auto.durationSeconds.toString(),
-                    genre = "SmartTube-Algorithmic"
-                )
-                val fallbackList = getRelatedVideosFallback(videoId, maxResults - 1)
-                return@withContext (listOf(primaryItem) + fallbackList).distinctBy { it.videoId }
-            }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            // Req 1: cancellation propagates — never convert to fallback/empty.
-            throw e
-        } catch (e: Exception) {
-            android.util.Log.w("ContentFetcher", "SmartTube related fetch fallback: ${e.message}")
-        }
-        getRelatedVideosFallback(videoId, maxResults)
-    }
-
-    private suspend fun getRelatedVideosFallback(videoId: String, maxResults: Int): List<VideoItem> {
-        return try {
-            val ds = youtubeDs.get()
-            ds.getRelatedVideos(videoId).take(maxResults).map { item ->
-                VideoItem(
-                    videoId = item.id,
-                    title = item.title,
-                    artist = item.channelName,
-                    channelId = "",
-                    duration = "${item.duration / 60}:${item.duration % 60}",
-                    genre = ""
-                )
-            }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            // Req 1: cancellation propagates — never convert to emptyList.
-            throw e
-        } catch (e: Exception) {
-            android.util.Log.e("ContentFetcher", "getRelatedVideosFallback failed for $videoId: ${e.message}")
-            emptyList()
-        }
-    }
-
-    // ── Search by artist name + genre via SmartTube TVHTML5 ──
-    suspend fun searchByArtist(
-        artistName: String,
-        maxResults: Int = 15,
-    ): List<VideoItem> = withContext(Dispatchers.IO) {
-        val query = "$artistName new songs official"
-        searchByQuery(query, maxResults)
-    }
-
-    suspend fun searchByQuery(
-        query: String,
-        maxResults: Int = 15,
-    ): List<VideoItem> = withContext(Dispatchers.IO) {
-        if (query.isBlank()) return@withContext emptyList()
-        try {
-            val smartTubeResult = smartTubeEngine.searchTracks(query)
-            if (smartTubeResult.isSuccess) {
-                val items = smartTubeResult.getOrNull().orEmpty()
-                if (items.isNotEmpty()) {
-                    return@withContext items.take(maxResults).map { item ->
-                        VideoItem(
-                            videoId = item.videoId ?: item.id,
-                            title = item.title,
-                            artist = item.artist ?: item.subtitle,
-                            channelId = item.channelId ?: "",
-                            duration = "3:30",
-                            genre = ""
-                        )
+    @Inject
+    constructor(
+        private val smartTubeEngine: SmartTubeEngine,
+        private val youtubeDs: Provider<YoutubeRemoteDataSource>,
+    ) {
+        suspend fun getRelatedVideos(
+            videoId: String,
+            maxResults: Int = 20,
+            isVideo: Boolean = false
+        ): List<VideoItem> =
+            withContext(Dispatchers.IO) {
+                try {
+                    // FEL-400: same bare-videoId contract as the primary /next path.
+                    val auto = smartTubeEngine.getAlgorithmicNext(videoId)
+                    if (auto != null && auto.videoId.isNotBlank()) {
+                        val primaryItem =
+                            VideoItem(
+                                videoId = auto.videoId,
+                                title = auto.title,
+                                artist = auto.artist,
+                                channelId = "",
+                                duration = auto.durationSeconds.toString(),
+                                genre = "SmartTube-Algorithmic"
+                            )
+                        val fallbackList = getRelatedVideosFallback(videoId, maxResults - 1)
+                        return@withContext (listOf(primaryItem) + fallbackList).distinctBy { it.videoId }
                     }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    // Req 1: cancellation propagates — never convert to fallback/empty.
+                    throw e
+                } catch (e: Exception) {
+                    android.util.Log.w("ContentFetcher", "SmartTube related fetch fallback: ${e.message}")
                 }
+                getRelatedVideosFallback(videoId, maxResults)
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            // Req 1: cancellation propagates — never convert to fallback/empty.
-            throw e
-        } catch (e: Exception) {
-            android.util.Log.w("ContentFetcher", "SmartTube search fallback: ${e.message}")
-        }
-        searchByQueryFallback(query, maxResults)
-    }
 
-    private suspend fun searchByQueryFallback(query: String, maxResults: Int): List<VideoItem> {
-        return try {
-            val ds = youtubeDs.get()
-            ds.searchVideos(query).take(maxResults).map { item ->
-                VideoItem(
-                    videoId = item.id,
-                    title = item.title,
-                    artist = item.channelName,
-                    channelId = item.channelId,
-                    duration = "${item.duration / 60}:${item.duration % 60}",
-                    genre = ""
-                )
+        private suspend fun getRelatedVideosFallback(
+            videoId: String,
+            maxResults: Int
+        ): List<VideoItem> {
+            return try {
+                val ds = youtubeDs.get()
+                ds.getRelatedVideos(videoId).take(maxResults).map { item ->
+                    VideoItem(
+                        videoId = item.id,
+                        title = item.title,
+                        artist = item.channelName,
+                        channelId = "",
+                        duration = "${item.duration / 60}:${item.duration % 60}",
+                        genre = ""
+                    )
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                // Req 1: cancellation propagates — never convert to emptyList.
+                throw e
+            } catch (e: Exception) {
+                android.util.Log.e("ContentFetcher", "getRelatedVideosFallback failed for $videoId: ${e.message}")
+                emptyList()
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            // Req 1: cancellation propagates — never convert to emptyList.
-            throw e
-        } catch (e: Exception) {
-            android.util.Log.e("ContentFetcher", "searchByQueryFallback failed for $query: ${e.message}")
-            emptyList()
         }
-    }
 
-    // ── Trending music via TVHTML5 InnerTube ──
-    suspend fun getTrendingMusic(
-        regionCode: String = "IN",
-        maxResults: Int = 20,
-    ): List<VideoItem> = withContext(Dispatchers.IO) {
-        getTrendingMusicFallback(maxResults)
-    }
-
-    private suspend fun getTrendingMusicFallback(maxResults: Int): List<VideoItem> {
-        return try {
-            val ds = youtubeDs.get()
-            ds.getTrending().take(maxResults).map { item ->
-                VideoItem(
-                    videoId = item.id,
-                    title = item.title,
-                    artist = item.channelName,
-                    channelId = item.channelId,
-                    duration = "${item.duration / 60}:${item.duration % 60}",
-                    genre = ""
-                )
+        // ── Search by artist name + genre via SmartTube TVHTML5 ──
+        suspend fun searchByArtist(
+            artistName: String,
+            maxResults: Int = 15,
+        ): List<VideoItem> =
+            withContext(Dispatchers.IO) {
+                val query = "$artistName new songs official"
+                searchByQuery(query, maxResults)
             }
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            // Req 1: cancellation propagates — never convert to emptyList.
-            throw e
-        } catch (e: Exception) {
-            android.util.Log.e("ContentFetcher", "getTrendingMusicFallback failed: ${e.message}")
-            emptyList()
+
+        suspend fun searchByQuery(
+            query: String,
+            maxResults: Int = 15,
+        ): List<VideoItem> =
+            withContext(Dispatchers.IO) {
+                if (query.isBlank()) return@withContext emptyList()
+                try {
+                    val smartTubeResult = smartTubeEngine.searchTracks(query)
+                    if (smartTubeResult.isSuccess) {
+                        val items = smartTubeResult.getOrNull().orEmpty()
+                        if (items.isNotEmpty()) {
+                            return@withContext items.take(maxResults).map { item ->
+                                VideoItem(
+                                    videoId = item.videoId ?: item.id,
+                                    title = item.title,
+                                    artist = item.artist ?: item.subtitle,
+                                    channelId = item.channelId ?: "",
+                                    duration = "3:30",
+                                    genre = ""
+                                )
+                            }
+                        }
+                    }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    // Req 1: cancellation propagates — never convert to fallback/empty.
+                    throw e
+                } catch (e: Exception) {
+                    android.util.Log.w("ContentFetcher", "SmartTube search fallback: ${e.message}")
+                }
+                searchByQueryFallback(query, maxResults)
+            }
+
+        private suspend fun searchByQueryFallback(
+            query: String,
+            maxResults: Int
+        ): List<VideoItem> {
+            return try {
+                val ds = youtubeDs.get()
+                ds.searchVideos(query).take(maxResults).map { item ->
+                    VideoItem(
+                        videoId = item.id,
+                        title = item.title,
+                        artist = item.channelName,
+                        channelId = item.channelId,
+                        duration = "${item.duration / 60}:${item.duration % 60}",
+                        genre = ""
+                    )
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                // Req 1: cancellation propagates — never convert to emptyList.
+                throw e
+            } catch (e: Exception) {
+                android.util.Log.e("ContentFetcher", "searchByQueryFallback failed for $query: ${e.message}")
+                emptyList()
+            }
+        }
+
+        // ── Trending music via TVHTML5 InnerTube ──
+        suspend fun getTrendingMusic(
+            regionCode: String = "IN",
+            maxResults: Int = 20,
+        ): List<VideoItem> =
+            withContext(Dispatchers.IO) {
+                getTrendingMusicFallback(maxResults)
+            }
+
+        private suspend fun getTrendingMusicFallback(maxResults: Int): List<VideoItem> {
+            return try {
+                val ds = youtubeDs.get()
+                ds.getTrending().take(maxResults).map { item ->
+                    VideoItem(
+                        videoId = item.id,
+                        title = item.title,
+                        artist = item.channelName,
+                        channelId = item.channelId,
+                        duration = "${item.duration / 60}:${item.duration % 60}",
+                        genre = ""
+                    )
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                // Req 1: cancellation propagates — never convert to emptyList.
+                throw e
+            } catch (e: Exception) {
+                android.util.Log.e("ContentFetcher", "getTrendingMusicFallback failed: ${e.message}")
+                emptyList()
+            }
         }
     }
-}

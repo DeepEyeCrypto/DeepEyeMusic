@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import com.deepeye.musicpro.ui.modifiers.rememberParentScrollLockConnection
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -43,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.deepeye.musicpro.ui.modifiers.rememberParentScrollLockConnection
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -50,16 +50,17 @@ val EQ_FREQUENCIES = listOf("31", "62", "125", "250", "500", "1k", "2k", "4k", "
 
 data class EqPreset(val name: String, val gains: FloatArray)
 
-val STUDIO_EQ_PRESETS = listOf(
-    EqPreset("Flat", floatArrayOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)),
-    EqPreset("Sub-Bass Boost", floatArrayOf(8f, 6f, 4f, 2f, 0f, 0f, 1f, 2f, 3f, 4f)),
-    EqPreset("Punchy 808", floatArrayOf(3f, 6f, 4f, 0f, -1f, 0f, 1f, 2f, 2.5f, 2f)),
-    EqPreset("Vocal Clarity", floatArrayOf(-1f, -0.5f, 0f, 1.5f, 3.5f, 4f, 3.5f, 4.5f, 6f, 7f)),
-    EqPreset("Club / EDM", floatArrayOf(7f, 5f, 3f, 1f, 0f, 0f, 0.5f, 1.5f, 2.5f, 3f)),
-    EqPreset("Rock & Metal", floatArrayOf(6f, 4f, 2f, 0f, -1f, 1f, 4f, 5f, 6f, 6f)),
-    EqPreset("Acoustic Warmth", floatArrayOf(3f, 3f, 2f, 1f, 2f, 3f, 4f, 3f, 2f, 1f)),
-    EqPreset("Treble Air", floatArrayOf(-2f, -1f, 0f, 0f, 1f, 3f, 5f, 7f, 8.5f, 9f)),
-)
+val STUDIO_EQ_PRESETS =
+    listOf(
+        EqPreset("Flat", floatArrayOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)),
+        EqPreset("Sub-Bass Boost", floatArrayOf(8f, 6f, 4f, 2f, 0f, 0f, 1f, 2f, 3f, 4f)),
+        EqPreset("Punchy 808", floatArrayOf(3f, 6f, 4f, 0f, -1f, 0f, 1f, 2f, 2.5f, 2f)),
+        EqPreset("Vocal Clarity", floatArrayOf(-1f, -0.5f, 0f, 1.5f, 3.5f, 4f, 3.5f, 4.5f, 6f, 7f)),
+        EqPreset("Club / EDM", floatArrayOf(7f, 5f, 3f, 1f, 0f, 0f, 0.5f, 1.5f, 2.5f, 3f)),
+        EqPreset("Rock & Metal", floatArrayOf(6f, 4f, 2f, 0f, -1f, 1f, 4f, 5f, 6f, 6f)),
+        EqPreset("Acoustic Warmth", floatArrayOf(3f, 3f, 2f, 1f, 2f, 3f, 4f, 3f, 2f, 1f)),
+        EqPreset("Treble Air", floatArrayOf(-2f, -1f, 0f, 0f, 1f, 3f, 5f, 7f, 8.5f, 9f)),
+    )
 
 private val neonCyan = Color(0xFF00E5FF)
 private val neonPurple = Color(0xFF7B1FA2)
@@ -90,7 +91,6 @@ internal const val EQ_MAGNETIC_DETENT_DB = 1.0f
  * exactly one band.
  */
 internal object EqTouchMath {
-
     /**
      * Resolves the band index for a horizontal touch position.
      *
@@ -100,7 +100,11 @@ internal object EqTouchMath {
      * @return The locked band index, or `null` when the geometry is degenerate
      *   (zero width, zero bands, or NaN input) and the gesture must be ignored.
      */
-    fun bandIndexForTouchX(touchX: Float, surfaceWidth: Float, bandCount: Int): Int? {
+    fun bandIndexForTouchX(
+        touchX: Float,
+        surfaceWidth: Float,
+        bandCount: Int
+    ): Int? {
         if (bandCount <= 0 || surfaceWidth <= 0f) return null
         if (touchX.isNaN() || surfaceWidth.isNaN()) return null
         val slotWidth = surfaceWidth / bandCount
@@ -140,7 +144,11 @@ internal object EqTouchMath {
      * @return Gain in the range [EQ_MIN_DB, EQ_MAX_DB]; `null` when the track has
      *   not been laid out yet (zero height) and the gesture must be ignored.
      */
-    fun gainForTouchY(touchY: Float, trackTop: Float, trackHeight: Float): Float? {
+    fun gainForTouchY(
+        touchY: Float,
+        trackTop: Float,
+        trackHeight: Float
+    ): Float? {
         if (trackHeight <= 0f) return null
         if (touchY.isNaN() || trackTop.isNaN() || trackHeight.isNaN()) return null
         val fraction = ((touchY - trackTop) / trackHeight).coerceIn(0f, 1f)
@@ -173,7 +181,11 @@ internal object EqTouchMath {
      *
      * @return The centre X in pixels, or `null` when the geometry is degenerate.
      */
-    fun slotCenterX(index: Int, surfaceWidth: Float, bandCount: Int): Float? {
+    fun slotCenterX(
+        index: Int,
+        surfaceWidth: Float,
+        bandCount: Int
+    ): Float? {
         if (bandCount <= 0 || surfaceWidth <= 0f) return null
         if (surfaceWidth.isNaN()) return null
         val slotWidth = surfaceWidth / bandCount
@@ -213,7 +225,10 @@ internal object EqTouchMath {
      * @return `bandCount * minSlotWidthPx`, or `0f` for a degenerate band count
      *   or a non-positive / NaN [minSlotWidthPx].
      */
-    fun requiredContentWidth(bandCount: Int, minSlotWidthPx: Float): Float {
+    fun requiredContentWidth(
+        bandCount: Int,
+        minSlotWidthPx: Float
+    ): Float {
         if (bandCount <= 0) return 0f
         if (minSlotWidthPx <= 0f || minSlotWidthPx.isNaN()) return 0f
         return minSlotWidthPx * bandCount
@@ -224,7 +239,10 @@ internal object EqTouchMath {
      * [viewportWidth] viewport. Zero when the strip fits, so the panning
      * machinery is inert rather than conditional in the wide layout.
      */
-    fun maxScrollOffset(contentWidth: Float, viewportWidth: Float): Float {
+    fun maxScrollOffset(
+        contentWidth: Float,
+        viewportWidth: Float
+    ): Float {
         if (contentWidth.isNaN() || viewportWidth.isNaN()) return 0f
         return (contentWidth - viewportWidth).coerceAtLeast(0f)
     }
@@ -236,7 +254,11 @@ internal object EqTouchMath {
      * right back to zero; anything beyond that is clamped back to the bound so a
      * fling cannot park a band permanently off-screen or leave a dead gap.
      */
-    fun clampScrollOffset(offsetPx: Float, contentWidth: Float, viewportWidth: Float): Float {
+    fun clampScrollOffset(
+        offsetPx: Float,
+        contentWidth: Float,
+        viewportWidth: Float
+    ): Float {
         if (offsetPx.isNaN()) return 0f
         return offsetPx.coerceIn(0f, maxScrollOffset(contentWidth, viewportWidth))
     }
@@ -251,8 +273,7 @@ internal object EqTouchMath {
      *
      * @return `0f` inside the detent, otherwise [gain] unchanged.
      */
-    fun applyMagneticDetent(gain: Float): Float =
-        if (abs(gain) <= EQ_MAGNETIC_DETENT_DB) 0f else gain
+    fun applyMagneticDetent(gain: Float): Float = if (abs(gain) <= EQ_MAGNETIC_DETENT_DB) 0f else gain
 }
 
 /**
@@ -277,21 +298,36 @@ internal enum class EqGestureAxis { UNDECIDED, VERTICAL, HORIZONTAL }
 internal object EqGestureLog {
     private const val TAG = "EqGesture"
 
-    fun axisLocked(axis: EqGestureAxis, band: Int, totalX: Float, totalY: Float, canPan: Boolean) {
+    fun axisLocked(
+        axis: EqGestureAxis,
+        band: Int,
+        totalX: Float,
+        totalY: Float,
+        canPan: Boolean
+    ) {
         android.util.Log.d(
             TAG,
             "axisLocked axis=$axis band=$band totalX=$totalX totalY=$totalY canPan=$canPan",
         )
     }
 
-    fun panned(offsetPx: Float, deltaX: Float, maxOffsetPx: Float) {
+    fun panned(
+        offsetPx: Float,
+        deltaX: Float,
+        maxOffsetPx: Float
+    ) {
         android.util.Log.d(
             TAG,
             "panned offsetPx=$offsetPx deltaX=$deltaX maxOffsetPx=$maxOffsetPx",
         )
     }
 
-    fun gestureRejected(reason: String, y: Float, trackTop: Float, trackHeight: Float) {
+    fun gestureRejected(
+        reason: String,
+        y: Float,
+        trackTop: Float,
+        trackHeight: Float
+    ) {
         android.util.Log.d(
             TAG,
             "gestureRejected reason=$reason y=$y trackTop=$trackTop trackHeight=$trackHeight",
@@ -317,7 +353,11 @@ internal object EqGestureLog {
     }
 
     /** Unconditional per-gesture exit trace with the axis the gesture resolved to. */
-    fun gestureEnd(axis: EqGestureAxis, band: Int, offsetPx: Float) {
+    fun gestureEnd(
+        axis: EqGestureAxis,
+        band: Int,
+        offsetPx: Float
+    ) {
         android.util.Log.d(TAG, "gestureEnd axis=$axis band=$band offsetPx=$offsetPx")
     }
 }
@@ -409,30 +449,33 @@ fun EqualizerCurveVisualizer(
 
     // Never narrower than the viewport: a wide layout shows all ten bands with
     // the offset pinned at 0 and panning never engages.
-    val contentWidthPx = remember(bandCount, minSlotWidthPx, viewportWidthPx) {
-        maxOf(
-            EqTouchMath.requiredContentWidth(bandCount, minSlotWidthPx),
-            viewportWidthPx,
-        )
-    }
+    val contentWidthPx =
+        remember(bandCount, minSlotWidthPx, viewportWidthPx) {
+            maxOf(
+                EqTouchMath.requiredContentWidth(bandCount, minSlotWidthPx),
+                viewportWidthPx,
+            )
+        }
 
     // A relayout (rotation, grid reflow) can shrink the legal travel while an
     // offset is live, which would leave the strip parked off its new bounds.
     LaunchedEffect(contentWidthPx, viewportWidthPx) {
-        scrollOffsetPx = EqTouchMath.clampScrollOffset(
-            scrollOffsetPx,
-            contentWidthPx,
-            viewportWidthPx,
-        )
+        scrollOffsetPx =
+            EqTouchMath.clampScrollOffset(
+                scrollOffsetPx,
+                contentWidthPx,
+                viewportWidthPx,
+            )
     }
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(darkSurface)
-            .border(1.dp, glassBorder, RoundedCornerShape(24.dp))
-            .padding(14.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(darkSurface)
+                .border(1.dp, glassBorder, RoundedCornerShape(24.dp))
+                .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // Curve Header & Quick Actions
@@ -446,10 +489,11 @@ fun EqualizerCurveVisualizer(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0x3300E5FF)),
+                    modifier =
+                        Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0x3300E5FF)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -511,11 +555,12 @@ fun EqualizerCurveVisualizer(
                 // after a drag the engine lags by a frame or two, so keying off
                 // `eqBands` made the "Flat" chip lose its selection while the
                 // curve visibly read 0dB.
-                val isSelected = remember(draftBands.toList(), preset) {
-                    val currentRounded = draftBands.take(10).map { it.roundToInt() }
-                    val presetRounded = preset.gains.take(10).map { it.roundToInt() }
-                    currentRounded == presetRounded
-                }
+                val isSelected =
+                    remember(draftBands.toList(), preset) {
+                        val currentRounded = draftBands.take(10).map { it.roundToInt() }
+                        val presetRounded = preset.gains.take(10).map { it.roundToInt() }
+                        currentRounded == presetRounded
+                    }
 
                 Surface(
                     onClick = {
@@ -534,10 +579,11 @@ fun EqualizerCurveVisualizer(
                     },
                     shape = RoundedCornerShape(16.dp),
                     color = if (isSelected) Color(0x3300E5FF) else Color(0x0EFFFFFF),
-                    border = androidx.compose.foundation.BorderStroke(
-                        width = if (isSelected) 1.5.dp else 1.dp,
-                        color = if (isSelected) neonCyan else glassBorder
-                    ),
+                    border =
+                        androidx.compose.foundation.BorderStroke(
+                            width = if (isSelected) 1.5.dp else 1.dp,
+                            color = if (isSelected) neonCyan else glassBorder
+                        ),
                     modifier = Modifier.heightIn(min = 38.dp)
                 ) {
                     Text(
@@ -557,13 +603,14 @@ fun EqualizerCurveVisualizer(
         // explicit clip the curve would bleed out over the neighbouring DSP
         // modules instead of sliding under the card edge.
         Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(95.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .clipToBounds()
-                .background(Color(0xFF090B10).copy(alpha = 0.95f))
-                .border(1.dp, glassBorder, RoundedCornerShape(16.dp))
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(95.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .clipToBounds()
+                    .background(Color(0xFF090B10).copy(alpha = 0.95f))
+                    .border(1.dp, glassBorder, RoundedCornerShape(16.dp))
         ) {
             val width = size.width
             val height = size.height
@@ -600,10 +647,11 @@ fun EqualizerCurveVisualizer(
             // with it. Everything here is drawn in content coordinates and the
             // whole canvas is clipped to the viewport, which keeps the spline and
             // its guides in lockstep with the fader bank below.
-            val slotCenters = List(numBands) { i ->
-                EqTouchMath.slotCenterX(i, contentWidthPx, numBands, scrollOffsetPx)
-                    ?: return@Canvas
-            }
+            val slotCenters =
+                List(numBands) { i ->
+                    EqTouchMath.slotCenterX(i, contentWidthPx, numBands, scrollOffsetPx)
+                        ?: return@Canvas
+                }
 
             for (i in 0 until numBands) {
                 val x = slotCenters[i]
@@ -628,50 +676,56 @@ fun EqualizerCurveVisualizer(
             }
 
             // Smooth cubic Bezier spline
-            val strokePath = Path().apply {
-                moveTo(points.first().x, points.first().y)
-                for (i in 0 until points.size - 1) {
-                    val p0 = points[i]
-                    val p1 = points[i + 1]
-                    val controlX1 = (p0.x + p1.x) / 2f
-                    val controlY1 = p0.y
-                    val controlX2 = (p0.x + p1.x) / 2f
-                    val controlY2 = p1.y
-                    cubicTo(controlX1, controlY1, controlX2, controlY2, p1.x, p1.y)
+            val strokePath =
+                Path().apply {
+                    moveTo(points.first().x, points.first().y)
+                    for (i in 0 until points.size - 1) {
+                        val p0 = points[i]
+                        val p1 = points[i + 1]
+                        val controlX1 = (p0.x + p1.x) / 2f
+                        val controlY1 = p0.y
+                        val controlX2 = (p0.x + p1.x) / 2f
+                        val controlY2 = p1.y
+                        cubicTo(controlX1, controlY1, controlX2, controlY2, p1.x, p1.y)
+                    }
                 }
-            }
 
             // Gradient Fill under curve
-            val fillPath = Path().apply {
-                addPath(strokePath)
-                lineTo(points.last().x, height)
-                lineTo(points.first().x, height)
-                close()
-            }
+            val fillPath =
+                Path().apply {
+                    addPath(strokePath)
+                    lineTo(points.last().x, height)
+                    lineTo(points.first().x, height)
+                    close()
+                }
 
             drawPath(
                 path = fillPath,
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        (if (isEnabled) neonCyan else Color.Gray).copy(alpha = 0.35f),
-                        (if (isEnabled) neonPurple else Color.DarkGray).copy(alpha = 0.15f),
-                        Color.Transparent
-                    ),
-                    startY = 0f,
-                    endY = height
-                )
+                brush =
+                    Brush.verticalGradient(
+                        colors =
+                            listOf(
+                                (if (isEnabled) neonCyan else Color.Gray).copy(alpha = 0.35f),
+                                (if (isEnabled) neonPurple else Color.DarkGray).copy(alpha = 0.15f),
+                                Color.Transparent
+                            ),
+                        startY = 0f,
+                        endY = height
+                    )
             )
 
             // Neon glowing stroke
             drawPath(
                 path = strokePath,
-                brush = Brush.horizontalGradient(
-                    colors = if (isEnabled) {
-                        listOf(neonCyan, Color(0xFF00B0FF), neonPurple, Color(0xFFFF4081))
-                    } else {
-                        listOf(Color.Gray, Color.DarkGray)
-                    }
-                ),
+                brush =
+                    Brush.horizontalGradient(
+                        colors =
+                            if (isEnabled) {
+                                listOf(neonCyan, Color(0xFF00B0FF), neonPurple, Color(0xFFFF4081))
+                            } else {
+                                listOf(Color.Gray, Color.DarkGray)
+                            }
+                    ),
                 style = Stroke(width = 3.5.dp.toPx(), cap = StrokeCap.Round)
             )
 
@@ -737,7 +791,10 @@ fun EqualizerCurveVisualizer(
 
         // Writes the draft (instant visual feedback) and hands the same value to
         // the ViewModel's conflated queue. Never touches the engine directly.
-        fun applyGain(index: Int, gain: Float) {
+        fun applyGain(
+            index: Int,
+            gain: Float
+        ) {
             if (index !in draftBands.indices) return
             draftBands = draftBands.copyOf().also { it[index] = gain }
             currentOnBandGainChanged(index, gain)
@@ -746,240 +803,249 @@ fun EqualizerCurveVisualizer(
         /** Which axis this gesture committed to is tracked by [EqGestureAxis]. */
 
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .onSizeChanged { viewportWidthPx = it.width.toFloat() }
-                .nestedScroll(rememberParentScrollLockConnection(isLocked = activeBand != null))
-                .onGloballyPositioned { surfaceCoords = it }
-                .pointerInput(isEnabled, bandCount, contentWidthPx) {
-                    if (!isEnabled || bandCount <= 0) return@pointerInput
-                    // Read inside the pointer scope: the platform touch slop is only
-                    // reachable from PointerInputScope, and it is the threshold that
-                    // separates an intentional fader drag from finger tremor.
-                    val touchSlop = viewConfiguration.touchSlop
-                    awaitEachGesture {
-                        val down = awaitFirstDown(
-                            requireUnconsumed = false,
-                            pass = PointerEventPass.Initial,
-                        )
-                        if (trackHeightPx <= 0f) {
-                            EqGestureLog.gestureRejected(
-                                "unlaid_out_track",
-                                down.position.y,
-                                trackTopPx,
-                                trackHeightPx,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .onSizeChanged { viewportWidthPx = it.width.toFloat() }
+                    .nestedScroll(rememberParentScrollLockConnection(isLocked = activeBand != null))
+                    .onGloballyPositioned { surfaceCoords = it }
+                    .pointerInput(isEnabled, bandCount, contentWidthPx) {
+                        if (!isEnabled || bandCount <= 0) return@pointerInput
+                        // Read inside the pointer scope: the platform touch slop is only
+                        // reachable from PointerInputScope, and it is the threshold that
+                        // separates an intentional fader drag from finger tremor.
+                        val touchSlop = viewConfiguration.touchSlop
+                        awaitEachGesture {
+                            val down =
+                                awaitFirstDown(
+                                    requireUnconsumed = false,
+                                    pass = PointerEventPass.Initial,
+                                )
+                            if (trackHeightPx <= 0f) {
+                                EqGestureLog.gestureRejected(
+                                    "unlaid_out_track",
+                                    down.position.y,
+                                    trackTopPx,
+                                    trackHeightPx,
+                                )
+                                return@awaitEachGesture
+                            }
+
+                            // A touch that begins in the readout / frequency-label gutter
+                            // is left unconsumed so the surrounding page still scrolls.
+                            if (!EqTouchMath.isWithinTouchZone(
+                                    down.position.y,
+                                    trackTopPx,
+                                    trackHeightPx,
+                                    touchOvershootPx,
+                                )
+                            ) {
+                                EqGestureLog.gestureRejected(
+                                    "outside_touch_zone",
+                                    down.position.y,
+                                    trackTopPx,
+                                    trackHeightPx,
+                                )
+                                return@awaitEachGesture
+                            }
+
+                            val pointerId = down.id
+                            val viewport = size.width.toFloat()
+                            // Panning is only ever a candidate when the strip actually
+                            // overflows; in a wide layout every drag is a fader drag.
+                            val canPan =
+                                EqTouchMath.maxScrollOffset(contentWidthPx, viewport) > 0f
+                            EqGestureLog.gestureStart(
+                                viewport = viewport,
+                                contentWidth = contentWidthPx,
+                                canPan = canPan,
+                                touchSlop = touchSlop,
+                                trackTop = trackTopPx,
+                                trackHeight = trackHeightPx,
+                                bandCount = bandCount,
                             )
-                            return@awaitEachGesture
-                        }
+                            // Starve the parent scrollable from the very first event:
+                            // this bank owns any touch that lands on a track.
+                            down.consume()
 
-                        // A touch that begins in the readout / frequency-label gutter
-                        // is left unconsumed so the surrounding page still scrolls.
-                        if (!EqTouchMath.isWithinTouchZone(
-                                down.position.y,
-                                trackTopPx,
-                                trackHeightPx,
-                                touchOvershootPx,
-                            )
-                        ) {
-                            EqGestureLog.gestureRejected(
-                                "outside_touch_zone",
-                                down.position.y,
-                                trackTopPx,
-                                trackHeightPx,
-                            )
-                            return@awaitEachGesture
-                        }
+                            var axis = EqGestureAxis.UNDECIDED
+                            var lockedIndex = -1
+                            gestureInFlight = true
+                            try {
+                                while (true) {
+                                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                                    val change =
+                                        event.changes.firstOrNull { it.id == pointerId } ?: break
+                                    if (!change.pressed) break
+                                    change.consume()
 
-                        val pointerId = down.id
-                        val viewport = size.width.toFloat()
-                        // Panning is only ever a candidate when the strip actually
-                        // overflows; in a wide layout every drag is a fader drag.
-                        val canPan =
-                            EqTouchMath.maxScrollOffset(contentWidthPx, viewport) > 0f
-                        EqGestureLog.gestureStart(
-                            viewport = viewport,
-                            contentWidth = contentWidthPx,
-                            canPan = canPan,
-                            touchSlop = touchSlop,
-                            trackTop = trackTopPx,
-                            trackHeight = trackHeightPx,
-                            bandCount = bandCount,
-                        )
-                        // Starve the parent scrollable from the very first event:
-                        // this bank owns any touch that lands on a track.
-                        down.consume()
-
-                        var axis = EqGestureAxis.UNDECIDED
-                        var lockedIndex = -1
-                        gestureInFlight = true
-                        try {
-                            while (true) {
-                                val event = awaitPointerEvent(PointerEventPass.Initial)
-                                val change =
-                                    event.changes.firstOrNull { it.id == pointerId } ?: break
-                                if (!change.pressed) break
-                                change.consume()
-
-                                if (axis == EqGestureAxis.UNDECIDED) {
-                                    // Axis is decided on the CUMULATIVE displacement from
-                                    // the down point, never the per-event delta. A real
-                                    // finger — and an injected drag alike — arrives as a
-                                    // stream of small per-frame deltas, each of which can
-                                    // sit under the touch slop for the whole gesture. Testing
-                                    // only the per-event delta left the axis permanently
-                                    // UNDECIDED, so an ordinary slow pan silently did
-                                    // nothing; testing only the total would ignore the
-                                    // slop entirely and make every tremor a fader move.
-                                    val total = change.position - down.position
-                                    val priorAxis = axis
-                                    when {
-                                        canPan && abs(total.x) > touchSlop &&
-                                            abs(total.x) > abs(total.y) -> {
-                                            axis = EqGestureAxis.HORIZONTAL
+                                    if (axis == EqGestureAxis.UNDECIDED) {
+                                        // Axis is decided on the CUMULATIVE displacement from
+                                        // the down point, never the per-event delta. A real
+                                        // finger — and an injected drag alike — arrives as a
+                                        // stream of small per-frame deltas, each of which can
+                                        // sit under the touch slop for the whole gesture. Testing
+                                        // only the per-event delta left the axis permanently
+                                        // UNDECIDED, so an ordinary slow pan silently did
+                                        // nothing; testing only the total would ignore the
+                                        // slop entirely and make every tremor a fader move.
+                                        val total = change.position - down.position
+                                        val priorAxis = axis
+                                        when {
+                                            canPan && abs(total.x) > touchSlop &&
+                                                abs(total.x) > abs(total.y) -> {
+                                                axis = EqGestureAxis.HORIZONTAL
+                                            }
+                                            abs(total.y) > touchSlop -> {
+                                                axis = EqGestureAxis.VERTICAL
+                                                lockedIndex =
+                                                    EqTouchMath.bandIndexForTouchX(
+                                                        change.position.x,
+                                                        scrollOffsetPx,
+                                                        contentWidthPx,
+                                                        bandCount,
+                                                    ) ?: -1
+                                                if (lockedIndex >= 0) {
+                                                    activeBand = lockedIndex
+                                                    applyGain(
+                                                        lockedIndex,
+                                                        gainFromTouchY(change.position.y),
+                                                    )
+                                                }
+                                            }
                                         }
-                                        abs(total.y) > touchSlop -> {
-                                            axis = EqGestureAxis.VERTICAL
-                                            lockedIndex =
-                                                EqTouchMath.bandIndexForTouchX(
-                                                    change.position.x,
-                                                    scrollOffsetPx,
+                                        if (axis != priorAxis) {
+                                            EqGestureLog.axisLocked(
+                                                axis,
+                                                lockedIndex,
+                                                total.x,
+                                                total.y,
+                                                canPan,
+                                            )
+                                        }
+                                        continue
+                                    }
+
+                                    when (axis) {
+                                        EqGestureAxis.HORIZONTAL -> {
+                                            // Dragging left reveals later bands, so the
+                                            // offset grows with a leftward finger delta.
+                                            val deltaX = change.positionChange().x
+                                            scrollOffsetPx =
+                                                EqTouchMath.clampScrollOffset(
+                                                    scrollOffsetPx - deltaX,
                                                     contentWidthPx,
-                                                    bandCount,
-                                                ) ?: -1
+                                                    viewport,
+                                                )
+                                            EqGestureLog.panned(
+                                                scrollOffsetPx,
+                                                deltaX,
+                                                EqTouchMath.maxScrollOffset(
+                                                    contentWidthPx,
+                                                    viewport,
+                                                ),
+                                            )
+                                        }
+                                        EqGestureAxis.VERTICAL ->
                                             if (lockedIndex >= 0) {
-                                                activeBand = lockedIndex
                                                 applyGain(
                                                     lockedIndex,
                                                     gainFromTouchY(change.position.y),
                                                 )
                                             }
-                                        }
+                                        EqGestureAxis.UNDECIDED -> Unit
                                     }
-                                    if (axis != priorAxis) {
-                                        EqGestureLog.axisLocked(
-                                            axis,
-                                            lockedIndex,
-                                            total.x,
-                                            total.y,
-                                            canPan,
-                                        )
-                                    }
-                                    continue
                                 }
 
-                                when (axis) {
-                                    EqGestureAxis.HORIZONTAL -> {
-                                        // Dragging left reveals later bands, so the
-                                        // offset grows with a leftward finger delta.
-                                        val deltaX = change.positionChange().x
-                                        scrollOffsetPx = EqTouchMath.clampScrollOffset(
-                                            scrollOffsetPx - deltaX,
-                                            contentWidthPx,
-                                            viewport,
-                                        )
-                                        EqGestureLog.panned(
-                                            scrollOffsetPx,
-                                            deltaX,
-                                            EqTouchMath.maxScrollOffset(
-                                                contentWidthPx,
-                                                viewport,
-                                            ),
-                                        )
+                                // A tap that never passed slop still sets its band, so a
+                                // quick tap on a fader is not swallowed by the axis lock.
+                                if (axis == EqGestureAxis.UNDECIDED) {
+                                    EqTouchMath.bandIndexForTouchX(
+                                        down.position.x,
+                                        scrollOffsetPx,
+                                        contentWidthPx,
+                                        bandCount,
+                                    )?.let { tapped ->
+                                        activeBand = tapped
+                                        applyGain(tapped, gainFromTouchY(down.position.y))
                                     }
-                                    EqGestureAxis.VERTICAL -> if (lockedIndex >= 0) {
-                                        applyGain(
-                                            lockedIndex,
-                                            gainFromTouchY(change.position.y),
-                                        )
-                                    }
-                                    EqGestureAxis.UNDECIDED -> Unit
                                 }
-                            }
-
-                            // A tap that never passed slop still sets its band, so a
-                            // quick tap on a fader is not swallowed by the axis lock.
-                            if (axis == EqGestureAxis.UNDECIDED) {
-                                EqTouchMath.bandIndexForTouchX(
-                                    down.position.x,
-                                    scrollOffsetPx,
-                                    contentWidthPx,
-                                    bandCount,
-                                )?.let { tapped ->
-                                    activeBand = tapped
-                                    applyGain(tapped, gainFromTouchY(down.position.y))
+                            } finally {
+                                EqGestureLog.gestureEnd(axis, lockedIndex, scrollOffsetPx)
+                                if (activeBand == lockedIndex || axis == EqGestureAxis.UNDECIDED) {
+                                    activeBand = null
                                 }
-                            }
-                        } finally {
-                            EqGestureLog.gestureEnd(axis, lockedIndex, scrollOffsetPx)
-                            if (activeBand == lockedIndex || axis == EqGestureAxis.UNDECIDED) {
-                                activeBand = null
-                            }
-                            gestureInFlight = false
-                            // Flush the final position so coalescing can never drop
-                            // the last value of a fast swipe. Panning has no gain to
-                            // commit, and a bare tap was already applied above.
-                            if (axis == EqGestureAxis.VERTICAL) {
-                                currentOnCommitBands(draftBands)
+                                gestureInFlight = false
+                                // Flush the final position so coalescing can never drop
+                                // the last value of a fast swipe. Panning has no gain to
+                                // commit, and a bare tap was already applied above.
+                                if (axis == EqGestureAxis.VERTICAL) {
+                                    currentOnCommitBands(draftBands)
+                                }
                             }
                         }
                     }
-                }
         ) {
             Column(Modifier.fillMaxWidth()) {
                 // dB readout row — one cell per band, positioned at the panned slot
                 // centres. The Box clips so readouts for bands scrolled off the
                 // edge slide out of the card instead of over the neighbouring module.
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clipToBounds()
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clipToBounds()
                 ) {
                     for (i in 0 until bandCount) {
                         // Same panned slot-centre function the tracks and the curve
                         // use, so a readout can never end up labelling a neighbouring
                         // fader. Text is centred on the slot, hence the half-width
                         // shift back from the centre.
-                        val centerX = EqTouchMath.slotCenterX(
-                            i,
-                            contentWidthPx,
-                            bandCount,
-                            scrollOffsetPx,
-                        ) ?: continue
+                        val centerX =
+                            EqTouchMath.slotCenterX(
+                                i,
+                                contentWidthPx,
+                                bandCount,
+                                scrollOffsetPx,
+                            ) ?: continue
                         val currentGain = draftBands[i]
                         val isBoost = currentGain > 0.4f
                         val isCut = currentGain < -0.4f
-                        val formattedGain = if (currentGain >= 0.4f) {
-                            "+${currentGain.roundToInt()}"
-                        } else if (currentGain <= -0.4f) {
-                            "${currentGain.roundToInt()}"
-                        } else {
-                            "0"
-                        }
+                        val formattedGain =
+                            if (currentGain >= 0.4f) {
+                                "+${currentGain.roundToInt()}"
+                            } else if (currentGain <= -0.4f) {
+                                "${currentGain.roundToInt()}"
+                            } else {
+                                "0"
+                            }
 
                         Text(
                             text = formattedGain,
                             fontSize = 11.sp,
-                            color = when {
-                                !isEnabled -> Color.Gray
-                                i == activeBand -> neonCyan
-                                isBoost -> neonCyan
-                                isCut -> Color(0xFFFF9100)
-                                else -> Color.White.copy(0.7f)
-                            },
+                            color =
+                                when {
+                                    !isEnabled -> Color.Gray
+                                    i == activeBand -> neonCyan
+                                    isBoost -> neonCyan
+                                    isCut -> Color(0xFFFF9100)
+                                    else -> Color.White.copy(0.7f)
+                                },
                             fontWeight = FontWeight.Black,
                             // Positioned absolutely at the panned slot centre: the
                             // old `weight(1f)` divided the VIEWPORT into equal cells,
                             // which silently misaligns every label the moment the
                             // strip is panned. Centred text needs the half-width of
                             // its own measured box, hence the onSizeChanged capture.
-                            modifier = Modifier
-                                .onSizeChanged { textHalfWidthPx = it.width / 2f }
-                                .offset {
-                                    IntOffset(
-                                        (centerX - textHalfWidthPx).roundToInt(),
-                                        0,
-                                    )
-                                },
+                            modifier =
+                                Modifier
+                                    .onSizeChanged { textHalfWidthPx = it.width / 2f }
+                                    .offset {
+                                        IntOffset(
+                                            (centerX - textHalfWidthPx).roundToInt(),
+                                            0,
+                                        )
+                                    },
                             textAlign = TextAlign.Center,
                         )
                     }
@@ -993,25 +1059,27 @@ fun EqualizerCurveVisualizer(
                 // space, which is wider than this canvas, so without it the
                 // off-screen faders would paint straight over the adjacent DSP card.
                 Canvas(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(cappedTrackHeight)
-                        .clipToBounds()
-                        .onGloballyPositioned { canvasCoords ->
-                            val root = surfaceCoords
-                            if (root != null && root.isAttached && canvasCoords.isAttached) {
-                                val bounds = root.localBoundingBoxOf(
-                                    sourceCoordinates = canvasCoords,
-                                    clipBounds = false,
-                                )
-                                if (abs(bounds.top - trackTopPx) > 0.5f ||
-                                    abs(bounds.height - trackHeightPx) > 0.5f
-                                ) {
-                                    trackTopPx = bounds.top
-                                    trackHeightPx = bounds.height
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(cappedTrackHeight)
+                            .clipToBounds()
+                            .onGloballyPositioned { canvasCoords ->
+                                val root = surfaceCoords
+                                if (root != null && root.isAttached && canvasCoords.isAttached) {
+                                    val bounds =
+                                        root.localBoundingBoxOf(
+                                            sourceCoordinates = canvasCoords,
+                                            clipBounds = false,
+                                        )
+                                    if (abs(bounds.top - trackTopPx) > 0.5f ||
+                                        abs(bounds.height - trackHeightPx) > 0.5f
+                                    ) {
+                                        trackTopPx = bounds.top
+                                        trackHeightPx = bounds.height
+                                    }
                                 }
                             }
-                        }
                 ) {
                     if (bandCount <= 0) return@Canvas
 
@@ -1034,12 +1102,13 @@ fun EqualizerCurveVisualizer(
                         val isActive = i == activeBand
                         // Same slot-centre function as the curve visualiser's grid
                         // guides above, so track, guide and spline node cannot diverge.
-                        val centerX = EqTouchMath.slotCenterX(
-                            i,
-                            contentWidthPx,
-                            bandCount,
-                            scrollOffsetPx,
-                        ) ?: continue
+                        val centerX =
+                            EqTouchMath.slotCenterX(
+                                i,
+                                contentWidthPx,
+                                bandCount,
+                                scrollOffsetPx,
+                            ) ?: continue
                         val gain = draftBands[i].coerceIn(EQ_MIN_DB, EQ_MAX_DB)
                         val normGain = (gain / EQ_MAX_DB).coerceIn(-1f, 1f)
                         val thumbY = midY - normGain * travel
@@ -1058,13 +1127,14 @@ fun EqualizerCurveVisualizer(
                         // ── Locked band: the slot lights up from within ────────────
                         if (isActive) {
                             drawRoundRect(
-                                brush = Brush.verticalGradient(
-                                    listOf(
-                                        neonCyan.copy(alpha = 0.38f),
-                                        neonCyan.copy(alpha = 0.12f),
-                                        neonCyan.copy(alpha = 0.38f),
-                                    )
-                                ),
+                                brush =
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            neonCyan.copy(alpha = 0.38f),
+                                            neonCyan.copy(alpha = 0.12f),
+                                            neonCyan.copy(alpha = 0.38f),
+                                        )
+                                    ),
                                 topLeft = Offset(trackLeft, 0f),
                                 size = Size(trackWidth, size.height),
                                 cornerRadius = CornerRadius(trackRadius),
@@ -1076,10 +1146,11 @@ fun EqualizerCurveVisualizer(
                             if (beamHeight > 0.5f) {
                                 drawRoundRect(
                                     color = neonCyan.copy(alpha = 0.45f),
-                                    topLeft = Offset(
-                                        trackLeft + trackWidth * 0.32f,
-                                        beamTop,
-                                    ),
+                                    topLeft =
+                                        Offset(
+                                            trackLeft + trackWidth * 0.32f,
+                                            beamTop,
+                                        ),
                                     size = Size(trackWidth * 0.36f, beamHeight),
                                     cornerRadius = CornerRadius(trackWidth * 0.18f),
                                 )
@@ -1088,11 +1159,12 @@ fun EqualizerCurveVisualizer(
 
                         // Track border — brightens to signal the locked band
                         drawRoundRect(
-                            color = if (isActive) {
-                                neonCyan.copy(alpha = 0.95f)
-                            } else {
-                                glassBorder
-                            },
+                            color =
+                                if (isActive) {
+                                    neonCyan.copy(alpha = 0.95f)
+                                } else {
+                                    glassBorder
+                                },
                             topLeft = Offset(trackLeft, 0f),
                             size = Size(trackWidth, size.height),
                             cornerRadius = CornerRadius(trackRadius),
@@ -1110,29 +1182,32 @@ fun EqualizerCurveVisualizer(
 
                         // Hardware console fader knob cap
                         drawRoundRect(
-                            brush = Brush.verticalGradient(
-                                if (isEnabled) {
-                                    listOf(Color(0xFF263238), Color(0xFF102027))
-                                } else {
-                                    listOf(Color(0xFF1E1E1E), Color(0xFF121212))
-                                }
-                            ),
+                            brush =
+                                Brush.verticalGradient(
+                                    if (isEnabled) {
+                                        listOf(Color(0xFF263238), Color(0xFF102027))
+                                    } else {
+                                        listOf(Color(0xFF1E1E1E), Color(0xFF121212))
+                                    }
+                                ),
                             topLeft = Offset(centerX - thumbRadius, thumbY - thumbRadius),
                             size = Size(thumbRadius * 2f, thumbRadius * 2f),
                             cornerRadius = CornerRadius(thumbCorner),
                         )
                         drawRoundRect(
-                            color = if (isEnabled) {
-                                neonCyan.copy(alpha = if (isActive) 1f else 0.8f)
-                            } else {
-                                Color.White.copy(0.2f)
-                            },
+                            color =
+                                if (isEnabled) {
+                                    neonCyan.copy(alpha = if (isActive) 1f else 0.8f)
+                                } else {
+                                    Color.White.copy(0.2f)
+                                },
                             topLeft = Offset(centerX - thumbRadius, thumbY - thumbRadius),
                             size = Size(thumbRadius * 2f, thumbRadius * 2f),
                             cornerRadius = CornerRadius(thumbCorner),
-                            style = Stroke(
-                                width = if (isActive) 1.5f.dp.toPx() else 1.dp.toPx()
-                            ),
+                            style =
+                                Stroke(
+                                    width = if (isActive) 1.5f.dp.toPx() else 1.dp.toPx()
+                                ),
                         )
 
                         // Knob centre glowing indicator line
@@ -1150,34 +1225,38 @@ fun EqualizerCurveVisualizer(
                 // Frequency label row — positioned at the same panned slot centres
                 // as the tracks, for the same reason as the dB readouts above.
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clipToBounds()
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clipToBounds()
                 ) {
                     for (i in 0 until bandCount) {
-                        val centerX = EqTouchMath.slotCenterX(
-                            i,
-                            contentWidthPx,
-                            bandCount,
-                            scrollOffsetPx,
-                        ) ?: continue
+                        val centerX =
+                            EqTouchMath.slotCenterX(
+                                i,
+                                contentWidthPx,
+                                bandCount,
+                                scrollOffsetPx,
+                            ) ?: continue
                         Text(
                             text = EQ_FREQUENCIES.getOrElse(i) { "${i}k" },
                             fontSize = 11.sp,
-                            color = if (i == activeBand) {
-                                neonCyan
-                            } else {
-                                Color.White.copy(alpha = 0.85f)
-                            },
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .onSizeChanged { textHalfWidthPx = it.width / 2f }
-                                .offset {
-                                    IntOffset(
-                                        (centerX - textHalfWidthPx).roundToInt(),
-                                        0,
-                                    )
+                            color =
+                                if (i == activeBand) {
+                                    neonCyan
+                                } else {
+                                    Color.White.copy(alpha = 0.85f)
                                 },
+                            fontWeight = FontWeight.Bold,
+                            modifier =
+                                Modifier
+                                    .onSizeChanged { textHalfWidthPx = it.width / 2f }
+                                    .offset {
+                                        IntOffset(
+                                            (centerX - textHalfWidthPx).roundToInt(),
+                                            0,
+                                        )
+                                    },
                             textAlign = TextAlign.Center,
                         )
                     }

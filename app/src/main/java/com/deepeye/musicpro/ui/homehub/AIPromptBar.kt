@@ -9,8 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,28 +28,32 @@ fun AIPromptBar(
     modifier: Modifier = Modifier
 ) {
     var promptText by remember { mutableStateOf("") }
-    val gradientBrush = Brush.horizontalGradient(
-        colors = listOf(Color(0xFF00D2FF), Color(0xFF7C4DFF))
-    )
+    val gradientBrush =
+        Brush.horizontalGradient(
+            colors = listOf(Color(0xFF00D2FF), Color(0xFF7C4DFF))
+        )
 
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
         shape = RoundedCornerShape(24.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .background(gradientBrush, shape = RoundedCornerShape(16.dp))
-                    .padding(8.dp)
+                modifier =
+                    Modifier
+                        .padding(8.dp)
+                        .background(gradientBrush, shape = RoundedCornerShape(16.dp))
+                        .padding(8.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.AutoAwesome,
@@ -69,26 +73,28 @@ fun AIPromptBar(
                         color = Color.Gray
                     )
                 },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                    cursorColor = Color(0xFF00D2FF)
-                ),
+                colors =
+                    TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        cursorColor = Color(0xFF00D2FF)
+                    ),
                 singleLine = true,
                 enabled = !isGenerating,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(
-                    onSend = {
-                        if (promptText.isNotBlank() && !isGenerating) {
-                            onSubmitPrompt(promptText)
-                            promptText = ""
+                keyboardActions =
+                    KeyboardActions(
+                        onSend = {
+                            if (promptText.isNotBlank() && !isGenerating) {
+                                onSubmitPrompt(promptText)
+                                promptText = ""
+                            }
                         }
-                    }
-                )
+                    )
             )
 
             if (isGenerating) {

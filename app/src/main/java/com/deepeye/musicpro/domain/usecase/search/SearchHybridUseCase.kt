@@ -18,27 +18,27 @@ data class HybridSearchResponse(
 )
 
 class SearchHybridUseCase
-@Inject
-constructor(
-    private val musicRepository: MusicRepository,
-    private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
-) {
-    operator fun invoke(query: String): Flow<HybridSearchResponse> {
-        if (query.isBlank()) return flow { emit(HybridSearchResponse(emptyList(), emptyList())) }
+    @Inject
+    constructor(
+        private val musicRepository: MusicRepository,
+        private val youtubeRemoteDataSource: YoutubeRemoteDataSource,
+    ) {
+        operator fun invoke(query: String): Flow<HybridSearchResponse> {
+            if (query.isBlank()) return flow { emit(HybridSearchResponse(emptyList(), emptyList())) }
 
-        val localFlow = musicRepository.searchSongs(query)
-        val remoteFlow =
-            flow {
-                try {
-                    val youtubeResults = youtubeRemoteDataSource.searchMusic(query)
-                    emit(youtubeResults)
-                } catch (e: Exception) {
-                    emit(emptyList())
+            val localFlow = musicRepository.searchSongs(query)
+            val remoteFlow =
+                flow {
+                    try {
+                        val youtubeResults = youtubeRemoteDataSource.searchMusic(query)
+                        emit(youtubeResults)
+                    } catch (e: Exception) {
+                        emit(emptyList())
+                    }
                 }
-            }
 
-        return combine(localFlow, remoteFlow) { local, remote ->
-            HybridSearchResponse(local, remote)
+            return combine(localFlow, remoteFlow) { local, remote ->
+                HybridSearchResponse(local, remote)
+            }
         }
     }
-}

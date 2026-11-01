@@ -79,9 +79,10 @@ fun RadialPulseVisualizer(
 
         // Soft translucent scrim to allow ambient artwork to glow through
         drawRect(
-            brush = Brush.verticalGradient(
-                listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
-            )
+            brush =
+                Brush.verticalGradient(
+                    listOf(Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.55f))
+                )
         )
 
         // Beat gate: a sharp bass rise spawns a shockwave. Disabled under
@@ -94,15 +95,17 @@ fun RadialPulseVisualizer(
         }
 
         drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    primaryColor.copy(alpha = 0.18f + bass * 0.16f),
-                    secondaryColor.copy(alpha = 0.08f + mid * 0.08f),
-                    Color.Transparent
+            brush =
+                Brush.radialGradient(
+                    colors =
+                        listOf(
+                            primaryColor.copy(alpha = 0.18f + bass * 0.16f),
+                            secondaryColor.copy(alpha = 0.08f + mid * 0.08f),
+                            Color.Transparent
+                        ),
+                    center = Offset(cx, cy),
+                    radius = baseR * 1.6f
                 ),
-                center = Offset(cx, cy),
-                radius = baseR * 1.6f
-            ),
             radius = baseR * 1.6f,
             center = Offset(cx, cy)
         )
@@ -110,11 +113,12 @@ fun RadialPulseVisualizer(
         // Core disc scaled by treble for a high-frequency shimmer.
         val coreR = baseR * (0.16f + treble * 0.10f)
         drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(Color.White.copy(alpha = 0.85f), primaryColor.copy(alpha = 0.25f)),
-                center = Offset(cx, cy),
-                radius = coreR
-            ),
+            brush =
+                Brush.radialGradient(
+                    colors = listOf(Color.White.copy(alpha = 0.85f), primaryColor.copy(alpha = 0.25f)),
+                    center = Offset(cx, cy),
+                    radius = coreR
+                ),
             radius = coreR,
             center = Offset(cx, cy)
         )
@@ -129,7 +133,10 @@ fun RadialPulseVisualizer(
             val r = baseR * (0.22f + ringT * 0.78f) * wave
 
             drawCircle(
-                color = (if (i % 2 == 0) primaryColor else secondaryColor).copy(alpha = 0.18f + (1f - ringT) * 0.35f + peak * 0.15f),
+                color =
+                    (if (i % 2 == 0) primaryColor else secondaryColor).copy(
+                        alpha = 0.18f + (1f - ringT) * 0.35f + peak * 0.15f
+                    ),
                 radius = r,
                 center = Offset(cx, cy),
                 style = Stroke(width = 1.2f + (1f - ringT) * 2.4f + bass)

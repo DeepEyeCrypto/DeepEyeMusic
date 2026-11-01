@@ -1,0 +1,72 @@
+{
+  "keyword_frequency": {
+    "bass": 124,
+    "mids": 119,
+    "treble": 215,
+    "beat": 99,
+    "energy": 164
+  },
+  "scenes_with_keyword": {
+    "treble": 215,
+    "beat": 99,
+    "mids": 119,
+    "energy": 164,
+    "bass": 124
+  },
+  "behavior_patterns": {
+    "bass": {
+      "drives": 3,
+      "scales": 1,
+      "pulses": 8,
+      "swells": 7,
+      "kicks": 1,
+      "grows": 5,
+      "advances": 2
+    },
+    "mids": {
+      "modulates": 1,
+      "turbulence": 1,
+      "detail": 8,
+      "shifts": 3,
+      "drifts": 3,
+      "shapes": 5,
+      "textures": 3,
+      "layers": 2,
+      "colors": 7
+    },
+    "treble": {
+      "sparkles": 1,
+      "shimmers": 1,
+      "accents": 3,
+      "highlights": 3,
+      "edges": 17
+    },
+    "beat": {
+      "pulses": 8,
+      "kicks": 1,
+      "hits": 7,
+      "drops": 14,
+      "snaps": 6,
+      "flashes": 1
+    },
+    "energy": {
+      "glow": 26,
+      "amplitude": 10,
+      "drives": 3
+    }
+  },
+  "recommended_uniforms": {
+    "iAudioBass": "Low-frequency energy (31-125 Hz). Drives large-scale motion, scale, dilation, pulse depth. Range 0-2.",
+    "iAudioMids": "Mid-frequency energy (125-2000 Hz). Drives turbulence, complexity, texture, color shifts, mid-detail. Range 0-2.",
+    "iAudioTreble": "High-frequency energy (2000+ Hz). Drives sparkle, shimmer, edge highlights, fine detail, micro-motion. Range 0-2.",
+    "iAudioEnergy": "Overall RMS-like level. Drives global brightness, glow, amplitude. Range 0-1.",
+    "iBeatPulse": "Onset/transient detection. Sharp pulse on kick/snare. Range 0-1."
+  },
+  "recommended_smoothing": {
+    "attack_tau": 0.016,
+    "release_tau": 0.05,
+    "beat_release_tau": 0.12,
+    "max_dt": 0.1,
+    "nan_guard": true
+  }
+}

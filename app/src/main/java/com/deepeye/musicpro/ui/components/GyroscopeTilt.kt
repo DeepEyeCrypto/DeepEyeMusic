@@ -29,8 +29,9 @@ fun rememberGyroscopeTilt(): State<Offset> {
     DisposableEffect(context, lifecycleOwner) {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
         val rotationVectorSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
-        val fallbackSensor = sensorManager?.getDefaultSensor(Sensor.TYPE_GRAVITY)
-            ?: sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        val fallbackSensor =
+            sensorManager?.getDefaultSensor(Sensor.TYPE_GRAVITY)
+                ?: sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
         val activeSensor = rotationVectorSensor ?: fallbackSensor
 
@@ -38,43 +39,48 @@ fun rememberGyroscopeTilt(): State<Offset> {
         var currentY = 0f
         val kFilterFactor = 0.12f // 12% low-pass filter smoothing factor (exponential smoothing)
 
-        val listener = object : SensorEventListener {
-            override fun onSensorChanged(event: SensorEvent?) {
-                if (event == null || event.sensor == null) return
+        val listener =
+            object : SensorEventListener {
+                override fun onSensorChanged(event: SensorEvent?) {
+                    if (event == null || event.sensor == null) return
 
-                var targetX = 0f
-                var targetY = 0f
+                    var targetX = 0f
+                    var targetY = 0f
 
-                if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR) {
-                    val rotationMatrix = FloatArray(9)
-                    SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
-                    val orientation = FloatArray(3)
-                    SensorManager.getOrientation(rotationMatrix, orientation)
-                    targetX = (orientation[2] / (Math.PI / 2).toFloat()).coerceIn(-1.0f, 1.0f)
-                    targetY = (orientation[1] / (Math.PI / 2).toFloat()).coerceIn(-1.0f, 1.0f)
-                } else {
-                    targetX = (event.values[0] / 9.81f).coerceIn(-1.0f, 1.0f)
-                    targetY = (event.values[1] / 9.81f).coerceIn(-1.0f, 1.0f)
+                    if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR) {
+                        val rotationMatrix = FloatArray(9)
+                        SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+                        val orientation = FloatArray(3)
+                        SensorManager.getOrientation(rotationMatrix, orientation)
+                        targetX = (orientation[2] / (Math.PI / 2).toFloat()).coerceIn(-1.0f, 1.0f)
+                        targetY = (orientation[1] / (Math.PI / 2).toFloat()).coerceIn(-1.0f, 1.0f)
+                    } else {
+                        targetX = (event.values[0] / 9.81f).coerceIn(-1.0f, 1.0f)
+                        targetY = (event.values[1] / 9.81f).coerceIn(-1.0f, 1.0f)
+                    }
+
+                    currentX += (targetX - currentX) * kFilterFactor
+                    currentY += (targetY - currentY) * kFilterFactor
+
+                    tiltState.value = Offset(currentX, currentY)
                 }
 
-                currentX += (targetX - currentX) * kFilterFactor
-                currentY += (targetY - currentY) * kFilterFactor
-
-                tiltState.value = Offset(currentX, currentY)
+                override fun onAccuracyChanged(
+                    sensor: Sensor?,
+                    accuracy: Int
+                ) {}
             }
 
-            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-        }
-
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                if (sensorManager != null && activeSensor != null) {
-                    sensorManager.registerListener(listener, activeSensor, SensorManager.SENSOR_DELAY_UI)
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    if (sensorManager != null && activeSensor != null) {
+                        sensorManager.registerListener(listener, activeSensor, SensorManager.SENSOR_DELAY_UI)
+                    }
+                } else if (event == Lifecycle.Event.ON_PAUSE) {
+                    sensorManager?.unregisterListener(listener)
                 }
-            } else if (event == Lifecycle.Event.ON_PAUSE) {
-                sensorManager?.unregisterListener(listener)
             }
-        }
 
         lifecycleOwner.lifecycle.addObserver(observer)
 

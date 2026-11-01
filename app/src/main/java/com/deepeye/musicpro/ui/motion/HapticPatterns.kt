@@ -5,44 +5,35 @@ package com.deepeye.musicpro.ui.motion
 
 import android.content.Context
 import android.os.Build
-import android.provider.Settings
-import android.view.HapticFeedbackConstants
-import android.view.View
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
+import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.os.VibrationEffect
+import android.provider.Settings
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.ScrollState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 
 /**
  * Premium haptic feedback patterns for DeepEye Music Pro.
  */
 class PremiumHaptics(private val context: Context, private val isEnabled: Boolean) {
-    private val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-        vibratorManager.defaultVibrator
-    } else {
-        @Suppress("DEPRECATION")
-        context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-    }
+    private val vibrator =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            vibratorManager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
 
     fun lightClick() {
         if (!isEnabled) return
@@ -53,7 +44,8 @@ class PremiumHaptics(private val context: Context, private val isEnabled: Boolea
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(10)
             }
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+        }
     }
 
     fun click() {
@@ -65,7 +57,8 @@ class PremiumHaptics(private val context: Context, private val isEnabled: Boolea
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(20)
             }
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+        }
     }
 
     fun heavyClick() {
@@ -77,7 +70,8 @@ class PremiumHaptics(private val context: Context, private val isEnabled: Boolea
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(40)
             }
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+        }
     }
 
     fun slideTick() {
@@ -90,7 +84,8 @@ class PremiumHaptics(private val context: Context, private val isEnabled: Boolea
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(30)
             }
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+        }
     }
 }
 
@@ -122,74 +117,86 @@ fun rememberPremiumHaptics(): PremiumHaptics {
  * It triggers a subtle slideTick haptic every time a new item crosses the viewport boundary,
  * but only if the user is actively scrolling.
  */
-fun Modifier.premiumScrollHaptics(state: LazyListState, thresholdPx: Int = 150): Modifier = composed {
-    val haptics = rememberPremiumHaptics()
-    
-    LaunchedEffect(state) {
-        var lastOffset = state.firstVisibleItemScrollOffset
-        var accumulated = 0
-        snapshotFlow { state.firstVisibleItemScrollOffset }
-            .collect { offset ->
-                if (state.isScrollInProgress) {
-                    val delta = kotlin.math.abs(offset - lastOffset)
-                    // Ignore huge jumps caused by index changes
-                    if (delta < 1000) {
-                        accumulated += delta
-                        if (accumulated > thresholdPx) {
-                            haptics.slideTick()
-                            accumulated = 0
+fun Modifier.premiumScrollHaptics(
+    state: LazyListState,
+    thresholdPx: Int = 150
+): Modifier =
+    composed {
+        val haptics = rememberPremiumHaptics()
+
+        LaunchedEffect(state) {
+            var lastOffset = state.firstVisibleItemScrollOffset
+            var accumulated = 0
+            snapshotFlow { state.firstVisibleItemScrollOffset }
+                .collect { offset ->
+                    if (state.isScrollInProgress) {
+                        val delta = kotlin.math.abs(offset - lastOffset)
+                        // Ignore huge jumps caused by index changes
+                        if (delta < 1000) {
+                            accumulated += delta
+                            if (accumulated > thresholdPx) {
+                                haptics.slideTick()
+                                accumulated = 0
+                            }
                         }
                     }
+                    lastOffset = offset
                 }
-                lastOffset = offset
-            }
+        }
+        this
     }
-    this
-}
 
 /**
  * Adds optimized, premium haptic feedback to a LazyGrid during scrolling.
  */
-fun Modifier.premiumScrollHaptics(state: LazyGridState, thresholdPx: Int = 150): Modifier = composed {
-    val haptics = rememberPremiumHaptics()
-    
-    LaunchedEffect(state) {
-        var lastOffset = state.firstVisibleItemScrollOffset
-        var accumulated = 0
-        snapshotFlow { state.firstVisibleItemScrollOffset }
-            .collect { offset ->
-                if (state.isScrollInProgress) {
-                    val delta = kotlin.math.abs(offset - lastOffset)
-                    if (delta < 1000) {
-                        accumulated += delta
-                        if (accumulated > thresholdPx) {
-                            haptics.slideTick()
-                            accumulated = 0
+fun Modifier.premiumScrollHaptics(
+    state: LazyGridState,
+    thresholdPx: Int = 150
+): Modifier =
+    composed {
+        val haptics = rememberPremiumHaptics()
+
+        LaunchedEffect(state) {
+            var lastOffset = state.firstVisibleItemScrollOffset
+            var accumulated = 0
+            snapshotFlow { state.firstVisibleItemScrollOffset }
+                .collect { offset ->
+                    if (state.isScrollInProgress) {
+                        val delta = kotlin.math.abs(offset - lastOffset)
+                        if (delta < 1000) {
+                            accumulated += delta
+                            if (accumulated > thresholdPx) {
+                                haptics.slideTick()
+                                accumulated = 0
+                            }
                         }
                     }
+                    lastOffset = offset
                 }
-                lastOffset = offset
-            }
+        }
+        this
     }
-    this
-}
 
 /**
  * Adds optimized, premium haptic feedback to a standard ScrollState.
  * It triggers a tick every time the user scrolls past [thresholdPx].
  */
-fun Modifier.premiumScrollHaptics(state: ScrollState, thresholdPx: Int = 300): Modifier = composed {
-    val haptics = rememberPremiumHaptics()
-    
-    LaunchedEffect(state) {
-        var lastHapticValue = state.value
-        snapshotFlow { state.value }
-            .collect { value ->
-                if (state.isScrollInProgress && kotlin.math.abs(value - lastHapticValue) > thresholdPx) {
-                    haptics.slideTick()
-                    lastHapticValue = value
+fun Modifier.premiumScrollHaptics(
+    state: ScrollState,
+    thresholdPx: Int = 300
+): Modifier =
+    composed {
+        val haptics = rememberPremiumHaptics()
+
+        LaunchedEffect(state) {
+            var lastHapticValue = state.value
+            snapshotFlow { state.value }
+                .collect { value ->
+                    if (state.isScrollInProgress && kotlin.math.abs(value - lastHapticValue) > thresholdPx) {
+                        haptics.slideTick()
+                        lastHapticValue = value
+                    }
                 }
-            }
+        }
+        this
     }
-    this
-}

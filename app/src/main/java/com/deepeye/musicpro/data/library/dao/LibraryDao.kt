@@ -80,7 +80,9 @@ interface LibraryDao {
     fun observeDownloads(): Flow<List<DownloadEntity>>
 
     @Query("SELECT * FROM downloads WHERE state = :state ORDER BY downloadedAt DESC")
-    fun observeCompletedDownloads(state: com.deepeye.musicpro.domain.model.library.DownloadState = com.deepeye.musicpro.domain.model.library.DownloadState.COMPLETED): Flow<List<DownloadEntity>>
+    fun observeCompletedDownloads(
+        state: com.deepeye.musicpro.domain.model.library.DownloadState = com.deepeye.musicpro.domain.model.library.DownloadState.COMPLETED
+    ): Flow<List<DownloadEntity>>
 
     @Query("SELECT * FROM downloads WHERE state = 'COMPLETED'")
     suspend fun getCompletedDownloadsList(): List<DownloadEntity>
@@ -120,5 +122,8 @@ interface LibraryDao {
     suspend fun getAllSubscribedChannels(): List<com.deepeye.musicpro.data.library.entities.SubscribedChannelEntity>
 
     @Query("UPDATE subscribed_channels SET lastSeenVideoId = :videoId WHERE channelId = :channelId")
-    suspend fun updateLastSeenVideo(channelId: String, videoId: String)
+    suspend fun updateLastSeenVideo(
+        channelId: String,
+        videoId: String
+    )
 }

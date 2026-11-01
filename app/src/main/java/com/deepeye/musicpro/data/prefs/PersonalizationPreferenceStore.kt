@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.Flow
  */
 interface PersonalizationPreferenceStore {
     fun observe(): Flow<PersonalizationPreferences>
+
     suspend fun current(): PersonalizationPreferences
+
     suspend fun update(transform: (PersonalizationPreferences) -> PersonalizationPreferences)
 }

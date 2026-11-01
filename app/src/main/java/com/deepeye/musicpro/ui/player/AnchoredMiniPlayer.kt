@@ -6,7 +6,6 @@ package com.deepeye.musicpro.ui.player
 import android.util.Log
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.splineBasedDecay
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.gestures.AnchoredDraggableState
@@ -22,9 +21,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -112,7 +111,6 @@ fun AnchoredMiniPlayer(
             )
         }
 
-
         // Sync programmatic state changes (from ViewModel e.g. collapse() on back press)
         // to the draggable state. This does NOT trigger the drag-settled callback below
         // because we guard against re-entering.
@@ -152,7 +150,7 @@ fun AnchoredMiniPlayer(
                         val isAtCollapsed by remember {
                             derivedStateOf {
                                 draggableState.targetValue == MiniSheetAnchor.COLLAPSED &&
-                                draggableState.currentValue == MiniSheetAnchor.COLLAPSED
+                                    draggableState.currentValue == MiniSheetAnchor.COLLAPSED
                             }
                         }
                         if (isAtCollapsed) {
@@ -177,10 +175,11 @@ fun AnchoredMiniPlayer(
 
                     coroutineScope {
                         awaitEachGesture {
-                            val down = awaitFirstDown(
-                                requireUnconsumed = false,
-                                pass = PointerEventPass.Initial
-                            )
+                            val down =
+                                awaitFirstDown(
+                                    requireUnconsumed = false,
+                                    pass = PointerEventPass.Initial
+                                )
 
                             // Guard: if the touch is below the mini player content area
                             // (i.e., in the bottom nav bar zone), don't intercept it.
@@ -243,15 +242,24 @@ fun AnchoredMiniPlayer(
                                                 dragDirection = Orientation.Horizontal
                                                 overSlop = if (dx > 0) dx - touchSlop else dx + touchSlop
                                                 change.consume()
-                                                Log.d("MiniPlayerGesture", "Horizontal slop crossed (COLLAPSED). Consuming.")
+                                                Log.d(
+                                                    "MiniPlayerGesture",
+                                                    "Horizontal slop crossed (COLLAPSED). Consuming."
+                                                )
                                             } else {
                                                 dragDirection = null
-                                                Log.d("MiniPlayerGesture", "Horizontal slop crossed (EXPANDED). Yielding to children.")
+                                                Log.d(
+                                                    "MiniPlayerGesture",
+                                                    "Horizontal slop crossed (EXPANDED). Yielding to children."
+                                                )
                                             }
                                         }
                                         else -> {
                                             dragDirection = null
-                                            Log.d("MiniPlayerGesture", "Ambiguous diagonal detected (dx=$absDx, dy=$absDy). Rejecting.")
+                                            Log.d(
+                                                "MiniPlayerGesture",
+                                                "Ambiguous diagonal detected (dx=$absDx, dy=$absDy). Rejecting."
+                                            )
                                         }
                                     }
                                     break
@@ -266,20 +274,21 @@ fun AnchoredMiniPlayer(
                             // 2. Direction committed — now consume at Initial pass for the drag
                             if (dragDirection == Orientation.Vertical) {
                                 val dragChannel = Channel<Float>(Channel.UNLIMITED)
-                                val dragJob = scope.launch {
-                                    draggableState.anchoredDrag(MutatePriority.UserInput) {
-                                        var currentOffset = draggableState.offset
-                                        if (!currentOffset.isNaN()) {
-                                            dragTo(currentOffset + overSlop)
-                                        }
-                                        for (deltaY in dragChannel) {
-                                            currentOffset = draggableState.offset
+                                val dragJob =
+                                    scope.launch {
+                                        draggableState.anchoredDrag(MutatePriority.UserInput) {
+                                            var currentOffset = draggableState.offset
                                             if (!currentOffset.isNaN()) {
-                                                dragTo(currentOffset + deltaY)
+                                                dragTo(currentOffset + overSlop)
+                                            }
+                                            for (deltaY in dragChannel) {
+                                                currentOffset = draggableState.offset
+                                                if (!currentOffset.isNaN()) {
+                                                    dragTo(currentOffset + deltaY)
+                                                }
                                             }
                                         }
                                     }
-                                }
 
                                 try {
                                     while (true) {
@@ -306,7 +315,8 @@ fun AnchoredMiniPlayer(
                                         try {
                                             dragJob.join()
                                             draggableState.settle(0f) // velocity param deprecated; using 0f
-                                        } catch (_: Exception) {}
+                                        } catch (_: Exception) {
+                                        }
                                     }
                                 }
                             } else {
@@ -319,7 +329,10 @@ fun AnchoredMiniPlayer(
                                         if (change == null || !change.pressed) {
                                             val velocity = velocityTracker.calculateVelocity()
                                             val vx = velocity.x
-                                            Log.d("MiniPlayerGesture", "Horizontal drag ended. DragX=$dragX, VelocityX=$vx")
+                                            Log.d(
+                                                "MiniPlayerGesture",
+                                                "Horizontal drag ended. DragX=$dragX, VelocityX=$vx"
+                                            )
 
                                             val skipByDistance = abs(dragX) > skipThreshold
                                             val skipByFling = abs(vx) > horizontalFlingVelocityThreshold
@@ -353,13 +366,20 @@ fun AnchoredMiniPlayer(
                 sheetState = sheetState,
                 currentAnchor = draggableState.currentValue,
                 progress =
-                if (draggableState.offset.isNaN()) {
-                    0f
-                } else {
-                    // Calculate progress from collapsed (0f) to expanded (1f)
-                    val totalDist = collapsedAnchor - expandedAnchor
-                    if (totalDist > 0) ((collapsedAnchor - draggableState.offset) / totalDist).coerceIn(0f, 1f) else 0f
-                },
+                    if (draggableState.offset.isNaN()) {
+                        0f
+                    } else {
+                        // Calculate progress from collapsed (0f) to expanded (1f)
+                        val totalDist = collapsedAnchor - expandedAnchor
+                        if (totalDist > 0) {
+                            ((collapsedAnchor - draggableState.offset) / totalDist).coerceIn(
+                                0f,
+                                1f
+                            )
+                        } else {
+                            0f
+                        }
+                    },
                 onExpand = onExpand,
                 onCollapse = onCollapse,
                 onHalfExpand = onHalfExpand,

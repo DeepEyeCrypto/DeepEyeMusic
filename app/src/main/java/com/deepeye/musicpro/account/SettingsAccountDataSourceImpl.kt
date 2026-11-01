@@ -19,42 +19,47 @@ import javax.inject.Singleton
  * The [accountKey] is built as a stable SHA-256 hash of the refresh token.
  */
 @Singleton
-class SettingsAccountDataSourceImpl @Inject constructor(
-    private val settingsDataStore: SettingsDataStore
-) : AccountDataSource {
+class SettingsAccountDataSourceImpl
+    @Inject
+    constructor(
+        private val settingsDataStore: SettingsDataStore
+    ) : AccountDataSource {
+        override val connectedStream: Flow<ConnectedAccountSnapshot?> =
+            settingsDataStore.settings.map { settings ->
+                if (!settings.youtubeAccessToken.isNullOrBlank()) {
+                    val accountKey =
+                        deriveStableAccountKey(
+                            settings.youtubeRefreshToken,
+                            settings.youtubeAccessToken
+                        )
+                    ConnectedAccountSnapshot(
+                        accountKey = accountKey,
+                        displayName = settings.youtubeUserName,
+                        avatarUrl = settings.youtubeUserAvatar,
+                        channelKey = settings.youtubeUserEmail,
+                    )
+                } else {
+                    null
+                }
+            }.distinctUntilChanged()
 
-    override val connectedStream: Flow<ConnectedAccountSnapshot?> =
-        settingsDataStore.settings.map { settings ->
-            if (!settings.youtubeAccessToken.isNullOrBlank()) {
-                val accountKey = deriveStableAccountKey(
-                    settings.youtubeRefreshToken, 
-                    settings.youtubeAccessToken
-                )
-                ConnectedAccountSnapshot(
-                    accountKey = accountKey,
-                    displayName = settings.youtubeUserName,
-                    avatarUrl = settings.youtubeUserAvatar,
-                    channelKey = settings.youtubeUserEmail,
-                )
-            } else {
-                null
+        /**
+         * Creates an opaque, privacy-safe key for caching.
+         * Uses the refresh token if available because it rarely changes across access token
+         * rotations, guaranteeing a stable ID for cache invalidation.
+         */
+        private fun deriveStableAccountKey(
+            refreshToken: String?,
+            accessToken: String
+        ): String {
+            val seed = if (!refreshToken.isNullOrBlank()) refreshToken else accessToken
+            return try {
+                val md = MessageDigest.getInstance("SHA-256")
+                val digest = md.digest(seed.toByteArray())
+                digest.fold("") { str, it -> str + "%02x".format(it) }
+            } catch (_: Exception) {
+                // Fallback that still hides the raw token if hashing fails
+                seed.hashCode().toString()
             }
-        }.distinctUntilChanged()
-
-    /**
-     * Creates an opaque, privacy-safe key for caching.
-     * Uses the refresh token if available because it rarely changes across access token
-     * rotations, guaranteeing a stable ID for cache invalidation.
-     */
-    private fun deriveStableAccountKey(refreshToken: String?, accessToken: String): String {
-        val seed = if (!refreshToken.isNullOrBlank()) refreshToken else accessToken
-        return try {
-            val md = MessageDigest.getInstance("SHA-256")
-            val digest = md.digest(seed.toByteArray())
-            digest.fold("") { str, it -> str + "%02x".format(it) }
-        } catch (_: Exception) {
-            // Fallback that still hides the raw token if hashing fails
-            seed.hashCode().toString()
         }
     }
-}

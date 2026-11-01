@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface HistoryDao {
-
     // --- Search History ---
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSearch(search: SearchHistoryEntity)
@@ -60,5 +59,8 @@ interface HistoryDao {
     suspend fun getQueueSnapshot(): QueueSnapshotEntity?
 
     @Query("UPDATE queue_history SET current_index = :index, timestamp = :timestamp WHERE id = 1")
-    suspend fun updateQueueIndex(index: Int, timestamp: Long = System.currentTimeMillis())
+    suspend fun updateQueueIndex(
+        index: Int,
+        timestamp: Long = System.currentTimeMillis()
+    )
 }

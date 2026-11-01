@@ -16,16 +16,16 @@ package com.deepeye.musicpro.ui.update
  * formatting noise so the text fits cleanly inside a single Compose Text.
  */
 object MarkdownLiteDecoder {
-
     fun decode(markdown: String): String {
-        var s = markdown
-            .replace("&#10;", "\n")
-            .replace("&#xD;", "\n")
-            .replace("&amp;", "&")
-            .replace("&lt;", "<")
-            .replace("&gt;", ">")
-            .replace("&quot;", "\"")
-            .replace("&#39;", "'")
+        var s =
+            markdown
+                .replace("&#10;", "\n")
+                .replace("&#xD;", "\n")
+                .replace("&amp;", "&")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&quot;", "\"")
+                .replace("&#39;", "'")
 
         // Strip trailing reference links like [1]: https://example.com
         s = s.replace("(?m)^\\[\\d+\\]:\\s+.*$".toRegex(), "")

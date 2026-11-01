@@ -62,26 +62,28 @@ fun SearchFilterBar(
                 },
                 modifier = Modifier.defaultMinSize(minHeight = 48.dp),
                 leadingIcon =
-                if (isSelected) {
-                    { Icon(Icons.Rounded.Check, contentDescription = null, tint = NeonCyanAccent) }
-                } else {
-                    null
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = GlassContainer,
-                    labelColor = TextWhite,
-                    selectedContainerColor = GlassContainer,
-                    selectedLabelColor = NeonCyanAccent,
-                    selectedLeadingIconColor = NeonCyanAccent,
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = isSelected,
-                    borderColor = GlassBorder,
-                    selectedBorderColor = NeonCyanAccent,
-                    borderWidth = 1.dp,
-                    selectedBorderWidth = 1.dp,
-                ),
+                    if (isSelected) {
+                        { Icon(Icons.Rounded.Check, contentDescription = null, tint = NeonCyanAccent) }
+                    } else {
+                        null
+                    },
+                colors =
+                    FilterChipDefaults.filterChipColors(
+                        containerColor = GlassContainer,
+                        labelColor = TextWhite,
+                        selectedContainerColor = GlassContainer,
+                        selectedLabelColor = NeonCyanAccent,
+                        selectedLeadingIconColor = NeonCyanAccent,
+                    ),
+                border =
+                    FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = isSelected,
+                        borderColor = GlassBorder,
+                        selectedBorderColor = NeonCyanAccent,
+                        borderWidth = 1.dp,
+                        selectedBorderWidth = 1.dp,
+                    ),
             )
         }
     }

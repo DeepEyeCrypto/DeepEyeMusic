@@ -8,8 +8,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import com.deepeye.musicpro.ui.modifiers.consumeHorizontalDrags
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -21,9 +19,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.deepeye.musicpro.ui.modifiers.consumeHorizontalDrags
 import kotlin.math.roundToInt
 
 @Composable
@@ -42,41 +40,41 @@ fun SwipeQueueCard(
     ) {
         Box(
             modifier =
-            Modifier
-                .fillMaxWidth()
-                .background(
-                    when {
-                        offsetX < -50f -> MaterialTheme.colorScheme.error.copy(alpha = 0.5f) // Red for remove
-                        offsetX > 50f -> com.deepeye.musicpro.ui.theme.TealDim.copy(alpha = 0.5f) // Teal for action
-                        else -> Color.Transparent
-                    },
-                )
-                .consumeHorizontalDrags(
-                    enabled = true,
-                    onHorizontalDrag = { _, dragAmount ->
-                        offsetX += dragAmount
-                    },
-                    onDragEnd = {
+                Modifier
+                    .fillMaxWidth()
+                    .background(
                         when {
-                            offsetX < -220f -> {
-                                isDismissed = true
-                                onRemove()
+                            offsetX < -50f -> MaterialTheme.colorScheme.error.copy(alpha = 0.5f) // Red for remove
+                            offsetX > 50f -> com.deepeye.musicpro.ui.theme.TealDim.copy(alpha = 0.5f) // Teal for action
+                            else -> Color.Transparent
+                        },
+                    )
+                    .consumeHorizontalDrags(
+                        enabled = true,
+                        onHorizontalDrag = { _, dragAmount ->
+                            offsetX += dragAmount
+                        },
+                        onDragEnd = {
+                            when {
+                                offsetX < -220f -> {
+                                    isDismissed = true
+                                    onRemove()
+                                }
+                                offsetX > 220f -> {
+                                    onPlayNext()
+                                    offsetX = 0f
+                                }
+                                offsetX > 120f -> {
+                                    onPin()
+                                    offsetX = 0f
+                                }
+                                else -> offsetX = 0f
                             }
-                            offsetX > 220f -> {
-                                onPlayNext()
-                                offsetX = 0f
-                            }
-                            offsetX > 120f -> {
-                                onPin()
-                                offsetX = 0f
-                            }
-                            else -> offsetX = 0f
+                        },
+                        onDragCancel = {
+                            offsetX = 0f
                         }
-                    },
-                    onDragCancel = {
-                        offsetX = 0f
-                    }
-                ),
+                    ),
         ) {
             // Background Action Hints
             if (offsetX < 0) {
@@ -102,9 +100,9 @@ fun SwipeQueueCard(
             // Foreground Content
             Box(
                 modifier =
-                Modifier
-                    .offset { IntOffset(offsetX.roundToInt(), 0) }
-                    .background(MaterialTheme.colorScheme.surface), // Queue background
+                    Modifier
+                        .offset { IntOffset(offsetX.roundToInt(), 0) }
+                        .background(MaterialTheme.colorScheme.surface), // Queue background
             ) {
                 content()
             }

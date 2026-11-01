@@ -17,266 +17,266 @@ import javax.inject.Singleton
  */
 @Singleton
 class QueueManager
-@Inject
-constructor() {
-    private val _queue = MutableStateFlow<List<MediaItem>>(emptyList())
-    val queue: StateFlow<List<MediaItem>> = _queue.asStateFlow()
+    @Inject
+    constructor() {
+        private val _queue = MutableStateFlow<List<MediaItem>>(emptyList())
+        val queue: StateFlow<List<MediaItem>> = _queue.asStateFlow()
 
-    private val _currentIndex = MutableStateFlow(-1)
-    val currentIndex: StateFlow<Int> = _currentIndex.asStateFlow()
+        private val _currentIndex = MutableStateFlow(-1)
+        val currentIndex: StateFlow<Int> = _currentIndex.asStateFlow()
 
-    private val _repeatMode = MutableStateFlow(RepeatMode.NONE)
-    val repeatMode: StateFlow<RepeatMode> = _repeatMode.asStateFlow()
+        private val _repeatMode = MutableStateFlow(RepeatMode.NONE)
+        val repeatMode: StateFlow<RepeatMode> = _repeatMode.asStateFlow()
 
-    private val _shuffleMode = MutableStateFlow(ShuffleMode.OFF)
-    val shuffleMode: StateFlow<ShuffleMode> = _shuffleMode.asStateFlow()
+        private val _shuffleMode = MutableStateFlow(ShuffleMode.OFF)
+        val shuffleMode: StateFlow<ShuffleMode> = _shuffleMode.asStateFlow()
 
-    private var originalQueue: List<MediaItem> = emptyList()
+        private var originalQueue: List<MediaItem> = emptyList()
 
-    val currentItem: MediaItem?
-        get() {
-            val idx = _currentIndex.value
+        val currentItem: MediaItem?
+            get() {
+                val idx = _currentIndex.value
+                val q = _queue.value
+                return if (idx in q.indices) q[idx] else null
+            }
+
+        /**
+         * Sets a new queue and starts playing from the given index.
+         */
+        @Synchronized
+        fun setQueue(
+            items: List<MediaItem>,
+            startIndex: Int = 0,
+        ) {
+            originalQueue = items
+            if (_shuffleMode.value == ShuffleMode.ON) {
+                val shuffled = items.toMutableList()
+                val startItem = items.getOrNull(startIndex)
+                shuffled.shuffle()
+                // Move the start item to the front
+                startItem?.let {
+                    shuffled.remove(it)
+                    shuffled.add(0, it)
+                }
+                _queue.value = shuffled
+                _currentIndex.value = 0
+            } else {
+                _queue.value = items
+                _currentIndex.value = startIndex.coerceIn(0, items.size - 1)
+            }
+        }
+
+        @Synchronized
+        fun peekNext(): MediaItem? {
             val q = _queue.value
-            return if (idx in q.indices) q[idx] else null
+            if (q.isEmpty()) return null
+            val nextIndex = _currentIndex.value + 1
+            return if (nextIndex < q.size) q[nextIndex] else null
         }
 
-    /**
-     * Sets a new queue and starts playing from the given index.
-     */
-    @Synchronized
-    fun setQueue(
-        items: List<MediaItem>,
-        startIndex: Int = 0,
-    ) {
-        originalQueue = items
-        if (_shuffleMode.value == ShuffleMode.ON) {
-            val shuffled = items.toMutableList()
-            val startItem = items.getOrNull(startIndex)
-            shuffled.shuffle()
-            // Move the start item to the front
-            startItem?.let {
-                shuffled.remove(it)
-                shuffled.add(0, it)
-            }
-            _queue.value = shuffled
-            _currentIndex.value = 0
-        } else {
-            _queue.value = items
-            _currentIndex.value = startIndex.coerceIn(0, items.size - 1)
-        }
-    }
+        /**
+         * Moves to the next track in the queue.
+         * Returns the next MediaItem, or null if at end of queue with repeat off.
+         */
+        @Synchronized
+        fun next(): MediaItem? {
+            val q = _queue.value
+            if (q.isEmpty()) return null
 
-    @Synchronized
-    fun peekNext(): MediaItem? {
-        val q = _queue.value
-        if (q.isEmpty()) return null
-        val nextIndex = _currentIndex.value + 1
-        return if (nextIndex < q.size) q[nextIndex] else null
-    }
-
-    /**
-     * Moves to the next track in the queue.
-     * Returns the next MediaItem, or null if at end of queue with repeat off.
-     */
-    @Synchronized
-    fun next(): MediaItem? {
-        val q = _queue.value
-        if (q.isEmpty()) return null
-
-        return when (_repeatMode.value) {
-            RepeatMode.ONE -> {
-                // Stay on same song
-                currentItem
-            }
-            RepeatMode.ALL -> {
-                // FEL same-song loop: a single-item queue wraps modulo to index 0,
-                // so natural completion / Next silently replays the SAME audio
-                // instead of reaching autoplay. Yield to autoplay resolution so a
-                // DIFFERENT track can be fetched; intentional single-track repeat
-                // remains available via Repeat ONE.
-                if (q.size <= 1) return null
-                val nextIndex = (_currentIndex.value + 1) % q.size
-                _currentIndex.value = nextIndex
-                q[nextIndex]
-            }
-            RepeatMode.NONE -> {
-                val nextIndex = _currentIndex.value + 1
-                if (nextIndex < q.size) {
+            return when (_repeatMode.value) {
+                RepeatMode.ONE -> {
+                    // Stay on same song
+                    currentItem
+                }
+                RepeatMode.ALL -> {
+                    // FEL same-song loop: a single-item queue wraps modulo to index 0,
+                    // so natural completion / Next silently replays the SAME audio
+                    // instead of reaching autoplay. Yield to autoplay resolution so a
+                    // DIFFERENT track can be fetched; intentional single-track repeat
+                    // remains available via Repeat ONE.
+                    if (q.size <= 1) return null
+                    val nextIndex = (_currentIndex.value + 1) % q.size
                     _currentIndex.value = nextIndex
                     q[nextIndex]
-                } else {
-                    null // End of queue
                 }
-            }
-        }
-    }
-
-    /**
-     * Moves to the previous track in the queue.
-     * Returns null if already at the beginning with no repeat, signaling the caller
-     * should restart the current track instead.
-     */
-    @Synchronized
-    fun previous(): MediaItem? {
-        val q = _queue.value
-        if (q.isEmpty()) return null
-
-        return if (_currentIndex.value > 0) {
-            val prevIndex = _currentIndex.value - 1
-            _currentIndex.value = prevIndex
-            q[prevIndex]
-        } else if (_repeatMode.value == RepeatMode.ALL) {
-            val prevIndex = q.size - 1
-            _currentIndex.value = prevIndex
-            q[prevIndex]
-        } else {
-            // Already at the beginning with no repeat — return null
-            // so the caller can decide to restart the current track.
-            null
-        }
-    }
-
-    /**
-     * Toggles repeat mode: OFF → ALL → ONE → OFF
-     */
-    @Synchronized
-    fun toggleRepeatMode() {
-        _repeatMode.value =
-            when (_repeatMode.value) {
-                RepeatMode.NONE -> RepeatMode.ALL
-                RepeatMode.ALL -> RepeatMode.ONE
-                RepeatMode.ONE -> RepeatMode.NONE
-            }
-    }
-
-    /**
-     * Toggles shuffle mode on/off.
-     */
-    @Synchronized
-    fun toggleShuffleMode() {
-        _shuffleMode.value =
-            when (_shuffleMode.value) {
-                ShuffleMode.OFF -> {
-                    // Shuffle the queue, keeping current item at current position
-                    val current = currentItem
-                    val shuffled = _queue.value.toMutableList()
-                    shuffled.shuffle()
-                    current?.let {
-                        shuffled.remove(it)
-                        shuffled.add(0, it)
-                        _currentIndex.value = 0
+                RepeatMode.NONE -> {
+                    val nextIndex = _currentIndex.value + 1
+                    if (nextIndex < q.size) {
+                        _currentIndex.value = nextIndex
+                        q[nextIndex]
+                    } else {
+                        null // End of queue
                     }
-                    _queue.value = shuffled
-                    ShuffleMode.ON
                 }
-                ShuffleMode.ON -> {
-                    // Restore original order
-                    val current = currentItem
-                    _queue.value = originalQueue
-                    current?.let {
-                        val idx = originalQueue.indexOf(it)
-                        if (idx >= 0) _currentIndex.value = idx
+            }
+        }
+
+        /**
+         * Moves to the previous track in the queue.
+         * Returns null if already at the beginning with no repeat, signaling the caller
+         * should restart the current track instead.
+         */
+        @Synchronized
+        fun previous(): MediaItem? {
+            val q = _queue.value
+            if (q.isEmpty()) return null
+
+            return if (_currentIndex.value > 0) {
+                val prevIndex = _currentIndex.value - 1
+                _currentIndex.value = prevIndex
+                q[prevIndex]
+            } else if (_repeatMode.value == RepeatMode.ALL) {
+                val prevIndex = q.size - 1
+                _currentIndex.value = prevIndex
+                q[prevIndex]
+            } else {
+                // Already at the beginning with no repeat — return null
+                // so the caller can decide to restart the current track.
+                null
+            }
+        }
+
+        /**
+         * Toggles repeat mode: OFF → ALL → ONE → OFF
+         */
+        @Synchronized
+        fun toggleRepeatMode() {
+            _repeatMode.value =
+                when (_repeatMode.value) {
+                    RepeatMode.NONE -> RepeatMode.ALL
+                    RepeatMode.ALL -> RepeatMode.ONE
+                    RepeatMode.ONE -> RepeatMode.NONE
+                }
+        }
+
+        /**
+         * Toggles shuffle mode on/off.
+         */
+        @Synchronized
+        fun toggleShuffleMode() {
+            _shuffleMode.value =
+                when (_shuffleMode.value) {
+                    ShuffleMode.OFF -> {
+                        // Shuffle the queue, keeping current item at current position
+                        val current = currentItem
+                        val shuffled = _queue.value.toMutableList()
+                        shuffled.shuffle()
+                        current?.let {
+                            shuffled.remove(it)
+                            shuffled.add(0, it)
+                            _currentIndex.value = 0
+                        }
+                        _queue.value = shuffled
+                        ShuffleMode.ON
                     }
-                    ShuffleMode.OFF
-                }
-            }
-    }
-
-    /**
-     * Moves an item in the queue from one position to another (drag-to-reorder).
-     */
-    @Synchronized
-    fun moveItem(
-        fromIndex: Int,
-        toIndex: Int,
-    ) {
-        val mutable = _queue.value.toMutableList()
-        if (fromIndex in mutable.indices && toIndex in mutable.indices) {
-            val item = mutable.removeAt(fromIndex)
-            mutable.add(toIndex, item)
-            _queue.value = mutable
-
-            // Adjust current index if needed
-            val currentIdx = _currentIndex.value
-            _currentIndex.value =
-                when {
-                    currentIdx == fromIndex -> toIndex
-                    fromIndex < currentIdx && toIndex >= currentIdx -> currentIdx - 1
-                    fromIndex > currentIdx && toIndex <= currentIdx -> currentIdx + 1
-                    else -> currentIdx
+                    ShuffleMode.ON -> {
+                        // Restore original order
+                        val current = currentItem
+                        _queue.value = originalQueue
+                        current?.let {
+                            val idx = originalQueue.indexOf(it)
+                            if (idx >= 0) _currentIndex.value = idx
+                        }
+                        ShuffleMode.OFF
+                    }
                 }
         }
-    }
 
-    /**
-     * Removes an item from the queue.
-     */
-    @Synchronized
-    fun removeItem(index: Int) {
-        val mutable = _queue.value.toMutableList()
-        if (index in mutable.indices) {
-            mutable.removeAt(index)
-            _queue.value = mutable
+        /**
+         * Moves an item in the queue from one position to another (drag-to-reorder).
+         */
+        @Synchronized
+        fun moveItem(
+            fromIndex: Int,
+            toIndex: Int,
+        ) {
+            val mutable = _queue.value.toMutableList()
+            if (fromIndex in mutable.indices && toIndex in mutable.indices) {
+                val item = mutable.removeAt(fromIndex)
+                mutable.add(toIndex, item)
+                _queue.value = mutable
 
-            val currentIdx = _currentIndex.value
-            if (index < currentIdx) {
-                // Item before current was removed, shift index back
-                _currentIndex.value = currentIdx - 1
-            } else if (index == currentIdx) {
-                // Currently playing item was removed; keep index the same
-                // so it now points to the next item (which shifted into this position).
-                // If we removed the last item, clamp to the new last index.
-                _currentIndex.value = currentIdx.coerceAtMost(mutable.size - 1).coerceAtLeast(-1)
+                // Adjust current index if needed
+                val currentIdx = _currentIndex.value
+                _currentIndex.value =
+                    when {
+                        currentIdx == fromIndex -> toIndex
+                        fromIndex < currentIdx && toIndex >= currentIdx -> currentIdx - 1
+                        fromIndex > currentIdx && toIndex <= currentIdx -> currentIdx + 1
+                        else -> currentIdx
+                    }
             }
-            // If index > currentIdx, no adjustment needed
+        }
+
+        /**
+         * Removes an item from the queue.
+         */
+        @Synchronized
+        fun removeItem(index: Int) {
+            val mutable = _queue.value.toMutableList()
+            if (index in mutable.indices) {
+                mutable.removeAt(index)
+                _queue.value = mutable
+
+                val currentIdx = _currentIndex.value
+                if (index < currentIdx) {
+                    // Item before current was removed, shift index back
+                    _currentIndex.value = currentIdx - 1
+                } else if (index == currentIdx) {
+                    // Currently playing item was removed; keep index the same
+                    // so it now points to the next item (which shifted into this position).
+                    // If we removed the last item, clamp to the new last index.
+                    _currentIndex.value = currentIdx.coerceAtMost(mutable.size - 1).coerceAtLeast(-1)
+                }
+                // If index > currentIdx, no adjustment needed
+            }
+        }
+
+        /**
+         * Clears the queue.
+         */
+        @Synchronized
+        fun clear() {
+            _queue.value = emptyList()
+            originalQueue = emptyList()
+            _currentIndex.value = -1
+        }
+
+        @Synchronized
+        fun clearQueue() = clear()
+
+        /**
+         * Jumps to a specific index in the queue.
+         */
+        @Synchronized
+        fun jumpTo(index: Int): MediaItem? {
+            val q = _queue.value
+            if (index in q.indices) {
+                _currentIndex.value = index
+                return q[index]
+            }
+            return null
+        }
+
+        @Synchronized
+        fun jumpToId(id: String): MediaItem? {
+            val q = _queue.value
+            val index = q.indexOfFirst { it.id == id }
+            if (index != -1) {
+                _currentIndex.value = index
+                return q[index]
+            }
+            return null
+        }
+
+        /**
+         * Appends a list of items to the end of the queue.
+         */
+        @Synchronized
+        fun addItems(items: List<MediaItem>) {
+            val mutable = _queue.value.toMutableList()
+            mutable.addAll(items)
+            _queue.value = mutable
+            originalQueue = originalQueue + items
         }
     }
-
-    /**
-     * Clears the queue.
-     */
-    @Synchronized
-    fun clear() {
-        _queue.value = emptyList()
-        originalQueue = emptyList()
-        _currentIndex.value = -1
-    }
-
-    @Synchronized
-    fun clearQueue() = clear()
-
-    /**
-     * Jumps to a specific index in the queue.
-     */
-    @Synchronized
-    fun jumpTo(index: Int): MediaItem? {
-        val q = _queue.value
-        if (index in q.indices) {
-            _currentIndex.value = index
-            return q[index]
-        }
-        return null
-    }
-
-    @Synchronized
-    fun jumpToId(id: String): MediaItem? {
-        val q = _queue.value
-        val index = q.indexOfFirst { it.id == id }
-        if (index != -1) {
-            _currentIndex.value = index
-            return q[index]
-        }
-        return null
-    }
-
-    /**
-     * Appends a list of items to the end of the queue.
-     */
-    @Synchronized
-    fun addItems(items: List<MediaItem>) {
-        val mutable = _queue.value.toMutableList()
-        mutable.addAll(items)
-        _queue.value = mutable
-        originalQueue = originalQueue + items
-    }
-}

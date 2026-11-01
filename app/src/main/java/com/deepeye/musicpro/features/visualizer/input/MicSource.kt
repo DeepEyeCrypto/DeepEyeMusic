@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class MicSource {
     private var audioRecord: AudioRecord? = null
     private val isCapturing = AtomicBoolean(false)
-    
+
     private val _rawPcmData = MutableStateFlow(FloatArray(0))
     val rawPcmData: StateFlow<FloatArray> = _rawPcmData
 
@@ -31,38 +31,40 @@ class MicSource {
     private val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
 
     @SuppressLint("MissingPermission")
-    suspend fun startCapture() = withContext(Dispatchers.IO) {
-        if (isCapturing.get()) return@withContext
+    suspend fun startCapture() =
+        withContext(Dispatchers.IO) {
+            if (isCapturing.get()) return@withContext
 
-        audioRecord = AudioRecord(
-            MediaRecorder.AudioSource.MIC,
-            sampleRate,
-            channelConfig,
-            audioFormat,
-            bufferSize
-        )
+            audioRecord =
+                AudioRecord(
+                    MediaRecorder.AudioSource.MIC,
+                    sampleRate,
+                    channelConfig,
+                    audioFormat,
+                    bufferSize
+                )
 
-        if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
-            Log.e("MicSource", "Failed to initialize AudioRecord")
-            return@withContext
-        }
+            if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
+                Log.e("MicSource", "Failed to initialize AudioRecord")
+                return@withContext
+            }
 
-        isCapturing.set(true)
-        audioRecord?.startRecording()
+            isCapturing.set(true)
+            audioRecord?.startRecording()
 
-        val buffer = ShortArray(bufferSize / 2)
-        val pcm = FloatArray(bufferSize / 4)
+            val buffer = ShortArray(bufferSize / 2)
+            val pcm = FloatArray(bufferSize / 4)
 
-        while (isCapturing.get()) {
-            val read = audioRecord?.read(buffer, 0, buffer.size) ?: 0
-            if (read > 0) {
-                for (i in 0 until read) {
-                    pcm[i] = buffer[i].toFloat() / 32768f
+            while (isCapturing.get()) {
+                val read = audioRecord?.read(buffer, 0, buffer.size) ?: 0
+                if (read > 0) {
+                    for (i in 0 until read) {
+                        pcm[i] = buffer[i].toFloat() / 32768f
+                    }
+                    _rawPcmData.value = pcm.copyOf(read)
                 }
-                _rawPcmData.value = pcm.copyOf(read)
             }
         }
-    }
 
     fun stopCapture() {
         isCapturing.set(false)

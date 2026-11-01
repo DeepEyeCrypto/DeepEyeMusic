@@ -134,29 +134,31 @@ fun EmptyFeedStateCard(
     val accent = if (offline) Color(0xFF9E9E9E) else Color(0xFF00E5C3)
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(CardGeometry.ScreenGutter)
-            .clip(CardGeometry.Compact.shape)
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        Color.White.copy(alpha = 0.06f),
-                        Color.White.copy(alpha = 0.03f)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(CardGeometry.ScreenGutter)
+                .clip(CardGeometry.Compact.shape)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.06f),
+                            Color.White.copy(alpha = 0.03f)
+                        )
                     )
                 )
-            )
-            .border(1.dp, Color.White.copy(alpha = 0.10f), CardGeometry.Compact.shape)
-            .padding(24.dp),
+                .border(1.dp, Color.White.copy(alpha = 0.10f), CardGeometry.Compact.shape)
+                .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(accent.copy(alpha = 0.15f))
-                .border(1.dp, accent.copy(alpha = 0.4f), CircleShape),
+            modifier =
+                Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(accent.copy(alpha = 0.15f))
+                    .border(1.dp, accent.copy(alpha = 0.4f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -229,50 +231,58 @@ fun EmptyFeedPlaceholder(
     val radius = CardGeometry.Video.cornerRadius
     // Sweep the dash phase so the outline animates; a static dash can read as
     // a rendering artefact rather than a deliberate placeholder.
-    val transition = androidx.compose.animation.core.rememberInfiniteTransition(
-        label = "placeholderDash"
-    )
+    val transition =
+        androidx.compose.animation.core.rememberInfiniteTransition(
+            label = "placeholderDash"
+        )
     val phase by transition.animateFloat(
         initialValue = 0f,
         targetValue = 2 * DASH_PERIOD_PX,
-        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            animation = androidx.compose.animation.core.tween(
-                durationMillis = 1600,
-                easing = androidx.compose.animation.core.LinearEasing,
+        animationSpec =
+            androidx.compose.animation.core.infiniteRepeatable(
+                animation =
+                    androidx.compose.animation.core.tween(
+                        durationMillis = 1600,
+                        easing = androidx.compose.animation.core.LinearEasing,
+                    ),
+                repeatMode = androidx.compose.animation.core.RepeatMode.Restart,
             ),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Restart,
-        ),
         label = "placeholderDashPhase",
     )
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(CardGeometry.Video.minWidth)
-            .clip(RoundedCornerShape(radius))
-            .background(Color.White.copy(alpha = 0.05f))
-            .drawBehind {
-                val stroke = 1.dp.toPx()
-                val inset = stroke / 2f
-                drawRoundRect(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFF00E5C3).copy(alpha = 0.55f),
-                            Color(0xFF7C4DFF).copy(alpha = 0.55f),
-                        )
-                    ),
-                    topLeft = Offset(inset, inset),
-                    size = Size(size.width - stroke, size.height - stroke),
-                    cornerRadius = CornerRadius(radius.toPx()),
-                    style = Stroke(
-                        width = stroke,
-                        pathEffect = PathEffect.dashPathEffect(
-                            floatArrayOf(DASH_ON_PX, DASH_OFF_PX),
-                            phase = phase,
-                        ),
-                    ),
-                )
-            },
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(CardGeometry.Video.minWidth)
+                .clip(RoundedCornerShape(radius))
+                .background(Color.White.copy(alpha = 0.05f))
+                .drawBehind {
+                    val stroke = 1.dp.toPx()
+                    val inset = stroke / 2f
+                    drawRoundRect(
+                        brush =
+                            Brush.linearGradient(
+                                colors =
+                                    listOf(
+                                        Color(0xFF00E5C3).copy(alpha = 0.55f),
+                                        Color(0xFF7C4DFF).copy(alpha = 0.55f),
+                                    )
+                            ),
+                        topLeft = Offset(inset, inset),
+                        size = Size(size.width - stroke, size.height - stroke),
+                        cornerRadius = CornerRadius(radius.toPx()),
+                        style =
+                            Stroke(
+                                width = stroke,
+                                pathEffect =
+                                    PathEffect.dashPathEffect(
+                                        floatArrayOf(DASH_ON_PX, DASH_OFF_PX),
+                                        phase = phase,
+                                    ),
+                            ),
+                    )
+                },
         contentAlignment = Alignment.Center,
     ) {
         Text(

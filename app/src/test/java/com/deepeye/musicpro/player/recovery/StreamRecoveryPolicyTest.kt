@@ -10,7 +10,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StreamRecoveryPolicyTest {
-
     private val policy = StreamRecoveryPolicy()
     private val mapper = PlaybackRecoveryErrorMapper()
 
@@ -86,11 +85,12 @@ class StreamRecoveryPolicyTest {
 
     @Test
     fun testErrorMapper_maps403Code() {
-        val exception = PlaybackException(
-            "Response code: 403",
-            null,
-            PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
-        )
+        val exception =
+            PlaybackException(
+                "Response code: 403",
+                null,
+                PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
+            )
         val mapped = mapper.map(exception)
         assertTrue(mapped is PlaybackRecoveryError.HttpStatus)
         assertEquals(403, (mapped as PlaybackRecoveryError.HttpStatus).statusCode)
@@ -98,11 +98,12 @@ class StreamRecoveryPolicyTest {
 
     @Test
     fun testErrorMapper_mapsDecoderFailure() {
-        val exception = PlaybackException(
-            "Decoder init error",
-            null,
-            PlaybackException.ERROR_CODE_DECODER_INIT_FAILED
-        )
+        val exception =
+            PlaybackException(
+                "Decoder init error",
+                null,
+                PlaybackException.ERROR_CODE_DECODER_INIT_FAILED
+            )
         val mapped = mapper.map(exception)
         assertTrue(mapped is PlaybackRecoveryError.Decoder)
     }
@@ -122,7 +123,12 @@ class StreamRecoveryPolicyTest {
 
     @Test
     fun testErrorMapper_mapsNetworkTimeout() {
-        val exTimeout = PlaybackException("Network connection timeout", null, PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT)
+        val exTimeout =
+            PlaybackException(
+                "Network connection timeout",
+                null,
+                PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
+            )
         val mapped = mapper.map(exTimeout)
         assertTrue(mapped is PlaybackRecoveryError.SourceLoad)
     }

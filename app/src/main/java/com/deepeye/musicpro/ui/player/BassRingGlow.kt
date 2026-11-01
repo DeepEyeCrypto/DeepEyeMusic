@@ -12,7 +12,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.unit.dp
 import kotlin.math.*
 
 private val NeonCyan = Color(0xFF00E5FF)
@@ -31,40 +30,48 @@ fun BassRingGlow(
     isPlaying: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val rawBass = remember(fftData) {
-        if (fftData.size >= 4) {
-            ((fftData[0] + fftData[1] + fftData[2] + fftData[3]) / 4f).coerceIn(0f, 1.5f)
-        } else if (fftData.isNotEmpty()) {
-            fftData[0].coerceIn(0f, 1.5f)
-        } else {
-            0f
+    val rawBass =
+        remember(fftData) {
+            if (fftData.size >= 4) {
+                ((fftData[0] + fftData[1] + fftData[2] + fftData[3]) / 4f).coerceIn(0f, 1.5f)
+            } else if (fftData.isNotEmpty()) {
+                fftData[0].coerceIn(0f, 1.5f)
+            } else {
+                0f
+            }
         }
-    }
 
-    val rawMid = remember(fftData) {
-        if (fftData.size >= 12) {
-            var sum = 0f
-            for (i in 4..11) sum += fftData[i]
-            (sum / 8f).coerceIn(0f, 1.5f)
-        } else 0f
-    }
+    val rawMid =
+        remember(fftData) {
+            if (fftData.size >= 12) {
+                var sum = 0f
+                for (i in 4..11) sum += fftData[i]
+                (sum / 8f).coerceIn(0f, 1.5f)
+            } else {
+                0f
+            }
+        }
 
-    val rawTreble = remember(fftData) {
-        if (fftData.size >= 24) {
-            var sum = 0f
-            for (i in 12..23) sum += fftData[i]
-            (sum / 12f).coerceIn(0f, 1.5f)
-        } else 0f
-    }
+    val rawTreble =
+        remember(fftData) {
+            if (fftData.size >= 24) {
+                var sum = 0f
+                for (i in 12..23) sum += fftData[i]
+                (sum / 12f).coerceIn(0f, 1.5f)
+            } else {
+                0f
+            }
+        }
 
     val infiniteTransition = rememberInfiniteTransition(label = "GeometricRotation")
     val rotationRad by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = (2 * PI).toFloat(),
-        animationSpec = infiniteRepeatable(
-            animation = tween(14000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(14000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ),
         label = "BaseRotation"
     )
 
@@ -76,15 +83,21 @@ fun BassRingGlow(
         // 1. Ambient Bass Glow Aura
         val auraRadius = baseRadius * (1.25f + if (isPlaying) rawBass * 0.35f else 0f)
         drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    dominantColor.copy(alpha = if (isPlaying) (0.35f + rawBass * 0.45f).coerceIn(0f, 0.85f) else 0.12f),
-                    DeepElectricBlue.copy(alpha = if (isPlaying) (0.20f + rawMid * 0.30f).coerceIn(0f, 0.5f) else 0.05f),
-                    Color.Transparent
-                ),
-                center = Offset(centerX, centerY),
-                radius = auraRadius
-            )
+            brush =
+                Brush.radialGradient(
+                    colors =
+                        listOf(
+                            dominantColor.copy(
+                                alpha = if (isPlaying) (0.35f + rawBass * 0.45f).coerceIn(0f, 0.85f) else 0.12f
+                            ),
+                            DeepElectricBlue.copy(
+                                alpha = if (isPlaying) (0.20f + rawMid * 0.30f).coerceIn(0f, 0.5f) else 0.05f
+                            ),
+                            Color.Transparent
+                        ),
+                    center = Offset(centerX, centerY),
+                    radius = auraRadius
+                )
         )
 
         // 2. 3D Nested Reactive Wireframe Triangles (vvavy.io aesthetic)
@@ -105,7 +118,14 @@ fun BassRingGlow(
                 treble = if (isPlaying) rawTreble else 0f,
                 fftData = fftData,
                 layerIndex = layer,
-                accentColor = if (layer == 0) dominantColor else if (layer == 1) NeonCyan else CyberPurple,
+                accentColor =
+                    if (layer == 0) {
+                        dominantColor
+                    } else if (layer == 1) {
+                        NeonCyan
+                    } else {
+                        CyberPurple
+                    },
                 alpha = if (isPlaying) layerAlpha else layerAlpha * 0.4f
             )
         }
@@ -133,7 +153,16 @@ private fun DrawScope.draw3DTriangleMesh(
         val fftIdx = (i * 4 + layerIndex * 2) % (if (fftData.isNotEmpty()) fftData.size else 1)
         val harmonicShift = if (fftData.isNotEmpty()) fftData[fftIdx] * 25f else 0f
 
-        val r = radius + harmonicShift + (if (i == 0) bass * 22f else if (i == 1) mid * 18f else treble * 15f)
+        val r =
+            radius + harmonicShift + (
+                if (i == 0) {
+                    bass * 22f
+                } else if (i == 1) {
+                    mid * 18f
+                } else {
+                    treble * 15f
+                }
+            )
         val x = centerX + r * cos(angle)
         val y = centerY + r * sin(angle)
         points.add(Offset(x, y))
@@ -172,15 +201,17 @@ private fun DrawScope.draw3DTriangleMesh(
     if (layerIndex == 0) {
         drawPath(
             path = path,
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    accentColor.copy(alpha = (0.18f + bass * 0.18f).coerceIn(0f, 0.5f) * alpha),
-                    DeepElectricBlue.copy(alpha = 0.06f * alpha),
-                    Color.Transparent
-                ),
-                center = Offset(centerX, centerY),
-                radius = radius * 1.05f
-            )
+            brush =
+                Brush.radialGradient(
+                    colors =
+                        listOf(
+                            accentColor.copy(alpha = (0.18f + bass * 0.18f).coerceIn(0f, 0.5f) * alpha),
+                            DeepElectricBlue.copy(alpha = 0.06f * alpha),
+                            Color.Transparent
+                        ),
+                    center = Offset(centerX, centerY),
+                    radius = radius * 1.05f
+                )
         )
     }
 
@@ -188,21 +219,24 @@ private fun DrawScope.draw3DTriangleMesh(
     val strokeWidth = (3.2f - layerIndex * 0.6f).coerceAtLeast(1.4f)
     drawPath(
         path = path,
-        brush = Brush.linearGradient(
-            colors = listOf(
-                SpecularWhite.copy(alpha = alpha),
-                accentColor.copy(alpha = alpha),
-                DeepElectricBlue.copy(alpha = alpha * 0.85f),
-                CyberPurple.copy(alpha = alpha * 0.70f)
+        brush =
+            Brush.linearGradient(
+                colors =
+                    listOf(
+                        SpecularWhite.copy(alpha = alpha),
+                        accentColor.copy(alpha = alpha),
+                        DeepElectricBlue.copy(alpha = alpha * 0.85f),
+                        CyberPurple.copy(alpha = alpha * 0.70f)
+                    ),
+                start = points.firstOrNull() ?: Offset.Zero,
+                end = points.lastOrNull() ?: Offset.Zero
             ),
-            start = points.firstOrNull() ?: Offset.Zero,
-            end = points.lastOrNull() ?: Offset.Zero
-        ),
-        style = Stroke(
-            width = strokeWidth,
-            cap = StrokeCap.Round,
-            join = StrokeJoin.Round
-        )
+        style =
+            Stroke(
+                width = strokeWidth,
+                cap = StrokeCap.Round,
+                join = StrokeJoin.Round
+            )
     )
 
     // 3. Glowing Corner Vertex Nodes

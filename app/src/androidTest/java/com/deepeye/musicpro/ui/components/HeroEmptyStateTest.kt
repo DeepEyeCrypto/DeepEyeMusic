@@ -32,7 +32,6 @@ private const val HeroBoxTag = "heroBox"
  */
 @RunWith(AndroidJUnit4::class)
 class HeroEmptyStateTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -122,8 +121,9 @@ class HeroEmptyStateTest {
 
         // The hero must not claim zero height: a wrap-content implementation
         // would collapse here and leave the surrounding viewport empty.
-        val rootWidth = composeTestRule.onNodeWithText("Your Feed Is Empty")
-            .fetchSemanticsNode().size.width
+        val rootWidth =
+            composeTestRule.onNodeWithText("Your Feed Is Empty")
+                .fetchSemanticsNode().size.width
         assertTrue("hero content should be laid out with real width", rootWidth > 0)
     }
 
@@ -195,15 +195,17 @@ class HeroEmptyStateTest {
             }
         }
 
-        val box = composeTestRule.onNodeWithTag(HeroBoxTag)
-            .fetchSemanticsNode()
-            .boundsInRoot
-        val title = composeTestRule.onNodeWithText("Your Feed Is Empty")
-            .fetchSemanticsNode()
-            .boundsInRoot
+        val box =
+            composeTestRule.onNodeWithTag(HeroBoxTag)
+                .fetchSemanticsNode()
+                .boundsInRoot
+        val title =
+            composeTestRule.onNodeWithText("Your Feed Is Empty")
+                .fetchSemanticsNode()
+                .boundsInRoot
 
         assertTrue(
-            "title ${title} must sit inside the 300dp box $box",
+            "title $title must sit inside the 300dp box $box",
             title.bottom <= box.bottom,
         )
     }

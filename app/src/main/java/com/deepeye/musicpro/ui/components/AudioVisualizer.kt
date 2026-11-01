@@ -102,8 +102,8 @@ private fun AudioVisualizerPreview() {
     AudioVisualizer(
         fftData = mockData,
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .height(120.dp),
+            Modifier
+                .fillMaxWidth()
+                .height(120.dp),
     )
 }

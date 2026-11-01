@@ -5,7 +5,6 @@ package com.deepeye.musicpro.ui.homehub
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -16,22 +15,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.deepeye.musicpro.ui.components.DynamicLabel
-import com.deepeye.musicpro.ui.components.SecondaryLabel
-import com.deepeye.musicpro.ui.components.rememberSparseAwareRailLayout
 import coil3.compose.AsyncImage
 import coil3.request.crossfade
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
-import com.deepeye.musicpro.ui.theme.CardGeometry
-import com.deepeye.musicpro.ui.theme.GlassBorder
+import com.deepeye.musicpro.ui.components.DynamicLabel
+import com.deepeye.musicpro.ui.components.SecondaryLabel
 import com.deepeye.musicpro.ui.components.bouncyClickable
+import com.deepeye.musicpro.ui.theme.CardGeometry
 
 /** Rail shows at most this many recent tracks. */
 private const val ContinueListeningMaxItems = 4
@@ -76,9 +73,10 @@ fun ContinueListeningRow(
 
         val displayedItems = items.take(ContinueListeningMaxItems)
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             displayedItems.chunked(2).forEach { chunk ->
@@ -109,13 +107,14 @@ private fun ContinueListeningCard(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
-            .heightIn(min = CardGeometry.ContinueListening.minHeight)
-            .clip(CardGeometry.ContinueListening.shape)
-            .background(Color.White.copy(alpha = 0.05f)) // Frost background
-            .border(1.dp, Color.White.copy(alpha = 0.1f), CardGeometry.ContinueListening.shape)
-            .bouncyClickable(onClick = onClick)
-            .padding(CardGeometry.ContinueListening.contentPadding),
+        modifier =
+            modifier
+                .heightIn(min = CardGeometry.ContinueListening.minHeight)
+                .clip(CardGeometry.ContinueListening.shape)
+                .background(Color.White.copy(alpha = 0.05f)) // Frost background
+                .border(1.dp, Color.White.copy(alpha = 0.1f), CardGeometry.ContinueListening.shape)
+                .bouncyClickable(onClick = onClick)
+                .padding(CardGeometry.ContinueListening.contentPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -125,18 +124,20 @@ private fun ContinueListeningCard(
         // above the text) overflowed the landscape viewport and clipped the
         // title and artist away entirely.
         Box(
-            modifier = Modifier
-                .size(CardGeometry.ContinueListening.artworkSize)
-                .clip(RoundedCornerShape(CardGeometry.ContinueListening.cornerRadius / 1.5f))
-                .background(Brush.linearGradient(listOf(Color(0xFF2A2A35), Color(0xFF1E1E28)))),
+            modifier =
+                Modifier
+                    .size(CardGeometry.ContinueListening.artworkSize)
+                    .clip(RoundedCornerShape(CardGeometry.ContinueListening.cornerRadius / 1.5f))
+                    .background(Brush.linearGradient(listOf(Color(0xFF2A2A35), Color(0xFF1E1E28)))),
             contentAlignment = Alignment.Center,
         ) {
             if (music.thumbnailUrl.isNotEmpty()) {
                 AsyncImage(
-                    model = coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
-                        .data(music.thumbnailUrl)
-                        .crossfade(true)
-                        .build(),
+                    model =
+                        coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                            .data(music.thumbnailUrl)
+                            .crossfade(true)
+                            .build(),
                     contentDescription = music.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
@@ -152,11 +153,12 @@ private fun ContinueListeningCard(
 
             // Play Button Overlay
             Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(androidx.compose.foundation.shape.CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f))
-                    .border(1.dp, Color.White.copy(alpha = 0.5f), androidx.compose.foundation.shape.CircleShape),
+                modifier =
+                    Modifier
+                        .size(42.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(Color.White.copy(alpha = 0.2f))
+                        .border(1.dp, Color.White.copy(alpha = 0.5f), androidx.compose.foundation.shape.CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

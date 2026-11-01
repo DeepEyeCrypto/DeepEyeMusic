@@ -10,7 +10,6 @@ package com.deepeye.musicpro.ui.player.visualizer.agsl
 import org.intellij.lang.annotations.Language
 
 object AgslShaders {
-
     /**
      * Scene: Liquid Plasma / Viscous Ferrofluid (VVavy "liquid-carbon-plasma" / "fluid-simulator")
      * Features: Navier-Stokes-inspired curl noise field, bass-driven dilation, dynamic Monet palette synthesis.

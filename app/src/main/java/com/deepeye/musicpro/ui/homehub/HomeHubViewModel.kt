@@ -13,10 +13,10 @@ import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.model.home.HomeFeedState
 import com.deepeye.musicpro.domain.model.home.HomeMusicItem
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
+import com.deepeye.musicpro.domain.repository.MusicRepository
 import com.deepeye.musicpro.dsp.engine.DSPEngine
 import com.deepeye.musicpro.player.controller.PlayerController
 import com.deepeye.musicpro.player.visualizer.VisualizerEngine
-import com.deepeye.musicpro.domain.repository.MusicRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,140 +29,143 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeHubViewModel
-@Inject
-constructor(
-    private val feedRepo: HomeFeedRepository,
-    private val dspEngine: DSPEngine,
-    private val visualizerEngine: VisualizerEngine,
-    private val playerController: PlayerController,
-    private val musicRepository: MusicRepository,
-    private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
-    private val gamificationRepository: com.deepeye.musicpro.domain.repository.GamificationRepository,
-    private val aiRadioEngine: com.deepeye.musicpro.domain.ai.AIRadioEngine,
-) : ViewModel() {
-    private val _feedState = MutableStateFlow(HomeFeedState(isLoading = true))
-    val feedState: StateFlow<HomeFeedState> = _feedState.asStateFlow()
+    @Inject
+    constructor(
+        private val feedRepo: HomeFeedRepository,
+        private val dspEngine: DSPEngine,
+        private val visualizerEngine: VisualizerEngine,
+        private val playerController: PlayerController,
+        private val musicRepository: MusicRepository,
+        private val gamificationEngine: com.deepeye.musicpro.domain.gamification.GamificationEngine,
+        private val gamificationRepository: com.deepeye.musicpro.domain.repository.GamificationRepository,
+        private val aiRadioEngine: com.deepeye.musicpro.domain.ai.AIRadioEngine,
+    ) : ViewModel() {
+        private val _feedState = MutableStateFlow(HomeFeedState(isLoading = true))
+        val feedState: StateFlow<HomeFeedState> = _feedState.asStateFlow()
 
-    val gamificationState = gamificationRepository.getGamificationState().stateIn(
-        scope = viewModelScope,
-        started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
-        initialValue = com.deepeye.musicpro.domain.gamification.GamificationState()
-    )
+        val gamificationState =
+            gamificationRepository.getGamificationState().stateIn(
+                scope = viewModelScope,
+                started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+                initialValue = com.deepeye.musicpro.domain.gamification.GamificationState()
+            )
 
-    private val _btcPrice = MutableStateFlow("Fetching BTC...")
-    val btcPrice = _btcPrice.asStateFlow()
+        private val _btcPrice = MutableStateFlow("Fetching BTC...")
+        val btcPrice = _btcPrice.asStateFlow()
 
-    val achievementEvents = gamificationEngine.achievementEvents
+        val achievementEvents = gamificationEngine.achievementEvents
 
-    val isDspAttached = dspEngine.engineState
+        val isDspAttached = dspEngine.engineState
 
-    // RANKING-UNAVAILABLE: global leaderboard was Firebase-backed and removed.
-    // Typed empty value (not a fake leaderboard) so UI never renders stale ranks.
-    val top3Users: kotlinx.coroutines.flow.StateFlow<List<com.deepeye.musicpro.domain.ranking.UserRank>> =
-        kotlinx.coroutines.flow.MutableStateFlow(emptyList())
+        // RANKING-UNAVAILABLE: global leaderboard was Firebase-backed and removed.
+        // Typed empty value (not a fake leaderboard) so UI never renders stale ranks.
+        val top3Users: kotlinx.coroutines.flow.StateFlow<List<com.deepeye.musicpro.domain.ranking.UserRank>> =
+            kotlinx.coroutines.flow.MutableStateFlow(emptyList())
 
-    init {
-        loadFeed()
-        // Gamification engine is now a local no-op GHOST-OMEGA service; no
-        // Firestore restore/sync. Local streak state reads still apply.
-        viewModelScope.launch {
-            gamificationEngine.checkAndUpdateStreak()
+        init {
+            loadFeed()
+            // Gamification engine is now a local no-op GHOST-OMEGA service; no
+            // Firestore restore/sync. Local streak state reads still apply.
+            viewModelScope.launch {
+                gamificationEngine.checkAndUpdateStreak()
+            }
+            fetchBtcPrice()
         }
-        fetchBtcPrice()
-    }
 
-    private fun fetchBtcPrice() {
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            while (isActive) {
+        private fun fetchBtcPrice() {
+            viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                while (isActive) {
+                    try {
+                        val url = java.net.URL("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT")
+                        val connection = url.openConnection() as java.net.HttpURLConnection
+                        connection.connectTimeout = 3000
+                        connection.readTimeout = 3000
+                        val response = connection.inputStream.bufferedReader().use { it.readText() }
+                        val priceStr = response.substringAfter("\"price\":\"").substringBefore("\"")
+                        val formattedPrice = String.format("%,.2f", priceStr.toDoubleOrNull() ?: 0.0)
+                        _btcPrice.value = "₿ $$formattedPrice"
+                    } catch (e: Exception) {
+                        _btcPrice.value = "₿ Error"
+                    }
+                    kotlinx.coroutines.delay(10000L) // poll every 10 seconds
+                }
+            }
+        }
+
+        fun loadFeed() {
+            viewModelScope.launch {
+                _feedState.value = HomeFeedState(isLoading = true)
                 try {
-                    val url = java.net.URL("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT")
-                    val connection = url.openConnection() as java.net.HttpURLConnection
-                    connection.connectTimeout = 3000
-                    connection.readTimeout = 3000
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val priceStr = response.substringAfter("\"price\":\"").substringBefore("\"")
-                    val formattedPrice = String.format("%,.2f", priceStr.toDoubleOrNull() ?: 0.0)
-                    _btcPrice.value = "₿ $$formattedPrice"
+                    _feedState.value = feedRepo.getHomeFeed()
                 } catch (e: Exception) {
-                    _btcPrice.value = "₿ Error"
+                    Log.e("HomeHubVM", "Feed load error: ${e.message}")
+                    _feedState.value = HomeFeedState(isOffline = true, error = e.message)
                 }
-                kotlinx.coroutines.delay(10000L) // poll every 10 seconds
             }
         }
-    }
 
-    fun loadFeed() {
-        viewModelScope.launch {
-            _feedState.value = HomeFeedState(isLoading = true)
-            try {
-                _feedState.value = feedRepo.getHomeFeed()
-            } catch (e: Exception) {
-                Log.e("HomeHubVM", "Feed load error: ${e.message}")
-                _feedState.value = HomeFeedState(isOffline = true, error = e.message)
-            }
+        fun playVideo(video: HomeVideoItem) {
+            val mediaItem =
+                MediaItem.Remote(
+                    id = video.id,
+                    title = video.title,
+                    artist = video.channelName,
+                    artworkUri = Uri.parse(video.thumbnailUrl),
+                    duration = video.duration * 1000L,
+                    isVideo = true,
+                )
+            // Radio-Omega: Play single item, allow InnerTube /next to populate genuine continuous radio
+            playerController.setQueue(listOf(mediaItem), 0)
         }
-    }
 
-    fun playVideo(video: HomeVideoItem) {
-        val mediaItem = MediaItem.Remote(
-            id = video.id,
-            title = video.title,
-            artist = video.channelName,
-            artworkUri = Uri.parse(video.thumbnailUrl),
-            duration = video.duration * 1000L,
-            isVideo = true,
-        )
-        // Radio-Omega: Play single item, allow InnerTube /next to populate genuine continuous radio
-        playerController.setQueue(listOf(mediaItem), 0)
-    }
-
-    fun playMusic(music: HomeMusicItem) {
-        val mediaItem = MediaItem.Remote(
-            id = music.id,
-            title = music.title,
-            artist = music.artist,
-            artworkUri = Uri.parse(music.thumbnailUrl),
-            duration = music.duration * 1000L,
-            isVideo = false,
-        )
-        // Radio-Omega: Play single item, allow InnerTube /next to populate genuine continuous radio
-        playerController.setQueue(listOf(mediaItem), 0)
-    }
-
-    fun openV4A(navController: NavController) {
-        navController.navigate("dsp")
-    }
-
-    val isAIGenerating = aiRadioEngine.isGenerating
-
-    fun onAIPromptSubmitted(prompt: String) {
-        viewModelScope.launch {
-            try {
-                aiRadioEngine.generateRadioFromPrompt(prompt)
-            } catch (e: Exception) {
-                Log.e("HomeHubVM", "AI radio generation failed: ${e.message}")
-            }
+        fun playMusic(music: HomeMusicItem) {
+            val mediaItem =
+                MediaItem.Remote(
+                    id = music.id,
+                    title = music.title,
+                    artist = music.artist,
+                    artworkUri = Uri.parse(music.thumbnailUrl),
+                    duration = music.duration * 1000L,
+                    isVideo = false,
+                )
+            // Radio-Omega: Play single item, allow InnerTube /next to populate genuine continuous radio
+            playerController.setQueue(listOf(mediaItem), 0)
         }
-    }
 
-    fun playContinueWatchingItem(video: com.deepeye.musicpro.domain.model.home.HomeVideoItem) {
-        playVideo(video)
-    }
+        fun openV4A(navController: NavController) {
+            navController.navigate("dsp")
+        }
 
-    fun playContinueListeningItem(music: com.deepeye.musicpro.domain.model.home.HomeMusicItem) {
-        playMusic(music)
-    }
+        val isAIGenerating = aiRadioEngine.isGenerating
 
-    fun playLocalResume(music: com.deepeye.musicpro.domain.model.home.HomeMusicItem) {
-        val songId = music.id.toLongOrNull() ?: return
-        viewModelScope.launch {
-            try {
-                musicRepository.getSongById(songId).first()?.let { song ->
-                    playerController.playMedia(MediaItem.Local(song))
+        fun onAIPromptSubmitted(prompt: String) {
+            viewModelScope.launch {
+                try {
+                    aiRadioEngine.generateRadioFromPrompt(prompt)
+                } catch (e: Exception) {
+                    Log.e("HomeHubVM", "AI radio generation failed: ${e.message}")
                 }
-            } catch (e: Exception) {
-                Log.e("HomeHubVM", "Failed to resolve local resume song $songId: ${e.message}")
+            }
+        }
+
+        fun playContinueWatchingItem(video: com.deepeye.musicpro.domain.model.home.HomeVideoItem) {
+            playVideo(video)
+        }
+
+        fun playContinueListeningItem(music: com.deepeye.musicpro.domain.model.home.HomeMusicItem) {
+            playMusic(music)
+        }
+
+        fun playLocalResume(music: com.deepeye.musicpro.domain.model.home.HomeMusicItem) {
+            val songId = music.id.toLongOrNull() ?: return
+            viewModelScope.launch {
+                try {
+                    musicRepository.getSongById(songId).first()?.let { song ->
+                        playerController.playMedia(MediaItem.Local(song))
+                    }
+                } catch (e: Exception) {
+                    Log.e("HomeHubVM", "Failed to resolve local resume song $songId: ${e.message}")
+                }
             }
         }
     }
-}

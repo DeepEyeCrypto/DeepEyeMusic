@@ -20,11 +20,12 @@ class AutoUpdateManagerTest {
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
-        updateManager = AutoUpdateManager(
-            context = context,
-            okHttpClient = mockk(relaxed = true),
-            gson = mockk(relaxed = true),
-        )
+        updateManager =
+            AutoUpdateManager(
+                context = context,
+                okHttpClient = mockk(relaxed = true),
+                gson = mockk(relaxed = true),
+            )
     }
 
     @Test

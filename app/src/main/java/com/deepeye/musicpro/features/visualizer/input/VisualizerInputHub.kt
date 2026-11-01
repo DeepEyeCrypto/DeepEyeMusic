@@ -10,7 +10,10 @@ import kotlinx.coroutines.flow.StateFlow
  */
 interface VisualizerInputHub {
     val isMicActive: StateFlow<Boolean>
+
     fun setMicInput(enabled: Boolean)
+
     fun setFileInput(path: String?)
+
     fun setMidiInput(enabled: Boolean)
 }

@@ -37,52 +37,53 @@ fun StudioKnob(
 ) {
     val view = LocalView.current
     var lastHapticValue by remember { mutableStateOf(value) }
-    
+
     // Convert value to angle (-135 to +135 degrees)
     val startAngle = 135f
     val sweepAngle = 270f
-    
+
     val normalizedValue = ((value - valueRange.start) / (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
     val currentAngle = startAngle + (normalizedValue * sweepAngle)
 
     Box(
-        modifier = modifier
-            .size(72.dp)
-            .pointerInput(Unit) {
-                var dragAngle = 0f
-                detectDragGestures(
-                    onDragStart = { offset ->
-                        val centerX = size.width / 2f
-                        val centerY = size.height / 2f
-                        dragAngle = atan2(offset.y - centerY, offset.x - centerX) * (180f / PI.toFloat())
-                    },
-                    onDrag = { change, _ ->
-                        change.consume()
-                        val centerX = size.width / 2f
-                        val centerY = size.height / 2f
-                        val newAngle = atan2(change.position.y - centerY, change.position.x - centerX) * (180f / PI.toFloat())
-                        
-                        var angleDiff = newAngle - dragAngle
-                        if (angleDiff < -180f) angleDiff += 360f
-                        if (angleDiff > 180f) angleDiff -= 360f
-                        
-                        dragAngle = newAngle
-                        
-                        // Map angle change to value change
-                        val valueChange = (angleDiff / sweepAngle) * (valueRange.endInclusive - valueRange.start)
-                        val newValue = (value + valueChange).coerceIn(valueRange.start, valueRange.endInclusive)
-                        
-                        onValueChange(newValue)
-                        
-                        // Haptic tick every ~5% change
-                        val tickThreshold = (valueRange.endInclusive - valueRange.start) * 0.05f
-                        if (Math.abs(newValue - lastHapticValue) >= tickThreshold) {
-                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                            lastHapticValue = newValue
+        modifier =
+            modifier
+                .size(72.dp)
+                .pointerInput(Unit) {
+                    var dragAngle = 0f
+                    detectDragGestures(
+                        onDragStart = { offset ->
+                            val centerX = size.width / 2f
+                            val centerY = size.height / 2f
+                            dragAngle = atan2(offset.y - centerY, offset.x - centerX) * (180f / PI.toFloat())
+                        },
+                        onDrag = { change, _ ->
+                            change.consume()
+                            val centerX = size.width / 2f
+                            val centerY = size.height / 2f
+                            val newAngle = atan2(change.position.y - centerY, change.position.x - centerX) * (180f / PI.toFloat())
+
+                            var angleDiff = newAngle - dragAngle
+                            if (angleDiff < -180f) angleDiff += 360f
+                            if (angleDiff > 180f) angleDiff -= 360f
+
+                            dragAngle = newAngle
+
+                            // Map angle change to value change
+                            val valueChange = (angleDiff / sweepAngle) * (valueRange.endInclusive - valueRange.start)
+                            val newValue = (value + valueChange).coerceIn(valueRange.start, valueRange.endInclusive)
+
+                            onValueChange(newValue)
+
+                            // Haptic tick every ~5% change
+                            val tickThreshold = (valueRange.endInclusive - valueRange.start) * 0.05f
+                            if (Math.abs(newValue - lastHapticValue) >= tickThreshold) {
+                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                lastHapticValue = newValue
+                            }
                         }
-                    }
-                )
-            }
+                    )
+                }
     ) {
         Canvas(modifier = Modifier.matchParentSize()) {
             val center = Offset(size.width / 2, size.height / 2)
@@ -103,10 +104,11 @@ fun StudioKnob(
             // 2. Draw active arc (Progress)
             if (normalizedValue > 0f) {
                 drawArc(
-                    brush = Brush.sweepGradient(
-                        colors = listOf(activeColor.copy(alpha = 0.5f), activeColor),
-                        center = center
-                    ),
+                    brush =
+                        Brush.sweepGradient(
+                            colors = listOf(activeColor.copy(alpha = 0.5f), activeColor),
+                            center = center
+                        ),
                     startAngle = startAngle,
                     sweepAngle = normalizedValue * sweepAngle,
                     useCenter = false,
@@ -118,14 +120,16 @@ fun StudioKnob(
 
             // 3. Draw Knob Base (Metallic Gradient)
             drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        Color(0xFF2A2A35),
-                        Color(0xFF1E1E24)
+                brush =
+                    Brush.radialGradient(
+                        colors =
+                            listOf(
+                                Color(0xFF2A2A35),
+                                Color(0xFF1E1E24)
+                            ),
+                        center = center,
+                        radius = radius
                     ),
-                    center = center,
-                    radius = radius
-                ),
                 radius = radius,
                 center = center
             )
@@ -148,7 +152,7 @@ fun StudioKnob(
                 radius = 4.dp.toPx(),
                 center = Offset(indicatorX, indicatorY)
             )
-            
+
             // Glowing effect on the dot
             drawCircle(
                 color = activeColor.copy(alpha = 0.5f),

@@ -37,6 +37,8 @@ sealed class Routes(val route: String) {
 
     data object History : Routes("history")
 
+    data object Profile : Routes("profile")
+
     data object LikedSongs : Routes("liked_songs")
 
     data object SavedItems : Routes("saved_items")

@@ -4,7 +4,6 @@
 package com.deepeye.musicpro.domain.model
 
 import android.net.Uri
-
 import androidx.compose.runtime.Immutable
 
 /**

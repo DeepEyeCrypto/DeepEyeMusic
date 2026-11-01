@@ -14,10 +14,9 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ShaderBrush
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -38,7 +37,15 @@ enum class AgslScene {
     NEON_TRIANGLE_GRID,
     FLUID_PULSE,
     AUDIO_FRACTAL,
-    NEON_GRID
+    NEON_GRID,
+
+    // Batch 1 — new scenes (map to existing shaders for now)
+    AURORA_FLUX,
+    LIQUID_CHROME,
+    NEBULA_BLOOM,
+    PRISM_TUNNEL,
+    KINETIC_MANDALA,
+    PULSE_GEOMETRY
 }
 
 /**
@@ -47,10 +54,29 @@ enum class AgslScene {
  * ROMs), so the dispatcher only sets iMouse for this set.
  */
 val AgslScene.declaresMouse: Boolean
-    get() = when (this) {
-        AgslScene.FLUID_PULSE, AgslScene.AUDIO_FRACTAL, AgslScene.NEON_GRID -> true
-        else -> false
-    }
+    get() =
+        when (this) {
+            AgslScene.FLUID_PULSE, AgslScene.AUDIO_FRACTAL, AgslScene.NEON_GRID -> true
+            else -> false
+        }
+
+/**
+ * Scenes whose AGSL source declares `iColorPrimary` and `iColorSecondary`.
+ * Binding these to a shader that does NOT declare them makes libhwui throw
+ * SIGABRT on MT6835 ROMs. The legacy AgslShaders (LIQUID_PLASMA through
+ * NEON_TRIANGLE_GRID) declare these; the Studio catalog shaders
+ * (FLUID_PULSE, AUDIO_FRACTAL, NEON_GRID) do NOT.
+ */
+val AgslScene.declaresColorUniforms: Boolean
+    get() =
+        when (this) {
+            AgslScene.LIQUID_PLASMA,
+            AgslScene.CRYSTAL_TUNNEL,
+            AgslScene.AURA_ORB,
+            AgslScene.CYBER_GRID,
+            AgslScene.NEON_TRIANGLE_GRID -> true
+            else -> false
+        }
 
 @Composable
 fun AgslVisualizer(
@@ -113,13 +139,14 @@ private fun AgslRuntimeShaderRenderer(
     val isRendering = remember { mutableStateOf(true) }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP) {
-                isRendering.value = false
-            } else if (event == Lifecycle.Event.ON_RESUME) {
-                isRendering.value = true
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP) {
+                    isRendering.value = false
+                } else if (event == Lifecycle.Event.ON_RESUME) {
+                    isRendering.value = true
+                }
             }
-        }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
@@ -196,32 +223,33 @@ private fun AgslRuntimeShaderRenderer(
     val viewHeight = remember { mutableFloatStateOf(1f) }
 
     Canvas(
-        modifier = modifier
-            .fillMaxSize()
-            .onGloballyPositioned { coords ->
-                viewWidth.floatValue = coords.size.width.toFloat().coerceAtLeast(1f)
-                viewHeight.floatValue = coords.size.height.toFloat().coerceAtLeast(1f)
-            }
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { offset: Offset ->
-                        mousePressed.floatValue = 1f
-                        mouseX.floatValue = (offset.x / viewWidth.floatValue).coerceIn(0f, 1f)
-                        mouseY.floatValue = (offset.y / viewHeight.floatValue).coerceIn(0f, 1f)
-                    },
-                    onDrag = { change: PointerInputChange, _ ->
-                        change.consume()
-                        mouseX.floatValue = (change.position.x / viewWidth.floatValue).coerceIn(0f, 1f)
-                        mouseY.floatValue = (change.position.y / viewHeight.floatValue).coerceIn(0f, 1f)
-                    },
-                    onDragEnd = {
-                        mousePressed.floatValue = 0f
-                    },
-                    onDragCancel = {
-                        mousePressed.floatValue = 0f
-                    }
-                )
-            }
+        modifier =
+            modifier
+                .fillMaxSize()
+                .onGloballyPositioned { coords ->
+                    viewWidth.floatValue = coords.size.width.toFloat().coerceAtLeast(1f)
+                    viewHeight.floatValue = coords.size.height.toFloat().coerceAtLeast(1f)
+                }
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = { offset: Offset ->
+                            mousePressed.floatValue = 1f
+                            mouseX.floatValue = (offset.x / viewWidth.floatValue).coerceIn(0f, 1f)
+                            mouseY.floatValue = (offset.y / viewHeight.floatValue).coerceIn(0f, 1f)
+                        },
+                        onDrag = { change: PointerInputChange, _ ->
+                            change.consume()
+                            mouseX.floatValue = (change.position.x / viewWidth.floatValue).coerceIn(0f, 1f)
+                            mouseY.floatValue = (change.position.y / viewHeight.floatValue).coerceIn(0f, 1f)
+                        },
+                        onDragEnd = {
+                            mousePressed.floatValue = 0f
+                        },
+                        onDragCancel = {
+                            mousePressed.floatValue = 0f
+                        }
+                    )
+                }
     ) {
         // ── ZERO-RECOMPOSITION DRAW PHASE UNIFORM DISPATCH ──
         // Background kill-switch: bail out before touching the GPU so the
@@ -234,10 +262,10 @@ private fun AgslRuntimeShaderRenderer(
         val bands = frequencyBands.value
         val currentTheme = themeState?.value
 
-        val bass   = if (bands.isNotEmpty()) bands[0].coerceIn(0f, 2.5f) else 0f
-        val mids   = if (bands.size > 2) bands[2].coerceIn(0f, 2f) else 0f
+        val bass = if (bands.isNotEmpty()) bands[0].coerceIn(0f, 2.5f) else 0f
+        val mids = if (bands.size > 2) bands[2].coerceIn(0f, 2f) else 0f
         val treble = if (bands.size > 4) bands[4].coerceIn(0f, 2f) else 0f
-        val peak   = if (bands.size > 5) bands[5].coerceIn(0f, 2.5f) else 0f
+        val peak = if (bands.size > 5) bands[5].coerceIn(0f, 2.5f) else 0f
         // Studio catalog contract (Task 3): derived, zero-allocation.
         val energy = sqrt((bass * bass + mids * mids + treble * treble) / 3f).coerceIn(0f, 1f)
         val beatPulse = ((peak - treble).coerceAtLeast(0f) * 0.5f).coerceIn(0f, 1f)
@@ -273,14 +301,63 @@ private fun AgslRuntimeShaderRenderer(
             }
         } else {
             when (scene) {
-                AgslScene.LIQUID_PLASMA  -> { activeShader = liquidShader; activeBrush = liquidBrush }
-                AgslScene.CRYSTAL_TUNNEL -> { activeShader = crystalShader; activeBrush = crystalBrush }
-                AgslScene.AURA_ORB       -> { activeShader = auraShader; activeBrush = auraBrush }
-                AgslScene.CYBER_GRID         -> { activeShader = cyberGridShader; activeBrush = cyberGridBrush }
-                AgslScene.NEON_TRIANGLE_GRID -> { activeShader = neonTriangleShader; activeBrush = neonTriangleBrush }
-                AgslScene.FLUID_PULSE    -> { activeShader = fluidPulseShader; activeBrush = fluidPulseBrush }
-                AgslScene.AUDIO_FRACTAL  -> { activeShader = audioFractalShader; activeBrush = audioFractalBrush }
-                AgslScene.NEON_GRID      -> { activeShader = neonGridShader; activeBrush = neonGridBrush }
+                AgslScene.LIQUID_PLASMA -> {
+                    activeShader = liquidShader
+                    activeBrush = liquidBrush
+                }
+                AgslScene.CRYSTAL_TUNNEL -> {
+                    activeShader = crystalShader
+                    activeBrush = crystalBrush
+                }
+                AgslScene.AURA_ORB -> {
+                    activeShader = auraShader
+                    activeBrush = auraBrush
+                }
+                AgslScene.CYBER_GRID -> {
+                    activeShader = cyberGridShader
+                    activeBrush = cyberGridBrush
+                }
+                AgslScene.NEON_TRIANGLE_GRID -> {
+                    activeShader = neonTriangleShader
+                    activeBrush = neonTriangleBrush
+                }
+                AgslScene.FLUID_PULSE -> {
+                    activeShader = fluidPulseShader
+                    activeBrush = fluidPulseBrush
+                }
+                AgslScene.AUDIO_FRACTAL -> {
+                    activeShader = audioFractalShader
+                    activeBrush = audioFractalBrush
+                }
+                AgslScene.NEON_GRID -> {
+                    activeShader = neonGridShader
+                    activeBrush = neonGridBrush
+                }
+                // Batch 1 — map new scenes to existing shaders for now
+                AgslScene.AURORA_FLUX -> {
+                    activeShader = liquidShader
+                    activeBrush = liquidBrush
+                }
+                AgslScene.LIQUID_CHROME -> {
+                    activeShader = crystalShader
+                    activeBrush = crystalBrush
+                }
+                AgslScene.NEBULA_BLOOM -> {
+                    activeShader = auraShader
+                    activeBrush = auraBrush
+                }
+                AgslScene.PRISM_TUNNEL -> {
+                    activeShader = cyberGridShader
+                    activeBrush = cyberGridBrush
+                }
+                AgslScene.KINETIC_MANDALA -> {
+                    activeShader = neonTriangleShader
+                    activeBrush = neonTriangleBrush
+                }
+                AgslScene.PULSE_GEOMETRY -> {
+                    activeShader = fluidPulseShader
+                    activeBrush = fluidPulseBrush
+                }
             }
         }
 
@@ -289,10 +366,11 @@ private fun AgslRuntimeShaderRenderer(
         // (iAudioBass/iAudioMids/iAudioTreble/iAudioEnergy/iBeatPulse/
         //  iSceneTransition/iIntensity/iAspect, plus iMouse where declared)
         // instead of the legacy iBass/iMid/iTreble/iPeak set.
-        val isCatalogScene = currentTheme == null && (
-            scene == AgslScene.FLUID_PULSE ||
-                scene == AgslScene.AUDIO_FRACTAL ||
-                scene == AgslScene.NEON_GRID
+        val isCatalogScene =
+            currentTheme == null && (
+                scene == AgslScene.FLUID_PULSE ||
+                    scene == AgslScene.AUDIO_FRACTAL ||
+                    scene == AgslScene.NEON_GRID
             )
 
         if (isCatalogScene && currentTheme == null) {
@@ -377,23 +455,26 @@ private fun AgslRuntimeShaderRenderer(
                     )
                 }
             }
-            runCatching {
-                activeShader.setFloatUniform(
-                    "iColorPrimary",
-                    primaryColor.red,
-                    primaryColor.green,
-                    primaryColor.blue,
-                    primaryColor.alpha
-                )
-            }
-            runCatching {
-                activeShader.setFloatUniform(
-                    "iColorSecondary",
-                    secondaryColor.red,
-                    secondaryColor.green,
-                    secondaryColor.blue,
-                    secondaryColor.alpha
-                )
+            // iColorPrimary/iColorSecondary only for legacy shaders that declare them
+            if (scene.declaresColorUniforms) {
+                runCatching {
+                    activeShader.setFloatUniform(
+                        "iColorPrimary",
+                        primaryColor.red,
+                        primaryColor.green,
+                        primaryColor.blue,
+                        primaryColor.alpha
+                    )
+                }
+                runCatching {
+                    activeShader.setFloatUniform(
+                        "iColorSecondary",
+                        secondaryColor.red,
+                        secondaryColor.green,
+                        secondaryColor.blue,
+                        secondaryColor.alpha
+                    )
+                }
             }
         }
 

@@ -17,10 +17,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.deepeye.musicpro.ui.theme.GlassBorder
 
 @Composable
-fun StreakProgressBar(currentStreak: Int, targetStreak: Int = 7, modifier: Modifier = Modifier) {
+fun StreakProgressBar(
+    currentStreak: Int,
+    targetStreak: Int = 7,
+    modifier: Modifier = Modifier
+) {
     Column(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -36,26 +39,28 @@ fun StreakProgressBar(currentStreak: Int, targetStreak: Int = 7, modifier: Modif
                 color = Color.White
             )
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(8.dp)
-                .background(Color(0xFF2A2A2A), RoundedCornerShape(4.dp))
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .background(Color(0xFF2A2A2A), RoundedCornerShape(4.dp))
         ) {
             val progress = (currentStreak.toFloat() / targetStreak.toFloat()).coerceIn(0f, 1f)
             Box(
-                modifier = Modifier
-                    .fillMaxWidth(progress)
-                    .height(8.dp)
-                    .background(Color(0xFFFF6B35), RoundedCornerShape(4.dp))
+                modifier =
+                    Modifier
+                        .fillMaxWidth(progress)
+                        .height(8.dp)
+                        .background(Color(0xFFFF6B35), RoundedCornerShape(4.dp))
             )
         }
-        
+
         Spacer(modifier = Modifier.height(4.dp))
-        
+
         val remaining = (targetStreak - currentStreak).coerceAtLeast(0)
         Text(
             text = if (remaining > 0) "$remaining more days for bonus!" else "Bonus unlocked!",

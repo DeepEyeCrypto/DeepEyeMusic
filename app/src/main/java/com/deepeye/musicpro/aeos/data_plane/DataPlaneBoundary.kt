@@ -7,7 +7,6 @@ import com.deepeye.musicpro.aeos.observability.EbpfRuntimeSecurity
  * Data Plane Boundary - Handles isolated business logic.
  */
 abstract class DataPlaneBoundary {
-    
     protected fun executeLogic(operation: String) {
         EbpfRuntimeSecurity.traceExecution("DATA_PLANE", operation)
     }

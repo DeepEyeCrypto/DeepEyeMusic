@@ -1,0 +1,602 @@
+{
+  "metadata_summary": {
+    "total_scenes": 232,
+    "unique_tags": 53,
+    "tag_frequency_top_20": {
+      "High Definition": 206,
+      "groovy": 154,
+      "trippy": 153,
+      "cinematic": 126,
+      "mid-energy": 107,
+      "tech.livestream": 98,
+      "punchy": 61,
+      "geometry": 55,
+      "high-energy": 34,
+      "dreamy": 31,
+      "steady": 29,
+      "tech.chain-effect": 26,
+      "dark": 26,
+      "tech.manual-trigger": 22,
+      "particles": 22,
+      "mysterious": 22,
+      "fast": 18,
+      "euphoric": 16,
+      "raymarching": 16,
+      "playful": 15
+    },
+    "missing_fields": "None \u2014 all 232 entries have id, name, description, tags, url, createdBy, dateModified",
+    "date_range": "2026-04-01T19:49:25.279Z to 2026-10-25T15:51:32.069Z"
+  },
+  "theme_clusters": {
+    "CINEMATIC / ATMOSPHERIC": {
+      "count": 126,
+      "examples": [
+        "8bit Showdown",
+        "Anime Counter Scan",
+        "Anime Sun Over Mountains",
+        "Aura Orb Hyper-Geometric",
+        "Bass Punch Camera",
+        "Beat Barrel Roll",
+        "Beat Freeze",
+        "Binary Rain",
+        "Bloom Burn",
+        "Blue Green Motion"
+      ],
+      "common_tags": [
+        "High Definition",
+        "cinematic",
+        "groovy",
+        "trippy",
+        "mid-energy"
+      ],
+      "audio_patterns": "Broad coverage; often cinematic bass swells + treble sparkle + energy-driven glow",
+      "agsl_feasibility": "MEDIUM",
+      "opportunity": "Underserved for music-first premium; cinematic scenes often lack precise bass/mids/treble separation"
+    },
+    "PARTICLE / FIELD": {
+      "count": 58,
+      "examples": [
+        "Acid Physarum Split",
+        "Anime Sun Over Mountains",
+        "Binary Rain",
+        "Bitless",
+        "Blue Green Motion",
+        "Color Inversion",
+        "Colors",
+        "Cosmic Gaussian Cloud",
+        "Dark Trance Particle Cube",
+        "Deep House Velvet Drift"
+      ],
+      "common_tags": [
+        "High Definition",
+        "groovy",
+        "trippy",
+        "particles"
+      ],
+      "audio_patterns": "Particle density/speed driven by energy; color by treble; spawn rate by bass",
+      "agsl_feasibility": "LOW",
+      "opportunity": "GPU particle systems heavy on mobile; use sparingly or with low particle counts"
+    },
+    "ORGANIC / FLUID / SMOKE": {
+      "count": 47,
+      "examples": [
+        "A Smoke",
+        "Acid Physarum Split",
+        "Deep House Velvet Drift",
+        "Disolve",
+        "Dragonspine",
+        "Dreamflow",
+        "EdgeFlow Pro",
+        "EDM Show",
+        "Feedback Lab",
+        "Flow"
+      ],
+      "common_tags": [
+        "High Definition",
+        "groovy",
+        "trippy",
+        "cinematic",
+        "mid-energy"
+      ],
+      "audio_patterns": "Bass->scale/dilation, Mids->turbulence/curl, Treble->shimmer/specular, Energy->brightness",
+      "agsl_feasibility": "MEDIUM",
+      "opportunity": "HIGH \u2014 domain-warped FBM flow fields novel; bass-driven domain warping not in VVavy"
+    },
+    "TUNNEL / PORTAL": {
+      "count": 45,
+      "examples": [
+        "Bitless",
+        "Centroid Crystalline Tunnel",
+        "Color Vortex Suck",
+        "CRT Lissajous Tunnel",
+        "Deep House",
+        "Depth Outline Stage",
+        "Disolve",
+        "Dreamflow",
+        "Droste Temple",
+        "Endless Road"
+      ],
+      "common_tags": [
+        "High Definition",
+        "tech.livestream",
+        "cinematic",
+        "trippy",
+        "tech.chain-effect"
+      ],
+      "audio_patterns": "Bass->z-advance/zoom, Mids->line width/glow, Treble->grid accents, Beat->pulse",
+      "agsl_feasibility": "MEDIUM",
+      "opportunity": "HIGH \u2014 perspective grid + waveform mapping novel; synthwave tunnel underserved"
+    },
+    "NEON / RETRO / SYNTHWAVE": {
+      "count": 43,
+      "examples": [
+        "8bit Showdown",
+        "Acid Physarum Split",
+        "Anime Counter Scan",
+        "Beat Drop Grid",
+        "Blacklight",
+        "Brutal Columns",
+        "Cyber Punk Punch",
+        "Dark Trance Particle Cube",
+        "Deep House Velvet Drift",
+        "Dragonspine"
+      ],
+      "common_tags": [
+        "High Definition",
+        "groovy",
+        "trippy",
+        "cinematic",
+        "tech.livestream",
+        "tech.manual-trigger"
+      ],
+      "audio_patterns": "Bass->neon intensity/pulse, Mids->grid/line modulation, Treble->glow/sparkle, Beat->flash",
+      "agsl_feasibility": "HIGH",
+      "opportunity": "HIGH \u2014 synthwave/neon grid with precise audio mapping underserved"
+    },
+    "NATURE / COSMIC": {
+      "count": 36,
+      "examples": [
+        "Anime Sun Over Mountains",
+        "Bloom Burn",
+        "Coastal Landscape",
+        "Cosmic Gaussian Cloud",
+        "Cozy Apartment Vinyl Session",
+        "Disolve",
+        "Dreamflow",
+        "Dust Meridian",
+        "Galactic Kaleidoscope",
+        "Ghostlight Tree"
+      ],
+      "common_tags": [
+        "High Definition",
+        "dreamy",
+        "nature",
+        "cosmic",
+        "cinematic"
+      ],
+      "audio_patterns": "Bass->organic growth, Mids->atmospheric drift, Treble->star/sparkle, Energy->glow",
+      "agsl_feasibility": "MEDIUM",
+      "opportunity": "HIGH \u2014 nebula/aurora with harmonic orbital rays novel"
+    },
+    "GEOMETRIC": {
+      "count": 32,
+      "examples": [
+        "Aura Orb Hyper-Geometric",
+        "Beat Drop Grid",
+        "Dark Trance Particle Cube",
+        "Galactic Kaleidoscope",
+        "Glass Facets",
+        "Grid Locked",
+        "Guess What",
+        "Kaleidoscope Tunnel",
+        "Liquid Resonance",
+        "Neon Matrix Grid"
+      ],
+      "common_tags": [
+        "High Definition",
+        "geometry",
+        "cinematic",
+        "trippy",
+        "punchy"
+      ],
+      "audio_patterns": "Bass->scale/pulse, Mids->rotation/turbulence, Treble->edge highlights, Beat->grid flash",
+      "agsl_feasibility": "HIGH",
+      "opportunity": "HIGH \u2014 SDF triangle/grid arrays with spatial hashing novel"
+    },
+    "KALEIDOSCOPIC / SYMMETRIC": {
+      "count": 27,
+      "examples": [
+        "Centroid Crystalline Tunnel",
+        "Complicating Things",
+        "Dreamflow",
+        "Droste Temple",
+        "Fate Weaver",
+        "Flower Fractal Ripple",
+        "Galactic Kaleidoscope",
+        "Kaleidoscope Tunnel",
+        "Liquid Glass Residue",
+        "Liquid Kaleido Feedback"
+      ],
+      "common_tags": [
+        "High Definition",
+        "trippy",
+        "cinematic",
+        "kaleidoscope",
+        "symmetry"
+      ],
+      "audio_patterns": "Bass->symmetry order, Mids->rotation speed, Treble->fractal boundary, Beat->symmetry pulse",
+      "agsl_feasibility": "HIGH",
+      "opportunity": "HIGH \u2014 kaleidoscopic SDF with audio-reactive symmetry novel"
+    },
+    "FRACTAL / ABSTRACT": {
+      "count": 9,
+      "examples": [
+        "Deep House",
+        "Disolve",
+        "Dreamflow",
+        "Edge Feedback Fold",
+        "Flower Fractal Ripple",
+        "Fractal Symphony Bloom",
+        "Iridescent Fractal Orbit",
+        "Liminal Space Folding",
+        "Tri-Quad Tree"
+      ],
+      "common_tags": [
+        "High Definition",
+        "fractal",
+        "abstract",
+        "trippy",
+        "cinematic"
+      ],
+      "audio_patterns": "Bass->zoom/iterations, Mids->domain drift, Treble->boundary sparkle, Beat->zoom kick",
+      "agsl_feasibility": "HIGH",
+      "opportunity": "HIGH \u2014 beat-synced Mandelbrot/Julia raymarch novel"
+    },
+    "TEXT / TYPOGRAPHY": {
+      "count": 7,
+      "examples": [
+        "Flowmosh",
+        "Glitch Matrix",
+        "Journey Through the Divine Mind",
+        "Main Character",
+        "Matcha Whisper",
+        "Textures",
+        "Word of Mouth"
+      ],
+      "common_tags": [
+        "typography",
+        "text",
+        "glitch"
+      ],
+      "audio_patterns": "Text distortion by bass; glyph animation by treble; layout by energy",
+      "agsl_feasibility": "LOW",
+      "opportunity": "LOW \u2014 text rendering heavy on GPU; not music-first"
+    },
+    "MINIMAL / MONOCHROME": {
+      "count": 6,
+      "examples": [
+        "Beat Freeze",
+        "Brutal Columns",
+        "Hey DJ Pick Me",
+        "Main Character",
+        "Ring Runner",
+        "Warped Kaleidoscope"
+      ],
+      "common_tags": [
+        "minimal",
+        "monochrome",
+        "clean",
+        "steady"
+      ],
+      "audio_patterns": "Bass->orbit/count, Mids->color shift, Treble->none, Beat->pulse",
+      "agsl_feasibility": "HIGH",
+      "opportunity": "HIGH \u2014 bass-only minimal orbit novel; battery-friendly"
+    },
+    "OTHER": {
+      "count": 27,
+      "examples": [
+        "Various unclassifiable scenes"
+      ],
+      "common_tags": [
+        "various"
+      ],
+      "audio_patterns": "Mixed",
+      "agsl_feasibility": "LOW",
+      "opportunity": "LOW \u2014 unclassifiable"
+    }
+  },
+  "audio_mapping_patterns": {
+    "bass": {
+      "coverage": "124/232 (53.4%)",
+      "keywords": {
+        "bass": 75,
+        "low": 83,
+        "sub": 5,
+        "kick": 4,
+        "low-end": 5,
+        "rumble": 2
+      },
+      "behaviors": [
+        "drives",
+        "scales",
+        "pulses",
+        "swells",
+        "grows",
+        "advances",
+        "dilates"
+      ],
+      "recommended_uniform": "iAudioBass (0-2) \u2014 Low-frequency 31-125 Hz; drives scale, dilation, pulse depth"
+    },
+    "mids": {
+      "coverage": "119/232 (51.3%)",
+      "keywords": {
+        "mids": 18,
+        "mid": 128,
+        "vocal": 1,
+        "melody": 2,
+        "midrange": 2,
+        "voice": 1
+      },
+      "behaviors": [
+        "modulates",
+        "turbulence",
+        "detail",
+        "shifts",
+        "drifts",
+        "shapes",
+        "textures",
+        "layers",
+        "colors"
+      ],
+      "recommended_uniform": "iAudioMids (0-2) \u2014 Mid-frequency 125-2000 Hz; drives turbulence, complexity, texture"
+    },
+    "treble": {
+      "coverage": "215/232 (92.7%)",
+      "keywords": {
+        "treble": 17,
+        "high": 254,
+        "sparkle": 2,
+        "shimmer": 7,
+        "high-end": 2,
+        "bright": 23
+      },
+      "behaviors": [
+        "sparkles",
+        "shimmers",
+        "accents",
+        "highlights",
+        "edges",
+        "brightens",
+        "twinkles",
+        "glints"
+      ],
+      "recommended_uniform": "iAudioTreble (0-2) \u2014 High-frequency 2000+ Hz; drives sparkle, shimmer, edge highlights"
+    },
+    "beat_onset": {
+      "coverage": "99/232 (42.7%)",
+      "keywords": {
+        "beat": 46,
+        "onset": 1,
+        "pulse": 17,
+        "rhythm": 3,
+        "tempo": 23,
+        "bpm": 3,
+        "kick": 4,
+        "transient": 7,
+        "hit": 13,
+        "drop": 26
+      },
+      "behaviors": [
+        "pulses",
+        "kicks",
+        "hits",
+        "drops",
+        "snaps",
+        "flashes",
+        "triggers"
+      ],
+      "recommended_uniform": "iBeatPulse (0-1) \u2014 Onset/transient detection; sharp pulse on kick/snare"
+    },
+    "energy": {
+      "coverage": "164/232 (70.7%)",
+      "keywords": {
+        "energy": 158,
+        "loudness": 7,
+        "volume": 17,
+        "amplitude": 10,
+        "drive": 18
+      },
+      "behaviors": [
+        "glow",
+        "amplitude",
+        "drives",
+        "brightness",
+        "intensity",
+        "boosts",
+        "amplifies"
+      ],
+      "recommended_uniform": "iAudioEnergy (0-1) \u2014 Overall RMS-like level; drives global brightness, glow"
+    },
+    "recommended_smoothing": {
+      "attack_tau": 0.016,
+      "release_tau": 0.05,
+      "beat_release_tau": 0.12,
+      "max_dt": 0.1,
+      "nan_guard": true,
+      "strategy": "Asymmetric attack/release; attack fast for punch, release slow for smooth tail; beat pulse decays faster; clamp deltaTime for background stalls; NaN/Inf guard on all inputs"
+    }
+  },
+  "gap_analysis": {
+    "ranked_opportunities": [
+      {
+        "rank": 1,
+        "name": "AURORA FLUX",
+        "reasoning": "Domain-warped FBM flow field \u2014 bass-driven domain warping not in VVavy; organic fluid feel premium; HIGH feasibility; LOW perf risk"
+      },
+      {
+        "rank": 2,
+        "name": "LIQUID CHROME",
+        "reasoning": "Curl noise + Monet palette \u2014 curl-noise liquid chrome novel; premium liquid metal feel; HIGH feasibility"
+      },
+      {
+        "rank": 3,
+        "name": "NEBULA BLOOM",
+        "reasoning": "Concentric halos + harmonic rays \u2014 harmonic orbital rays novel; cosmic premium feel; HIGH feasibility; radial SDF low cost"
+      },
+      {
+        "rank": 4,
+        "name": "PRISM TUNNEL",
+        "reasoning": "Perspective grid + undulating terrain \u2014 audio-reactive horizon tunnel novel; synthwave tunnel premium; HIGH feasibility"
+      },
+      {
+        "rank": 5,
+        "name": "KINETIC MANDALA",
+        "reasoning": "SDF triangle array + spatial hashing \u2014 spatial hash triangle array novel; geometric premium; HIGH feasibility"
+      },
+      {
+        "rank": 6,
+        "name": "PULSE GEOMETRY",
+        "reasoning": "Beat-synced raymarch geometry \u2014 beat-synced raymarch novel; technical showcase; MEDIUM feasibility/perf"
+      },
+      {
+        "rank": 7,
+        "name": "LIQUID STARFIELD",
+        "reasoning": "Fluid flow field + star particles \u2014 fluid starfield novel; dreamy cosmic premium; HIGH feasibility"
+      },
+      {
+        "rank": 8,
+        "name": "PRISMATIC SMOKE",
+        "reasoning": "Volumetric smoke + chromatic aberration \u2014 chromatic smoke novel; atmospheric premium; MEDIUM feasibility"
+      },
+      {
+        "rank": 9,
+        "name": "NEON WAVEFORM TUNNEL",
+        "reasoning": "Waveform-driven tunnel \u2014 waveform as tunnel geometry novel; music viz classic; HIGH feasibility"
+      },
+      {
+        "rank": 10,
+        "name": "ORGANIC CELL BLOOM",
+        "reasoning": "Voronoi cellular growth + bloom \u2014 cellular bloom novel; organic growth premium; HIGH feasibility"
+      },
+      {
+        "rank": 11,
+        "name": "FRACTAL PULSE MANDALA",
+        "reasoning": "Beat-synced Mandelbrot/Julia \u2014 beat-synced fractal mandala novel; technical premium; MEDIUM feasibility"
+      },
+      {
+        "rank": 12,
+        "name": "MINIMAL BASS ORBIT",
+        "reasoning": "Bass-only minimal orbit \u2014 bass-only minimal novel; battery-friendly; HIGH feasibility; LOW perf risk"
+      }
+    ]
+  },
+  "original_scene_designs": [
+    {
+      "name": "AURORA FLUX",
+      "visual_intent": "Organic fluid flow field with domain-warped FBM noise \u2014 bass-driven domain scale creates slow breathing blobs, mids add curl turbulence, treble adds high-frequency shimmer",
+      "inspired_theme_cluster": "ORGANIC / FLUID / SMOKE + GEOMETRIC",
+      "audio_mapping": {
+        "bass": "Domain scale (1.5-2.7) \u2014 larger, slower blobs on heavy bass",
+        "mids": "Warp amplitude (0.6-1.6) \u2014 more turbulence/curl on mids",
+        "treble": "High-frequency micro-displacement (0.08*noise) \u2014 fine shimmer",
+        "energy": "Global brightness multiplier (0.6-1.4) \u2014 overall luminance",
+        "beat_pulse": "White flash (0.45*pulse) \u2014 transient accent on kick"
+      },
+      "agsl_technique_outline": "4-octave FBM noise with audio-driven domain warping; coord = uv * bassScale + warp(w) * midWarp; treble adds high-freq noise2(coord*8); color navy->teal->magenta",
+      "uniform_usage": "iAudioBass, iAudioMids, iAudioTreble, iAudioEnergy, iBeatPulse, iSceneTransition, iIntensity, iAspect, iTime, iTimeDelta, iResolution, iMouse",
+      "performance_estimate": "~8ms on MT6835 (2D FBM, no raymarch, 4 octaves)",
+      "low_end_fallback": "Disable 2 FBM octaves (2 octaves instead of 4) on BATTERY tier",
+      "originality_note": "Domain-warped FBM flow with bass-driven scale not in VVavy; organic fluid breathing feel novel"
+    },
+    {
+      "name": "LIQUID CHROME",
+      "visual_intent": "Navier-Stokes-inspired curl noise field with dynamic Monet palette \u2014 liquid metal surface with horizon glow, bass-driven dilation, mids-driven curl turbulence, treble specular highlights",
+      "inspired_theme_cluster": "ORGANIC / FLUID / SMOKE + CINEMATIC",
+      "audio_mapping": {
+        "bass": "Camera z-advance speed (1.5-4.0) + hill amplitude (0.08-0.23) \u2014 faster advance, taller hills",
+        "mids": "Curl noise amplitude + grid line width (0.03-0.05) \u2014 more turbulence, thicker lines",
+        "treble": "Grid intersection sparkle (1.4*treble) \u2014 sharp neon accents on intersections",
+        "energy": "Global glow/horizon multiplier (0.5-1.0) \u2014 overall atmosphere",
+        "beat_pulse": "Camera speed boost (1.5x) + horizon flash \u2014 transient camera kick"
+      },
+      "agsl_technique_outline": "Curl noise via dFdx/dFdy of noise; perspective grid with audio-reactive hills; Monet palette blend; treble intersection sparkle",
+      "uniform_usage": "iAudioBass, iAudioMids, iAudioTreble, iAudioEnergy, iBeatPulse, iSceneTransition, iIntensity, iAspect, iTime, iTimeDelta, iResolution, iMouse",
+      "performance_estimate": "~10ms on MT6835 (curl noise + grid, no raymarch)",
+      "low_end_fallback": "Disable specular intersection pass on BATTERY tier",
+      "originality_note": "Curl-noise liquid chrome with Monet palette novel; Navier-Stokes-inspired not in VVavy"
+    },
+    {
+      "name": "NEBULA BLOOM",
+      "visual_intent": "Concentric halo rings with harmonic orbital rays \u2014 central pulsing core, bass-driven ring density, mids-controlled ring count, treble ray sparkle, beat-triggered ring flash",
+      "inspired_theme_cluster": "NATURE / COSMIC + CINEMATIC",
+      "audio_mapping": {
+        "bass": "Core radius (0.35-0.60) + ring speed (0.6-1.1) \u2014 larger core, faster ring expansion",
+        "mids": "Ring density/multiplier \u2014 more concentric rings on mids",
+        "treble": "Orbital ray sparkle (0.3-1.0) \u2014 harmonic rays on high frequencies",
+        "energy": "Global contrast/bloom multiplier \u2014 overall nebula brightness",
+        "beat_pulse": "Ring phase kick + core flash \u2014 transient ring expansion flash"
+      },
+      "agsl_technique_outline": "Radial SDF: core ring + concentric shockwaves (fract(dist*2.5 - time)) + harmonic rays (sin(angle*8)); color mix teal->magenta; pow(0.9) contrast",
+      "uniform_usage": "iAudioBass, iAudioMids, iAudioTreble, iAudioEnergy, iBeatPulse, iSceneTransition, iIntensity, iAspect, iTime, iTimeDelta, iResolution, iMouse",
+      "performance_estimate": "~6ms on MT6835 (radial SDF, no loops)",
+      "low_end_fallback": "Disable ray pass (keep core + rings only) on BATTERY tier",
+      "originality_note": "Harmonic orbital rays with audio-reactive ring phase novel; nebula bloom with harmonic rays not in VVavy"
+    }
+  ],
+  "p0_implementation_plan": {
+    "priority_scenes": [
+      "AURORA FLUX",
+      "LIQUID CHROME",
+      "NEBULA BLOOM"
+    ],
+    "agsl_outlines": {
+      "AURORA_FLUX": "Complete AGSL in agsl_scene_outlines_1-5.json",
+      "LIQUID CHROME": "Complete AGSL in agsl_scene_outlines_1-5.json",
+      "NEBULA BLOOM": "Complete AGSL in agsl_scene_outlines_1-5.json"
+    },
+    "test_plans": {
+      "AURORA FLUX": [
+        "Compile test: AGSL main signature + uniform contract",
+        "Zero-audio test: all uniforms 0 -> no NaN, graceful idle",
+        "Bass sweep: 0-2 -> domain scale visually expands",
+        "Mids sweep: 0-2 -> warp turbulence increases",
+        "Treble sweep: 0-2 -> high-freq shimmer appears",
+        "Beat pulse: 0-1 -> white flash visible",
+        "Energy sweep: 0-1 -> brightness scales",
+        "Transition: iSceneTransition 0-1 -> smooth crossfade",
+        "Thermal: BATTERY tier -> 2 FBM octaves disabled",
+        "Device: Realme RMX3945 \u2014 cold start, 60s run, no SIGABRT"
+      ],
+      "LIQUID CHROME": [
+        "Compile test: AGSL main signature + uniform contract",
+        "Zero-audio test: all uniforms 0 -> no NaN",
+        "Bass sweep: 0-2 -> camera speed + hill amplitude increase",
+        "Mids sweep: 0-2 -> curl turbulence + line width increase",
+        "Treble sweep: 0-2 -> grid intersection sparkle appears",
+        "Beat pulse: 0-1 -> camera kick + horizon flash",
+        "Transition crossfade: iSceneTransition 0-1 smooth",
+        "Thermal: BATTERY -> specular pass disabled",
+        "Device: Realme RMX3945 \u2014 cold start, 60s run"
+      ],
+      "NEBULA BLOOM": [
+        "Compile test: AGSL main signature + uniform contract",
+        "Zero-audio test: all uniforms 0 -> no NaN",
+        "Bass sweep: 0-2 -> core radius expands, ring speed increases",
+        "Mids sweep: 0-2 -> ring density increases",
+        "Treble sweep: 0-2 -> orbital rays appear/sparkle",
+        "Beat pulse: 0-1 -> ring flash + core flash",
+        "Transition crossfade: iSceneTransition 0-1 smooth",
+        "Thermal: BATTERY -> ray pass disabled",
+        "Device: Realme RMX3945 \u2014 cold start, 60s run"
+      ]
+    },
+    "integration_plan": {
+      "ShaderCatalog.kt": "Add 3 const val AGSL strings (AURORA_FLUX, LIQUID_CHROME, NEBULA_BLOOM); add 3 SceneInfo entries to SCENES list",
+      "AgslVisualizer.kt": "Add 3 RuntimeShader/ShaderBrush fields; add 3 branches in scene dispatch when(currentTheme==null) for AgslScene enum values; ensure uniform dispatch uses full contract (iAudioBass/Mids/Treble/Energy/BeatPulse/SceneTransition/Intensity/Aspect + iMouse where declaresMouse=true)",
+      "VisualizerStudioScreen.kt": "Add 3 entries to AvailableVisualizerScenes with correct VisualizerSceneId enum values; ensure VisualizerHost gets new enum branches",
+      "DSPEngine_AudioFrameInterpolator": "No changes \u2014 existing 6-band output maps to iAudioBass=bands[0], iAudioMids=bands[2], iAudioTreble=bands[4], iBeatPulse derived from peak-bands[4]",
+      "ThermalGovernor": "BATTERY tier: reduce AURORA_FLUX to 2 FBM octaves; disable LIQUID_CHROME specular pass; disable NEBULA_BLOOM ray pass; CAPPED tier: 60fps cap, heavier smoothing"
+    }
+  },
+  "final_status": "RESEARCH COMPLETE \u2014 READY FOR APPROVED IMPLEMENTATION"
+}

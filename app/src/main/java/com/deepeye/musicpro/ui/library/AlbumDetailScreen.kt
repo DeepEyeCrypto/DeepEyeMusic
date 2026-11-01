@@ -45,29 +45,29 @@ data class AlbumDetailUiState(
 
 @HiltViewModel
 class AlbumDetailViewModel
-@Inject
-constructor(
-    savedStateHandle: SavedStateHandle,
-    private val getAlbumByIdUseCase: GetAlbumByIdUseCase,
-    private val getSongsByAlbumUseCase: GetSongsByAlbumUseCase,
-) : ViewModel() {
-    private val albumId: Long = savedStateHandle.get<Long>("albumId") ?: 0L
-    private val _uiState = MutableStateFlow(AlbumDetailUiState())
-    val uiState: StateFlow<AlbumDetailUiState> = _uiState.asStateFlow()
+    @Inject
+    constructor(
+        savedStateHandle: SavedStateHandle,
+        private val getAlbumByIdUseCase: GetAlbumByIdUseCase,
+        private val getSongsByAlbumUseCase: GetSongsByAlbumUseCase,
+    ) : ViewModel() {
+        private val albumId: Long = savedStateHandle.get<Long>("albumId") ?: 0L
+        private val _uiState = MutableStateFlow(AlbumDetailUiState())
+        val uiState: StateFlow<AlbumDetailUiState> = _uiState.asStateFlow()
 
-    init {
-        viewModelScope.launch {
-            getAlbumByIdUseCase(albumId).collect { album ->
-                _uiState.value = _uiState.value.copy(album = album)
+        init {
+            viewModelScope.launch {
+                getAlbumByIdUseCase(albumId).collect { album ->
+                    _uiState.value = _uiState.value.copy(album = album)
+                }
             }
-        }
-        viewModelScope.launch {
-            getSongsByAlbumUseCase(albumId).collect { songs ->
-                _uiState.value = _uiState.value.copy(songs = songs, isLoading = false)
+            viewModelScope.launch {
+                getSongsByAlbumUseCase(albumId).collect { songs ->
+                    _uiState.value = _uiState.value.copy(songs = songs, isLoading = false)
+                }
             }
         }
     }
-}
 
 @Composable
 fun AlbumDetailScreen(
@@ -99,11 +99,11 @@ fun AlbumDetailScreen(
                     model = album.artUri,
                     contentDescription = album.title,
                     modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .padding(horizontal = 40.dp)
-                        .clip(RoundedCornerShape(20.dp)),
+                        Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .padding(horizontal = 40.dp)
+                            .clip(RoundedCornerShape(20.dp)),
                     contentScale = ContentScale.Crop,
                 )
                 Text(

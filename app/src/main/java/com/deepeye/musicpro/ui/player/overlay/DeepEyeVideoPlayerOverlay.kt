@@ -12,10 +12,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -32,10 +32,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material.icons.outlined.ThumbDown
+import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.CircularProgressIndicator
-import com.deepeye.musicpro.ui.modifiers.preventParentScrollOnDrag
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -67,7 +66,7 @@ import com.deepeye.musicpro.player.format.PlaybackDiagnostics
 import com.deepeye.musicpro.player.format.QualityPreset
 import com.deepeye.musicpro.ui.LocalFullscreenMode
 import com.deepeye.musicpro.ui.LocalPipMode
-import com.deepeye.musicpro.ui.theme.ContentBounds
+import com.deepeye.musicpro.ui.modifiers.preventParentScrollOnDrag
 import com.deepeye.musicpro.ui.theme.ElectricViolet
 import com.deepeye.musicpro.ui.theme.NeonCyan
 import com.deepeye.musicpro.ui.theme.TouchTargets
@@ -89,6 +88,7 @@ import kotlin.math.hypot
  * Layer 2: Gesture HUD & Ripple Badges (Floating non-blocking visual feedback)
  * Layer 3: Controls Overlay (Top info bar, Center play/pause, Bottom multimedia bar) — fully isolated from gesture capture
  */
+
 /** Stable test handles for the video overlay, which has no permanent labelled controls. */
 object DeepEyeVideoPlayerOverlayTags {
     const val ROOT = "deepeye_video_overlay_root"
@@ -110,12 +110,12 @@ object DeepEyeVideoPlayerOverlayTags {
 //
 // See `UiScale` and `Spacing` for the full reasoning about why touch targets are
 // exempt from viewport scaling.
-private val TransportSecondarySize = TouchTargets.Min        // 48dp, was 60dp
-private val TransportPrimarySize = TouchTargets.Large         // 56dp, was 84dp
-private val TransportSecondaryIconSize = 22.sdp              // was 32.dp
-private val TransportPrimaryIconSize = 28.sdp                // was 48.dp
-private val TransportGap = 14.sdp                            // was 36.dp
-private val TransportPadding = 18.sdp                        // was 28.dp
+private val TransportSecondarySize = TouchTargets.Min // 48dp, was 60dp
+private val TransportPrimarySize = TouchTargets.Large // 56dp, was 84dp
+private val TransportSecondaryIconSize = 22.sdp // was 32.dp
+private val TransportPrimaryIconSize = 28.sdp // was 48.dp
+private val TransportGap = 14.sdp // was 36.dp
+private val TransportPadding = 18.sdp // was 28.dp
 
 @Composable
 fun DeepEyeVideoPlayerOverlay(
@@ -166,6 +166,7 @@ fun DeepEyeVideoPlayerOverlay(
 
     // Auto-hide controls timer
     var lastInteractionTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
+
     fun resetTimer() {
         lastInteractionTime = System.currentTimeMillis()
     }
@@ -191,21 +192,26 @@ fun DeepEyeVideoPlayerOverlay(
     val playbackSpeed = playerState.playbackSpeed
 
     // Determine if video is genuinely buffering (not playing + meaningful duration + position not advancing + no recent user interaction)
-    val isVideoBuffering: Boolean = if (!hasVideo) {
-        false
-    } else if (durationMs <= 0L) {
-        true
-    } else if (isPlaying) {
-        false
-    } else if (System.currentTimeMillis() - lastInteractionTime < 2500L) {
-        false
-    } else {
-        currentPosition > 0L && currentPosition < durationMs - 2000L
-    }
+    val isVideoBuffering: Boolean =
+        if (!hasVideo) {
+            false
+        } else if (durationMs <= 0L) {
+            true
+        } else if (isPlaying) {
+            false
+        } else if (System.currentTimeMillis() - lastInteractionTime < 2500L) {
+            false
+        } else {
+            currentPosition > 0L && currentPosition < durationMs - 2000L
+        }
 
-    val qualityText = selectedFormat?.formattedVideoResolution
-        ?: if (hasVideo) QualityPreset.AUTO.displayName.split("(").first().trim()
-        else ""
+    val qualityText =
+        selectedFormat?.formattedVideoResolution
+            ?: if (hasVideo) {
+                QualityPreset.AUTO.displayName.split("(").first().trim()
+            } else {
+                ""
+            }
     val is4K = (selectedFormat?.height ?: 0) >= 2160
     val isHDR = selectedFormat?.isHdr ?: false
     val is60Fps = (selectedFormat?.frameRate ?: 0f) >= 50f
@@ -218,20 +224,22 @@ fun DeepEyeVideoPlayerOverlay(
     // Helper for Zoom Presets
     fun cycleZoomMode() {
         resetTimer()
-        val nextScale = when {
-            videoScale < 1.05f -> 1.35f // Crop to Fill
-            videoScale < 1.4f -> 1.5f  // 150%
-            videoScale < 1.7f -> 2.0f  // 200%
-            videoScale < 2.5f -> 3.0f  // 300%
-            else -> 1.0f              // Reset to Fit
-        }
+        val nextScale =
+            when {
+                videoScale < 1.05f -> 1.35f // Crop to Fill
+                videoScale < 1.4f -> 1.5f // 150%
+                videoScale < 1.7f -> 2.0f // 200%
+                videoScale < 2.5f -> 3.0f // 300%
+                else -> 1.0f // Reset to Fit
+            }
         onScaleChange(nextScale)
         onOffsetChange(0f, 0f)
-        val label = when (nextScale) {
-            1.0f -> "FIT (100%)"
-            1.35f -> "FILL (CROP)"
-            else -> "${(nextScale * 100).toInt()}%"
-        }
+        val label =
+            when (nextScale) {
+                1.0f -> "FIT (100%)"
+                1.35f -> "FILL (CROP)"
+                else -> "${(nextScale * 100).toInt()}%"
+            }
         zoomOsd = label
         scope.launch {
             delay(1500)
@@ -242,11 +250,11 @@ fun DeepEyeVideoPlayerOverlay(
     // Stable handle for UI tests: the overlay is a gesture surface with no
     // permanent labelled affordances, so the root is what tests assert against.
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .testTag(DeepEyeVideoPlayerOverlayTags.ROOT)
+        modifier =
+            modifier
+                .fillMaxSize()
+                .testTag(DeepEyeVideoPlayerOverlayTags.ROOT)
     ) {
-
         val currentScale by rememberUpdatedState(videoScale)
         val currentOffsetX by rememberUpdatedState(videoOffsetX)
         val currentOffsetY by rememberUpdatedState(videoOffsetY)
@@ -255,258 +263,294 @@ fun DeepEyeVideoPlayerOverlay(
         // LAYER 1: GESTURE DETECTION SURFACE (Background layer behind controls)
         // ══════════════════════════════════════════════════════════════════════
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(isLocked, isInPipMode, isFullscreen) {
-                    if (isInPipMode) return@pointerInput
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .pointerInput(isLocked, isInPipMode, isFullscreen) {
+                        if (isInPipMode) return@pointerInput
 
-                    var initialBrightness = 0f
-                    var initialVolume = 0
-                    var initialSeek = 0L
-                    val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-                    var dragDirection: Int? = null // 1: Seek, 2: Brightness, 3: Volume, 4: Exit Fullscreen, 5: Pinch Zoom/Pan
-                    var initialPinchDistance = 0f
-                    var initialScale = 1f
-                    var initialCentroid = Offset.Zero
-                    var initialOffsetX = 0f
-                    var initialOffsetY = 0f
-                    var lastTapTime = 0L
-                    var lastTapPos = Offset.Zero
-                    var isDragging = false
+                        var initialBrightness = 0f
+                        var initialVolume = 0
+                        var initialSeek = 0L
+                        val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                        var dragDirection: Int? = null // 1: Seek, 2: Brightness, 3: Volume, 4: Exit Fullscreen, 5: Pinch Zoom/Pan
+                        var initialPinchDistance = 0f
+                        var initialScale = 1f
+                        var initialCentroid = Offset.Zero
+                        var initialOffsetX = 0f
+                        var initialOffsetY = 0f
+                        var lastTapTime = 0L
+                        var lastTapPos = Offset.Zero
+                        var isDragging = false
 
-                    awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = true)
-                        if (down.isConsumed) return@awaitEachGesture
-                        val downPos = down.position
-                        val downTime = System.currentTimeMillis()
-                        val slopThreshold = viewConfig.touchSlop
-                        val screenWidth = size.width.toFloat()
-                        val screenHeight = size.height.toFloat()
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = true)
+                            if (down.isConsumed) return@awaitEachGesture
+                            val downPos = down.position
+                            val downTime = System.currentTimeMillis()
+                            val slopThreshold = viewConfig.touchSlop
+                            val screenWidth = size.width.toFloat()
+                            val screenHeight = size.height.toFloat()
 
-                        initialBrightness = getOverlayScreenBrightness(context, activity)
-                        initialVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                        initialSeek = currentPosition
-                        initialScale = currentScale
-                        initialOffsetX = currentOffsetX
-                        initialOffsetY = currentOffsetY
-                        dragDirection = null
-                        isDragging = false
+                            initialBrightness = getOverlayScreenBrightness(context, activity)
+                            initialVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                            initialSeek = currentPosition
+                            initialScale = currentScale
+                            initialOffsetX = currentOffsetX
+                            initialOffsetY = currentOffsetY
+                            dragDirection = null
+                            isDragging = false
 
-                        while (true) {
-                            val event = awaitPointerEvent()
-                            val change = event.changes.firstOrNull { it.id == down.id }
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes.firstOrNull { it.id == down.id }
 
-                            if (change == null || !change.pressed) {
-                                if (isDragging) {
-                                    if (dragDirection == 1) {
-                                        seekOsd?.let { target ->
-                                            onSeekTo(target)
-                                            actions.seekFinished(target)
+                                if (change == null || !change.pressed) {
+                                    if (isDragging) {
+                                        if (dragDirection == 1) {
+                                            seekOsd?.let { target ->
+                                                onSeekTo(target)
+                                                actions.seekFinished(target)
+                                            }
                                         }
-                                    }
-                                    volumeOsd = null
-                                    brightnessOsd = null
-                                    seekOsd = null
-                                    isDragging = false
-                                    dragDirection = null
-                                    lastTapTime = 0L
-                                } else {
-                                    val pressDuration = System.currentTimeMillis() - downTime
-                                    val moveDist = (change?.position ?: downPos).minus(downPos).getDistance()
-                                    if (pressDuration < 400L && moveDist < slopThreshold * 2f) {
-                                        val now = System.currentTimeMillis()
-                                        if (now - lastTapTime < 350L && (downPos - lastTapPos).getDistance() < slopThreshold * 4f) {
-                                            // Double Tap Gesture
-                                            lastTapTime = 0L
-                                            resetTimer()
-                                            if (!isLocked) {
-                                                if (downPos.x < screenWidth * 0.35f) {
-                                                    // Left Double Tap: -10s
-                                                    val newPos = (currentPosition - 10000L).coerceAtLeast(0L)
-                                                    onSeekTo(newPos)
-                                                    actions.rewind10()
-                                                    showLeftRipple = true
-                                                    scope.launch {
-                                                        delay(650)
-                                                        showLeftRipple = false
-                                                    }
-                                                } else if (downPos.x > screenWidth * 0.65f) {
-                                                    // Right Double Tap: +10s
-                                                    val newPos = if (durationMs > 0) (currentPosition + 10000L).coerceAtMost(durationMs) else currentPosition + 10000L
-                                                    onSeekTo(newPos)
-                                                    actions.forward10()
-                                                    showRightRipple = true
-                                                    scope.launch {
-                                                        delay(650)
-                                                        showRightRipple = false
+                                        volumeOsd = null
+                                        brightnessOsd = null
+                                        seekOsd = null
+                                        isDragging = false
+                                        dragDirection = null
+                                        lastTapTime = 0L
+                                    } else {
+                                        val pressDuration = System.currentTimeMillis() - downTime
+                                        val moveDist = (change?.position ?: downPos).minus(downPos).getDistance()
+                                        if (pressDuration < 400L && moveDist < slopThreshold * 2f) {
+                                            val now = System.currentTimeMillis()
+                                            if (now - lastTapTime < 350L && (downPos - lastTapPos).getDistance() < slopThreshold * 4f) {
+                                                // Double Tap Gesture
+                                                lastTapTime = 0L
+                                                resetTimer()
+                                                if (!isLocked) {
+                                                    if (downPos.x < screenWidth * 0.35f) {
+                                                        // Left Double Tap: -10s
+                                                        val newPos = (currentPosition - 10000L).coerceAtLeast(0L)
+                                                        onSeekTo(newPos)
+                                                        actions.rewind10()
+                                                        showLeftRipple = true
+                                                        scope.launch {
+                                                            delay(650)
+                                                            showLeftRipple = false
+                                                        }
+                                                    } else if (downPos.x > screenWidth * 0.65f) {
+                                                        // Right Double Tap: +10s
+                                                        val newPos =
+                                                            if (durationMs > 0) {
+                                                                (currentPosition + 10000L).coerceAtMost(
+                                                                    durationMs
+                                                                )
+                                                            } else {
+                                                                currentPosition + 10000L
+                                                            }
+                                                        onSeekTo(newPos)
+                                                        actions.forward10()
+                                                        showRightRipple = true
+                                                        scope.launch {
+                                                            delay(650)
+                                                            showRightRipple = false
+                                                        }
+                                                    } else {
+                                                        // Center Double Tap: Toggle Zoom / Reset
+                                                        cycleZoomMode()
                                                     }
                                                 } else {
-                                                    // Center Double Tap: Toggle Zoom / Reset
-                                                    cycleZoomMode()
+                                                    showLockOsd = true
+                                                    scope.launch {
+                                                        delay(2000)
+                                                        showLockOsd = false
+                                                    }
                                                 }
                                             } else {
-                                                showLockOsd = true
-                                                scope.launch {
-                                                    delay(2000)
-                                                    showLockOsd = false
-                                                }
-                                            }
-                                        } else {
-                                            // Single Tap on empty background
-                                            lastTapTime = now
-                                            lastTapPos = downPos
-                                            if (!isLocked) {
-                                                controlsVisible = !controlsVisible
-                                                resetTimer()
-                                            } else {
-                                                showLockOsd = true
-                                                scope.launch {
-                                                    delay(2500)
-                                                    showLockOsd = false
+                                                // Single Tap on empty background
+                                                lastTapTime = now
+                                                lastTapPos = downPos
+                                                if (!isLocked) {
+                                                    controlsVisible = !controlsVisible
+                                                    resetTimer()
+                                                } else {
+                                                    showLockOsd = true
+                                                    scope.launch {
+                                                        delay(2500)
+                                                        showLockOsd = false
+                                                    }
                                                 }
                                             }
                                         }
                                     }
+                                    break
                                 }
-                                break
-                            }
 
-                            if (change.isConsumed && !isDragging) {
-                                break
-                            }
-
-                            if (isLocked) {
-                                change.consume()
-                                continue
-                            }
-
-                            val dy = change.position.y - downPos.y
-                            val dx = change.position.x - downPos.x
-
-                            // Multi-Touch Pinch To Zoom & Pan
-                            if (event.changes.size >= 2) {
-                                val ptr1 = event.changes[0].position
-                                val ptr2 = event.changes[1].position
-                                val distance = hypot(ptr1.x - ptr2.x, ptr1.y - ptr2.y)
-                                val currentCentroid = Offset((ptr1.x + ptr2.x) / 2f, (ptr1.y + ptr2.y) / 2f)
-
-                                if (dragDirection == 5) {
-                                    if (initialPinchDistance > 10f) {
-                                        val newScale = (initialScale * (distance / initialPinchDistance)).coerceIn(1.0f, 4.0f)
-                                        if (newScale <= 1.02f) {
-                                            onScaleChange(1.0f)
-                                            onOffsetChange(0f, 0f)
-                                        } else {
-                                            val maxOffsetX = (screenWidth * (newScale - 1f)) / 2f
-                                            val maxOffsetY = (screenHeight * (newScale - 1f)) / 2f
-                                            val deltaX = currentCentroid.x - initialCentroid.x
-                                            val deltaY = currentCentroid.y - initialCentroid.y
-                                            val clampedX = (initialOffsetX + deltaX).coerceIn(-maxOffsetX, maxOffsetX)
-                                            val clampedY = (initialOffsetY + deltaY).coerceIn(-maxOffsetY, maxOffsetY)
-                                            onScaleChange(newScale)
-                                            onOffsetChange(clampedX, clampedY)
-                                        }
-                                        val label = if (newScale <= 1.02f) "FIT (100%)" else "${(newScale * 100).toInt()}%"
-                                        zoomOsd = label
-                                        scope.launch {
-                                            delay(1200)
-                                            if (zoomOsd == label) zoomOsd = null
-                                        }
-                                    }
-                                    event.changes.forEach { it.consume() }
-                                } else {
-                                    dragDirection = 5
-                                    initialPinchDistance = distance
-                                    initialCentroid = currentCentroid
-                                    initialScale = currentScale
-                                    initialOffsetX = currentOffsetX
-                                    initialOffsetY = currentOffsetY
-                                    isDragging = true
-                                    lastTapTime = 0L
+                                if (change.isConsumed && !isDragging) {
+                                    break
                                 }
-                            } else if (dragDirection == null) {
-                                if (abs(dy) > slopThreshold || abs(dx) > slopThreshold) {
-                                    isDragging = true
-                                    lastTapTime = 0L
-                                    // VLC gesture priorities:
-                                    // 1. If 2 fingers or scale > 1.15f with diagonal/multi-touch -> Pan
-                                    // 2. If single finger vertical swipe -> Brightness (Left half) or Volume (Right half)
-                                    // 3. If single finger horizontal swipe -> Scrub / Seek
-                                    if (abs(dy) > abs(dx) * 1.1f) {
-                                        if (isFullscreen && dy > 80f && downPos.y < screenHeight * 0.20f) {
-                                            dragDirection = 4 // Exit Fullscreen swipe down from top edge
-                                        } else if (downPos.x < screenWidth * 0.5f) {
-                                            dragDirection = 2 // Brightness (Left 50% screen)
-                                        } else {
-                                            dragDirection = 3 // Volume (Right 50% screen)
+
+                                if (isLocked) {
+                                    change.consume()
+                                    continue
+                                }
+
+                                val dy = change.position.y - downPos.y
+                                val dx = change.position.x - downPos.x
+
+                                // Multi-Touch Pinch To Zoom & Pan
+                                if (event.changes.size >= 2) {
+                                    val ptr1 = event.changes[0].position
+                                    val ptr2 = event.changes[1].position
+                                    val distance = hypot(ptr1.x - ptr2.x, ptr1.y - ptr2.y)
+                                    val currentCentroid = Offset((ptr1.x + ptr2.x) / 2f, (ptr1.y + ptr2.y) / 2f)
+
+                                    if (dragDirection == 5) {
+                                        if (initialPinchDistance > 10f) {
+                                            val newScale =
+                                                (initialScale * (distance / initialPinchDistance)).coerceIn(
+                                                    1.0f,
+                                                    4.0f
+                                                )
+                                            if (newScale <= 1.02f) {
+                                                onScaleChange(1.0f)
+                                                onOffsetChange(0f, 0f)
+                                            } else {
+                                                val maxOffsetX = (screenWidth * (newScale - 1f)) / 2f
+                                                val maxOffsetY = (screenHeight * (newScale - 1f)) / 2f
+                                                val deltaX = currentCentroid.x - initialCentroid.x
+                                                val deltaY = currentCentroid.y - initialCentroid.y
+                                                val clampedX =
+                                                    (initialOffsetX + deltaX).coerceIn(
+                                                        -maxOffsetX,
+                                                        maxOffsetX
+                                                    )
+                                                val clampedY =
+                                                    (initialOffsetY + deltaY).coerceIn(
+                                                        -maxOffsetY,
+                                                        maxOffsetY
+                                                    )
+                                                onScaleChange(newScale)
+                                                onOffsetChange(clampedX, clampedY)
+                                            }
+                                            val label = if (newScale <= 1.02f) "FIT (100%)" else "${(newScale * 100).toInt()}%"
+                                            zoomOsd = label
+                                            scope.launch {
+                                                delay(1200)
+                                                if (zoomOsd == label) zoomOsd = null
+                                            }
                                         }
-                                    } else if (abs(dx) > abs(dy) * 1.1f) {
-                                        dragDirection = 1 // Scrub / Seek (Horizontal)
-                                    } else if (currentScale > 1.05f) {
-                                        dragDirection = 5 // Pan zoomed video
+                                        event.changes.forEach { it.consume() }
+                                    } else {
+                                        dragDirection = 5
+                                        initialPinchDistance = distance
+                                        initialCentroid = currentCentroid
+                                        initialScale = currentScale
                                         initialOffsetX = currentOffsetX
                                         initialOffsetY = currentOffsetY
+                                        isDragging = true
+                                        lastTapTime = 0L
+                                    }
+                                } else if (dragDirection == null) {
+                                    if (abs(dy) > slopThreshold || abs(dx) > slopThreshold) {
+                                        isDragging = true
+                                        lastTapTime = 0L
+                                        // VLC gesture priorities:
+                                        // 1. If 2 fingers or scale > 1.15f with diagonal/multi-touch -> Pan
+                                        // 2. If single finger vertical swipe -> Brightness (Left half) or Volume (Right half)
+                                        // 3. If single finger horizontal swipe -> Scrub / Seek
+                                        if (abs(dy) > abs(dx) * 1.1f) {
+                                            if (isFullscreen && dy > 80f && downPos.y < screenHeight * 0.20f) {
+                                                dragDirection = 4 // Exit Fullscreen swipe down from top edge
+                                            } else if (downPos.x < screenWidth * 0.5f) {
+                                                dragDirection = 2 // Brightness (Left 50% screen)
+                                            } else {
+                                                dragDirection = 3 // Volume (Right 50% screen)
+                                            }
+                                        } else if (abs(dx) > abs(dy) * 1.1f) {
+                                            dragDirection = 1 // Scrub / Seek (Horizontal)
+                                        } else if (currentScale > 1.05f) {
+                                            dragDirection = 5 // Pan zoomed video
+                                            initialOffsetX = currentOffsetX
+                                            initialOffsetY = currentOffsetY
+                                        }
                                     }
                                 }
-                            }
 
-                            if (isDragging && dragDirection != null) {
-                                change.consume()
-                                resetTimer()
-                                when (dragDirection) {
-                                    5 -> { // Pan single touch when zoomed (strictly clamped)
-                                        if (currentScale > 1.05f) {
-                                            val maxOffsetX = (screenWidth * (currentScale - 1f)) / 2f
-                                            val maxOffsetY = (screenHeight * (currentScale - 1f)) / 2f
-                                            val panDx = change.position.x - change.previousPosition.x
-                                            val panDy = change.position.y - change.previousPosition.y
-                                            val clampedX = (currentOffsetX + panDx).coerceIn(-maxOffsetX, maxOffsetX)
-                                            val clampedY = (currentOffsetY + panDy).coerceIn(-maxOffsetY, maxOffsetY)
-                                            onOffsetChange(clampedX, clampedY)
-                                        } else {
-                                            onOffsetChange(0f, 0f)
+                                if (isDragging && dragDirection != null) {
+                                    change.consume()
+                                    resetTimer()
+                                    when (dragDirection) {
+                                        5 -> { // Pan single touch when zoomed (strictly clamped)
+                                            if (currentScale > 1.05f) {
+                                                val maxOffsetX = (screenWidth * (currentScale - 1f)) / 2f
+                                                val maxOffsetY = (screenHeight * (currentScale - 1f)) / 2f
+                                                val panDx = change.position.x - change.previousPosition.x
+                                                val panDy = change.position.y - change.previousPosition.y
+                                                val clampedX =
+                                                    (currentOffsetX + panDx).coerceIn(
+                                                        -maxOffsetX,
+                                                        maxOffsetX
+                                                    )
+                                                val clampedY =
+                                                    (currentOffsetY + panDy).coerceIn(
+                                                        -maxOffsetY,
+                                                        maxOffsetY
+                                                    )
+                                                onOffsetChange(clampedX, clampedY)
+                                            } else {
+                                                onOffsetChange(0f, 0f)
+                                            }
                                         }
-                                    }
-                                    1 -> { // Scrub / Seek
-                                        val seekDeltaMs = ((dx / screenWidth.coerceAtLeast(1f)) * 90000f).toLong()
-                                        val maxDur = durationMs.coerceAtLeast(0L)
-                                        val targetSeek = if (maxDur > 0) (initialSeek + seekDeltaMs).coerceIn(0L, maxDur) else (initialSeek + seekDeltaMs).coerceAtLeast(0L)
-                                        seekOsd = targetSeek
-                                        brightnessOsd = null
-                                        volumeOsd = null
-                                        actions.seekChanged(targetSeek)
-                                    }
-                                    2 -> { // Brightness
-                                        val deltaB = -(dy / screenHeight.coerceAtLeast(1f)) * 1.5f
-                                        val newBrightness = (initialBrightness + deltaB).coerceIn(0.01f, 1f)
-                                        activity?.window?.let { win ->
-                                            val lp = win.attributes
-                                            lp.screenBrightness = newBrightness
-                                            win.attributes = lp
+                                        1 -> { // Scrub / Seek
+                                            val seekDeltaMs = ((dx / screenWidth.coerceAtLeast(1f)) * 90000f).toLong()
+                                            val maxDur = durationMs.coerceAtLeast(0L)
+                                            val targetSeek =
+                                                if (maxDur > 0) {
+                                                    (initialSeek + seekDeltaMs).coerceIn(
+                                                        0L,
+                                                        maxDur
+                                                    )
+                                                } else {
+                                                    (initialSeek + seekDeltaMs).coerceAtLeast(0L)
+                                                }
+                                            seekOsd = targetSeek
+                                            brightnessOsd = null
+                                            volumeOsd = null
+                                            actions.seekChanged(targetSeek)
                                         }
-                                        brightnessOsd = (newBrightness * 100).toInt()
-                                        volumeOsd = null
-                                        seekOsd = null
-                                    }
-                                    3 -> { // Volume
-                                        val deltaV = -(dy / screenHeight.coerceAtLeast(1f)) * maxVolume * 1.5f
-                                        val newVolume = (initialVolume + deltaV).toInt().coerceIn(0, maxVolume)
-                                        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
-                                        volumeOsd = ((newVolume.toFloat() / maxVolume.coerceAtLeast(1)) * 100).toInt()
-                                        brightnessOsd = null
-                                        seekOsd = null
-                                    }
-                                    4 -> { // Exit Fullscreen
-                                        if (dy > 80f) {
-                                            actions.dismiss()
-                                            break
+                                        2 -> { // Brightness
+                                            val deltaB = -(dy / screenHeight.coerceAtLeast(1f)) * 1.5f
+                                            val newBrightness = (initialBrightness + deltaB).coerceIn(0.01f, 1f)
+                                            activity?.window?.let { win ->
+                                                val lp = win.attributes
+                                                lp.screenBrightness = newBrightness
+                                                win.attributes = lp
+                                            }
+                                            brightnessOsd = (newBrightness * 100).toInt()
+                                            volumeOsd = null
+                                            seekOsd = null
+                                        }
+                                        3 -> { // Volume
+                                            val deltaV = -(dy / screenHeight.coerceAtLeast(1f)) * maxVolume * 1.5f
+                                            val newVolume = (initialVolume + deltaV).toInt().coerceIn(0, maxVolume)
+                                            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, newVolume, 0)
+                                            volumeOsd = ((newVolume.toFloat() / maxVolume.coerceAtLeast(1)) * 100).toInt()
+                                            brightnessOsd = null
+                                            seekOsd = null
+                                        }
+                                        4 -> { // Exit Fullscreen
+                                            if (dy > 80f) {
+                                                actions.dismiss()
+                                                break
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
         )
 
         // ══════════════════════════════════════════════════════════════════════
@@ -529,9 +573,19 @@ fun DeepEyeVideoPlayerOverlay(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.FastRewind, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(20.dp))
+                            Icon(
+                                Icons.Default.FastRewind,
+                                contentDescription = null,
+                                tint = NeonCyan,
+                                modifier = Modifier.size(20.dp)
+                            )
                             Spacer(Modifier.width(4.dp))
-                            Text("-10s", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(
+                                "-10s",
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
@@ -552,9 +606,19 @@ fun DeepEyeVideoPlayerOverlay(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("+10s", color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(
+                                "+10s",
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
                             Spacer(Modifier.width(4.dp))
-                            Icon(Icons.Default.FastForward, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(20.dp))
+                            Icon(
+                                Icons.Default.FastForward,
+                                contentDescription = null,
+                                tint = NeonCyan,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
                 }
@@ -581,24 +645,64 @@ fun DeepEyeVideoPlayerOverlay(
                 ) {
                     when {
                         brightnessOsd != null -> {
-                            Icon(Icons.Default.BrightnessMedium, contentDescription = "Brightness", tint = Color(0xFFFFD54F), modifier = Modifier.size(22.dp))
-                            Text("${brightnessOsd}%", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                            Icon(
+                                Icons.Default.BrightnessMedium,
+                                contentDescription = "Brightness",
+                                tint = Color(0xFFFFD54F),
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Text(
+                                "$brightnessOsd%",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium
+                            )
                         }
                         volumeOsd != null -> {
-                            Icon(if (volumeOsd == 0) Icons.AutoMirrored.Filled.VolumeMute else Icons.AutoMirrored.Filled.VolumeUp, contentDescription = "Volume", tint = NeonCyan, modifier = Modifier.size(22.dp))
-                            Text("${volumeOsd}%", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                            Icon(
+                                if (volumeOsd == 0) Icons.AutoMirrored.Filled.VolumeMute else Icons.AutoMirrored.Filled.VolumeUp,
+                                contentDescription = "Volume",
+                                tint = NeonCyan,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Text(
+                                "$volumeOsd%",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium
+                            )
                         }
                         seekOsd != null -> {
                             val currentSeek = seekOsd ?: 0L
                             val delta = currentSeek - currentPosition
                             val sign = if (delta >= 0) "+" else ""
-                            Icon(if (delta >= 0) Icons.Default.FastForward else Icons.Default.FastRewind, contentDescription = "Seek", tint = Color(0xFFFFB300), modifier = Modifier.size(22.dp))
-                            Text("${TimeFormatter.formatDuration(currentSeek)} ($sign${delta / 1000}s)", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                            Icon(
+                                if (delta >= 0) Icons.Default.FastForward else Icons.Default.FastRewind,
+                                contentDescription = "Seek",
+                                tint = Color(0xFFFFB300),
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Text(
+                                "${TimeFormatter.formatDuration(currentSeek)} ($sign${delta / 1000}s)",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleSmall
+                            )
                         }
                         zoomOsd != null -> {
                             val currentZoom = zoomOsd ?: ""
-                            Icon(Icons.Default.AspectRatio, contentDescription = "Zoom", tint = ElectricViolet, modifier = Modifier.size(22.dp))
-                            Text(currentZoom, color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                            Icon(
+                                Icons.Default.AspectRatio,
+                                contentDescription = "Zoom",
+                                tint = ElectricViolet,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Text(
+                                currentZoom,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium
+                            )
                         }
                     }
                 }
@@ -622,35 +726,52 @@ fun DeepEyeVideoPlayerOverlay(
                         modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(Icons.Default.Lock, contentDescription = "Locked", tint = Color(0xFFFF5252), modifier = Modifier.size(26.dp))
+                        Icon(
+                            Icons.Default.Lock,
+                            contentDescription = "Locked",
+                            tint = Color(0xFFFF5252),
+                            modifier = Modifier.size(26.dp)
+                        )
                         Spacer(Modifier.height(6.dp))
-                        Text("Screen Locked", color = Color.White, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text(
+                            "Screen Locked",
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
 
             // Floating Unlock Button on top right
             Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp)
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
             ) {
                 Surface(
                     shape = CircleShape,
                     color = Color.Black.copy(alpha = 0.75f),
                     border = BorderStroke(1.2.dp, NeonCyan),
-                    modifier = Modifier
-                        .size(44.dp)
-                        .minTouchTarget()
-                        .clickable {
-                            isLocked = false
-                            actions.toggleLock()
-                            controlsVisible = true
-                            resetTimer()
-                        }
+                    modifier =
+                        Modifier
+                            .size(44.dp)
+                            .minTouchTarget()
+                            .clickable {
+                                isLocked = false
+                                actions.toggleLock()
+                                controlsVisible = true
+                                resetTimer()
+                            }
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.LockOpen, contentDescription = "Unlock", tint = NeonCyan, modifier = Modifier.size(22.dp))
+                        Icon(
+                            Icons.Default.LockOpen,
+                            contentDescription = "Unlock",
+                            tint = NeonCyan,
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
                 }
             }
@@ -670,12 +791,13 @@ fun DeepEyeVideoPlayerOverlay(
             Surface(
                 shape = RoundedCornerShape(36.dp),
                 color = Color(0x18FFFFFF),
-                border = BorderStroke(
-                    1.2.dp,
-                    Brush.linearGradient(
-                        listOf(Color(0x38FFFFFF), Color(0x2500E5FF), Color(0x38FFFFFF))
-                    )
-                ),
+                border =
+                    BorderStroke(
+                        1.2.dp,
+                        Brush.linearGradient(
+                            listOf(Color(0x38FFFFFF), Color(0x2500E5FF), Color(0x38FFFFFF))
+                        )
+                    ),
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
             ) {
                 Row(
@@ -685,26 +807,44 @@ fun DeepEyeVideoPlayerOverlay(
                 ) {
                     // Skip Previous
                     IconButton(
-                        onClick = { resetTimer(); actions.previous() },
-                        modifier = Modifier
-                            .size(TransportSecondarySize)
-                            .clip(CircleShape)
-                            .background(Color(0x22FFFFFF))
-                            .border(1.dp, Color(0x30FFFFFF), CircleShape)
+                        onClick = {
+                            resetTimer()
+                            actions.previous()
+                        },
+                        modifier =
+                            Modifier
+                                .size(TransportSecondarySize)
+                                .clip(CircleShape)
+                                .background(Color(0x22FFFFFF))
+                                .border(1.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
-                        Icon(Icons.Default.SkipPrevious, "Previous", tint = Color.White, modifier = Modifier.size(TransportSecondaryIconSize))
+                        Icon(
+                            Icons.Default.SkipPrevious,
+                            "Previous",
+                            tint = Color.White,
+                            modifier = Modifier.size(TransportSecondaryIconSize)
+                        )
                     }
 
                     // Rewind 10s
                     IconButton(
-                        onClick = { resetTimer(); actions.rewind10() },
-                        modifier = Modifier
-                            .size(TransportSecondarySize)
-                            .clip(CircleShape)
-                            .background(Color(0x22FFFFFF))
-                            .border(1.dp, Color(0x30FFFFFF), CircleShape)
+                        onClick = {
+                            resetTimer()
+                            actions.rewind10()
+                        },
+                        modifier =
+                            Modifier
+                                .size(TransportSecondarySize)
+                                .clip(CircleShape)
+                                .background(Color(0x22FFFFFF))
+                                .border(1.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
-                        Icon(Icons.Default.Replay10, "-10s", tint = Color.White, modifier = Modifier.size(TransportSecondaryIconSize))
+                        Icon(
+                            Icons.Default.Replay10,
+                            "-10s",
+                            tint = Color.White,
+                            modifier = Modifier.size(TransportSecondaryIconSize)
+                        )
                     }
 
                     // Main Play/Pause — Glowing Neon Cyan Action Button
@@ -712,10 +852,14 @@ fun DeepEyeVideoPlayerOverlay(
                         shape = CircleShape,
                         color = NeonCyan,
                         border = BorderStroke(2.5.dp, Color.White.copy(alpha = 0.85f)),
-                        modifier = Modifier
-                            .size(TransportPrimarySize)
-                            .clip(CircleShape)
-                            .clickable { resetTimer(); actions.playPause() }
+                        modifier =
+                            Modifier
+                                .size(TransportPrimarySize)
+                                .clip(CircleShape)
+                                .clickable {
+                                    resetTimer()
+                                    actions.playPause()
+                                }
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
@@ -729,26 +873,44 @@ fun DeepEyeVideoPlayerOverlay(
 
                     // Forward 10s
                     IconButton(
-                        onClick = { resetTimer(); actions.forward10() },
-                        modifier = Modifier
-                            .size(TransportSecondarySize)
-                            .clip(CircleShape)
-                            .background(Color(0x22FFFFFF))
-                            .border(1.dp, Color(0x30FFFFFF), CircleShape)
+                        onClick = {
+                            resetTimer()
+                            actions.forward10()
+                        },
+                        modifier =
+                            Modifier
+                                .size(TransportSecondarySize)
+                                .clip(CircleShape)
+                                .background(Color(0x22FFFFFF))
+                                .border(1.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
-                        Icon(Icons.Default.Forward10, "+10s", tint = Color.White, modifier = Modifier.size(TransportSecondaryIconSize))
+                        Icon(
+                            Icons.Default.Forward10,
+                            "+10s",
+                            tint = Color.White,
+                            modifier = Modifier.size(TransportSecondaryIconSize)
+                        )
                     }
 
                     // Skip Next
                     IconButton(
-                        onClick = { resetTimer(); actions.next() },
-                        modifier = Modifier
-                            .size(TransportSecondarySize)
-                            .clip(CircleShape)
-                            .background(Color(0x22FFFFFF))
-                            .border(1.dp, Color(0x30FFFFFF), CircleShape)
+                        onClick = {
+                            resetTimer()
+                            actions.next()
+                        },
+                        modifier =
+                            Modifier
+                                .size(TransportSecondarySize)
+                                .clip(CircleShape)
+                                .background(Color(0x22FFFFFF))
+                                .border(1.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
-                        Icon(Icons.Default.SkipNext, "Next", tint = Color.White, modifier = Modifier.size(TransportSecondaryIconSize))
+                        Icon(
+                            Icons.Default.SkipNext,
+                            "Next",
+                            tint = Color.White,
+                            modifier = Modifier.size(TransportSecondaryIconSize)
+                        )
                     }
                 }
             }
@@ -775,11 +937,12 @@ fun DeepEyeVideoPlayerOverlay(
                     // Back / Dismiss
                     IconButton(
                         onClick = { actions.dismiss() },
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x18FFFFFF))
-                            .border(1.2.dp, Color(0x30FFFFFF), CircleShape)
+                        modifier =
+                            Modifier
+                                .size(50.dp)
+                                .clip(CircleShape)
+                                .background(Color(0x18FFFFFF))
+                                .border(1.2.dp, Color(0x30FFFFFF), CircleShape)
                     ) {
                         Icon(Icons.Default.Close, "Back", tint = NeonCyan, modifier = Modifier.size(26.dp))
                     }
@@ -817,7 +980,14 @@ fun DeepEyeVideoPlayerOverlay(
                         if (is4K) ProBadge("4K UHD", Color(0xFFFF3D00), Color.White, fontSize = 12.sp)
                         if (isHDR) ProBadge("HDR", Color(0xFF00E676), Color(0xFF090B10), fontSize = 12.sp)
                         if (is60Fps) ProBadge("60 FPS", Color(0xFF00B0FF), Color.White, fontSize = 12.sp)
-                        if (qualityText.isNotEmpty() && !is4K) ProBadge(qualityText.uppercase(), Color(0x3300E5FF), NeonCyan, fontSize = 12.sp)
+                        if (qualityText.isNotEmpty() && !is4K) {
+                            ProBadge(
+                                qualityText.uppercase(),
+                                Color(0x3300E5FF),
+                                NeonCyan,
+                                fontSize = 12.sp
+                            )
+                        }
                     }
                 }
             }
@@ -842,33 +1012,40 @@ fun DeepEyeVideoPlayerOverlay(
                     positionMs = currentPosition,
                     durationMs = durationMs,
                     bufferedMs = bufferedPosition,
-                    onSeekTo = { target -> resetTimer(); onSeekTo(target); actions.seekFinished(target) }
+                    onSeekTo = { target ->
+                        resetTimer()
+                        onSeekTo(target)
+                        actions.seekFinished(target)
+                    }
                 )
 
                 Spacer(Modifier.height(8.dp))
 
                 // 2. Smart Grouped Action Dock (Floating Liquid Glass Pill Dock)
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentWidth(Alignment.CenterHorizontally),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.CenterHorizontally),
                     contentAlignment = Alignment.Center
                 ) {
                     Surface(
                         shape = RoundedCornerShape(18.dp),
                         color = Color(0xD80D1117),
-                        border = BorderStroke(
-                            1.dp,
-                            Brush.horizontalGradient(
-                                listOf(Color(0x3000E5FF), Color(0x307C4DFF), Color(0x3000E5FF))
-                            )
-                        ),
+                        border =
+                            BorderStroke(
+                                1.dp,
+                                Brush.horizontalGradient(
+                                    listOf(Color(0x3000E5FF), Color(0x307C4DFF), Color(0x3000E5FF))
+                                )
+                            ),
                         modifier = Modifier.wrapContentSize()
                     ) {
                         Row(
-                            modifier = Modifier
-                                .horizontalScroll(rememberScrollState())
-                                .padding(horizontal = 8.dp, vertical = 5.dp),
+                            modifier =
+                                Modifier
+                                    .horizontalScroll(rememberScrollState())
+                                    .padding(horizontal = 8.dp, vertical = 5.dp),
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -877,15 +1054,29 @@ fun DeepEyeVideoPlayerOverlay(
                                 isLocked = true
                                 actions.toggleLock()
                                 showLockOsd = true
-                                scope.launch { delay(2000); showLockOsd = false }
+                                scope.launch {
+                                    delay(2000)
+                                    showLockOsd = false
+                                }
                             }
 
-                            ActionChip(Icons.Default.PictureInPicture, "PiP", enabled = !isInPipMode, idleTint = Color(0xFF81D4FA)) {
+                            ActionChip(
+                                Icons.Default.PictureInPicture,
+                                "PiP",
+                                enabled = !isInPipMode,
+                                idleTint = Color(0xFF81D4FA)
+                            ) {
                                 resetTimer()
                                 actions.openPipOrBackgroundPlay()
                             }
 
-                            ActionChip(Icons.Default.Analytics, "Stats", active = showStats, activeTint = NeonCyan, idleTint = Color(0xFF80DEEA)) {
+                            ActionChip(
+                                Icons.Default.Analytics,
+                                "Stats",
+                                active = showStats,
+                                activeTint = NeonCyan,
+                                idleTint = Color(0xFF80DEEA)
+                            ) {
                                 resetTimer()
                                 actions.openStats()
                                 onToggleStats()
@@ -927,16 +1118,18 @@ fun DeepEyeVideoPlayerOverlay(
                                 actions.toggleSubscribe()
                             }
 
-                            val downloadIcon = when {
-                                playerState.isDownloaded -> Icons.Default.CheckCircle
-                                playerState.isDownloading -> Icons.Default.Downloading
-                                else -> Icons.Default.Download
-                            }
-                            val downloadLabel = when {
-                                playerState.isDownloaded -> "Saved"
-                                playerState.isDownloading -> "Saving"
-                                else -> "Save"
-                            }
+                            val downloadIcon =
+                                when {
+                                    playerState.isDownloaded -> Icons.Default.CheckCircle
+                                    playerState.isDownloading -> Icons.Default.Downloading
+                                    else -> Icons.Default.Download
+                                }
+                            val downloadLabel =
+                                when {
+                                    playerState.isDownloaded -> "Saved"
+                                    playerState.isDownloading -> "Saving"
+                                    else -> "Save"
+                                }
                             ActionChip(
                                 icon = downloadIcon,
                                 label = downloadLabel,
@@ -951,9 +1144,23 @@ fun DeepEyeVideoPlayerOverlay(
                             ChipDivider()
 
                             // ─── Media Group ───
-                            ActionChip(Icons.Default.AspectRatio, "Aspect", active = videoScale != 1.0f, activeTint = ElectricViolet, idleTint = Color(0xFFCE93D8)) { cycleZoomMode() }
+                            ActionChip(
+                                Icons.Default.AspectRatio,
+                                "Aspect",
+                                active = videoScale != 1.0f,
+                                activeTint = ElectricViolet,
+                                idleTint = Color(0xFFCE93D8)
+                            ) {
+                                cycleZoomMode()
+                            }
 
-                            ActionChip(Icons.Default.Speed, "${playbackSpeed}x", active = playbackSpeed != 1.0f, activeTint = Color(0xFF00E676), idleTint = Color(0xFFA5D6A7)) {
+                            ActionChip(
+                                Icons.Default.Speed,
+                                "${playbackSpeed}x",
+                                active = playbackSpeed != 1.0f,
+                                activeTint = Color(0xFF00E676),
+                                idleTint = Color(0xFFA5D6A7)
+                            ) {
                                 resetTimer()
                                 val speeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
                                 val currentIdx = speeds.indexOf(playbackSpeed).takeIf { it >= 0 } ?: 2
@@ -962,28 +1169,74 @@ fun DeepEyeVideoPlayerOverlay(
                                 actions.openSpeed()
                             }
 
-                            ActionChip(Icons.Default.HighQuality, "Quality", enabled = hasQuality, idleTint = Color(0xFF90CAF9)) { resetTimer(); actions.openQuality() }
-                            ActionChip(Icons.Default.Tune, "EQ", idleTint = Color(0xFFB39DDB)) { resetTimer(); actions.openDsp() }
-                            ActionChip(Icons.Default.MusicNote, "Lyrics", idleTint = Color(0xFFF48FB1)) { resetTimer(); actions.openLyrics() }
-                            ActionChip(Icons.Default.AutoAwesome, "Visuals", idleTint = Color(0xFF80D8FF)) { resetTimer(); actions.openVisualizer() }
+                            ActionChip(
+                                Icons.Default.HighQuality,
+                                "Quality",
+                                enabled = hasQuality,
+                                idleTint = Color(0xFF90CAF9)
+                            ) {
+                                resetTimer()
+                                actions.openQuality()
+                            }
+                            ActionChip(Icons.Default.Tune, "EQ", idleTint = Color(0xFFB39DDB)) {
+                                resetTimer()
+                                actions.openDsp()
+                            }
+                            ActionChip(Icons.Default.MusicNote, "Lyrics", idleTint = Color(0xFFF48FB1)) {
+                                resetTimer()
+                                actions.openLyrics()
+                            }
+                            ActionChip(Icons.Default.AutoAwesome, "Visuals", idleTint = Color(0xFF80D8FF)) {
+                                resetTimer()
+                                actions.openVisualizer()
+                            }
 
                             ChipDivider()
 
                             // ─── Interaction Group ───
-                            val repeatIcon = when (playerState.repeatMode) {
-                                RepeatMode.ONE -> Icons.Default.RepeatOne
-                                RepeatMode.ALL -> Icons.Default.Repeat
-                                RepeatMode.NONE -> Icons.Default.Repeat
+                            val repeatIcon =
+                                when (playerState.repeatMode) {
+                                    RepeatMode.ONE -> Icons.Default.RepeatOne
+                                    RepeatMode.ALL -> Icons.Default.Repeat
+                                    RepeatMode.NONE -> Icons.Default.Repeat
+                                }
+                            ActionChip(
+                                repeatIcon,
+                                "Repeat",
+                                active = playerState.repeatMode != RepeatMode.NONE,
+                                activeTint = NeonCyan,
+                                idleTint = Color(0xFF80DEEA)
+                            ) {
+                                resetTimer()
+                                actions.toggleRepeat()
                             }
-                            ActionChip(repeatIcon, "Repeat", active = playerState.repeatMode != RepeatMode.NONE, activeTint = NeonCyan, idleTint = Color(0xFF80DEEA)) { resetTimer(); actions.toggleRepeat() }
-                            ActionChip(Icons.Default.ClosedCaption, "CC", enabled = hasCaptions || hasVideo, active = playerState.isCaptionEnabled, activeTint = NeonCyan, idleTint = Color(0xFFB0BEC5)) { resetTimer(); actions.toggleCaptions() }
+                            ActionChip(
+                                Icons.Default.ClosedCaption,
+                                "CC",
+                                enabled = hasCaptions || hasVideo,
+                                active = playerState.isCaptionEnabled,
+                                activeTint = NeonCyan,
+                                idleTint = Color(0xFFB0BEC5)
+                            ) {
+                                resetTimer()
+                                actions.toggleCaptions()
+                            }
 
                             ChipDivider()
 
                             // ─── Utility Group ───
-                            ActionChip(Icons.Default.Bedtime, "Sleep", idleTint = Color(0xFFFFCC80)) { resetTimer(); actions.openSleepTimer() }
-                            ActionChip(Icons.Default.Tv, "TV Link", idleTint = Color(0xFFFFAB91)) { resetTimer(); actions.openAccount() }
-                            ActionChip(Icons.Default.Info, "Info", idleTint = Color(0xFFCFD8DC)) { resetTimer(); actions.openInfo() }
+                            ActionChip(Icons.Default.Bedtime, "Sleep", idleTint = Color(0xFFFFCC80)) {
+                                resetTimer()
+                                actions.openSleepTimer()
+                            }
+                            ActionChip(Icons.Default.Tv, "TV Link", idleTint = Color(0xFFFFAB91)) {
+                                resetTimer()
+                                actions.openAccount()
+                            }
+                            ActionChip(Icons.Default.Info, "Info", idleTint = Color(0xFFCFD8DC)) {
+                                resetTimer()
+                                actions.openInfo()
+                            }
                         }
                     }
                 }
@@ -993,10 +1246,11 @@ fun DeepEyeVideoPlayerOverlay(
         // ── STATS FOR NERDS HUD OVERLAY ──
         if (showStats && diagnostics != null) {
             Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 50.dp, end = 12.dp)
-                    .widthIn(max = 280.dp)
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 50.dp, end = 12.dp)
+                        .widthIn(max = 280.dp)
             ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -1012,7 +1266,13 @@ fun DeepEyeVideoPlayerOverlay(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("STATS FOR NERDS", style = MaterialTheme.typography.labelMedium, color = NeonCyan, fontWeight = FontWeight.ExtraBold, fontSize = 10.sp)
+                            Text(
+                                "STATS FOR NERDS",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = NeonCyan,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 10.sp
+                            )
                             Icon(
                                 Icons.Default.Close,
                                 contentDescription = "Close",
@@ -1022,9 +1282,18 @@ fun DeepEyeVideoPlayerOverlay(
                         }
                         Spacer(Modifier.height(2.dp))
                         StatsRow("Video ID", diagnostics.videoId.ifBlank { "N/A" })
-                        StatsRow("Resolution", diagnostics.activeVideoFormat?.formattedVideoResolution ?: "${diagnostics.activeVideoFormat?.width ?: 0}x${diagnostics.activeVideoFormat?.height ?: 0}")
-                        StatsRow("Video Codec", diagnostics.activeVideoFormat?.codecName ?: diagnostics.activeVideoDecoder.ifBlank { "Auto" })
-                        StatsRow("Audio Codec", diagnostics.activeAudioFormat?.codecName ?: diagnostics.activeAudioDecoder.ifBlank { "Auto" })
+                        StatsRow(
+                            "Resolution",
+                            diagnostics.activeVideoFormat?.formattedVideoResolution ?: "${diagnostics.activeVideoFormat?.width ?: 0}x${diagnostics.activeVideoFormat?.height ?: 0}"
+                        )
+                        StatsRow(
+                            "Video Codec",
+                            diagnostics.activeVideoFormat?.codecName ?: diagnostics.activeVideoDecoder.ifBlank { "Auto" }
+                        )
+                        StatsRow(
+                            "Audio Codec",
+                            diagnostics.activeAudioFormat?.codecName ?: diagnostics.activeAudioDecoder.ifBlank { "Auto" }
+                        )
                         StatsRow("Bandwidth", diagnostics.formattedBandwidth)
                         StatsRow("Buffer Health", diagnostics.formattedBufferHealth)
                         StatsRow("Dropped Frames", "${diagnostics.droppedFrames}")
@@ -1058,13 +1327,27 @@ fun DeepEyeVideoPlayerOverlay(
 }
 
 @Composable
-private fun StatsRow(label: String, value: String) {
+private fun StatsRow(
+    label: String,
+    value: String
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp)
-        Text(text = value, style = MaterialTheme.typography.labelSmall, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 11.sp)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 11.sp
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 11.sp
+        )
     }
 }
 
@@ -1103,14 +1386,21 @@ private fun DeepEyeTimeRow(
                     .preventParentScrollOnDrag(enabled = durationMs > 0)
                     .pointerInput(durationMs) {
                         awaitEachGesture {
-                            val down = awaitFirstDown(requireUnconsumed = false, pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                            val down =
+                                awaitFirstDown(
+                                    requireUnconsumed = false,
+                                    pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial
+                                )
                             if (durationMs > 0) {
                                 isScrubbing = true
                                 val fraction = (down.position.x / size.width.toFloat()).coerceIn(0f, 1f)
                                 scrubFraction = fraction
 
                                 while (true) {
-                                    val event = awaitPointerEvent(pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                                    val event =
+                                        awaitPointerEvent(
+                                            pass = androidx.compose.ui.input.pointer.PointerEventPass.Initial
+                                        )
                                     val change = event.changes.firstOrNull { it.id == down.id }
                                     if (change == null || !change.pressed) {
                                         val target = (scrubFraction * durationMs).toLong()
@@ -1153,9 +1443,10 @@ private fun DeepEyeTimeRow(
                     // 3. Progress Track (Neon Cyan Gradient)
                     val progW = size.width * progressFrac.coerceIn(0f, 1f)
                     drawRect(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(ElectricViolet, NeonCyan)
-                        ),
+                        brush =
+                            Brush.horizontalGradient(
+                                colors = listOf(ElectricViolet, NeonCyan)
+                            ),
                         topLeft = Offset(0f, 0f),
                         size = Size(progW, trackHeight)
                     )
@@ -1190,7 +1481,12 @@ private fun DeepEyeTimeRow(
 // ─── Pro Reusable Components ───
 
 @Composable
-private fun ProBadge(text: String, bg: Color, textColor: Color, fontSize: androidx.compose.ui.unit.TextUnit = 12.sp) {
+private fun ProBadge(
+    text: String,
+    bg: Color,
+    textColor: Color,
+    fontSize: androidx.compose.ui.unit.TextUnit = 12.sp
+) {
     Surface(
         shape = RoundedCornerShape(10.dp),
         color = bg,
@@ -1213,15 +1509,29 @@ private fun ProBadge(text: String, bg: Color, textColor: Color, fontSize: androi
 }
 
 @Composable
-private fun ProIconBtn(icon: ImageVector, tint: Color, enabled: Boolean = true, onClick: () -> Unit) {
+private fun ProIconBtn(
+    icon: ImageVector,
+    tint: Color,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
     Surface(
         shape = CircleShape,
         color = Color.White.copy(alpha = 0.08f),
-        modifier = Modifier
-            .size(44.dp)
-            .minTouchTarget()
-            .alpha(if (enabled) 1f else 0.35f)
-            .clickable(enabled = enabled, interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
+        modifier =
+            Modifier
+                .size(44.dp)
+                .minTouchTarget()
+                .alpha(if (enabled) 1f else 0.35f)
+                .clickable(
+                    enabled = enabled,
+                    interactionSource =
+                        remember {
+                            MutableInteractionSource()
+                        },
+                    indication = null,
+                    onClick = onClick
+                )
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
@@ -1250,11 +1560,12 @@ private fun ActionChip(
         shape = RoundedCornerShape(12.dp),
         color = chipBg,
         border = BorderStroke(1.dp, chipBorder),
-        modifier = Modifier
-            .height(38.dp)
-            .defaultMinSize(minWidth = 60.dp)
-            .minTouchTarget()
-            .alpha(if (enabled) 1f else 0.40f)
+        modifier =
+            Modifier
+                .height(38.dp)
+                .defaultMinSize(minWidth = 60.dp)
+                .minTouchTarget()
+                .alpha(if (enabled) 1f else 0.40f)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -1282,14 +1593,18 @@ private fun ChipDivider() {
     Box(Modifier.width(1.dp).height(18.dp).background(Color.White.copy(alpha = 0.20f)))
 }
 
-private fun getOverlayScreenBrightness(context: Context, activity: Activity?): Float {
+private fun getOverlayScreenBrightness(
+    context: Context,
+    activity: Activity?
+): Float {
     val windowBrightness = activity?.window?.attributes?.screenBrightness ?: -1f
     if (windowBrightness >= 0f) return windowBrightness
     return try {
-        val sysBrightness = Settings.System.getInt(
-            context.contentResolver,
-            Settings.System.SCREEN_BRIGHTNESS
-        )
+        val sysBrightness =
+            Settings.System.getInt(
+                context.contentResolver,
+                Settings.System.SCREEN_BRIGHTNESS
+            )
         (sysBrightness / 255f).coerceIn(0.01f, 1f)
     } catch (e: Exception) {
         0.5f

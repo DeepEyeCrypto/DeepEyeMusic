@@ -3,6 +3,7 @@
 
 package com.deepeye.musicpro.ui.player
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -29,18 +30,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import android.content.res.Configuration
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -66,21 +65,23 @@ fun MiniPlayerContent(
     val dominantColor by viewModel.dominantColor.collectAsStateWithLifecycle()
     val fftData by viewModel.fftData.collectAsStateWithLifecycle()
     val currentItem = playerState.currentItem
-    val playbackFraction = if (playerState.duration > 0) {
-        (playerState.position.toFloat() / playerState.duration.toFloat()).coerceIn(0f, 1f)
-    } else {
-        0f
-    }
+    val playbackFraction =
+        if (playerState.duration > 0) {
+            (playerState.position.toFloat() / playerState.duration.toFloat()).coerceIn(0f, 1f)
+        } else {
+            0f
+        }
 
     val horizontalPadding = if (isLandscape) (16 * (1f - progress)).dp else (12 * (1f - progress)).dp
     val bottomPadding = if (isLandscape) (6 * (1f - progress)).dp else (12 * (1f - progress)).dp
     val animatedCornerRadius = (24 * (1f - progress)).dp
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = horizontalPadding)
-            .padding(bottom = bottomPadding)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = horizontalPadding)
+                .padding(bottom = bottomPadding)
     ) {
         // When expanded or nearly expanded, render content directly without GlassSurface shader.
         // The liquidGlassEffect shader makes full-screen content invisible on many devices.
@@ -91,9 +92,10 @@ fun MiniPlayerContent(
         // ALWAYS keep expanded content in the tree (even when collapsed) so the WebView
         // stays attached and audio continues playing. Hide it visually when collapsed.
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(if (shouldShowExpanded) 1f else 0f)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .alpha(if (shouldShowExpanded) 1f else 0f)
         ) {
             expandedContent()
         }
@@ -102,9 +104,10 @@ fun MiniPlayerContent(
             // Show collapsed header fading out during transition
             if (progress < 0.99f) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .alpha(1f - progress),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .alpha(1f - progress),
                 ) {
                     DragHandleBar()
                     if (currentItem != null) {
@@ -137,28 +140,30 @@ fun MiniPlayerContent(
                 label = "miniPlayerScale"
             )
 
-            val collapsedModifier = if (isLandscape) {
-                Modifier
-                    .fillMaxHeight()
-                    .widthIn(max = 680.dp)
-                    .align(Alignment.BottomCenter)
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 6.dp)
-            } else {
-                Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 12.dp)
-                    .padding(bottom = 8.dp)
-            }
+            val collapsedModifier =
+                if (isLandscape) {
+                    Modifier
+                        .fillMaxHeight()
+                        .widthIn(max = 680.dp)
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 6.dp)
+                } else {
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 12.dp)
+                        .padding(bottom = 8.dp)
+                }
 
             GlassSurface(
-                modifier = collapsedModifier
-                    .graphicsLayer(scaleX = miniPlayerScale, scaleY = miniPlayerScale)
-                    .clickable(
-                        interactionSource = miniPlayerInteractionSource,
-                        indication = null,
-                        onClick = onExpand
-                    ),
+                modifier =
+                    collapsedModifier
+                        .graphicsLayer(scaleX = miniPlayerScale, scaleY = miniPlayerScale)
+                        .clickable(
+                            interactionSource = miniPlayerInteractionSource,
+                            indication = null,
+                            onClick = onExpand
+                        ),
                 shape = RoundedCornerShape(if (isLandscape) 20.dp else 24.dp), // Premium floating pill
                 tintColor = dominantColor.copy(alpha = 0.12f),
                 borderColor = Color.White.copy(alpha = 0.15f),
@@ -166,9 +171,10 @@ fun MiniPlayerContent(
                 Box(modifier = Modifier.fillMaxSize()) {
                     // The collapsed/half-expanded headers
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .alpha(1f - progress),
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .alpha(1f - progress),
                         verticalArrangement = Arrangement.Center
                     ) {
                         if (currentItem != null) {
@@ -190,8 +196,15 @@ fun MiniPlayerContent(
                             QueuePeekBar(onExpand = onExpand)
                         }
                     }
-                    
-                    Box(modifier = Modifier.align(Alignment.BottomStart).padding(horizontal = if (isLandscape) 18.dp else 24.dp).padding(bottom = 4.dp).alpha(1f - progress)) {
+
+                    Box(
+                        modifier =
+                            Modifier.align(
+                                Alignment.BottomStart
+                            ).padding(
+                                horizontal = if (isLandscape) 18.dp else 24.dp
+                            ).padding(bottom = 4.dp).alpha(1f - progress)
+                    ) {
                         MiniPlayerProgressLine(
                             progress = playbackFraction,
                             accentColor = dominantColor,
@@ -203,23 +216,22 @@ fun MiniPlayerContent(
     }
 }
 
-
 @Composable
 fun DragHandleBar() {
     Box(
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .height(24.dp),
+            Modifier
+                .fillMaxWidth()
+                .height(24.dp),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier =
-            Modifier
-                .width(40.dp)
-                .height(4.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(Color.White.copy(alpha = 0.3f)),
+                Modifier
+                    .width(40.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color.White.copy(alpha = 0.3f)),
         )
     }
 }
@@ -240,11 +252,12 @@ fun PlayerHeaderRow(
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     // Extract bass amplitude for mini ring pulse
-    val bassAmplitude = if (fftData.size >= 4) {
-        ((fftData[0] + fftData[1] + fftData[2] + fftData[3]) / 4f).coerceIn(0f, 1f)
-    } else {
-        0f
-    }
+    val bassAmplitude =
+        if (fftData.size >= 4) {
+            ((fftData[0] + fftData[1] + fftData[2] + fftData[3]) / 4f).coerceIn(0f, 1f)
+        } else {
+            0f
+        }
 
     val miniRingAlpha by animateFloatAsState(
         targetValue = if (isPlaying) 0.3f + bassAmplitude * 0.5f else 0f,
@@ -257,9 +270,9 @@ fun PlayerHeaderRow(
 
     Row(
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = if (isLandscape) 12.dp else 16.dp, vertical = if (isLandscape) 4.dp else 8.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = if (isLandscape) 12.dp else 16.dp, vertical = if (isLandscape) 4.dp else 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Album art with bass ring
@@ -279,11 +292,12 @@ fun PlayerHeaderRow(
             }
 
             Box(
-                modifier = Modifier
-                    .size(albumArtSize)
-                    .clip(RoundedCornerShape(if (isLandscape) 10.dp else 12.dp))
-                    .background(Brush.linearGradient(listOf(Color(0xFF2A2A35), Color(0xFF1E1E28))))
-                    .clickable { onArtworkTap() },
+                modifier =
+                    Modifier
+                        .size(albumArtSize)
+                        .clip(RoundedCornerShape(if (isLandscape) 10.dp else 12.dp))
+                        .background(Brush.linearGradient(listOf(Color(0xFF2A2A35), Color(0xFF1E1E28))))
+                        .clickable { onArtworkTap() },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -322,7 +336,12 @@ fun PlayerHeaderRow(
         }
 
         TactileIconButton(onClick = onPrev, modifier = Modifier.size(if (isLandscape) 34.dp else 40.dp)) {
-            Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = Color.White, modifier = Modifier.size(if (isLandscape) 20.dp else 24.dp))
+            Icon(
+                Icons.Default.SkipPrevious,
+                contentDescription = "Previous",
+                tint = Color.White,
+                modifier = Modifier.size(if (isLandscape) 20.dp else 24.dp)
+            )
         }
 
         Spacer(Modifier.width(if (isLandscape) 2.dp else 4.dp))
@@ -339,7 +358,12 @@ fun PlayerHeaderRow(
         Spacer(Modifier.width(if (isLandscape) 2.dp else 4.dp))
 
         TactileIconButton(onClick = onNext, modifier = Modifier.size(if (isLandscape) 34.dp else 40.dp)) {
-            Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White, modifier = Modifier.size(if (isLandscape) 20.dp else 24.dp))
+            Icon(
+                Icons.Default.SkipNext,
+                contentDescription = "Next",
+                tint = Color.White,
+                modifier = Modifier.size(if (isLandscape) 20.dp else 24.dp)
+            )
         }
 
         if (isLandscape) {
@@ -370,13 +394,14 @@ private fun TactileIconButton(
         label = "tactileScale"
     )
     Box(
-        modifier = modifier
-            .graphicsLayer(scaleX = scale, scaleY = scale)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            ),
+        modifier =
+            modifier
+                .graphicsLayer(scaleX = scale, scaleY = scale)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onClick
+                ),
         contentAlignment = Alignment.Center
     ) {
         content()
@@ -393,9 +418,10 @@ fun MiniPlayerProgressLine(
     modifier: Modifier = Modifier,
 ) {
     Canvas(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(3.dp)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(3.dp)
     ) {
         // Background track
         drawRoundRect(
@@ -416,12 +442,14 @@ fun MiniPlayerProgressLine(
             )
             // Solid line
             drawRoundRect(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        accentColor.copy(alpha = 0.5f),
-                        accentColor,
-                    )
-                ),
+                brush =
+                    Brush.horizontalGradient(
+                        colors =
+                            listOf(
+                                accentColor.copy(alpha = 0.5f),
+                                accentColor,
+                            )
+                    ),
                 topLeft = Offset.Zero,
                 size = Size(activeWidth, size.height),
                 cornerRadius = CornerRadius(size.height / 2f),
@@ -433,18 +461,20 @@ fun MiniPlayerProgressLine(
 @Composable
 fun QueuePeekBar(onExpand: () -> Unit) {
     GlassCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .clickable { onExpand() },
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .clickable { onExpand() },
         tintColor = Color.White.copy(alpha = 0.05f),
         cornerRadius = 12.dp,
         refractionHeight = 0.1f
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(

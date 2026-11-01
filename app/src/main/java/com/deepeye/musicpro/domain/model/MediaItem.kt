@@ -41,21 +41,23 @@ sealed class MediaItem {
 }
 
 fun MediaItem.toMedia3Item(): Media3Item {
-    val uri = when (this) {
-        is MediaItem.Local -> song.uri
-        is MediaItem.Remote -> streamUri ?: Uri.EMPTY
-    }
+    val uri =
+        when (this) {
+            is MediaItem.Local -> song.uri
+            is MediaItem.Remote -> streamUri ?: Uri.EMPTY
+        }
 
-    val builder = Media3Item.Builder()
-        .setUri(uri)
-        .setMediaId(id)
-        .setMediaMetadata(
-            MediaMetadata.Builder()
-                .setTitle(title)
-                .setArtist(artist)
-                .setArtworkUri(artworkUri)
-                .build(),
-        )
+    val builder =
+        Media3Item.Builder()
+            .setUri(uri)
+            .setMediaId(id)
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(title)
+                    .setArtist(artist)
+                    .setArtworkUri(artworkUri)
+                    .build(),
+            )
 
     val uriStr = uri.toString()
     if (uriStr.startsWith("data:application/dash+xml") || uriStr.contains("/manifest/dash/") || uriStr.endsWith(".mpd") || uriStr.contains(".mpd?")) {
@@ -66,4 +68,3 @@ fun MediaItem.toMedia3Item(): Media3Item {
 
     return builder.build()
 }
-

@@ -30,7 +30,7 @@ interface SourceResolver {
      * Unique identifier for this resolver (e.g. "SmartTubeInnertube", "WebViewBridge").
      */
     val name: String
-    
+
     /**
      * The priority of this resolver. Lower number = higher priority.
      */
@@ -42,14 +42,20 @@ interface SourceResolver {
      * @param preferVideo If true, requests DASH/HLS manifests. If false, requests M4A/WebM audio-only.
      * @return The direct stream URL, or null if resolution fails.
      */
-    suspend fun resolveStreamUrl(videoId: String, preferVideo: Boolean): String? {
+    suspend fun resolveStreamUrl(
+        videoId: String,
+        preferVideo: Boolean
+    ): String? {
         return resolveSource(videoId, preferVideo)?.url
     }
 
     /**
      * Attempt to resolve a video ID into a rich ResolvedSource with format inventories.
      */
-    suspend fun resolveSource(videoId: String, preferVideo: Boolean): ResolvedSource? {
+    suspend fun resolveSource(
+        videoId: String,
+        preferVideo: Boolean
+    ): ResolvedSource? {
         val url = resolveStreamUrl(videoId, preferVideo) ?: return null
         return ResolvedSource(
             url = url,

@@ -25,24 +25,25 @@ fun StudioVisualizer(
     barColor: Color = Color(0xFF00E5FF)
 ) {
     Canvas(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(60.dp)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(60.dp)
     ) {
         if (fftData.isEmpty()) return@Canvas
 
         val canvasWidth = size.width
         val canvasHeight = size.height
-        
+
         // We might get up to 512 bins, but drawing all of them is too dense.
         // Let's sample and draw a fixed number of bars (e.g., 32 or 64).
         val numBars = 48
         val spacing = 4.dp.toPx()
         val barWidth = (canvasWidth - (spacing * (numBars - 1))) / numBars
-        
+
         // Bin size
         val binsPerBar = (fftData.size / 2) / numBars // Use first half of FFT (lower frequencies are more active)
-        
+
         for (i in 0 until numBars) {
             // Calculate average magnitude for this bar's frequency range
             var sum = 0f
@@ -53,20 +54,25 @@ fun StudioVisualizer(
                 }
             }
             val averageMagnitude = if (binsPerBar > 0) sum / binsPerBar else 0f
-            
+
             // Apply a slight exponential curve to make quiet sounds visible but loud sounds punchy
-            val visualHeight = (Math.pow(averageMagnitude.toDouble(), 0.7).toFloat() * canvasHeight).coerceIn(4.dp.toPx(), canvasHeight)
-            
+            val visualHeight =
+                (Math.pow(averageMagnitude.toDouble(), 0.7).toFloat() * canvasHeight).coerceIn(
+                    4.dp.toPx(),
+                    canvasHeight
+                )
+
             val x = i * (barWidth + spacing)
             val y = canvasHeight - visualHeight
 
             // Draw glowing bar
             drawRoundRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(barColor, barColor.copy(alpha = 0.2f)),
-                    startY = y,
-                    endY = canvasHeight
-                ),
+                brush =
+                    Brush.verticalGradient(
+                        colors = listOf(barColor, barColor.copy(alpha = 0.2f)),
+                        startY = y,
+                        endY = canvasHeight
+                    ),
                 topLeft = Offset(x, y),
                 size = Size(barWidth, visualHeight),
                 cornerRadius = CornerRadius(barWidth / 2f, barWidth / 2f)

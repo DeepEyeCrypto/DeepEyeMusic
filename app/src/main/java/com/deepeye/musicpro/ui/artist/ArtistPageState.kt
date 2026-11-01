@@ -1,7 +1,6 @@
 package com.deepeye.musicpro.ui.artist
 
 import com.deepeye.musicpro.domain.model.search.SearchResultItem
-
 import java.io.Serializable
 
 data class ArtistPageState(

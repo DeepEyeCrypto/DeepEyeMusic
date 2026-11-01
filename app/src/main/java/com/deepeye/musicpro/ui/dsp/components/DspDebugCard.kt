@@ -37,9 +37,9 @@ fun DspDebugCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors =
-        CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-        ),
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+            ),
         border = BorderStroke(1.dp, Color(0xFFFF5900).copy(alpha = 0.5f)),
     ) {
         Column(
@@ -83,11 +83,11 @@ fun DspDebugCard(
                         "❌ NOT ATTACHED"
                     },
                     color =
-                    if (sessionId != 0) {
-                        Color(0xFF00E676)
-                    } else {
-                        Color(0xFFFF4B4B)
-                    },
+                        if (sessionId != 0) {
+                            Color(0xFF00E676)
+                        } else {
+                            Color(0xFFFF4B4B)
+                        },
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Bold,
                 )
@@ -117,11 +117,11 @@ fun DspDebugCard(
                 Text(
                     "${"%.1f".format(gainBudget.totalDb)} dB — ${gainBudget.risk}",
                     color =
-                    when (gainBudget.risk) {
-                        RiskLevel.SAFE -> Color(0xFF00E676)
-                        RiskLevel.MODERATE -> Color(0xFFFFD600)
-                        RiskLevel.DANGER -> Color(0xFFFF4B4B)
-                    },
+                        when (gainBudget.risk) {
+                            RiskLevel.SAFE -> Color(0xFF00E676)
+                            RiskLevel.MODERATE -> Color(0xFFFFD600)
+                            RiskLevel.DANGER -> Color(0xFFFF4B4B)
+                        },
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Bold,
                 )

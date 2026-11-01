@@ -25,64 +25,76 @@ data class GlassPalette(
 )
 
 @Singleton
-class AlbumArtColorExtractor @Inject constructor() {
+class AlbumArtColorExtractor
+    @Inject
+    constructor() {
+        suspend fun extract(
+            bitmap: Bitmap,
+            isDarkMode: Boolean
+        ): GlassPalette =
+            withContext(Dispatchers.Default) {
+                val palette = Palette.from(bitmap).generate()
 
-    suspend fun extract(bitmap: Bitmap, isDarkMode: Boolean): GlassPalette =
-        withContext(Dispatchers.Default) {
-            val palette = Palette.from(bitmap).generate()
+                val dominantVal = palette.getDominantColor(0xFF1A1A2E.toInt())
+                val vibrantVal = palette.getVibrantColor(dominantVal)
+                val mutedVal = palette.getMutedColor(dominantVal)
 
-            val dominantVal = palette.getDominantColor(0xFF1A1A2E.toInt())
-            val vibrantVal = palette.getVibrantColor(dominantVal)
-            val mutedVal = palette.getMutedColor(dominantVal)
+                val dominant = Color(dominantVal)
+                val vibrant = Color(vibrantVal)
+                val muted = Color(mutedVal)
 
-            val dominant = Color(dominantVal)
-            val vibrant = Color(vibrantVal)
-            val muted = Color(mutedVal)
+                // Compute adaptive tint based on background luminance and environment mode
+                val isBgLight = dominant.calculateLuminance() > 0.5
+                val rawTint =
+                    if (isDarkMode) {
+                        // Dim, cool dark mode tint
+                        vibrant.copy(alpha = 0.15f)
+                    } else {
+                        // Brighter light mode tint
+                        vibrant.copy(alpha = 0.10f)
+                    }
 
-            // Compute adaptive tint based on background luminance and environment mode
-            val isBgLight = dominant.calculateLuminance() > 0.5
-            val rawTint = if (isDarkMode) {
-                // Dim, cool dark mode tint
-                vibrant.copy(alpha = 0.15f)
-            } else {
-                // Brighter light mode tint
-                vibrant.copy(alpha = 0.10f)
+                // Contrast safety check
+                val onSurface = if (isBgLight) Color.Black else Color.White
+                val safeOnSurface = ensureContrast(onSurface, dominant)
+
+                GlassPalette(
+                    dominant = dominant,
+                    vibrant = vibrant,
+                    muted = muted,
+                    onSurface = safeOnSurface,
+                    adaptiveTint = rawTint
+                )
             }
 
-            // Contrast safety check
-            val onSurface = if (isBgLight) Color.Black else Color.White
-            val safeOnSurface = ensureContrast(onSurface, dominant)
-
-            GlassPalette(
-                dominant = dominant,
-                vibrant = vibrant,
-                muted = muted,
-                onSurface = safeOnSurface,
-                adaptiveTint = rawTint
-            )
+        private fun Color.calculateLuminance(): Double {
+            val r = red
+            val g = green
+            val b = blue
+            return 0.2126 * (if (r <= 0.03928) r / 12.92 else Math.pow((r + 0.055) / 1.055, 2.4)) +
+                0.7152 * (if (g <= 0.03928) g / 12.92 else Math.pow((g + 0.055) / 1.055, 2.4)) +
+                0.0722 * (if (b <= 0.03928) b / 12.92 else Math.pow((b + 0.055) / 1.055, 2.4))
         }
 
-    private fun Color.calculateLuminance(): Double {
-        val r = red
-        val g = green
-        val b = blue
-        return 0.2126 * (if (r <= 0.03928) r / 12.92 else Math.pow((r + 0.055) / 1.055, 2.4)) +
-            0.7152 * (if (g <= 0.03928) g / 12.92 else Math.pow((g + 0.055) / 1.055, 2.4)) +
-            0.0722 * (if (b <= 0.03928) b / 12.92 else Math.pow((b + 0.055) / 1.055, 2.4))
-    }
+        private fun calculateContrast(
+            color1: Color,
+            color2: Color
+        ): Double {
+            val l1 = color1.calculateLuminance()
+            val l2 = color2.calculateLuminance()
+            return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)
+        }
 
-    private fun calculateContrast(color1: Color, color2: Color): Double {
-        val l1 = color1.calculateLuminance()
-        val l2 = color2.calculateLuminance()
-        return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)
+        private fun ensureContrast(
+            textColor: Color,
+            backgroundColor: Color,
+            minRatio: Float = 4.5f
+        ): Color {
+            val contrast = calculateContrast(textColor, backgroundColor)
+            if (contrast >= minRatio) return textColor
+            return if (backgroundColor.calculateLuminance() > 0.5) Color.Black else Color.White
+        }
     }
-
-    private fun ensureContrast(textColor: Color, backgroundColor: Color, minRatio: Float = 4.5f): Color {
-        val contrast = calculateContrast(textColor, backgroundColor)
-        if (contrast >= minRatio) return textColor
-        return if (backgroundColor.calculateLuminance() > 0.5) Color.Black else Color.White
-    }
-}
 
 fun defaultPalette(): GlassPalette {
     return GlassPalette(

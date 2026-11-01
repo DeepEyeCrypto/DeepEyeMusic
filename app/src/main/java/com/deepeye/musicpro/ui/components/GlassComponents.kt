@@ -47,18 +47,16 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.deepeye.musicpro.ui.LocalHazeState
 import com.deepeye.musicpro.ui.theme.GlassTokens
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
-import com.deepeye.musicpro.ui.LocalHazeState
 
 /**
  * Modifier applying custom AGSL refraction and color aberration on Android 13+ (SDK 33+).
@@ -70,65 +68,71 @@ fun Modifier.liquidGlassEffect(
     chromaticAberration: Float = 0.1f,
     specularAlpha: Float = GlassTokens.SpecularAlpha,
     noiseFactor: Float = GlassTokens.NoiseFactor
-): Modifier = this.composed {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return@composed this
+): Modifier =
+    this.composed {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return@composed this
 
-    val shader = remember {
-        try {
-            RuntimeShader(LiquidGlassShader.ShaderCode)
-        } catch (e: Throwable) {
-            null
+        val shader =
+            remember {
+                try {
+                    RuntimeShader(LiquidGlassShader.ShaderCode)
+                } catch (e: Throwable) {
+                    null
+                }
+            }
+
+        if (shader == null) return@composed this
+
+        graphicsLayer {
+            try {
+                val tilt = tiltProvider()
+                shader.setFloatUniform("size", size.width, size.height)
+                shader.setFloatUniform("tilt", tilt.x, tilt.y)
+                shader.setFloatUniform("touch", touch.x, touch.y)
+                shader.setFloatUniform("refractionHeight", refractionHeight)
+                shader.setFloatUniform("chromaticAberration", chromaticAberration)
+                shader.setFloatUniform("specularAlpha", specularAlpha)
+                shader.setFloatUniform("noiseFactor", noiseFactor)
+
+                renderEffect =
+                    RenderEffect
+                        .createRuntimeShaderEffect(shader, "content")
+                        .asComposeRenderEffect()
+            } catch (e: Throwable) {
+                // Fallback
+            }
         }
     }
-
-    if (shader == null) return@composed this
-
-    graphicsLayer {
-        try {
-            val tilt = tiltProvider()
-            shader.setFloatUniform("size", size.width, size.height)
-            shader.setFloatUniform("tilt", tilt.x, tilt.y)
-            shader.setFloatUniform("touch", touch.x, touch.y)
-            shader.setFloatUniform("refractionHeight", refractionHeight)
-            shader.setFloatUniform("chromaticAberration", chromaticAberration)
-            shader.setFloatUniform("specularAlpha", specularAlpha)
-            shader.setFloatUniform("noiseFactor", noiseFactor)
-
-            renderEffect = RenderEffect
-                .createRuntimeShaderEffect(shader, "content")
-                .asComposeRenderEffect()
-        } catch (e: Throwable) {
-            // Fallback
-        }
-    }
-}
 
 /**
  * Read accessibility reduce transparency system-level settings on Android.
  */
 private fun isReduceTransparencyEnabled(context: Context): Boolean {
     val accessibilityManager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
-    val isHighContrastEnabled = try {
-        val method = accessibilityManager?.javaClass?.getMethod("isHighTextContrastEnabled")
-        method?.invoke(accessibilityManager) as? Boolean ?: false
-    } catch (e: Exception) {
-        false
-    }
-    val samsungKey = try {
-        Settings.System.getInt(context.contentResolver, "accessibility_reduce_transparency", 0) != 0
-    } catch (e: Exception) {
-        false
-    }
-    val nativeReduceTransparency = if (Build.VERSION.SDK_INT >= 34) {
+    val isHighContrastEnabled =
         try {
-            val method = accessibilityManager?.javaClass?.getMethod("isReduceTransparencyEnabled")
+            val method = accessibilityManager?.javaClass?.getMethod("isHighTextContrastEnabled")
             method?.invoke(accessibilityManager) as? Boolean ?: false
         } catch (e: Exception) {
             false
         }
-    } else {
-        false
-    }
+    val samsungKey =
+        try {
+            Settings.System.getInt(context.contentResolver, "accessibility_reduce_transparency", 0) != 0
+        } catch (e: Exception) {
+            false
+        }
+    val nativeReduceTransparency =
+        if (Build.VERSION.SDK_INT >= 34) {
+            try {
+                val method = accessibilityManager?.javaClass?.getMethod("isReduceTransparencyEnabled")
+                method?.invoke(accessibilityManager) as? Boolean ?: false
+            } catch (e: Exception) {
+                false
+            }
+        } else {
+            false
+        }
     return isHighContrastEnabled || samsungKey || nativeReduceTransparency
 }
 
@@ -154,9 +158,10 @@ fun GlassContainer(
     val context = LocalContext.current
     val resolvedShape = shape ?: RoundedCornerShape(cornerRadius)
     val reduceTransparency = remember(context) { isReduceTransparencyEnabled(context) }
-    val lowTierDevice = remember(context) {
-        com.deepeye.musicpro.util.DeviceCompat.isLowTierDevice(context)
-    }
+    val lowTierDevice =
+        remember(context) {
+            com.deepeye.musicpro.util.DeviceCompat.isLowTierDevice(context)
+        }
 
     when {
         // Low-tier hardware -> solid translucent fill. Real blur is fill-rate
@@ -165,25 +170,27 @@ fun GlassContainer(
         // render thread for memory bandwidth. Matches visually, costs nothing.
         lowTierDevice -> {
             Box(
-                modifier = modifier
-                    .background(
-                        if (reduceTransparency) {
-                            androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
-                        } else {
-                            Color.Black.copy(alpha = GlassTokens.LowTierFallbackAlpha)
-                        },
-                        resolvedShape
-                    )
-                    .border(1.dp, Color.White.copy(GlassTokens.BorderAlpha), resolvedShape),
+                modifier =
+                    modifier
+                        .background(
+                            if (reduceTransparency) {
+                                androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
+                            } else {
+                                Color.Black.copy(alpha = GlassTokens.LowTierFallbackAlpha)
+                            },
+                            resolvedShape
+                        )
+                        .border(1.dp, Color.White.copy(GlassTokens.BorderAlpha), resolvedShape),
                 content = content
             )
         }
         // Reduce Transparency -> Opaque Fallback
         reduceTransparency -> {
             Box(
-                modifier = modifier
-                    .background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant, resolvedShape)
-                    .border(1.dp, Color.White.copy(0.12f), resolvedShape),
+                modifier =
+                    modifier
+                        .background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant, resolvedShape)
+                        .border(1.dp, Color.White.copy(0.12f), resolvedShape),
                 content = content
             )
         }
@@ -191,24 +198,29 @@ fun GlassContainer(
         Build.VERSION.SDK_INT >= 33 -> {
             Box(modifier = modifier, propagateMinConstraints = true) {
                 Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clip(resolvedShape)
-                        .run {
-                            if (hazeState != null) {
-                                this.hazeEffect(
-                                    state = hazeState,
-                                    style = HazeStyle(
-                                        tint = HazeTint(tintColor.copy(alpha = tintColor.alpha.coerceAtMost(0.4f))),
-                                        blurRadius = blurRadius,
-                                        noiseFactor = GlassTokens.NoiseFactor
+                    modifier =
+                        Modifier
+                            .matchParentSize()
+                            .clip(resolvedShape)
+                            .run {
+                                if (hazeState != null) {
+                                    this.hazeEffect(
+                                        state = hazeState,
+                                        style =
+                                            HazeStyle(
+                                                tint =
+                                                    HazeTint(
+                                                        tintColor.copy(alpha = tintColor.alpha.coerceAtMost(0.4f))
+                                                    ),
+                                                blurRadius = blurRadius,
+                                                noiseFactor = GlassTokens.NoiseFactor
+                                            )
                                     )
-                                )
-                            } else {
-                                this.background(tintColor, resolvedShape)
+                                } else {
+                                    this.background(tintColor, resolvedShape)
+                                }
                             }
-                        }
-                        .border(1.dp, Color.White.copy(GlassTokens.BorderAlpha), resolvedShape)
+                            .border(1.dp, Color.White.copy(GlassTokens.BorderAlpha), resolvedShape)
                 )
                 content()
             }
@@ -217,29 +229,35 @@ fun GlassContainer(
         Build.VERSION.SDK_INT >= 31 -> {
             Box(modifier = modifier, propagateMinConstraints = true) {
                 Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clip(resolvedShape)
-                        .graphicsLayer {
-                            renderEffect = android.graphics.RenderEffect
-                                .createBlurEffect(32f, 32f, android.graphics.Shader.TileMode.CLAMP)
-                                .asComposeRenderEffect()
-                        }
-                        .run {
-                            if (hazeState != null) {
-                                this.hazeEffect(
-                                    state = hazeState,
-                                    style = HazeStyle(
-                                        tint = HazeTint(tintColor.copy(alpha = tintColor.alpha.coerceAtMost(0.4f))),
-                                        blurRadius = blurRadius,
-                                        noiseFactor = GlassTokens.NoiseFactor
-                                    )
-                                )
-                            } else {
-                                this.background(tintColor, resolvedShape)
+                    modifier =
+                        Modifier
+                            .matchParentSize()
+                            .clip(resolvedShape)
+                            .graphicsLayer {
+                                renderEffect =
+                                    android.graphics.RenderEffect
+                                        .createBlurEffect(32f, 32f, android.graphics.Shader.TileMode.CLAMP)
+                                        .asComposeRenderEffect()
                             }
-                        }
-                        .border(1.dp, Color.White.copy(GlassTokens.BorderAlpha), resolvedShape)
+                            .run {
+                                if (hazeState != null) {
+                                    this.hazeEffect(
+                                        state = hazeState,
+                                        style =
+                                            HazeStyle(
+                                                tint =
+                                                    HazeTint(
+                                                        tintColor.copy(alpha = tintColor.alpha.coerceAtMost(0.4f))
+                                                    ),
+                                                blurRadius = blurRadius,
+                                                noiseFactor = GlassTokens.NoiseFactor
+                                            )
+                                    )
+                                } else {
+                                    this.background(tintColor, resolvedShape)
+                                }
+                            }
+                            .border(1.dp, Color.White.copy(GlassTokens.BorderAlpha), resolvedShape)
                 )
                 content()
             }
@@ -247,17 +265,19 @@ fun GlassContainer(
         // Android 10/11 — static overlay fallback
         else -> {
             Box(
-                modifier = modifier
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                tintColor.copy(alpha = 0.55f),
-                                tintColor.copy(alpha = 0.35f)
-                            )
-                        ),
-                        resolvedShape
-                    )
-                    .border(1.dp, Color.White.copy(0.15f), resolvedShape),
+                modifier =
+                    modifier
+                        .background(
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        tintColor.copy(alpha = 0.55f),
+                                        tintColor.copy(alpha = 0.35f)
+                                    )
+                            ),
+                            resolvedShape
+                        )
+                        .border(1.dp, Color.White.copy(0.15f), resolvedShape),
                 content = content
             )
         }
@@ -281,9 +301,10 @@ fun GlassCard(
     val shape = RoundedCornerShape(cornerRadius)
 
     Box(
-        modifier = modifier
-            .clip(shape)
-            .border(1.dp, Color.White.copy(GlassTokens.BorderAlpha), shape),
+        modifier =
+            modifier
+                .clip(shape)
+                .border(1.dp, Color.White.copy(GlassTokens.BorderAlpha), shape),
         contentAlignment = Alignment.Center
     ) {
         GlassContainer(
@@ -328,21 +349,22 @@ fun GlassPill(
     val haptics = com.deepeye.musicpro.ui.motion.rememberPremiumHaptics()
 
     Box(
-        modifier = modifier
-            .clip(shape)
-            .clickable(onClick = {
-                haptics.click()
-                onClick()
-            })
-            .border(
-                1.dp,
-                if (active) {
-                    accent.copy(alpha = 0.6f)
-                } else {
-                    Color.White.copy(alpha = 0.18f)
-                },
-                shape
-            ),
+        modifier =
+            modifier
+                .clip(shape)
+                .clickable(onClick = {
+                    haptics.click()
+                    onClick()
+                })
+                .border(
+                    1.dp,
+                    if (active) {
+                        accent.copy(alpha = 0.6f)
+                    } else {
+                        Color.White.copy(alpha = 0.18f)
+                    },
+                    shape
+                ),
         contentAlignment = Alignment.Center
     ) {
         GlassContainer(
@@ -396,13 +418,14 @@ fun GlassButton(
     val haptics = com.deepeye.musicpro.ui.motion.rememberPremiumHaptics()
 
     Box(
-        modifier = modifier
-            .clip(shape)
-            .clickable(onClick = {
-                haptics.click()
-                onClick()
-            })
-            .border(1.dp, borderColor, shape),
+        modifier =
+            modifier
+                .clip(shape)
+                .clickable(onClick = {
+                    haptics.click()
+                    onClick()
+                })
+                .border(1.dp, borderColor, shape),
         contentAlignment = Alignment.Center
     ) {
         GlassContainer(
@@ -434,19 +457,21 @@ fun GlassProgressBar(
     val shape = RoundedCornerShape(8.dp)
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(8.dp)
-            .clip(shape)
-            .background(Color.White.copy(alpha = 0.1f))
-            .border(0.5.dp, Color.White.copy(alpha = 0.12f), shape)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(progress.coerceIn(0f, 1f))
+        modifier =
+            modifier
+                .fillMaxWidth()
                 .height(8.dp)
                 .clip(shape)
-                .background(color)
+                .background(Color.White.copy(alpha = 0.1f))
+                .border(0.5.dp, Color.White.copy(alpha = 0.12f), shape)
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth(progress.coerceIn(0f, 1f))
+                    .height(8.dp)
+                    .clip(shape)
+                    .background(color)
         )
     }
 }
@@ -461,29 +486,34 @@ fun GlassSpecularSurface(
     alpha: Float = GlassTokens.SpecularAlpha
 ) {
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .drawBehind {
-                val tilt = tiltProvider()
-                val startOffset = Offset(
-                    x = size.width * (0.1f - tilt.x * 0.15f),
-                    y = size.height * (0.1f - tilt.y * 0.15f)
-                )
-                val endOffset = Offset(
-                    x = size.width * (0.6f - tilt.x * 0.15f),
-                    y = size.height * (0.6f - tilt.y * 0.15f)
-                )
-                val brush = Brush.linearGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = alpha * 1.5f),
-                        Color.White.copy(alpha = alpha * 0.3f),
-                        Color.Transparent
-                    ),
-                    start = startOffset,
-                    end = endOffset
-                )
-                drawRect(brush = brush)
-            }
+        modifier =
+            modifier
+                .fillMaxSize()
+                .drawBehind {
+                    val tilt = tiltProvider()
+                    val startOffset =
+                        Offset(
+                            x = size.width * (0.1f - tilt.x * 0.15f),
+                            y = size.height * (0.1f - tilt.y * 0.15f)
+                        )
+                    val endOffset =
+                        Offset(
+                            x = size.width * (0.6f - tilt.x * 0.15f),
+                            y = size.height * (0.6f - tilt.y * 0.15f)
+                        )
+                    val brush =
+                        Brush.linearGradient(
+                            colors =
+                                listOf(
+                                    Color.White.copy(alpha = alpha * 1.5f),
+                                    Color.White.copy(alpha = alpha * 0.3f),
+                                    Color.Transparent
+                                ),
+                            start = startOffset,
+                            end = endOffset
+                        )
+                    drawRect(brush = brush)
+                }
     )
 }
 
@@ -509,17 +539,19 @@ fun GlassBottomSheet(
         containerColor = Color.Transparent,
         dragHandle = {
             Box(
-                modifier = Modifier
-                    .padding(vertical = 12.dp)
-                    .size(36.dp, 4.dp)
-                    .background(Color.White.copy(alpha = 0.3f), RoundedCornerShape(2.dp))
+                modifier =
+                    Modifier
+                        .padding(vertical = 12.dp)
+                        .size(36.dp, 4.dp)
+                        .background(Color.White.copy(alpha = 0.3f), RoundedCornerShape(2.dp))
             )
         }
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(shape)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clip(shape)
         ) {
             GlassContainer(
                 tintColor = tintColor,
@@ -529,9 +561,10 @@ fun GlassBottomSheet(
                 tiltProvider = { tiltState.value }
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 24.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 24.dp),
                     content = content
                 )
             }
@@ -557,9 +590,10 @@ fun GlassSurface(
     val resolvedShape = shape ?: RoundedCornerShape(cornerRadius)
 
     Box(
-        modifier = modifier
-            .clip(resolvedShape)
-            .border(1.dp, borderColor, resolvedShape),
+        modifier =
+            modifier
+                .clip(resolvedShape)
+                .border(1.dp, borderColor, resolvedShape),
         contentAlignment = Alignment.Center
     ) {
         GlassContainer(
@@ -591,23 +625,26 @@ fun GlassTopAppBar(
         title = title,
         navigationIcon = navigationIcon,
         actions = actions,
-        colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent,
-            scrolledContainerColor = Color.Transparent
-        ),
-        modifier = modifier.then(
-            if (hazeState != null) {
-                Modifier.hazeEffect(
-                    state = hazeState,
-                    style = dev.chrisbanes.haze.HazeStyle(
-                        tint = dev.chrisbanes.haze.HazeTint(tintColor),
-                        blurRadius = 32.dp,
-                        noiseFactor = 0.05f
+        colors =
+            androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+                scrolledContainerColor = Color.Transparent
+            ),
+        modifier =
+            modifier.then(
+                if (hazeState != null) {
+                    Modifier.hazeEffect(
+                        state = hazeState,
+                        style =
+                            dev.chrisbanes.haze.HazeStyle(
+                                tint = dev.chrisbanes.haze.HazeTint(tintColor),
+                                blurRadius = 32.dp,
+                                noiseFactor = 0.05f
+                            )
                     )
-                )
-            } else {
-                Modifier.background(tintColor)
-            }
-        )
+                } else {
+                    Modifier.background(tintColor)
+                }
+            )
     )
 }

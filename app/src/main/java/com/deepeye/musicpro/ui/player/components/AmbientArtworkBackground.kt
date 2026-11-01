@@ -35,9 +35,10 @@ fun AmbientArtworkBackground(
     content: @Composable () -> Unit = {}
 ) {
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color(0xFF07090E))
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(Color(0xFF07090E))
     ) {
         // ── LAYER 1: AMBIENT HARDWARE-BLURRED ARTWORK WITH CROSSFADE ──
         Crossfade(
@@ -51,52 +52,57 @@ fun AmbientArtworkBackground(
                     model = uri,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .scale(1.28f)
-                        .then(
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                Modifier.blur(
-                                    radius = 80.dp,
-                                    edgeTreatment = BlurredEdgeTreatment.Unbounded
-                                )
-                            } else {
-                                Modifier.blur(40.dp)
-                            }
-                        )
-                        .alpha(0.50f)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .scale(1.28f)
+                            .then(
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    Modifier.blur(
+                                        radius = 80.dp,
+                                        edgeTreatment = BlurredEdgeTreatment.Unbounded
+                                    )
+                                } else {
+                                    Modifier.blur(40.dp)
+                                }
+                            )
+                            .alpha(0.50f)
                 )
             }
         }
 
         // ── LAYER 2: DYNAMIC MONET COLOR TINT OVERLAY ──
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            primaryColor.copy(alpha = 0.35f),
-                            secondaryColor.copy(alpha = 0.20f),
-                            Color.Transparent
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.radialGradient(
+                            colors =
+                                listOf(
+                                    primaryColor.copy(alpha = 0.35f),
+                                    secondaryColor.copy(alpha = 0.20f),
+                                    Color.Transparent
+                                )
                         )
                     )
-                )
         )
 
         // ── LAYER 3: SAFETY SCRIM (WCAG CONTRAST PROTECTOR) ──
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Black.copy(alpha = 0.30f),
-                            Color.Black.copy(alpha = 0.45f),
-                            Color.Black.copy(alpha = 0.70f)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors =
+                                listOf(
+                                    Color.Black.copy(alpha = 0.30f),
+                                    Color.Black.copy(alpha = 0.45f),
+                                    Color.Black.copy(alpha = 0.70f)
+                                )
                         )
                     )
-                )
         )
 
         // ── LAYER 4 & 5: FOREGROUND CONTENT (VISUALIZERS, ARTWORK & CONTROLS) ──

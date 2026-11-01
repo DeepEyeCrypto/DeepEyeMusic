@@ -27,87 +27,90 @@ data class RefreshedPlaybackSource(
  * Executes SmartTube stream extraction with forceRefresh=true and applies format retention rules.
  */
 @Singleton
-class SmartTubeSourceRefreshUseCase @Inject constructor(
-    private val sourceResolverManager: SourceResolverManager
-) {
-    suspend fun refreshCurrentSource(
-        mediaId: String,
-        isVideo: Boolean,
-        selectedVideoFormatId: String?,
-        selectedAudioFormatId: String?,
-        qualityMode: String = "AUTO",
-        selectedAudioLanguage: String? = null
-    ): Result<RefreshedPlaybackSource> {
-        return try {
-            val resolved = sourceResolverManager.resolveSource(
-                videoId = mediaId,
-                preferVideo = isVideo,
-                forceRefresh = true
-            ) ?: return Result.failure(IllegalStateException("Resolver returned null source"))
+class SmartTubeSourceRefreshUseCase
+    @Inject
+    constructor(
+        private val sourceResolverManager: SourceResolverManager
+    ) {
+        suspend fun refreshCurrentSource(
+            mediaId: String,
+            isVideo: Boolean,
+            selectedVideoFormatId: String?,
+            selectedAudioFormatId: String?,
+            qualityMode: String = "AUTO",
+            selectedAudioLanguage: String? = null
+        ): Result<RefreshedPlaybackSource> {
+            return try {
+                val resolved =
+                    sourceResolverManager.resolveSource(
+                        videoId = mediaId,
+                        preferVideo = isVideo,
+                        forceRefresh = true
+                    ) ?: return Result.failure(IllegalStateException("Resolver returned null source"))
 
-            if (resolved.url.isEmpty()) {
-                return Result.failure(IllegalStateException("Resolver returned empty stream URL"))
-            }
-
-            // Retain video format ID if still present, or pick closest compatible
-            var chosenVideoFormatId: String? = null
-            var fallbackReason: String? = null
-
-            if (selectedVideoFormatId != null) {
-                val match = resolved.videoFormats.firstOrNull { it.stableId == selectedVideoFormatId }
-                if (match != null) {
-                    chosenVideoFormatId = match.stableId
-                } else {
-                    val fallback = resolved.videoFormats.firstOrNull { it.isDeviceCompatible }
-                    chosenVideoFormatId = fallback?.stableId
-                    val label = fallback?.height?.let { "${it}p" } ?: "Auto"
-                    fallbackReason = "Selected video format unavailable; fell back to $label"
+                if (resolved.url.isEmpty()) {
+                    return Result.failure(IllegalStateException("Resolver returned empty stream URL"))
                 }
-            }
 
-            // Retain audio format ID if still present, or pick closest compatible
-            var chosenAudioFormatId: String? = null
-            if (selectedAudioFormatId != null) {
-                val match = resolved.audioFormats.firstOrNull { it.stableId == selectedAudioFormatId }
-                if (match != null) {
-                    chosenAudioFormatId = match.stableId
-                } else {
-                    val fallback = resolved.audioFormats.firstOrNull { it.isDeviceCompatible }
-                    chosenAudioFormatId = fallback?.stableId
-                    val label = fallback?.bitrate?.let { "${it / 1000} kbps" } ?: "Auto"
-                    val audioFb = "Selected audio format unavailable; fell back to $label"
-                    fallbackReason = if (fallbackReason != null) "$fallbackReason, $audioFb" else audioFb
-                }
-            }
+                // Retain video format ID if still present, or pick closest compatible
+                var chosenVideoFormatId: String? = null
+                var fallbackReason: String? = null
 
-            // Determine effective playback URL
-            var effectiveUrl = resolved.hlsManifestUrl ?: resolved.url
-            if (isVideo && chosenVideoFormatId != null) {
-                val targetVFormat = resolved.videoFormats.firstOrNull { it.stableId == chosenVideoFormatId }
-                if (!targetVFormat?.streamUrl.isNullOrEmpty() && (targetVFormat?.isProgressive == true || resolved.hlsManifestUrl != null)) {
-                    effectiveUrl = targetVFormat?.streamUrl ?: effectiveUrl
+                if (selectedVideoFormatId != null) {
+                    val match = resolved.videoFormats.firstOrNull { it.stableId == selectedVideoFormatId }
+                    if (match != null) {
+                        chosenVideoFormatId = match.stableId
+                    } else {
+                        val fallback = resolved.videoFormats.firstOrNull { it.isDeviceCompatible }
+                        chosenVideoFormatId = fallback?.stableId
+                        val label = fallback?.height?.let { "${it}p" } ?: "Auto"
+                        fallbackReason = "Selected video format unavailable; fell back to $label"
+                    }
                 }
-            } else if (!isVideo && chosenAudioFormatId != null) {
-                val targetAFormat = resolved.audioFormats.firstOrNull { it.stableId == chosenAudioFormatId }
-                if (!targetAFormat?.streamUrl.isNullOrEmpty() && (targetAFormat?.isProgressive == true || resolved.hlsManifestUrl != null)) {
-                    effectiveUrl = targetAFormat?.streamUrl ?: effectiveUrl
-                }
-            }
 
-            Result.success(
-                RefreshedPlaybackSource(
-                    directUrl = effectiveUrl,
-                    isVideo = resolved.isVideo,
-                    isAdaptive = !resolved.isDirectStream,
-                    videoFormats = resolved.videoFormats,
-                    audioFormats = resolved.audioFormats,
-                    selectedVideoFormatId = chosenVideoFormatId,
-                    selectedAudioFormatId = chosenAudioFormatId,
-                    fallbackReason = fallbackReason
+                // Retain audio format ID if still present, or pick closest compatible
+                var chosenAudioFormatId: String? = null
+                if (selectedAudioFormatId != null) {
+                    val match = resolved.audioFormats.firstOrNull { it.stableId == selectedAudioFormatId }
+                    if (match != null) {
+                        chosenAudioFormatId = match.stableId
+                    } else {
+                        val fallback = resolved.audioFormats.firstOrNull { it.isDeviceCompatible }
+                        chosenAudioFormatId = fallback?.stableId
+                        val label = fallback?.bitrate?.let { "${it / 1000} kbps" } ?: "Auto"
+                        val audioFb = "Selected audio format unavailable; fell back to $label"
+                        fallbackReason = if (fallbackReason != null) "$fallbackReason, $audioFb" else audioFb
+                    }
+                }
+
+                // Determine effective playback URL
+                var effectiveUrl = resolved.hlsManifestUrl ?: resolved.url
+                if (isVideo && chosenVideoFormatId != null) {
+                    val targetVFormat = resolved.videoFormats.firstOrNull { it.stableId == chosenVideoFormatId }
+                    if (!targetVFormat?.streamUrl.isNullOrEmpty() && (targetVFormat?.isProgressive == true || resolved.hlsManifestUrl != null)) {
+                        effectiveUrl = targetVFormat?.streamUrl ?: effectiveUrl
+                    }
+                } else if (!isVideo && chosenAudioFormatId != null) {
+                    val targetAFormat = resolved.audioFormats.firstOrNull { it.stableId == chosenAudioFormatId }
+                    if (!targetAFormat?.streamUrl.isNullOrEmpty() && (targetAFormat?.isProgressive == true || resolved.hlsManifestUrl != null)) {
+                        effectiveUrl = targetAFormat?.streamUrl ?: effectiveUrl
+                    }
+                }
+
+                Result.success(
+                    RefreshedPlaybackSource(
+                        directUrl = effectiveUrl,
+                        isVideo = resolved.isVideo,
+                        isAdaptive = !resolved.isDirectStream,
+                        videoFormats = resolved.videoFormats,
+                        audioFormats = resolved.audioFormats,
+                        selectedVideoFormatId = chosenVideoFormatId,
+                        selectedAudioFormatId = chosenAudioFormatId,
+                        fallbackReason = fallbackReason
+                    )
                 )
-            )
-        } catch (e: Exception) {
-            Result.failure(e)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
         }
     }
-}

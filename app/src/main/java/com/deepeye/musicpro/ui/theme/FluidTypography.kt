@@ -41,16 +41,17 @@ data class AFDSTypography(
     val caption: TextStyle
 )
 
-val LocalFluidTypography = compositionLocalOf {
-    AFDSTypography(
-        display = TypeScale.Display,
-        headline = TypeScale.Headline,
-        title = TypeScale.Title,
-        body = TypeScale.Body,
-        label = TypeScale.Label,
-        caption = TypeScale.Caption
-    )
-}
+val LocalFluidTypography =
+    compositionLocalOf {
+        AFDSTypography(
+            display = TypeScale.Display,
+            headline = TypeScale.Headline,
+            title = TypeScale.Title,
+            body = TypeScale.Body,
+            label = TypeScale.Label,
+            caption = TypeScale.Caption
+        )
+    }
 
 /**
  * Calculates the exact AFDS fluid typography scale based on the current device screen width.
@@ -61,40 +62,53 @@ fun ProvideFluidTypography(content: @Composable () -> Unit) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp
 
-    val typography = remember(screenWidth) {
-        AFDSTypography(
-            display = TextStyle(
-                fontSize = calculateFluidFontSize(screenWidth, minFontSize = 32f, maxFontSize = 56f), // Hero
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.5).sp
-            ),
-            headline = TextStyle(
-                fontSize = calculateFluidFontSize(screenWidth, minFontSize = 24f, maxFontSize = 44f), // Title in user prompt
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.sp
-            ),
-            title = TextStyle(
-                fontSize = calculateFluidFontSize(screenWidth, minFontSize = 16f, maxFontSize = 24f),
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.15.sp
-            ),
-            body = TextStyle(
-                fontSize = calculateFluidFontSize(screenWidth, minFontSize = 14f, maxFontSize = 18f),
-                fontWeight = FontWeight.Normal,
-                letterSpacing = 0.25.sp
-            ),
-            label = TextStyle(
-                fontSize = calculateFluidFontSize(screenWidth, minFontSize = 12f, maxFontSize = 16f),
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 2.sp
-            ),
-            caption = TextStyle(
-                fontSize = calculateFluidFontSize(screenWidth, minFontSize = 11f, maxFontSize = 14f),
-                fontWeight = FontWeight.Normal,
-                letterSpacing = 0.4.sp
+    val typography =
+        remember(screenWidth) {
+            AFDSTypography(
+                display =
+                    TextStyle(
+                        fontSize = calculateFluidFontSize(screenWidth, minFontSize = 32f, maxFontSize = 56f), // Hero
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.5).sp
+                    ),
+                headline =
+                    TextStyle(
+                        fontSize =
+                            calculateFluidFontSize(
+                                screenWidth,
+                                minFontSize = 24f,
+                                maxFontSize = 44f
+                            ),
+                        // Title in user prompt
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.sp
+                    ),
+                title =
+                    TextStyle(
+                        fontSize = calculateFluidFontSize(screenWidth, minFontSize = 16f, maxFontSize = 24f),
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.15.sp
+                    ),
+                body =
+                    TextStyle(
+                        fontSize = calculateFluidFontSize(screenWidth, minFontSize = 14f, maxFontSize = 18f),
+                        fontWeight = FontWeight.Normal,
+                        letterSpacing = 0.25.sp
+                    ),
+                label =
+                    TextStyle(
+                        fontSize = calculateFluidFontSize(screenWidth, minFontSize = 12f, maxFontSize = 16f),
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 2.sp
+                    ),
+                caption =
+                    TextStyle(
+                        fontSize = calculateFluidFontSize(screenWidth, minFontSize = 11f, maxFontSize = 14f),
+                        fontWeight = FontWeight.Normal,
+                        letterSpacing = 0.4.sp
+                    )
             )
-        )
-    }
+        }
 
     CompositionLocalProvider(LocalFluidTypography provides typography) {
         content()

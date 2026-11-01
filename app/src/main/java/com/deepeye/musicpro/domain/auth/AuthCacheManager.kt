@@ -14,19 +14,21 @@ import javax.inject.Singleton
  * Guarantees that guest / anonymous search and rail caches never leak into authenticated user sessions.
  */
 @Singleton
-class AuthCacheManager @Inject constructor(
-    private val youTubeRepositoryProvider: Provider<YouTubeRepository>
-) {
-    companion object {
-        private const val TAG = "AuthCacheManager"
-    }
+class AuthCacheManager
+    @Inject
+    constructor(
+        private val youTubeRepositoryProvider: Provider<YouTubeRepository>
+    ) {
+        companion object {
+            private const val TAG = "AuthCacheManager"
+        }
 
-    suspend fun purgeAllCaches() {
-        Log.i(TAG, "[AuthCacheManager] Purging in-memory rail and search caches on auth state transition")
-        try {
-            youTubeRepositoryProvider.get().clearCache()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error purging caches", e)
+        suspend fun purgeAllCaches() {
+            Log.i(TAG, "[AuthCacheManager] Purging in-memory rail and search caches on auth state transition")
+            try {
+                youTubeRepositoryProvider.get().clearCache()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error purging caches", e)
+            }
         }
     }
-}

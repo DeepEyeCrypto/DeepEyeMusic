@@ -36,7 +36,6 @@ private const val TAG = "AutoSession"
 class DeepEyeCarSession(
     private val playerController: PlayerController,
 ) : Session() {
-
     override fun onCreateScreen(intent: Intent): Screen {
         val destination = intent.getStringExtra(EXTRA_DESTINATION)
         Log.i(TAG, "screen created destination=$destination result=success")

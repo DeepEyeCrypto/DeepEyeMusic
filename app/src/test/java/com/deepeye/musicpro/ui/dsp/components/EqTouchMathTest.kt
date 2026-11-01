@@ -18,7 +18,6 @@ import org.junit.Test
  *  * degenerate/unlaid-out geometry producing NaN or out-of-range gains.
  */
 class EqTouchMathTest {
-
     // ── band index resolution (ACTION_DOWN hit test) ──────────────────────────
 
     @Test

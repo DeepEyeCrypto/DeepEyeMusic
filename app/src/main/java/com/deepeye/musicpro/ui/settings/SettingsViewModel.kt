@@ -28,127 +28,135 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel
-@Inject
-constructor(
-    private val settingsDataStore: SettingsDataStore,
-    private val syncLibraryUseCase: SyncLibraryUseCase,
-    private val autoUpdateManager: AutoUpdateManager,
-    private val notificationStateRepo: com.deepeye.musicpro.data.repository.notification.NotificationStateRepo
-) : ViewModel() {
-    private val _uiState = MutableStateFlow(SettingsUiState())
-    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+    @Inject
+    constructor(
+        private val settingsDataStore: SettingsDataStore,
+        private val syncLibraryUseCase: SyncLibraryUseCase,
+        private val autoUpdateManager: AutoUpdateManager,
+        private val notificationStateRepo: com.deepeye.musicpro.data.repository.notification.NotificationStateRepo
+    ) : ViewModel() {
+        private val _uiState = MutableStateFlow(SettingsUiState())
+        val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    init {
-        viewModelScope.launch {
-            val enabled = notificationStateRepo.isNotificationsEnabled()
-            _uiState.value = _uiState.value.copy(notificationsEnabled = enabled)
-        }
-        viewModelScope.launch {
-            settingsDataStore.settings.collect { settings ->
-                _uiState.value = _uiState.value.copy(settings = settings)
+        init {
+            viewModelScope.launch {
+                val enabled = notificationStateRepo.isNotificationsEnabled()
+                _uiState.value = _uiState.value.copy(notificationsEnabled = enabled)
+            }
+            viewModelScope.launch {
+                settingsDataStore.settings.collect { settings ->
+                    _uiState.value = _uiState.value.copy(settings = settings)
+                }
+            }
+            viewModelScope.launch {
+                autoUpdateManager.updateState.collect { updateState ->
+                    _uiState.value = _uiState.value.copy(updateState = updateState)
+                }
             }
         }
-        viewModelScope.launch {
-            autoUpdateManager.updateState.collect { updateState ->
-                _uiState.value = _uiState.value.copy(updateState = updateState)
+
+        fun checkForUpdate() {
+            autoUpdateManager.checkForUpdate()
+        }
+
+        fun downloadUpdate(
+            apkUrl: String,
+            version: String,
+        ) {
+            autoUpdateManager.downloadUpdate(apkUrl, version)
+        }
+
+        fun installApk(file: File) {
+            autoUpdateManager.installApk(file)
+        }
+
+        fun resetUpdateState() {
+            autoUpdateManager.resetState()
+        }
+
+        fun setThemeMode(mode: ThemeMode) {
+            viewModelScope.launch { settingsDataStore.setThemeMode(mode) }
+        }
+
+        fun setDynamicColor(enabled: Boolean) {
+            viewModelScope.launch { settingsDataStore.setDynamicColor(enabled) }
+        }
+
+        fun setAmoledMode(enabled: Boolean) {
+            viewModelScope.launch { settingsDataStore.setAmoledMode(enabled) }
+        }
+
+        fun setCrossfadeDuration(seconds: Int) {
+            viewModelScope.launch { settingsDataStore.setCrossfadeDuration(seconds) }
+        }
+
+        fun setShowVisualizer(enabled: Boolean) {
+            viewModelScope.launch { settingsDataStore.setShowVisualizer(enabled) }
+        }
+
+        fun setAutoplayOnCellular(enabled: Boolean) {
+            viewModelScope.launch { settingsDataStore.setAutoplayOnCellular(enabled) }
+        }
+
+        fun setPreferredLanguages(languages: Set<String>) {
+            // No-op: handled by YouTube InnerTube
+        }
+
+        fun setFavoriteArtists(artists: Set<String>) {
+            // No-op: handled by YouTube InnerTube
+        }
+
+        fun rescanLibrary() {
+            viewModelScope.launch {
+                _uiState.value = _uiState.value.copy(isRescanningLibrary = true)
+                try {
+                    syncLibraryUseCase()
+                } catch (_: Exception) {
+                }
+                _uiState.value = _uiState.value.copy(isRescanningLibrary = false)
+            }
+        }
+
+        fun forceCloudSync() {
+            // No-op: synced directly with InnerTube
+        }
+
+        fun setNotificationsEnabled(enabled: Boolean) {
+            viewModelScope.launch {
+                notificationStateRepo.setNotificationsEnabled(enabled)
+                _uiState.value = _uiState.value.copy(notificationsEnabled = enabled)
+            }
+        }
+
+        fun triggerSubscriptionCheckNow(context: android.content.Context) {
+            val workRequest =
+                androidx.work.OneTimeWorkRequestBuilder<com.deepeye.musicpro.workers.YouTubeSubscriptionWorker>()
+                    .build()
+            androidx.work.WorkManager.getInstance(context).enqueue(workRequest)
+        }
+
+        fun logoutYouTube() {
+            viewModelScope.launch {
+                settingsDataStore.setYouTubeTokens("", null)
+            }
+        }
+
+        fun saveYouTubeTokens(
+            accessToken: String,
+            refreshToken: String?
+        ) {
+            viewModelScope.launch {
+                settingsDataStore.setYouTubeTokens(accessToken, refreshToken)
+            }
+        }
+
+        fun saveYouTubeProfile(
+            name: String?,
+            avatarUrl: String?,
+            email: String?
+        ) {
+            viewModelScope.launch {
+                settingsDataStore.setYouTubeProfile(name, avatarUrl, email)
             }
         }
     }
-
-    fun checkForUpdate() {
-        autoUpdateManager.checkForUpdate()
-    }
-
-    fun downloadUpdate(
-        apkUrl: String,
-        version: String,
-    ) {
-        autoUpdateManager.downloadUpdate(apkUrl, version)
-    }
-
-    fun installApk(file: File) {
-        autoUpdateManager.installApk(file)
-    }
-
-    fun resetUpdateState() {
-        autoUpdateManager.resetState()
-    }
-
-    fun setThemeMode(mode: ThemeMode) {
-        viewModelScope.launch { settingsDataStore.setThemeMode(mode) }
-    }
-
-    fun setDynamicColor(enabled: Boolean) {
-        viewModelScope.launch { settingsDataStore.setDynamicColor(enabled) }
-    }
-
-    fun setAmoledMode(enabled: Boolean) {
-        viewModelScope.launch { settingsDataStore.setAmoledMode(enabled) }
-    }
-
-    fun setCrossfadeDuration(seconds: Int) {
-        viewModelScope.launch { settingsDataStore.setCrossfadeDuration(seconds) }
-    }
-
-    fun setShowVisualizer(enabled: Boolean) {
-        viewModelScope.launch { settingsDataStore.setShowVisualizer(enabled) }
-    }
-
-    fun setAutoplayOnCellular(enabled: Boolean) {
-        viewModelScope.launch { settingsDataStore.setAutoplayOnCellular(enabled) }
-    }
-
-    fun setPreferredLanguages(languages: Set<String>) {
-        // No-op: handled by YouTube InnerTube
-    }
-
-    fun setFavoriteArtists(artists: Set<String>) {
-        // No-op: handled by YouTube InnerTube
-    }
-
-    fun rescanLibrary() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isRescanningLibrary = true)
-            try {
-                syncLibraryUseCase()
-            } catch (_: Exception) {
-            }
-            _uiState.value = _uiState.value.copy(isRescanningLibrary = false)
-        }
-    }
-
-    fun forceCloudSync() {
-        // No-op: synced directly with InnerTube
-    }
-
-    fun setNotificationsEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            notificationStateRepo.setNotificationsEnabled(enabled)
-            _uiState.value = _uiState.value.copy(notificationsEnabled = enabled)
-        }
-    }
-
-    fun triggerSubscriptionCheckNow(context: android.content.Context) {
-        val workRequest = androidx.work.OneTimeWorkRequestBuilder<com.deepeye.musicpro.workers.YouTubeSubscriptionWorker>()
-            .build()
-        androidx.work.WorkManager.getInstance(context).enqueue(workRequest)
-    }
-
-    fun logoutYouTube() {
-        viewModelScope.launch {
-            settingsDataStore.setYouTubeTokens("", null)
-        }
-    }
-
-    fun saveYouTubeTokens(accessToken: String, refreshToken: String?) {
-        viewModelScope.launch {
-            settingsDataStore.setYouTubeTokens(accessToken, refreshToken)
-        }
-    }
-
-    fun saveYouTubeProfile(name: String?, avatarUrl: String?, email: String?) {
-        viewModelScope.launch {
-            settingsDataStore.setYouTubeProfile(name, avatarUrl, email)
-        }
-    }
-}

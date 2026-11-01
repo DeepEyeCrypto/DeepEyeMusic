@@ -113,10 +113,11 @@ class GainBudgetCalculatorTest {
 
         // total = 6*0.4 + 8 + 6 = 16.4f → MODERATE (needs ≥18 for DANGER)
         // To get DANGER: need total ≥ 18f, so add more gain
-        val paramsDanger = params.copy(
-            eqBands = floatArrayOf(10f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f),
-            viperBassGain = 15f,
-        )
+        val paramsDanger =
+            params.copy(
+                eqBands = floatArrayOf(10f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f),
+                viperBassGain = 15f,
+            )
         // 10*0.4 + 8 + 15*0.5 = 4 + 8 + 7.5 = 19.5f → DANGER
 
         val budget = GainBudgetCalculator.calculate(paramsDanger)
@@ -141,15 +142,17 @@ class GainBudgetCalculatorTest {
 
         // total = 4*0.4 + 7.2 = 8.8f → SAFE (needs ≥10 for MODERATE)
         // To get MODERATE: need total ≥ 10f
-        val paramsModerate = params.copy(
-            bassBoostStrength = 1000,
-        )
+        val paramsModerate =
+            params.copy(
+                bassBoostStrength = 1000,
+            )
         // 4*0.4 + 8 = 1.6 + 8 = 9.6f still SAFE
         // Need even more
-        val paramsModerate2 = params.copy(
-            eqBands = floatArrayOf(8f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f),
-            bassBoostStrength = 1000,
-        )
+        val paramsModerate2 =
+            params.copy(
+                eqBands = floatArrayOf(8f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f),
+                bassBoostStrength = 1000,
+            )
         // 8*0.4 + 8 = 3.2 + 8 = 11.2f → MODERATE
 
         val budget = GainBudgetCalculator.calculate(paramsModerate2)

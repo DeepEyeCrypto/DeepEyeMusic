@@ -153,8 +153,12 @@ data class DeepEyePlaybackFormat(
 /**
  * Maps SmartTube's rich playback format model into DeepEye's player format model.
  */
-fun DeepEyePlaybackFormat.toDeepEyeFormat(groupIndex: Int = 0, trackIndex: Int = 0): com.deepeye.musicpro.player.format.DeepEyeFormat {
-    val isVid = this.streamType == DeepEyeStreamType.VIDEO_PROGRESSIVE ||
+fun DeepEyePlaybackFormat.toDeepEyeFormat(
+    groupIndex: Int = 0,
+    trackIndex: Int = 0
+): com.deepeye.musicpro.player.format.DeepEyeFormat {
+    val isVid =
+        this.streamType == DeepEyeStreamType.VIDEO_PROGRESSIVE ||
             this.streamType == DeepEyeStreamType.VIDEO_ONLY ||
             (!this.isAudioOnly && (this.width != null || this.height != null))
     return com.deepeye.musicpro.player.format.DeepEyeFormat(

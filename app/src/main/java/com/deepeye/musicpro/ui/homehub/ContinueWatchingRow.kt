@@ -51,9 +51,10 @@ fun ContinueWatchingRow(
 
         val displayedItems = items.take(4)
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             displayedItems.chunked(2).forEach { chunk ->
@@ -84,19 +85,21 @@ private fun ContinueWatchingCard(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White.copy(alpha = 0.08f))
-            .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick),
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White.copy(alpha = 0.08f))
+                .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
+                .clickable(onClick = onClick),
     ) {
         Column {
             // Thumbnail with progress overlay
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9f)
+                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
             ) {
                 AsyncImage(
                     model = video.thumbnailUrl,
@@ -107,22 +110,24 @@ private fun ContinueWatchingCard(
 
                 // Gradient overlay at bottom
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp)
-                        .align(Alignment.BottomCenter)
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)),
-                            )
-                        ),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .align(Alignment.BottomCenter)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)),
+                                )
+                            ),
                 )
 
                 // Play icon overlay
                 Surface(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .align(Alignment.Center),
+                    modifier =
+                        Modifier
+                            .size(36.dp)
+                            .align(Alignment.Center),
                     shape = RoundedCornerShape(18.dp),
                     color = Color(0xFF7B3FE4).copy(alpha = 0.9f),
                 ) {
@@ -137,10 +142,11 @@ private fun ContinueWatchingCard(
                 // Progress bar at very bottom
                 LinearProgressIndicator(
                     progress = { video.progressPercent.coerceIn(0f, 1f) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(3.dp)
-                        .align(Alignment.BottomCenter),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                            .align(Alignment.BottomCenter),
                     color = Color(0xFF7B3FE4),
                     trackColor = Color.White.copy(alpha = 0.2f),
                 )

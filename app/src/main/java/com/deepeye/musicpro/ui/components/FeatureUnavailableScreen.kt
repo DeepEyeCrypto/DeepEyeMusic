@@ -62,8 +62,9 @@ fun FeatureUnavailableScreen(
                 text = "Back",
                 style = MaterialTheme.typography.titleSmall,
                 color = tint,
-                modifier = Modifier
-                    .padding(horizontal = 24.dp, vertical = 10.dp)
+                modifier =
+                    Modifier
+                        .padding(horizontal = 24.dp, vertical = 10.dp)
             )
         }
     }

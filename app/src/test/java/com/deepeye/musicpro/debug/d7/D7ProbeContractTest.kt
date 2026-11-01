@@ -21,7 +21,6 @@ import org.junit.Test
  * Synthetic fixtures only — no live network, no real credentials.
  */
 class D7ProbeContractTest {
-
     private val syntheticToken = "synthetic-session-token-value"
     private val syntheticKey = "synthetic-api-key-value"
 
@@ -47,7 +46,10 @@ class D7ProbeContractTest {
         assertEquals("Bearer $syntheticToken", request.header("Authorization"))
         val body = request.body!!.contentString()
         assertTrue("H1 body must declare ANDROID_MUSIC client", body.contains("\"clientName\": \"ANDROID_MUSIC\""))
-        assertTrue("H1 body must carry the probed browseId", body.contains("\"browseId\": \"${D7ProbeRequests.BROWSE_HOME}\""))
+        assertTrue(
+            "H1 body must carry the probed browseId",
+            body.contains("\"browseId\": \"${D7ProbeRequests.BROWSE_HOME}\"")
+        )
     }
 
     @Test
@@ -65,7 +67,10 @@ class D7ProbeContractTest {
         assertEquals("Bearer $syntheticToken", request.header("Authorization"))
         val body = request.body!!.contentString()
         assertTrue("H2 body must declare TVHTML5 client", body.contains("\"clientName\": \"TVHTML5\""))
-        assertTrue("H2 body must carry the probed browseId", body.contains("\"browseId\": \"${D7ProbeRequests.BROWSE_LIKED}\""))
+        assertTrue(
+            "H2 body must carry the probed browseId",
+            body.contains("\"browseId\": \"${D7ProbeRequests.BROWSE_LIKED}\"")
+        )
     }
 
     @Test
@@ -83,11 +88,12 @@ class D7ProbeContractTest {
 
     @Test
     fun `safety - Bearer token never appears in any probe URL`() {
-        val requests = listOf(
-            D7ProbeRequests.h1(D7ProbeRequests.BROWSE_HOME, syntheticToken, syntheticKey),
-            D7ProbeRequests.h2(D7ProbeRequests.BROWSE_HOME, syntheticToken),
-            D7ProbeRequests.control(syntheticToken),
-        )
+        val requests =
+            listOf(
+                D7ProbeRequests.h1(D7ProbeRequests.BROWSE_HOME, syntheticToken, syntheticKey),
+                D7ProbeRequests.h2(D7ProbeRequests.BROWSE_HOME, syntheticToken),
+                D7ProbeRequests.control(syntheticToken),
+            )
         for (request in requests) {
             val url = request.url.toString()
             assertFalse("token leaked into URL of ${request.url.host}", url.contains(syntheticToken))
@@ -96,11 +102,12 @@ class D7ProbeContractTest {
 
     @Test
     fun `builders reject blank session - no tokenless probe can be built`() {
-        val builders = listOf<() -> okhttp3.Request>(
-            { D7ProbeRequests.h1(D7ProbeRequests.BROWSE_HOME, " ", syntheticKey) },
-            { D7ProbeRequests.h2(D7ProbeRequests.BROWSE_HOME, " ") },
-            { D7ProbeRequests.control(" ") },
-        )
+        val builders =
+            listOf<() -> okhttp3.Request>(
+                { D7ProbeRequests.h1(D7ProbeRequests.BROWSE_HOME, " ", syntheticKey) },
+                { D7ProbeRequests.h2(D7ProbeRequests.BROWSE_HOME, " ") },
+                { D7ProbeRequests.control(" ") },
+            )
         for (builder in builders) {
             try {
                 builder()

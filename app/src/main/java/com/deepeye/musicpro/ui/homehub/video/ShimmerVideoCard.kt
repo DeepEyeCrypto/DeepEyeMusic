@@ -31,10 +31,10 @@ fun ShimmerVideoCard(modifier: Modifier = Modifier) {
         initialValue = 0.1f,
         targetValue = 0.25f,
         animationSpec =
-        infiniteRepeatable(
-            animation = tween(900, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
+            infiniteRepeatable(
+                animation = tween(900, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
         label = "shimmerAlpha",
     )
     Column(modifier.width(180.dp)) {

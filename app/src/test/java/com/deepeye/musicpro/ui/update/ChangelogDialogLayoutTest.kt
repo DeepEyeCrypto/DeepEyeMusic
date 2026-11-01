@@ -36,7 +36,6 @@ import org.robolectric.RobolectricTestRunner
  */
 @RunWith(RobolectricTestRunner::class)
 class ChangelogDialogLayoutTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -45,19 +44,21 @@ class ChangelogDialogLayoutTest {
      * a multi-line description. This is roughly the shape of a real
      * several-versions-behind install, which is exactly when the dialog broke.
      */
-    private val longChangelog = List(6) { index ->
-        ChangelogEntry(
-            versionCode = 30048 - index,
-            versionName = "v3.0.1.${38 - index}",
-            releaseDate = "2026-09-${10 - index}",
-            title = "Release ${38 - index} — a deliberately long headline that wraps",
-            items = List(4) { bullet ->
-                "Bullet $bullet: a release-note line long enough to wrap onto a second " +
-                    "line at reading width, which is what makes this dialog overflow."
-            },
-            highlight = index == 0,
-        )
-    }
+    private val longChangelog =
+        List(6) { index ->
+            ChangelogEntry(
+                versionCode = 30048 - index,
+                versionName = "v3.0.1.${38 - index}",
+                releaseDate = "2026-09-${10 - index}",
+                title = "Release ${38 - index} — a deliberately long headline that wraps",
+                items =
+                    List(4) { bullet ->
+                        "Bullet $bullet: a release-note line long enough to wrap onto a second " +
+                            "line at reading width, which is what makes this dialog overflow."
+                    },
+                highlight = index == 0,
+            )
+        }
 
     private fun showDialog(entries: List<ChangelogEntry> = longChangelog) {
         composeTestRule.setContent {

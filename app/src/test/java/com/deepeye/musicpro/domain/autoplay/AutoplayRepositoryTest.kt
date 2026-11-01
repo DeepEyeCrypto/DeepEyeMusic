@@ -33,7 +33,6 @@ import org.junit.Test
  * Safe telemetry only: IDs, sizes, thread names. No payloads/tokens (MASVS).
  */
 class AutoplayRepositoryTest {
-
     private lateinit var contentFetcher: ContentFetcher
     private lateinit var smartTubeEngine: SmartTubeEngine
     private lateinit var innerTubeClient: InnerTubeRemoteClient
@@ -56,206 +55,239 @@ class AutoplayRepositoryTest {
         every { settingsDataStore.settings } returns flowOf(AppSettings(autoplayOnCellular = true))
         coEvery { cacheManager.loadAutoplayQueue(any()) } returns null
         coEvery { tasteModelEngine.affinityScoresForArtists(any(), any(), any()) } returns emptyMap()
-        repository = AutoplayRepository(
-            contentFetcher, smartTubeEngine, innerTubeClient,
-            cacheManager, networkConditionChecker, settingsDataStore, tasteModelEngine,
-        )
+        repository =
+            AutoplayRepository(
+                contentFetcher, smartTubeEngine, innerTubeClient,
+                cacheManager, networkConditionChecker, settingsDataStore, tasteModelEngine,
+            )
     }
 
-    private fun remoteTrack(id: String) = MediaItem.Remote(
-        id = id, title = "Title $id", artist = "Artist",
-        artworkUri = null, duration = 180_000L, streamUri = null, isVideo = false,
-    )
+    private fun remoteTrack(id: String) =
+        MediaItem.Remote(
+            id = id,
+            title = "Title $id",
+            artist = "Artist",
+            artworkUri = null,
+            duration = 180_000L,
+            streamUri = null,
+            isVideo = false,
+        )
 
     @Test
-    fun `generateNextQueue sends bare videoId contract without fabricated playlistId`() = runTest {
-        val currentId = "dQw4w9WgXcQ"
-        coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
-        coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
-        coEvery { contentFetcher.getRelatedVideos(any(), any(), any()) } returns emptyList()
-        repository.generateNextQueue(remoteTrack(currentId), AutoplayState())
-        // FEL-400: fabricated playlistId (e.g. RDAMVM<videoId>) is rejected with
-        // HTTP 400. The provider contract is bare videoId only.
-        coVerify(exactly = 1) { smartTubeEngine.fetchUpNext(currentId) }
-        coVerify(exactly = 1) { innerTubeClient.fetchNextAutoplay(currentId) }
-    }
+    fun `generateNextQueue sends bare videoId contract without fabricated playlistId`() =
+        runTest {
+            val currentId = "dQw4w9WgXcQ"
+            coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
+            coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
+            coEvery { contentFetcher.getRelatedVideos(any(), any(), any()) } returns emptyList()
+            repository.generateNextQueue(remoteTrack(currentId), AutoplayState())
+            // FEL-400: fabricated playlistId (e.g. RDAMVM<videoId>) is rejected with
+            // HTTP 400. The provider contract is bare videoId only.
+            coVerify(exactly = 1) { smartTubeEngine.fetchUpNext(currentId) }
+            coVerify(exactly = 1) { innerTubeClient.fetchNextAutoplay(currentId) }
+        }
 
     @Test
-    fun `generateNextQueue deduplicates current track to avoid Loop Trap`() = runTest {
-        val currentId = "CURRENT12345"
-        coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
-        coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
-        coEvery { contentFetcher.getRelatedVideos(currentId, 20, false) } returns listOf(
-            VideoItem(videoId = currentId, title = "Same", artist = "A", channelId = "", duration = "3:00"),
-            VideoItem(videoId = "NEXT0000001", title = "Next", artist = "B", channelId = "", duration = "3:00"),
-        )
-        val queue = repository.generateNextQueue(remoteTrack(currentId), AutoplayState())
-        assertTrue("expected candidates size=" + queue.size, queue.isNotEmpty())
-        assertFalse("Loop Trap queue=" + queue.map { it.videoId }, queue.any { it.videoId == currentId })
-    }
+    fun `generateNextQueue deduplicates current track to avoid Loop Trap`() =
+        runTest {
+            val currentId = "CURRENT12345"
+            coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
+            coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
+            coEvery { contentFetcher.getRelatedVideos(currentId, 20, false) } returns
+                listOf(
+                    VideoItem(videoId = currentId, title = "Same", artist = "A", channelId = "", duration = "3:00"),
+                    VideoItem(videoId = "NEXT0000001", title = "Next", artist = "B", channelId = "", duration = "3:00"),
+                )
+            val queue = repository.generateNextQueue(remoteTrack(currentId), AutoplayState())
+            assertTrue("expected candidates size=" + queue.size, queue.isNotEmpty())
+            assertFalse("Loop Trap queue=" + queue.map { it.videoId }, queue.any { it.videoId == currentId })
+        }
 
     @Test
-    fun `generateNextQueue excludes recent history window without halting stream`() = runTest {
-        val currentId = "CURRENT12345"
-        val history = listOf("HIST0000001", "HIST0000002")
-        coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
-        coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
-        coEvery { contentFetcher.getRelatedVideos(currentId, 20, false) } returns listOf(
-            VideoItem(videoId = "HIST0000001", title = "H1", artist = "A", channelId = "", duration = "3:00"),
-            VideoItem(videoId = "FRESH000001", title = "Fresh", artist = "B", channelId = "", duration = "3:00"),
-        )
-        val queue = repository.generateNextQueue(remoteTrack(currentId), AutoplayState(history = history))
-        assertTrue(queue.isNotEmpty())
-        assertFalse(queue.any { it.videoId in history })
-    }
+    fun `generateNextQueue excludes recent history window without halting stream`() =
+        runTest {
+            val currentId = "CURRENT12345"
+            val history = listOf("HIST0000001", "HIST0000002")
+            coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
+            coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
+            coEvery { contentFetcher.getRelatedVideos(currentId, 20, false) } returns
+                listOf(
+                    VideoItem(videoId = "HIST0000001", title = "H1", artist = "A", channelId = "", duration = "3:00"),
+                    VideoItem(videoId = "FRESH000001", title = "Fresh", artist = "B", channelId = "", duration = "3:00"),
+                )
+            val queue = repository.generateNextQueue(remoteTrack(currentId), AutoplayState(history = history))
+            assertTrue(queue.isNotEmpty())
+            assertFalse(queue.any { it.videoId in history })
+        }
 
     @Test
     fun `SmartTube fetchUpNext parser filters currently-playing track from mocked next JSON`() {
         val currentId = "CURRENT12345"
         val nextId = "NEXT0000001"
-        val payload = JSONObject(
-            """
-            {
-              "contents": {
-                "singleColumnWatchNextResults": {
-                  "autoplay": {
-                    "autoplay": {
-                      "sets": [
-                        {
-                          "autoplayVideoRenderer": {
-                            "autoplayEndpointRenderer": {
-                              "endpoint": { "watchEndpoint": { "videoId": "$currentId", "replayIfSameVideo": true } }
-                            }
-                          }
-                        },
-                        {
-                          "autoplayVideoRenderer": {
-                            "autonavEndpointRenderer": {
-                              "endpoint": { "watchEndpoint": { "videoId": "$nextId" } }
-                            }
-                          },
-                          "nextVideoRenderer": {
-                            "maybeHistoryEndpointRenderer": {
-                              "endpoint": { "watchEndpoint": { "videoId": "$nextId" } },
-                              "item": {
-                                "previewButtonRenderer": {
-                                  "title": { "runs": [{ "text": "Mocked Next" }] },
-                                  "byline": { "runs": [{ "text": "Mocked Artist" }] }
+        val payload =
+            JSONObject(
+                """
+                {
+                  "contents": {
+                    "singleColumnWatchNextResults": {
+                      "autoplay": {
+                        "autoplay": {
+                          "sets": [
+                            {
+                              "autoplayVideoRenderer": {
+                                "autoplayEndpointRenderer": {
+                                  "endpoint": { "watchEndpoint": { "videoId": "$currentId", "replayIfSameVideo": true } }
+                                }
+                              }
+                            },
+                            {
+                              "autoplayVideoRenderer": {
+                                "autonavEndpointRenderer": {
+                                  "endpoint": { "watchEndpoint": { "videoId": "$nextId" } }
+                                }
+                              },
+                              "nextVideoRenderer": {
+                                "maybeHistoryEndpointRenderer": {
+                                  "endpoint": { "watchEndpoint": { "videoId": "$nextId" } },
+                                  "item": {
+                                    "previewButtonRenderer": {
+                                      "title": { "runs": [{ "text": "Mocked Next" }] },
+                                      "byline": { "runs": [{ "text": "Mocked Artist" }] }
+                                    }
+                                  }
                                 }
                               }
                             }
-                          }
+                          ]
                         }
-                      ]
+                      }
                     }
                   }
                 }
-              }
-            }
-            """.trimIndent(),
-        )
+                """.trimIndent(),
+            )
         val auth: com.deepeye.musicpro.domain.auth.InnerTubeAuthManager = mockk(relaxed = true)
         val ctx: android.content.Context = mockk(relaxed = true)
         val http: okhttp3.OkHttpClient = mockk(relaxed = true)
         val realEngine = SmartTubeEngine(ctx, auth, http)
-        val method = SmartTubeEngine::class.java.getDeclaredMethod("extractUpNextTrack", JSONObject::class.java, String::class.java)
+        val method =
+            SmartTubeEngine::class.java.getDeclaredMethod(
+                "extractUpNextTrack",
+                JSONObject::class.java,
+                String::class.java
+            )
         method.isAccessible = true
-        val track = method.invoke(realEngine, payload, currentId) as com.deepeye.musicpro.data.source.remote.youtube.AutoplayTrack?
+        val track =
+            method.invoke(
+                realEngine,
+                payload,
+                currentId
+            ) as com.deepeye.musicpro.data.source.remote.youtube.AutoplayTrack?
         assertTrue(track != null)
         assertTrue("Loop Trap id=" + track?.videoId, track?.videoId == nextId)
     }
 
     @Test
-    fun `generateNextQueue rethrows CancellationException from fetchUpNext, never swallows`() = runTest {
-        val currentId = "CURRENT12345"
-        coEvery { smartTubeEngine.fetchUpNext(currentId) } throws CancellationException("synthetic cancellation")
-        coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
-        coEvery { contentFetcher.getRelatedVideos(any(), any(), any()) } returns emptyList()
-        try {
-            repository.generateNextQueue(remoteTrack(currentId), AutoplayState())
-            fail("expected CancellationException to propagate")
-        } catch (e: CancellationException) {
-            // expected: cancellation propagates, never swallowed
+    fun `generateNextQueue rethrows CancellationException from fetchUpNext, never swallows`() =
+        runTest {
+            val currentId = "CURRENT12345"
+            coEvery { smartTubeEngine.fetchUpNext(currentId) } throws CancellationException("synthetic cancellation")
+            coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
+            coEvery { contentFetcher.getRelatedVideos(any(), any(), any()) } returns emptyList()
+            try {
+                repository.generateNextQueue(remoteTrack(currentId), AutoplayState())
+                fail("expected CancellationException to propagate")
+            } catch (e: CancellationException) {
+                // expected: cancellation propagates, never swallowed
+            }
         }
-    }
 
     // ── Task 5: mode-aware ordering via TasteModelEngine ─────────────────────────
-    private fun relatedVideos(vararg pairs: Pair<String, String>) = pairs.map { (id, artist) ->
-        VideoItem(videoId = id, title = "T_$id", artist = artist, channelId = "", duration = "3:00")
-    }
-
-    @Test
-    fun `FAMILIAR mode orders queue highest-affinity-first`() = runTest {
-        val currentId = "CURRENT12345"
-        coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
-        coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
-        coEvery { contentFetcher.getRelatedVideos(currentId, 20, false) } returns
-            relatedVideos("LOW0000001" to "ArtistLow", "HIGH0000002" to "ArtistHigh")
-        coEvery { tasteModelEngine.affinityScoresForArtists(any(), any(), any()) } returns
-            mapOf("artisthigh" to 0.9, "artistlow" to 0.02)
-        // familiarMode=true, discoveryMode=false → FAMILIAR
-        val queue = repository.generateNextQueue(remoteTrack(currentId), AutoplayState(familiarMode = true))
-        assertTrue(queue.isNotEmpty())
-        assertEquals("FAMILIAR must rank affinity-descending", "HIGH0000002", queue.first().videoId)
-    }
-
-    @Test
-    fun `DISCOVERY mode orders queue lowest-affinity-first`() = runTest {
-        val currentId = "CURRENT12345"
-        coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
-        coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
-        coEvery { contentFetcher.getRelatedVideos(currentId, 20, false) } returns
-            relatedVideos("LOW0000001" to "ArtistLow", "HIGH0000002" to "ArtistHigh")
-        coEvery { tasteModelEngine.affinityScoresForArtists(any(), any(), any()) } returns
-            mapOf("artisthigh" to 0.9, "artistlow" to 0.02)
-        // familiarMode=false, discoveryMode=true → DISCOVERY
-        val queue = repository.generateNextQueue(
-            remoteTrack(currentId), AutoplayState(familiarMode = false, discoveryMode = true)
-        )
-        assertTrue(queue.isNotEmpty())
-        assertEquals("DISCOVERY must rank affinity-ascending", "LOW0000001", queue.first().videoId)
-    }
-
-    @Test
-    fun `BALANCED mode interleaves high and low affinity instead of pure sort`() = runTest {
-        val currentId = "CURRENT12345"
-        coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
-        coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
-        coEvery { contentFetcher.getRelatedVideos(currentId, 20, false) } returns
-            relatedVideos(
-                "H000000001" to "ArtistH",
-                "L000000002" to "ArtistL",
-                "H000000003" to "ArtistH",
-                "L000000004" to "ArtistL",
-            )
-        coEvery { tasteModelEngine.affinityScoresForArtists(any(), any(), any()) } returns
-            mapOf("artisth" to 0.8, "artistl" to 0.01)
-        // familiarMode=false, discoveryMode=false → BALANCED
-        val queue = repository.generateNextQueue(
-            remoteTrack(currentId), AutoplayState(familiarMode = false, discoveryMode = false)
-        )
-        val ids = queue.map { it.videoId }
-        assertTrue("BALANCED lost candidates: $ids", ids.size == 4)
-        // Interleaving: position 1 high-aff, position 2 low-aff.
-        assertEquals("BALANCED pos0 should be a high-affinity item", "H000000001", ids[0])
-        assertEquals("BALANCED pos1 should be a low-affinity item", "L000000002", ids[1])
-    }
-
-    @Test
-    fun `queue scores are normalized affinity floats in unit range`() = runTest {
-        val currentId = "CURRENT12345"
-        coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
-        coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
-        coEvery { contentFetcher.getRelatedVideos(currentId, 20, false) } returns
-            relatedVideos("HIGH0000002" to "ArtistHigh", "LOW0000001" to "ArtistLow")
-        coEvery { tasteModelEngine.affinityScoresForArtists(any(), any(), any()) } returns
-            mapOf("artisthigh" to 5.5, "artistlow" to 0.0) // 5.5 must clamp to 1.0
-        val queue = repository.generateNextQueue(remoteTrack(currentId), AutoplayState(familiarMode = true))
-        queue.forEach {
-            assertTrue("score ${it.score} out of [0,1]", it.score in 0f..1f)
+    private fun relatedVideos(vararg pairs: Pair<String, String>) =
+        pairs.map { (id, artist) ->
+            VideoItem(videoId = id, title = "T_$id", artist = artist, channelId = "", duration = "3:00")
         }
-        val highScore = queue.first { it.videoId == "HIGH0000002" }.score
-        val lowScore = queue.first { it.videoId == "LOW0000001" }.score
-        assertTrue("high ($highScore) must beat low ($lowScore)", highScore > lowScore)
-    }
+
+    @Test
+    fun `FAMILIAR mode orders queue highest-affinity-first`() =
+        runTest {
+            val currentId = "CURRENT12345"
+            coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
+            coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
+            coEvery { contentFetcher.getRelatedVideos(currentId, 20, false) } returns
+                relatedVideos("LOW0000001" to "ArtistLow", "HIGH0000002" to "ArtistHigh")
+            coEvery { tasteModelEngine.affinityScoresForArtists(any(), any(), any()) } returns
+                mapOf("artisthigh" to 0.9, "artistlow" to 0.02)
+            // familiarMode=true, discoveryMode=false → FAMILIAR
+            val queue = repository.generateNextQueue(remoteTrack(currentId), AutoplayState(familiarMode = true))
+            assertTrue(queue.isNotEmpty())
+            assertEquals("FAMILIAR must rank affinity-descending", "HIGH0000002", queue.first().videoId)
+        }
+
+    @Test
+    fun `DISCOVERY mode orders queue lowest-affinity-first`() =
+        runTest {
+            val currentId = "CURRENT12345"
+            coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
+            coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
+            coEvery { contentFetcher.getRelatedVideos(currentId, 20, false) } returns
+                relatedVideos("LOW0000001" to "ArtistLow", "HIGH0000002" to "ArtistHigh")
+            coEvery { tasteModelEngine.affinityScoresForArtists(any(), any(), any()) } returns
+                mapOf("artisthigh" to 0.9, "artistlow" to 0.02)
+            // familiarMode=false, discoveryMode=true → DISCOVERY
+            val queue =
+                repository.generateNextQueue(
+                    remoteTrack(currentId),
+                    AutoplayState(familiarMode = false, discoveryMode = true)
+                )
+            assertTrue(queue.isNotEmpty())
+            assertEquals("DISCOVERY must rank affinity-ascending", "LOW0000001", queue.first().videoId)
+        }
+
+    @Test
+    fun `BALANCED mode interleaves high and low affinity instead of pure sort`() =
+        runTest {
+            val currentId = "CURRENT12345"
+            coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
+            coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
+            coEvery { contentFetcher.getRelatedVideos(currentId, 20, false) } returns
+                relatedVideos(
+                    "H000000001" to "ArtistH",
+                    "L000000002" to "ArtistL",
+                    "H000000003" to "ArtistH",
+                    "L000000004" to "ArtistL",
+                )
+            coEvery { tasteModelEngine.affinityScoresForArtists(any(), any(), any()) } returns
+                mapOf("artisth" to 0.8, "artistl" to 0.01)
+            // familiarMode=false, discoveryMode=false → BALANCED
+            val queue =
+                repository.generateNextQueue(
+                    remoteTrack(currentId),
+                    AutoplayState(familiarMode = false, discoveryMode = false)
+                )
+            val ids = queue.map { it.videoId }
+            assertTrue("BALANCED lost candidates: $ids", ids.size == 4)
+            // Interleaving: position 1 high-aff, position 2 low-aff.
+            assertEquals("BALANCED pos0 should be a high-affinity item", "H000000001", ids[0])
+            assertEquals("BALANCED pos1 should be a low-affinity item", "L000000002", ids[1])
+        }
+
+    @Test
+    fun `queue scores are normalized affinity floats in unit range`() =
+        runTest {
+            val currentId = "CURRENT12345"
+            coEvery { smartTubeEngine.fetchUpNext(any()) } returns null
+            coEvery { innerTubeClient.fetchNextAutoplay(any()) } returns null
+            coEvery { contentFetcher.getRelatedVideos(currentId, 20, false) } returns
+                relatedVideos("HIGH0000002" to "ArtistHigh", "LOW0000001" to "ArtistLow")
+            coEvery { tasteModelEngine.affinityScoresForArtists(any(), any(), any()) } returns
+                mapOf("artisthigh" to 5.5, "artistlow" to 0.0) // 5.5 must clamp to 1.0
+            val queue = repository.generateNextQueue(remoteTrack(currentId), AutoplayState(familiarMode = true))
+            queue.forEach {
+                assertTrue("score ${it.score} out of [0,1]", it.score in 0f..1f)
+            }
+            val highScore = queue.first { it.videoId == "HIGH0000002" }.score
+            val lowScore = queue.first { it.videoId == "LOW0000001" }.score
+            assertTrue("high ($highScore) must beat low ($lowScore)", highScore > lowScore)
+        }
 }

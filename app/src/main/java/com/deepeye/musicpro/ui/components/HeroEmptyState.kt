@@ -6,8 +6,6 @@ package com.deepeye.musicpro.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -17,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material3.ButtonDefaults
@@ -44,7 +44,6 @@ import com.deepeye.musicpro.ui.theme.TextSecondary
 
 /** Accent used for the CTA border, matching the app's violet secondary. */
 private val HeroVioletAccent = Color(0xFF7C4DFF)
-
 
 /**
  * Full-viewport empty state for a feed that resolved to *absolutely nothing*.
@@ -97,9 +96,10 @@ fun HeroEmptyState(
     contentPadding: PaddingValues = PaddingValues(32.dp),
 ) {
     BoxWithConstraints(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(contentPadding),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(contentPadding),
         contentAlignment = Alignment.Center,
     ) {
         // The disc must be sized from the space that is actually left, not
@@ -118,9 +118,10 @@ fun HeroEmptyState(
             // (multi-window, IME open) even the compact layout can outgrow the
             // box. With it the content stays reachable instead of being clipped
             // away, and it is a no-op whenever the content already fits.
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .fillMaxWidth(),
+            modifier =
+                Modifier
+                    .verticalScroll(rememberScrollState())
+                    .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             HeroGlowIcon(icon, discSize, glyphSize)
@@ -143,9 +144,10 @@ fun HeroEmptyState(
                 textAlign = TextAlign.Center,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .padding(top = if (compact) 6.dp else 10.dp)
-                    .padding(horizontal = 16.dp),
+                modifier =
+                    Modifier
+                        .padding(top = if (compact) 6.dp else 10.dp)
+                        .padding(horizontal = 16.dp),
             )
 
             // Rendered only when there is something to do *and* something to do
@@ -154,21 +156,24 @@ fun HeroEmptyState(
                 OutlinedButton(
                     onClick = onAction,
                     shape = RoundedCornerShape(GlassTokens.CornerButton),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        brush = Brush.horizontalGradient(
-                            listOf(
-                                NeonCyan.copy(alpha = 0.55f),
-                                HeroVioletAccent.copy(alpha = 0.55f),
-                            )
+                    border =
+                        BorderStroke(
+                            width = 1.dp,
+                            brush =
+                                Brush.horizontalGradient(
+                                    listOf(
+                                        NeonCyan.copy(alpha = 0.55f),
+                                        HeroVioletAccent.copy(alpha = 0.55f),
+                                    )
+                                ),
                         ),
-                    ),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                    modifier = Modifier
-                        .padding(top = if (compact) 14.dp else 28.dp)
-                        // Guards against a long translated label stretching the
-                        // pill past a narrow viewport.
-                        .heightIn(min = 48.dp),
+                    modifier =
+                        Modifier
+                            .padding(top = if (compact) 14.dp else 28.dp)
+                            // Guards against a long translated label stretching the
+                            // pill past a narrow viewport.
+                            .heightIn(min = 48.dp),
                 ) {
                     Text(
                         text = actionText,
@@ -194,30 +199,37 @@ fun HeroEmptyState(
  * API levels where blur is unsupported.
  */
 @Composable
-private fun HeroGlowIcon(icon: ImageVector, discSize: Dp, glyphSize: Dp) {
+private fun HeroGlowIcon(
+    icon: ImageVector,
+    discSize: Dp,
+    glyphSize: Dp
+) {
     Box(contentAlignment = Alignment.Center) {
         // Soft halo — radial gradient, transparent at the rim.
         Box(
-            modifier = Modifier
-                .size(discSize)
-                .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            NeonCyan.copy(alpha = 0.30f),
-                            NeonCyan.copy(alpha = 0.0f),
-                        ),
-                    )
-                ),
+            modifier =
+                Modifier
+                    .size(discSize)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            colors =
+                                listOf(
+                                    NeonCyan.copy(alpha = 0.30f),
+                                    NeonCyan.copy(alpha = 0.0f),
+                                ),
+                        )
+                    ),
         )
 
         // Crisp disc + desaturated glyph.
         Box(
-            modifier = Modifier
-                .size(discSize * 0.6f)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.05f))
-                .border(1.dp, Color.White.copy(alpha = 0.10f), CircleShape),
+            modifier =
+                Modifier
+                    .size(discSize * 0.6f)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.05f))
+                    .border(1.dp, Color.White.copy(alpha = 0.10f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

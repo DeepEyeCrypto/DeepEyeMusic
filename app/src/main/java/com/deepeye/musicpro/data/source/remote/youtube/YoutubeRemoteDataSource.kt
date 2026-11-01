@@ -9,611 +9,693 @@ import com.deepeye.musicpro.domain.model.home.HomeVideoItem
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class YoutubeRemoteDataSource
-@Inject
-constructor(
-    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
-    private val client: okhttp3.OkHttpClient,
-    private val rankingManager: com.deepeye.musicpro.diagnostics.ExtractionRankingManager,
-    private val headlessExtractor: HeadlessWebViewExtractor,
-    private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
-    private val formatAdapter: com.deepeye.musicpro.player.smarttube.SmartTubeFormatAdapter = com.deepeye.musicpro.player.smarttube.SmartTubeFormatAdapter(com.deepeye.musicpro.player.smarttube.SmartTubeCodecCapabilityChecker()),
-) {
-    // SmartTube-style direct Innertube client (replaces the NewPipe extractor backend).
-    // OAuth token attached to /player requests bypasses the "confirm you're not a bot" gate.
-    private val extractorClient: okhttp3.OkHttpClient by lazy {
-        client.newBuilder()
-            .connectionPool(okhttp3.ConnectionPool(8, 3, java.util.concurrent.TimeUnit.MINUTES))
-            .connectTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
-            .readTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
-            .writeTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
-            .retryOnConnectionFailure(true)
-            .build()
-    }
-
-    // ⚡ PRIMARY: NewPipeExtractor (rock-solid, official NewPipe v0.26.5 engine)
-    // SmartTube is kept as FALLBACK only for edge cases where NewPipe fails.
-    private val newPipeExtractor by lazy {
-        com.deepeye.musicpro.extractor.newpipe.NewPipeExtractorBridge(extractorClient)
-    }
-
-    private val smartTubeExtractor by lazy {
-        com.deepeye.musicpro.extractor.SmartTubeInnertubeExtractor(
-            client = extractorClient,
-            formatAdapter = formatAdapter
-        ) {
-            settingsDataStore.settings.first().youtubeAccessToken?.takeIf { it.isNotBlank() }
+    @Inject
+    constructor(
+        @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
+        private val client: okhttp3.OkHttpClient,
+        private val rankingManager: com.deepeye.musicpro.diagnostics.ExtractionRankingManager,
+        private val headlessExtractor: HeadlessWebViewExtractor,
+        private val settingsDataStore: com.deepeye.musicpro.data.prefs.SettingsDataStore,
+        private val formatAdapter: com.deepeye.musicpro.player.smarttube.SmartTubeFormatAdapter =
+            com.deepeye.musicpro.player.smarttube.SmartTubeFormatAdapter(
+                com.deepeye.musicpro.player.smarttube.SmartTubeCodecCapabilityChecker()
+            ),
+    ) {
+        // SmartTube-style direct Innertube client (replaces the NewPipe extractor backend).
+        // OAuth token attached to /player requests bypasses the "confirm you're not a bot" gate.
+        private val extractorClient: okhttp3.OkHttpClient by lazy {
+            client.newBuilder()
+                .connectionPool(okhttp3.ConnectionPool(8, 3, java.util.concurrent.TimeUnit.MINUTES))
+                .connectTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+                .retryOnConnectionFailure(true)
+                .build()
         }
-    }
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
-    private val fastClient: okhttp3.OkHttpClient by lazy {
-        client.newBuilder()
-            .connectTimeout(2, java.util.concurrent.TimeUnit.SECONDS)
-            .readTimeout(2, java.util.concurrent.TimeUnit.SECONDS)
-            .writeTimeout(2, java.util.concurrent.TimeUnit.SECONDS)
-            .build()
-    }
+        // ⚡ PRIMARY: NewPipeExtractor (rock-solid, official NewPipe v0.26.5 engine)
+        // SmartTube is kept as FALLBACK only for edge cases where NewPipe fails.
+        private val newPipeExtractor by lazy {
+            com.deepeye.musicpro.extractor.newpipe.NewPipeExtractorBridge(extractorClient)
+        }
 
-    // 🔍 Search videos
-    suspend fun searchVideos(query: String): List<HomeVideoItem> = searchVideosFirstPage(query).items
+        private val smartTubeExtractor by lazy {
+            com.deepeye.musicpro.extractor.SmartTubeInnertubeExtractor(
+                client = extractorClient,
+                formatAdapter = formatAdapter
+            ) {
+                settingsDataStore.settings.first().youtubeAccessToken?.takeIf { it.isNotBlank() }
+            }
+        }
+        private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
-    suspend fun getVideoDetails(videoId: String): com.deepeye.musicpro.domain.model.VideoDetails? = withContext(ioDispatcher) {
-        try {
-            val pipedInstances = listOf(
-                "https://api.piped.private.coffee",
-                "https://pipedapi.kavin.rocks",
-                "https://pipedapi.us.projectsegfau.lt",
-                "https://pipedapi.colt.top"
-            ).shuffled()
-            
-            var result: com.deepeye.musicpro.domain.model.VideoDetails? = null
-            for (instance in pipedInstances) {
+        private val fastClient: okhttp3.OkHttpClient by lazy {
+            client.newBuilder()
+                .connectTimeout(2, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(2, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(2, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
+        }
+
+        // 🔍 Search videos
+        suspend fun searchVideos(query: String): List<HomeVideoItem> = searchVideosFirstPage(query).items
+
+        suspend fun getVideoDetails(videoId: String): com.deepeye.musicpro.domain.model.VideoDetails? =
+            withContext(
+                ioDispatcher
+            ) {
                 try {
-                    val request = okhttp3.Request.Builder()
-                        .url("$instance/streams/$videoId")
-                        .addHeader("User-Agent", "DeepEyeMusicPro/2.0")
-                        .build()
-                    val response = fastClient.newCall(request).execute()
-                    val body = response.body?.string()
-                    if (response.isSuccessful && body != null) {
-                        val json = org.json.JSONObject(body)
-                        val views = json.optLong("views", 0L)
-                        val uploader = json.optString("uploader", "")
-                        val uploaderAvatar = json.optString("uploaderAvatar", "")
-                        val subscriberCount = json.optLong("uploaderSubscriberCount", 0L)
-                        val uploadDate = json.optString("uploadDate", "")
-                        
-                        result = com.deepeye.musicpro.domain.model.VideoDetails(
-                            viewCount = views,
-                            subscriberCount = subscriberCount,
-                            uploadDate = com.deepeye.musicpro.util.formatUploadDate(uploadDate),
-                            channelName = uploader,
-                            channelAvatarUrl = uploaderAvatar
-                        )
-                        // #region agent log
+                    val pipedInstances =
+                        listOf(
+                            "https://api.piped.private.coffee",
+                            "https://pipedapi.kavin.rocks",
+                            "https://pipedapi.us.projectsegfau.lt",
+                            "https://pipedapi.colt.top"
+                        ).shuffled()
+
+                    var result: com.deepeye.musicpro.domain.model.VideoDetails? = null
+                    for (instance in pipedInstances) {
                         try {
-                            android.util.Log.i("DBG_B5FA56", org.json.JSONObject()
-                                .put("sessionId", "b5fa56").put("hypothesisId", "E")
-                                .put("location", "YoutubeRemoteDataSource.kt:getVideoDetails")
-                                .put("message", "piped_ok").put("timestamp", System.currentTimeMillis())
-                                .put("runId", "pre-fix")
-                                .put("data", org.json.JSONObject()
-                                    .put("host", instance.substringAfter("://").substringBefore("/"))
-                                    .put("views", views).put("subs", subscriberCount)
-                                    .put("hasAvatar", uploaderAvatar.isNotBlank())
-                                    .put("uploaderLen", uploader.length)
-                                ).toString())
-                        } catch (_: Exception) {}
-                        // #endregion
-                        break
-                    } else {
-                        // #region agent log
-                        try {
-                            android.util.Log.i("DBG_B5FA56", org.json.JSONObject()
-                                .put("sessionId", "b5fa56").put("hypothesisId", "E")
-                                .put("location", "YoutubeRemoteDataSource.kt:getVideoDetails")
-                                .put("message", "piped_http_fail").put("timestamp", System.currentTimeMillis())
-                                .put("runId", "pre-fix")
-                                .put("data", org.json.JSONObject()
-                                    .put("host", instance.substringAfter("://").substringBefore("/"))
-                                    .put("http", response.code)
-                                ).toString())
-                        } catch (_: Exception) {}
-                        // #endregion
+                            val request =
+                                okhttp3.Request.Builder()
+                                    .url("$instance/streams/$videoId")
+                                    .addHeader("User-Agent", "DeepEyeMusicPro/2.0")
+                                    .build()
+                            val response = fastClient.newCall(request).execute()
+                            val body = response.body?.string()
+                            if (response.isSuccessful && body != null) {
+                                val json = org.json.JSONObject(body)
+                                val views = json.optLong("views", 0L)
+                                val uploader = json.optString("uploader", "")
+                                val uploaderAvatar = json.optString("uploaderAvatar", "")
+                                val subscriberCount = json.optLong("uploaderSubscriberCount", 0L)
+                                val uploadDate = json.optString("uploadDate", "")
+
+                                result =
+                                    com.deepeye.musicpro.domain.model.VideoDetails(
+                                        viewCount = views,
+                                        subscriberCount = subscriberCount,
+                                        uploadDate = com.deepeye.musicpro.util.formatUploadDate(uploadDate),
+                                        channelName = uploader,
+                                        channelAvatarUrl = uploaderAvatar
+                                    )
+                                // #region agent log
+                                try {
+                                    android.util.Log.i(
+                                        "DBG_B5FA56",
+                                        org.json.JSONObject()
+                                            .put("sessionId", "b5fa56").put("hypothesisId", "E")
+                                            .put("location", "YoutubeRemoteDataSource.kt:getVideoDetails")
+                                            .put("message", "piped_ok").put("timestamp", System.currentTimeMillis())
+                                            .put("runId", "pre-fix")
+                                            .put(
+                                                "data",
+                                                org.json.JSONObject()
+                                                    .put("host", instance.substringAfter("://").substringBefore("/"))
+                                                    .put("views", views).put("subs", subscriberCount)
+                                                    .put("hasAvatar", uploaderAvatar.isNotBlank())
+                                                    .put("uploaderLen", uploader.length)
+                                            ).toString()
+                                    )
+                                } catch (_: Exception) {
+                                }
+                                // #endregion
+                                break
+                            } else {
+                                // #region agent log
+                                try {
+                                    android.util.Log.i(
+                                        "DBG_B5FA56",
+                                        org.json.JSONObject()
+                                            .put("sessionId", "b5fa56").put("hypothesisId", "E")
+                                            .put("location", "YoutubeRemoteDataSource.kt:getVideoDetails")
+                                            .put(
+                                                "message",
+                                                "piped_http_fail"
+                                            ).put("timestamp", System.currentTimeMillis())
+                                            .put("runId", "pre-fix")
+                                            .put(
+                                                "data",
+                                                org.json.JSONObject()
+                                                    .put("host", instance.substringAfter("://").substringBefore("/"))
+                                                    .put("http", response.code)
+                                            ).toString()
+                                    )
+                                } catch (_: Exception) {
+                                }
+                                // #endregion
+                            }
+                        } catch (e: Exception) {
+                            // #region agent log
+                            try {
+                                android.util.Log.i(
+                                    "DBG_B5FA56",
+                                    org.json.JSONObject()
+                                        .put("sessionId", "b5fa56").put("hypothesisId", "E")
+                                        .put("location", "YoutubeRemoteDataSource.kt:getVideoDetails")
+                                        .put("message", "piped_exc").put("timestamp", System.currentTimeMillis())
+                                        .put("runId", "pre-fix")
+                                        .put(
+                                            "data",
+                                            org.json.JSONObject()
+                                                .put("host", instance.substringAfter("://").substringBefore("/"))
+                                                .put("type", e.javaClass.simpleName)
+                                        ).toString()
+                                )
+                            } catch (_: Exception) {
+                            }
+                            // #endregion
+                            continue
+                        }
                     }
+                    result
                 } catch (e: Exception) {
-                    // #region agent log
+                    null
+                }
+            }
+
+        suspend fun searchVideosFirstPage(query: String): SearchResultPage =
+            withContext(ioDispatcher) {
+                try {
+                    val page = newPipeExtractor.searchVideosFirstPage(query)
+                    val filtered =
+                        page.videos.map { it.toHomeVideoItem() }
+                            .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                    SearchResultPage(filtered, page.nextPageUrl)
+                } catch (e: Exception) {
+                    Log.w("YoutubeDS", "NewPipe searchVideosFirstPage failed: ${e.message}, falling back to SmartTube")
                     try {
-                        android.util.Log.i("DBG_B5FA56", org.json.JSONObject()
-                            .put("sessionId", "b5fa56").put("hypothesisId", "E")
-                            .put("location", "YoutubeRemoteDataSource.kt:getVideoDetails")
-                            .put("message", "piped_exc").put("timestamp", System.currentTimeMillis())
-                            .put("runId", "pre-fix")
-                            .put("data", org.json.JSONObject()
-                                .put("host", instance.substringAfter("://").substringBefore("/"))
-                                .put("type", e.javaClass.simpleName)
-                            ).toString())
-                    } catch (_: Exception) {}
-                    // #endregion
-                    continue
+                        val page = smartTubeExtractor.searchVideosFirstPage(query)
+                        val filtered =
+                            page.videos.map { it.toHomeVideoItem() }
+                                .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                        SearchResultPage(filtered, page.nextPageUrl)
+                    } catch (e2: Exception) {
+                        Log.e("YoutubeDS", "searchVideosFirstPage failed: ${e2.message}")
+                        SearchResultPage(emptyList(), null)
+                    }
                 }
             }
-            result
-        } catch (e: Exception) {
-            null
-        }
-    }
 
-    suspend fun searchVideosFirstPage(query: String): SearchResultPage =
-        withContext(ioDispatcher) {
-            try {
-                val page = newPipeExtractor.searchVideosFirstPage(query)
-                val filtered = page.videos.map { it.toHomeVideoItem() }
-                    .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
-                SearchResultPage(filtered, page.nextPageUrl)
-            } catch (e: Exception) {
-                Log.w("YoutubeDS", "NewPipe searchVideosFirstPage failed: ${e.message}, falling back to SmartTube")
+        suspend fun searchVideosNextPage(
+            query: String,
+            nextPageUrl: String,
+        ): SearchResultPage =
+            withContext(ioDispatcher) {
                 try {
-                    val page = smartTubeExtractor.searchVideosFirstPage(query)
-                    val filtered = page.videos.map { it.toHomeVideoItem() }
-                        .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                    val page = newPipeExtractor.searchVideosNextPage(query, nextPageUrl)
+                    val filtered =
+                        page.videos.map { it.toHomeVideoItem() }
+                            .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
                     SearchResultPage(filtered, page.nextPageUrl)
-                } catch (e2: Exception) {
-                    Log.e("YoutubeDS", "searchVideosFirstPage failed: ${e2.message}")
-                    SearchResultPage(emptyList(), null)
+                } catch (e: Exception) {
+                    Log.w("YoutubeDS", "NewPipe searchVideosNextPage failed: ${e.message}, falling back to SmartTube")
+                    try {
+                        val page = smartTubeExtractor.searchVideosNextPage(query, nextPageUrl)
+                        val filtered =
+                            page.videos.map { it.toHomeVideoItem() }
+                                .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                        SearchResultPage(filtered, page.nextPageUrl)
+                    } catch (e2: Exception) {
+                        Log.e("YoutubeDS", "searchVideosNextPage failed: ${e2.message}")
+                        SearchResultPage(emptyList(), null)
+                    }
                 }
             }
-        }
 
-    suspend fun searchVideosNextPage(
-        query: String,
-        nextPageUrl: String,
-    ): SearchResultPage =
-        withContext(ioDispatcher) {
-            try {
-                val page = newPipeExtractor.searchVideosNextPage(query, nextPageUrl)
-                val filtered = page.videos.map { it.toHomeVideoItem() }
-                    .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
-                SearchResultPage(filtered, page.nextPageUrl)
-            } catch (e: Exception) {
-                Log.w("YoutubeDS", "NewPipe searchVideosNextPage failed: ${e.message}, falling back to SmartTube")
+        // 📈 Trending
+        suspend fun getTrending(): List<HomeVideoItem> =
+            withContext(ioDispatcher) {
                 try {
-                    val page = smartTubeExtractor.searchVideosNextPage(query, nextPageUrl)
-                    val filtered = page.videos.map { it.toHomeVideoItem() }
-                        .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
-                    SearchResultPage(filtered, page.nextPageUrl)
-                } catch (e2: Exception) {
-                    Log.e("YoutubeDS", "searchVideosNextPage failed: ${e2.message}")
-                    SearchResultPage(emptyList(), null)
-                }
-            }
-        }
-
-    // 📈 Trending
-    suspend fun getTrending(): List<HomeVideoItem> =
-        withContext(ioDispatcher) {
-            try {
-                val result = newPipeExtractor.getTrending().map { it.toHomeVideoItem() }
-                    .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
-                if (result.isNotEmpty()) return@withContext result
-                // Fallback to SmartTube
-                smartTubeExtractor.getTrending().map { it.toHomeVideoItem() }
-                    .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
-            } catch (e: Exception) {
-                Log.w("YoutubeDS", "NewPipe getTrending failed: ${e.message}, falling back to SmartTube")
-                try {
+                    val result =
+                        newPipeExtractor.getTrending().map { it.toHomeVideoItem() }
+                            .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                    if (result.isNotEmpty()) return@withContext result
+                    // Fallback to SmartTube
                     smartTubeExtractor.getTrending().map { it.toHomeVideoItem() }
                         .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
-                } catch (e2: Exception) {
-                    Log.e("YoutubeDS", "getTrending failed: ${e2.message}")
-                    emptyList()
-                }
-            }
-        }
-
-    // 🎵 Music search
-    suspend fun searchMusic(query: String): List<HomeMusicItem> =
-        withContext(ioDispatcher) {
-            try {
-                val result = newPipeExtractor.searchMusic(query).map { it.toHomeMusicItem() }
-                if (result.isNotEmpty()) return@withContext result
-                // Fallback to SmartTube
-                smartTubeExtractor.searchMusic(query).map { it.toHomeMusicItem() }
-            } catch (e: Exception) {
-                Log.w("YoutubeDS", "NewPipe searchMusic failed: ${e.message}, falling back to SmartTube")
-                try {
-                    smartTubeExtractor.searchMusic(query).map { it.toHomeMusicItem() }
-                } catch (e2: Exception) {
-                    Log.e("YoutubeDS", "searchMusic failed: ${e2.message}", e2)
-                    throw e2
-                }
-            }
-        }
-
-    // ▶️ Get stream URL (audio only — best bitrate)
-    suspend fun getAudioStreamUrl(videoId: String): String? = getStreamUrl(videoId, preferVideo = false)?.url
-
-    suspend fun getVideoStreamUrl(videoId: String): String? = getStreamUrl(videoId, preferVideo = true)?.url
-
-    // Unified helper that extracts the media stream using dynamically ranked extraction layers
-    suspend fun getStreamUrl(
-        videoId: String,
-        preferVideo: Boolean,
-        onLayerFallback: (() -> Unit)? = null
-    ): StreamResult? =
-        withContext(ioDispatcher) {
-            val cleanId = videoId.trim().take(11)
-            Log.d("YoutubeDS", "Resolving stream for video ID: $cleanId (preferVideo=$preferVideo)")
-
-            // ⚡ TIER 1: NewPipe Extractor (Rock-solid, official NewPipe v0.26.5 engine)
-            try {
-                val t0 = System.currentTimeMillis()
-                val newPipeResult = kotlinx.coroutines.withTimeoutOrNull(8000L) {
-                    extractNewPipe(cleanId, preferVideo)
-                }
-                if (newPipeResult != null) {
-                    val tookMs = System.currentTimeMillis() - t0
-                    Log.i("YoutubeDS", "⚡ TIER 1 NewPipe Extraction SUCCEEDED in ${tookMs}ms for $cleanId (preferVideo=$preferVideo)")
-                    return@withContext newPipeResult
-                }
-            } catch (e: Exception) {
-                Log.w("YoutubeDS", "TIER 1 NewPipe Extraction error for $cleanId: ${e.message}")
-            }
-
-            // ⚡ TIER 1 Fallback: SmartTube Extractor
-            try {
-                val t0 = System.currentTimeMillis()
-                val directResult = kotlinx.coroutines.withTimeoutOrNull(6000L) {
-                    extractSmartTube(cleanId, preferVideo)
-                }
-                if (directResult != null) {
-                    val tookMs = System.currentTimeMillis() - t0
-                    Log.i("YoutubeDS", "⚡ TIER 1 Fallback SmartTube Extraction SUCCEEDED in ${tookMs}ms for $cleanId")
-                    return@withContext directResult
-                }
-            } catch (e: Exception) {
-                Log.w("YoutubeDS", "TIER 1 SmartTube Extraction error for $cleanId: ${e.message}")
-            }
-
-            // 🔄 TIER 2: Direct Headless WebView + Alt Extractor (Bypasses bot gates & PO-token blocks)
-            rankingManager.recordFailure(com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.SMARTTUBE)
-            onLayerFallback?.invoke()
-            Log.w("YoutubeDS", "⚠️ Tier 1 Direct failed for $cleanId. Triggering Tier 2 Headless WebView / Alt Extractor...")
-
-            var finalResult: StreamResult? = null
-            try {
-                // First try Headless WebView Extractor (100% bypass for BotGate)
-                val webViewUrl = kotlinx.coroutines.withTimeoutOrNull(12000L) {
-                    headlessExtractor.extractStreamUrl(cleanId, preferVideo)
-                }
-                if (webViewUrl != null) {
-                    Log.i("YoutubeDS", "✅ Tier 2 Headless WebView SUCCEEDED for $cleanId: $webViewUrl")
-                    return@withContext StreamResult(webViewUrl, preferVideo)
-                }
-            } catch (e: Exception) {
-                Log.w("YoutubeDS", "Tier 2 Headless WebView failed: ${e.message}")
-            }
-
-            try {
-                // Fallback to Alternative Extractor
-                val altResult = kotlinx.coroutines.withTimeoutOrNull(6000L) {
-                    extractAlternative(cleanId, preferVideo)
-                }
-                if (altResult != null) {
-                    Log.i("YoutubeDS", "✅ Tier 2 Alt Extractor SUCCEEDED for $cleanId")
-                    return@withContext altResult
-                }
-            } catch (e: Exception) {
-                Log.w("YoutubeDS", "Tier 2 Alt Extractor failed: ${e.message}")
-            }
-
-            if (finalResult == null) {
-                Log.e("YoutubeDS", "🚨 All extraction tiers failed for $cleanId")
-            }
-            finalResult
-        }
-
-    private suspend fun extractNewPipe(videoId: String, preferVideo: Boolean): StreamResult? {
-        return try {
-            newPipeExtractor.extractStream(videoId, preferVideo)?.let {
-                StreamResult(
-                    url = it.url,
-                    isVideo = it.container != "audio",
-                    isAdaptive = it.container == "adaptive" || it.container == "dash",
-                    videoFormats = it.videoFormats,
-                    audioFormats = it.audioFormats,
-                    dashManifestUrl = it.dashManifestUrl,
-                    hlsManifestUrl = it.hlsManifestUrl
-                )
-            }
-        } catch (e: Exception) {
-            Log.e("YoutubeDS", "NewPipe extract failed for $videoId", e)
-            null
-        }
-    }
-
-    private suspend fun extractSmartTube(videoId: String, preferVideo: Boolean): StreamResult? {
-        return try {
-            smartTubeExtractor.extractStream(videoId, preferVideo)?.let {
-                val res = StreamResult(
-                    url = it.url,
-                    isVideo = it.container != "audio",
-                    isAdaptive = it.container == "adaptive",
-                    videoFormats = it.videoFormats,
-                    audioFormats = it.audioFormats,
-                    dashManifestUrl = it.dashManifestUrl,
-                    hlsManifestUrl = it.hlsManifestUrl
-                )
-                val safeHash = videoId.hashCode().toString()
-                val vLabels = it.videoFormats.take(5).map { vf -> "${vf.height ?: 0}p-${vf.frameRate?.toInt() ?: 30}-${vf.videoCodec?.displayName ?: "UNK"}" }
-                val aLabels = it.audioFormats.take(5).map { af -> "${af.audioCodec?.displayName ?: "UNK"}-${if ((af.channelCount ?: 2) > 2) "Surround" else "Stereo"}-${(af.bitrate ?: 0L) / 1000}kbps" }
-                Log.d("DeepEyeHQ", "event=resolver_inventory mediaKeyHash=$safeHash videoCount=${it.videoFormats.size} audioCount=${it.audioFormats.size} selectedVideo=${it.videoFormats.firstOrNull { f -> f.isSelected }?.stableId} selectedAudio=${it.audioFormats.firstOrNull { f -> f.isSelected }?.stableId} videoLabels=$vLabels audioLabels=$aLabels")
-                res
-            }
-        } catch (e: Exception) {
-            Log.e("YoutubeDS", "SmartTubeInnertube extract failed", e)
-            null
-        }
-    }
-
-    private suspend fun extractAlternative(videoId: String, preferVideo: Boolean): StreamResult? {
-        Log.d("YoutubeDS", "Alternative Extractor: extracting $videoId...")
-        val extractor = com.ar.youtubeextractor.core.YouTubeExtractor()
-        val url = "https://www.youtube.com/watch?v=$videoId"
-        val result = extractor.extractVideoData(url)
-        return when (result) {
-            is com.ar.youtubeextractor.core.Result.Success -> {
-                val data = result.data
-                val hlsUrl = data.streamingData?.hlsManifestUrl
-                if (!hlsUrl.isNullOrEmpty()) {
-                    StreamResult(hlsUrl, isVideo = preferVideo)
-                } else {
-                    val audioFormat = data.streamingData?.adaptiveFormats
-                        ?.filter { it.mimeType?.contains("audio") == true }
-                        ?.maxByOrNull { it.bitrate ?: 0 }
-                    val formatUrl = audioFormat?.url
-                    if (!formatUrl.isNullOrEmpty()) {
-                        StreamResult(formatUrl, isVideo = false)
-                    } else {
-                        null
+                } catch (e: Exception) {
+                    Log.w("YoutubeDS", "NewPipe getTrending failed: ${e.message}, falling back to SmartTube")
+                    try {
+                        smartTubeExtractor.getTrending().map { it.toHomeVideoItem() }
+                            .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                    } catch (e2: Exception) {
+                        Log.e("YoutubeDS", "getTrending failed: ${e2.message}")
+                        emptyList()
                     }
                 }
             }
-            is com.ar.youtubeextractor.core.Result.Error -> {
-                Log.e("YoutubeDS", "Alternative Extractor error: ${result.error}")
+
+        // 🎵 Music search
+        suspend fun searchMusic(query: String): List<HomeMusicItem> =
+            withContext(ioDispatcher) {
+                try {
+                    val result = newPipeExtractor.searchMusic(query).map { it.toHomeMusicItem() }
+                    if (result.isNotEmpty()) return@withContext result
+                    // Fallback to SmartTube
+                    smartTubeExtractor.searchMusic(query).map { it.toHomeMusicItem() }
+                } catch (e: Exception) {
+                    Log.w("YoutubeDS", "NewPipe searchMusic failed: ${e.message}, falling back to SmartTube")
+                    try {
+                        smartTubeExtractor.searchMusic(query).map { it.toHomeMusicItem() }
+                    } catch (e2: Exception) {
+                        Log.e("YoutubeDS", "searchMusic failed: ${e2.message}", e2)
+                        throw e2
+                    }
+                }
+            }
+
+        // ▶️ Get stream URL (audio only — best bitrate)
+        suspend fun getAudioStreamUrl(videoId: String): String? = getStreamUrl(videoId, preferVideo = false)?.url
+
+        suspend fun getVideoStreamUrl(videoId: String): String? = getStreamUrl(videoId, preferVideo = true)?.url
+
+        // Unified helper that extracts the media stream using dynamically ranked extraction layers
+        suspend fun getStreamUrl(
+            videoId: String,
+            preferVideo: Boolean,
+            onLayerFallback: (() -> Unit)? = null
+        ): StreamResult? =
+            withContext(ioDispatcher) {
+                val cleanId = videoId.trim().take(11)
+                Log.d("YoutubeDS", "Resolving stream for video ID: $cleanId (preferVideo=$preferVideo)")
+
+                // ⚡ TIER 1: NewPipe Extractor (Rock-solid, official NewPipe v0.26.5 engine)
+                try {
+                    val t0 = System.currentTimeMillis()
+                    val newPipeResult =
+                        kotlinx.coroutines.withTimeoutOrNull(8000L) {
+                            extractNewPipe(cleanId, preferVideo)
+                        }
+                    if (newPipeResult != null) {
+                        val tookMs = System.currentTimeMillis() - t0
+                        Log.i(
+                            "YoutubeDS",
+                            "⚡ TIER 1 NewPipe Extraction SUCCEEDED in ${tookMs}ms for $cleanId (preferVideo=$preferVideo)"
+                        )
+                        return@withContext newPipeResult
+                    }
+                } catch (e: Exception) {
+                    Log.w("YoutubeDS", "TIER 1 NewPipe Extraction error for $cleanId: ${e.message}")
+                }
+
+                // ⚡ TIER 1 Fallback: SmartTube Extractor
+                try {
+                    val t0 = System.currentTimeMillis()
+                    val directResult =
+                        kotlinx.coroutines.withTimeoutOrNull(6000L) {
+                            extractSmartTube(cleanId, preferVideo)
+                        }
+                    if (directResult != null) {
+                        val tookMs = System.currentTimeMillis() - t0
+                        Log.i(
+                            "YoutubeDS",
+                            "⚡ TIER 1 Fallback SmartTube Extraction SUCCEEDED in ${tookMs}ms for $cleanId"
+                        )
+                        return@withContext directResult
+                    }
+                } catch (e: Exception) {
+                    Log.w("YoutubeDS", "TIER 1 SmartTube Extraction error for $cleanId: ${e.message}")
+                }
+
+                // 🔄 TIER 2: Direct Headless WebView + Alt Extractor (Bypasses bot gates & PO-token blocks)
+                rankingManager.recordFailure(com.deepeye.musicpro.diagnostics.ExtractionRankingManager.Layer.SMARTTUBE)
+                onLayerFallback?.invoke()
+                Log.w(
+                    "YoutubeDS",
+                    "⚠️ Tier 1 Direct failed for $cleanId. Triggering Tier 2 Headless WebView / Alt Extractor..."
+                )
+
+                var finalResult: StreamResult? = null
+                try {
+                    // First try Headless WebView Extractor (100% bypass for BotGate)
+                    val webViewUrl =
+                        kotlinx.coroutines.withTimeoutOrNull(12000L) {
+                            headlessExtractor.extractStreamUrl(cleanId, preferVideo)
+                        }
+                    if (webViewUrl != null) {
+                        Log.i("YoutubeDS", "✅ Tier 2 Headless WebView SUCCEEDED for $cleanId: $webViewUrl")
+                        return@withContext StreamResult(webViewUrl, preferVideo)
+                    }
+                } catch (e: Exception) {
+                    Log.w("YoutubeDS", "Tier 2 Headless WebView failed: ${e.message}")
+                }
+
+                try {
+                    // Fallback to Alternative Extractor
+                    val altResult =
+                        kotlinx.coroutines.withTimeoutOrNull(6000L) {
+                            extractAlternative(cleanId, preferVideo)
+                        }
+                    if (altResult != null) {
+                        Log.i("YoutubeDS", "✅ Tier 2 Alt Extractor SUCCEEDED for $cleanId")
+                        return@withContext altResult
+                    }
+                } catch (e: Exception) {
+                    Log.w("YoutubeDS", "Tier 2 Alt Extractor failed: ${e.message}")
+                }
+
+                if (finalResult == null) {
+                    Log.e("YoutubeDS", "🚨 All extraction tiers failed for $cleanId")
+                }
+                finalResult
+            }
+
+        private suspend fun extractNewPipe(
+            videoId: String,
+            preferVideo: Boolean
+        ): StreamResult? {
+            return try {
+                newPipeExtractor.extractStream(videoId, preferVideo)?.let {
+                    StreamResult(
+                        url = it.url,
+                        isVideo = it.container != "audio",
+                        isAdaptive = it.container == "adaptive" || it.container == "dash",
+                        videoFormats = it.videoFormats,
+                        audioFormats = it.audioFormats,
+                        dashManifestUrl = it.dashManifestUrl,
+                        hlsManifestUrl = it.hlsManifestUrl
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("YoutubeDS", "NewPipe extract failed for $videoId", e)
                 null
             }
         }
-    }
 
-    private suspend fun extractPiped(videoId: String, preferVideo: Boolean): StreamResult? = kotlinx.coroutines.coroutineScope {
-        Log.d("YoutubeDS", "Piped API: extracting $videoId...")
-        val pipedInstances = listOf(
-            "https://api.piped.private.coffee",
-            "https://pipedapi.kavin.rocks",
-            "https://pipedapi.us.projectsegfau.lt",
-            "https://pipedapi.lunar.icu",
-            "https://api-piped.mha.fi",
-            "https://pipedapi.colt.top"
-        ).shuffled().take(3) // Race 3 random instances for lowest latency
-
-        val channel = kotlinx.coroutines.channels.Channel<StreamResult?>(pipedInstances.size)
-        val jobs = pipedInstances.map { instance ->
-            launch {
-                try {
-                    val pipedUrl = "$instance/streams/$videoId"
-                    val pipedRequest = okhttp3.Request.Builder()
-                        .url(pipedUrl)
-                        .addHeader("User-Agent", "DeepEyeMusicPro/2.0")
-                        .build()
-                    val pipedResponse = fastClient.newCall(pipedRequest).execute()
-                    if (pipedResponse.isSuccessful) {
-                        val body = pipedResponse.body?.string() ?: ""
-                        pipedResponse.close()
-                        if (body.isNotEmpty()) {
-                            val json = org.json.JSONObject(body)
-                            
-                            val hls = json.optString("hls", "")
-                            if (hls.isNotEmpty() && preferVideo) {
-                                channel.trySend(StreamResult(hls, isVideo = true))
-                                return@launch
-                            }
-                            
-                            if (preferVideo) {
-                                val videoStreams = json.optJSONArray("videoStreams")
-                                if (videoStreams != null && videoStreams.length() > 0) {
-                                    var bestUrl: String? = null
-                                    var bestBitrate = 0
-                                    for (i in 0 until videoStreams.length()) {
-                                        val stream = videoStreams.optJSONObject(i) ?: continue
-                                        val sUrl = stream.optString("url", "")
-                                        val bitrate = stream.optInt("bitrate", 0)
-                                        // Some apis put width/height. We'll use bitrate or quality
-                                        if (sUrl.isNotEmpty() && bitrate >= bestBitrate) {
-                                            bestUrl = sUrl
-                                            bestBitrate = bitrate
-                                        }
-                                    }
-                                    if (bestUrl != null) {
-                                        channel.trySend(StreamResult(bestUrl, isVideo = true))
-                                        return@launch
-                                    }
-                                }
-                            }
-
-                            val audioStreams = json.optJSONArray("audioStreams")
-                            if (audioStreams != null && audioStreams.length() > 0) {
-                                var bestUrl: String? = null
-                                var bestBitrate = 0
-                                for (i in 0 until audioStreams.length()) {
-                                    val stream = audioStreams.optJSONObject(i) ?: continue
-                                    val sUrl = stream.optString("url", "")
-                                    val bitrate = stream.optInt("bitrate", 0)
-                                    if (sUrl.isNotEmpty() && bitrate >= bestBitrate) {
-                                        bestUrl = sUrl
-                                        bestBitrate = bitrate
-                                    }
-                                }
-                                if (bestUrl != null) {
-                                    channel.trySend(StreamResult(bestUrl, isVideo = false))
-                                    return@launch
-                                }
-                            }
-                            
-                            if (hls.isNotEmpty()) {
-                                channel.trySend(StreamResult(hls, isVideo = preferVideo))
-                                return@launch
-                            }
+        private suspend fun extractSmartTube(
+            videoId: String,
+            preferVideo: Boolean
+        ): StreamResult? {
+            return try {
+                smartTubeExtractor.extractStream(videoId, preferVideo)?.let {
+                    val res =
+                        StreamResult(
+                            url = it.url,
+                            isVideo = it.container != "audio",
+                            isAdaptive = it.container == "adaptive",
+                            videoFormats = it.videoFormats,
+                            audioFormats = it.audioFormats,
+                            dashManifestUrl = it.dashManifestUrl,
+                            hlsManifestUrl = it.hlsManifestUrl
+                        )
+                    val safeHash = videoId.hashCode().toString()
+                    val vLabels =
+                        it.videoFormats.take(
+                            5
+                        ).map {
+                                vf ->
+                            "${vf.height ?: 0}p-${vf.frameRate?.toInt() ?: 30}-${vf.videoCodec?.displayName ?: "UNK"}"
                         }
-                    } else {
-                        pipedResponse.close()
-                    }
-                } catch (e: Exception) {
-                    Log.w("YoutubeDS", "Piped instance $instance failed: ${e.message}")
-                }
-                channel.trySend(null)
-            }
-        }
-
-        var finalRes: StreamResult? = null
-        for (i in pipedInstances.indices) {
-            val res = channel.receive()
-            if (res != null) {
-                finalRes = res
-                jobs.forEach { it.cancel() }
-                break
-            }
-        }
-        channel.close()
-        finalRes
-    }
-
-    private suspend fun extractInvidious(videoId: String, preferVideo: Boolean): StreamResult? = kotlinx.coroutines.coroutineScope {
-        Log.d("YoutubeDS", "Invidious API: extracting $videoId...")
-        val invidiousInstances = listOf(
-            "https://invidious.protokolla.fi",
-            "https://invidious.poast.org",
-            "https://inv.zzls.xyz",
-            "https://invidious.epicsite.app",
-            "https://yewtu.be",
-            "https://invidious.projectsegfau.lt"
-        ).shuffled().take(3)
-
-        val channel = kotlinx.coroutines.channels.Channel<StreamResult?>(invidiousInstances.size)
-        val jobs = invidiousInstances.map { instance ->
-            launch {
-                try {
-                    val invUrl = "$instance/api/v1/videos/$videoId"
-                    val request = okhttp3.Request.Builder()
-                        .url(invUrl)
-                        .addHeader("User-Agent", "DeepEyeMusicPro/2.0")
-                        .build()
-                    val response = fastClient.newCall(request).execute()
-                    if (response.isSuccessful) {
-                        val body = response.body?.string() ?: ""
-                        response.close()
-                        if (body.isNotEmpty()) {
-                            val json = org.json.JSONObject(body)
-                            val adaptiveFormats = json.optJSONArray("adaptiveFormats")
-                            if (adaptiveFormats != null && adaptiveFormats.length() > 0) {
-                                var bestUrl: String? = null
-                                var bestBitrate = 0
-                                for (i in 0 until adaptiveFormats.length()) {
-                                    val format = adaptiveFormats.optJSONObject(i) ?: continue
-                                    val type = format.optString("type", "")
-                                    val sUrl = format.optString("url", "")
-                                    val bitrate = format.optInt("bitrate", 0)
-                                    if (type.contains("audio") && sUrl.isNotEmpty() && bitrate > bestBitrate) {
-                                        bestUrl = sUrl
-                                        bestBitrate = bitrate
-                                    }
-                                }
-                                if (bestUrl != null) {
-                                    channel.trySend(StreamResult(bestUrl, isVideo = false))
-                                    return@launch
-                                }
-                            }
-                            val formatStreams = json.optJSONArray("formatStreams")
-                            if (formatStreams != null && formatStreams.length() > 0) {
-                                var bestUrl: String? = null
-                                var bestBitrate = 0
-                                for (i in 0 until formatStreams.length()) {
-                                    val format = formatStreams.optJSONObject(i) ?: continue
-                                    val sUrl = format.optString("url", "")
-                                    val bitrate = format.optInt("bitrate", 0)
-                                    if (sUrl.isNotEmpty() && bitrate > bestBitrate) {
-                                        bestUrl = sUrl
-                                        bestBitrate = bitrate
-                                    }
-                                }
-                                if (bestUrl != null) {
-                                    channel.trySend(StreamResult(bestUrl, isVideo = preferVideo))
-                                    return@launch
-                                }
-                            }
+                    val aLabels =
+                        it.audioFormats.take(
+                            5
+                        ).map {
+                                af ->
+                            "${af.audioCodec?.displayName ?: "UNK"}-${if ((af.channelCount ?: 2) > 2) "Surround" else "Stereo"}-${(af.bitrate ?: 0L) / 1000}kbps"
                         }
-                    } else {
-                        response.close()
-                    }
-                } catch (e: Exception) {
-                    Log.w("YoutubeDS", "Invidious instance $instance failed: ${e.message}")
-                }
-                channel.trySend(null)
-            }
-        }
-
-        var finalRes: StreamResult? = null
-        for (i in invidiousInstances.indices) {
-            val res = channel.receive()
-            if (res != null) {
-                finalRes = res
-                jobs.forEach { it.cancel() }
-                break
-            }
-        }
-        channel.close()
-        finalRes
-    }
-
-    suspend fun getRelatedMusic(
-        title: String,
-        artist: String,
-        isVideo: Boolean = false,
-    ): List<com.deepeye.musicpro.domain.model.MediaItem.Remote> =
-        withContext(ioDispatcher) {
-            try {
-                val result = newPipeExtractor.getRelatedMusic("$title $artist").map { item ->
-                    com.deepeye.musicpro.domain.model.MediaItem.Remote(
-                        id = item.id,
-                        title = item.title,
-                        artist = item.artist,
-                        artworkUri = android.net.Uri.parse(item.thumbnailUrl.upgradeResolution()),
-                        duration = item.duration * 1000L,
-                        isVideo = isVideo,
+                    Log.d(
+                        "DeepEyeHQ",
+                        "event=resolver_inventory mediaKeyHash=$safeHash videoCount=${it.videoFormats.size} audioCount=${it.audioFormats.size} selectedVideo=${it.videoFormats.firstOrNull {
+                                f ->
+                            f.isSelected
+                        }?.stableId} selectedAudio=${it.audioFormats.firstOrNull {
+                                f ->
+                            f.isSelected
+                        }?.stableId} videoLabels=$vLabels audioLabels=$aLabels"
                     )
-                }
-                if (result.isNotEmpty()) return@withContext result
-                // Fallback to SmartTube
-                smartTubeExtractor.getRelatedMusic("$title $artist").map { item ->
-                    com.deepeye.musicpro.domain.model.MediaItem.Remote(
-                        id = item.id,
-                        title = item.title,
-                        artist = item.artist,
-                        artworkUri = android.net.Uri.parse(item.thumbnailUrl.upgradeResolution()),
-                        duration = item.duration * 1000L,
-                        isVideo = isVideo,
-                    )
+                    res
                 }
             } catch (e: Exception) {
-                Log.w("YoutubeDS", "NewPipe getRelatedMusic failed: ${e.message}, falling back to SmartTube")
+                Log.e("YoutubeDS", "SmartTubeInnertube extract failed", e)
+                null
+            }
+        }
+
+        private suspend fun extractAlternative(
+            videoId: String,
+            preferVideo: Boolean
+        ): StreamResult? {
+            Log.d("YoutubeDS", "Alternative Extractor: extracting $videoId...")
+            val extractor = com.ar.youtubeextractor.core.YouTubeExtractor()
+            val url = "https://www.youtube.com/watch?v=$videoId"
+            val result = extractor.extractVideoData(url)
+            return when (result) {
+                is com.ar.youtubeextractor.core.Result.Success -> {
+                    val data = result.data
+                    val hlsUrl = data.streamingData?.hlsManifestUrl
+                    if (!hlsUrl.isNullOrEmpty()) {
+                        StreamResult(hlsUrl, isVideo = preferVideo)
+                    } else {
+                        val audioFormat =
+                            data.streamingData?.adaptiveFormats
+                                ?.filter { it.mimeType?.contains("audio") == true }
+                                ?.maxByOrNull { it.bitrate ?: 0 }
+                        val formatUrl = audioFormat?.url
+                        if (!formatUrl.isNullOrEmpty()) {
+                            StreamResult(formatUrl, isVideo = false)
+                        } else {
+                            null
+                        }
+                    }
+                }
+                is com.ar.youtubeextractor.core.Result.Error -> {
+                    Log.e("YoutubeDS", "Alternative Extractor error: ${result.error}")
+                    null
+                }
+            }
+        }
+
+        private suspend fun extractPiped(
+            videoId: String,
+            preferVideo: Boolean
+        ): StreamResult? =
+            kotlinx.coroutines.coroutineScope {
+                Log.d("YoutubeDS", "Piped API: extracting $videoId...")
+                val pipedInstances =
+                    listOf(
+                        "https://api.piped.private.coffee",
+                        "https://pipedapi.kavin.rocks",
+                        "https://pipedapi.us.projectsegfau.lt",
+                        "https://pipedapi.lunar.icu",
+                        "https://api-piped.mha.fi",
+                        "https://pipedapi.colt.top"
+                    ).shuffled().take(3) // Race 3 random instances for lowest latency
+
+                val channel = kotlinx.coroutines.channels.Channel<StreamResult?>(pipedInstances.size)
+                val jobs =
+                    pipedInstances.map { instance ->
+                        launch {
+                            try {
+                                val pipedUrl = "$instance/streams/$videoId"
+                                val pipedRequest =
+                                    okhttp3.Request.Builder()
+                                        .url(pipedUrl)
+                                        .addHeader("User-Agent", "DeepEyeMusicPro/2.0")
+                                        .build()
+                                val pipedResponse = fastClient.newCall(pipedRequest).execute()
+                                if (pipedResponse.isSuccessful) {
+                                    val body = pipedResponse.body?.string() ?: ""
+                                    pipedResponse.close()
+                                    if (body.isNotEmpty()) {
+                                        val json = org.json.JSONObject(body)
+
+                                        val hls = json.optString("hls", "")
+                                        if (hls.isNotEmpty() && preferVideo) {
+                                            channel.trySend(StreamResult(hls, isVideo = true))
+                                            return@launch
+                                        }
+
+                                        if (preferVideo) {
+                                            val videoStreams = json.optJSONArray("videoStreams")
+                                            if (videoStreams != null && videoStreams.length() > 0) {
+                                                var bestUrl: String? = null
+                                                var bestBitrate = 0
+                                                for (i in 0 until videoStreams.length()) {
+                                                    val stream = videoStreams.optJSONObject(i) ?: continue
+                                                    val sUrl = stream.optString("url", "")
+                                                    val bitrate = stream.optInt("bitrate", 0)
+                                                    // Some apis put width/height. We'll use bitrate or quality
+                                                    if (sUrl.isNotEmpty() && bitrate >= bestBitrate) {
+                                                        bestUrl = sUrl
+                                                        bestBitrate = bitrate
+                                                    }
+                                                }
+                                                if (bestUrl != null) {
+                                                    channel.trySend(StreamResult(bestUrl, isVideo = true))
+                                                    return@launch
+                                                }
+                                            }
+                                        }
+
+                                        val audioStreams = json.optJSONArray("audioStreams")
+                                        if (audioStreams != null && audioStreams.length() > 0) {
+                                            var bestUrl: String? = null
+                                            var bestBitrate = 0
+                                            for (i in 0 until audioStreams.length()) {
+                                                val stream = audioStreams.optJSONObject(i) ?: continue
+                                                val sUrl = stream.optString("url", "")
+                                                val bitrate = stream.optInt("bitrate", 0)
+                                                if (sUrl.isNotEmpty() && bitrate >= bestBitrate) {
+                                                    bestUrl = sUrl
+                                                    bestBitrate = bitrate
+                                                }
+                                            }
+                                            if (bestUrl != null) {
+                                                channel.trySend(StreamResult(bestUrl, isVideo = false))
+                                                return@launch
+                                            }
+                                        }
+
+                                        if (hls.isNotEmpty()) {
+                                            channel.trySend(StreamResult(hls, isVideo = preferVideo))
+                                            return@launch
+                                        }
+                                    }
+                                } else {
+                                    pipedResponse.close()
+                                }
+                            } catch (e: Exception) {
+                                Log.w("YoutubeDS", "Piped instance $instance failed: ${e.message}")
+                            }
+                            channel.trySend(null)
+                        }
+                    }
+
+                var finalRes: StreamResult? = null
+                for (i in pipedInstances.indices) {
+                    val res = channel.receive()
+                    if (res != null) {
+                        finalRes = res
+                        jobs.forEach { it.cancel() }
+                        break
+                    }
+                }
+                channel.close()
+                finalRes
+            }
+
+        private suspend fun extractInvidious(
+            videoId: String,
+            preferVideo: Boolean
+        ): StreamResult? =
+            kotlinx.coroutines.coroutineScope {
+                Log.d("YoutubeDS", "Invidious API: extracting $videoId...")
+                val invidiousInstances =
+                    listOf(
+                        "https://invidious.protokolla.fi",
+                        "https://invidious.poast.org",
+                        "https://inv.zzls.xyz",
+                        "https://invidious.epicsite.app",
+                        "https://yewtu.be",
+                        "https://invidious.projectsegfau.lt"
+                    ).shuffled().take(3)
+
+                val channel = kotlinx.coroutines.channels.Channel<StreamResult?>(invidiousInstances.size)
+                val jobs =
+                    invidiousInstances.map { instance ->
+                        launch {
+                            try {
+                                val invUrl = "$instance/api/v1/videos/$videoId"
+                                val request =
+                                    okhttp3.Request.Builder()
+                                        .url(invUrl)
+                                        .addHeader("User-Agent", "DeepEyeMusicPro/2.0")
+                                        .build()
+                                val response = fastClient.newCall(request).execute()
+                                if (response.isSuccessful) {
+                                    val body = response.body?.string() ?: ""
+                                    response.close()
+                                    if (body.isNotEmpty()) {
+                                        val json = org.json.JSONObject(body)
+                                        val adaptiveFormats = json.optJSONArray("adaptiveFormats")
+                                        if (adaptiveFormats != null && adaptiveFormats.length() > 0) {
+                                            var bestUrl: String? = null
+                                            var bestBitrate = 0
+                                            for (i in 0 until adaptiveFormats.length()) {
+                                                val format = adaptiveFormats.optJSONObject(i) ?: continue
+                                                val type = format.optString("type", "")
+                                                val sUrl = format.optString("url", "")
+                                                val bitrate = format.optInt("bitrate", 0)
+                                                if (type.contains("audio") && sUrl.isNotEmpty() && bitrate > bestBitrate) {
+                                                    bestUrl = sUrl
+                                                    bestBitrate = bitrate
+                                                }
+                                            }
+                                            if (bestUrl != null) {
+                                                channel.trySend(StreamResult(bestUrl, isVideo = false))
+                                                return@launch
+                                            }
+                                        }
+                                        val formatStreams = json.optJSONArray("formatStreams")
+                                        if (formatStreams != null && formatStreams.length() > 0) {
+                                            var bestUrl: String? = null
+                                            var bestBitrate = 0
+                                            for (i in 0 until formatStreams.length()) {
+                                                val format = formatStreams.optJSONObject(i) ?: continue
+                                                val sUrl = format.optString("url", "")
+                                                val bitrate = format.optInt("bitrate", 0)
+                                                if (sUrl.isNotEmpty() && bitrate > bestBitrate) {
+                                                    bestUrl = sUrl
+                                                    bestBitrate = bitrate
+                                                }
+                                            }
+                                            if (bestUrl != null) {
+                                                channel.trySend(StreamResult(bestUrl, isVideo = preferVideo))
+                                                return@launch
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    response.close()
+                                }
+                            } catch (e: Exception) {
+                                Log.w("YoutubeDS", "Invidious instance $instance failed: ${e.message}")
+                            }
+                            channel.trySend(null)
+                        }
+                    }
+
+                var finalRes: StreamResult? = null
+                for (i in invidiousInstances.indices) {
+                    val res = channel.receive()
+                    if (res != null) {
+                        finalRes = res
+                        jobs.forEach { it.cancel() }
+                        break
+                    }
+                }
+                channel.close()
+                finalRes
+            }
+
+        suspend fun getRelatedMusic(
+            title: String,
+            artist: String,
+            isVideo: Boolean = false,
+        ): List<com.deepeye.musicpro.domain.model.MediaItem.Remote> =
+            withContext(ioDispatcher) {
                 try {
+                    val result =
+                        newPipeExtractor.getRelatedMusic("$title $artist").map { item ->
+                            com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                                id = item.id,
+                                title = item.title,
+                                artist = item.artist,
+                                artworkUri = android.net.Uri.parse(item.thumbnailUrl.upgradeResolution()),
+                                duration = item.duration * 1000L,
+                                isVideo = isVideo,
+                            )
+                        }
+                    if (result.isNotEmpty()) return@withContext result
+                    // Fallback to SmartTube
                     smartTubeExtractor.getRelatedMusic("$title $artist").map { item ->
                         com.deepeye.musicpro.domain.model.MediaItem.Remote(
                             id = item.id,
@@ -624,95 +706,111 @@ constructor(
                             isVideo = isVideo,
                         )
                     }
-                } catch (e2: Exception) {
-                    Log.e("YoutubeDS", "getRelatedMusic failed: ${e2.message}")
-                    emptyList()
+                } catch (e: Exception) {
+                    Log.w("YoutubeDS", "NewPipe getRelatedMusic failed: ${e.message}, falling back to SmartTube")
+                    try {
+                        smartTubeExtractor.getRelatedMusic("$title $artist").map { item ->
+                            com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                                id = item.id,
+                                title = item.title,
+                                artist = item.artist,
+                                artworkUri = android.net.Uri.parse(item.thumbnailUrl.upgradeResolution()),
+                                duration = item.duration * 1000L,
+                                isVideo = isVideo,
+                            )
+                        }
+                    } catch (e2: Exception) {
+                        Log.e("YoutubeDS", "getRelatedMusic failed: ${e2.message}")
+                        emptyList()
+                    }
                 }
             }
-        }
 
-    // 🔗 Get related videos (for video autoplay)
-    suspend fun getRelatedVideos(videoId: String): List<HomeVideoItem> =
-        withContext(ioDispatcher) {
-            try {
-                val result = newPipeExtractor.getRelatedVideos(videoId).map { it.toHomeVideoItem() }
-                    .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
-                if (result.isNotEmpty()) return@withContext result
-                // Fallback to SmartTube
-                smartTubeExtractor.getRelatedVideos(videoId).map { it.toHomeVideoItem() }
-                    .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
-            } catch (e: Exception) {
-                Log.w("YoutubeDS", "NewPipe getRelatedVideos failed: ${e.message}, falling back to SmartTube")
+        // 🔗 Get related videos (for video autoplay)
+        suspend fun getRelatedVideos(videoId: String): List<HomeVideoItem> =
+            withContext(ioDispatcher) {
                 try {
+                    val result =
+                        newPipeExtractor.getRelatedVideos(videoId).map { it.toHomeVideoItem() }
+                            .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                    if (result.isNotEmpty()) return@withContext result
+                    // Fallback to SmartTube
                     smartTubeExtractor.getRelatedVideos(videoId).map { it.toHomeVideoItem() }
                         .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
-                } catch (e2: Exception) {
-                    Log.e("YoutubeDS", "getRelatedVideos failed: ${e2.message}")
-                    emptyList()
+                } catch (e: Exception) {
+                    Log.w("YoutubeDS", "NewPipe getRelatedVideos failed: ${e.message}, falling back to SmartTube")
+                    try {
+                        smartTubeExtractor.getRelatedVideos(videoId).map { it.toHomeVideoItem() }
+                            .filterNot { MusicFilter.isShort(it.title, it.duration, it.isShort) }
+                    } catch (e2: Exception) {
+                        Log.e("YoutubeDS", "getRelatedVideos failed: ${e2.message}")
+                        emptyList()
+                    }
                 }
             }
-        }
 
-    // 📱 Shorts — vertical format (Hard-blocked)
-    suspend fun getShorts(): List<HomeVideoItem> = emptyList()
+        // 📱 Shorts — vertical format (Hard-blocked)
+        suspend fun getShorts(): List<HomeVideoItem> = emptyList()
 
-    // 💡 Search Suggestions
-    suspend fun getSearchSuggestions(query: String): List<String> =
-        withContext(ioDispatcher) {
-            try {
-                val result = newPipeExtractor.getSearchSuggestions(query)
-                if (result.isNotEmpty()) return@withContext result
-                // Fallback to SmartTube
-                smartTubeExtractor.getSearchSuggestions(query)
-            } catch (e: Exception) {
-                Log.w("YoutubeDS", "NewPipe getSearchSuggestions failed: ${e.message}, falling back to SmartTube")
+        // 💡 Search Suggestions
+        suspend fun getSearchSuggestions(query: String): List<String> =
+            withContext(ioDispatcher) {
                 try {
+                    val result = newPipeExtractor.getSearchSuggestions(query)
+                    if (result.isNotEmpty()) return@withContext result
+                    // Fallback to SmartTube
                     smartTubeExtractor.getSearchSuggestions(query)
-                } catch (e2: Exception) {
-                    Log.e("YoutubeDS", "getSearchSuggestions failed: ${e2.message}")
-                    emptyList()
+                } catch (e: Exception) {
+                    Log.w("YoutubeDS", "NewPipe getSearchSuggestions failed: ${e.message}, falling back to SmartTube")
+                    try {
+                        smartTubeExtractor.getSearchSuggestions(query)
+                    } catch (e2: Exception) {
+                        Log.e("YoutubeDS", "getSearchSuggestions failed: ${e2.message}")
+                        emptyList()
+                    }
                 }
             }
+
+        // Mappers
+        private fun com.deepeye.musicpro.extractor.ExtractorVideoItem.toHomeVideoItem() =
+            HomeVideoItem(
+                id = id,
+                title = title,
+                channelName = artist,
+                channelId = channelId,
+                thumbnailUrl = thumbnailUrl.upgradeResolution(),
+                duration = duration,
+                viewCount = viewCount,
+                isShort = isShort,
+                channelAvatarUrl = channelAvatarUrl
+            )
+
+        private fun com.deepeye.musicpro.extractor.ExtractorMusicItem.toHomeMusicItem() =
+            HomeMusicItem(
+                id = id,
+                title = title,
+                artist = artist,
+                thumbnailUrl = thumbnailUrl.upgradeResolution(),
+                duration = duration
+            )
+
+        private fun String.upgradeResolution(): String {
+            return this.replace(Regex("(?<!maxres)(hqdefault|sddefault|mqdefault|default)\\.jpg"), "maxresdefault.jpg")
+                .replace(Regex("=w\\d+-h\\d+([a-zA-Z0-9\\-]*)"), "=w1080-h1080$1")
         }
 
-    // Mappers
-    private fun com.deepeye.musicpro.extractor.ExtractorVideoItem.toHomeVideoItem() = HomeVideoItem(
-        id = id,
-        title = title,
-        channelName = artist,
-        channelId = channelId,
-        thumbnailUrl = thumbnailUrl.upgradeResolution(),
-        duration = duration,
-        viewCount = viewCount,
-        isShort = isShort,
-        channelAvatarUrl = channelAvatarUrl
-    )
-
-    private fun com.deepeye.musicpro.extractor.ExtractorMusicItem.toHomeMusicItem() = HomeMusicItem(
-        id = id,
-        title = title,
-        artist = artist,
-        thumbnailUrl = thumbnailUrl.upgradeResolution(),
-        duration = duration
-    )
-
-    private fun String.upgradeResolution(): String {
-        return this.replace(Regex("(?<!maxres)(hqdefault|sddefault|mqdefault|default)\\.jpg"), "maxresdefault.jpg")
-            .replace(Regex("=w\\d+-h\\d+([a-zA-Z0-9\\-]*)"), "=w1080-h1080$1")
+        private fun String.extractVideoId(): String {
+            val id =
+                when {
+                    contains("v=") -> substringAfter("v=").substringBefore("&")
+                    contains("youtu.be/") -> substringAfterLast("/")
+                    contains("/shorts/") -> substringAfterLast("/")
+                    else -> this
+                }.take(11)
+            Log.d("YoutubeDS", "Extracted Video ID: $id from $this")
+            return id
+        }
     }
-
-    private fun String.extractVideoId(): String {
-        val id =
-            when {
-                contains("v=") -> substringAfter("v=").substringBefore("&")
-                contains("youtu.be/") -> substringAfterLast("/")
-                contains("/shorts/") -> substringAfterLast("/")
-                else -> this
-            }.take(11)
-        Log.d("YoutubeDS", "Extracted Video ID: $id from $this")
-        return id
-    }
-}
 
 // Data class representing the YouTube stream extraction result
 data class StreamResult(

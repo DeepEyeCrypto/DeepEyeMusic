@@ -1,0 +1,198 @@
+{
+  "mission": "VVavy 232-scene metadata deep research + original AGSL scene design for DeepEyeMusicPro",
+  "ip_compliance": "VERIFIED \u2014 Zero VVavy shader code, GLSL, assets, thumbnails, or branding extracted/copied. Only public metadata (names, descriptions, tags) analyzed.",
+  "phases_completed": {
+    "phase_1_metadata_ingest": {
+      "total_scenes": 232,
+      "unique_tags": 53,
+      "date_range": "2026-04-01 to 2026-10-25",
+      "duplicate_ids": 0,
+      "duplicate_names": 0,
+      "top_tags": {
+        "High Definition": 206,
+        "groovy": 154,
+        "trippy": 153,
+        "cinematic": 126,
+        "mid-energy": 107,
+        "tech.livestream": 98,
+        "punchy": 61,
+        "geometry": 55
+      },
+      "outputs": [
+        "files/research/vvavy_metadata_analysis.json",
+        "files/research/vvavy_metadata_analysis.csv"
+      ]
+    },
+    "phase_2_theme_clustering": {
+      "clusters": 12,
+      "counts": {
+        "CINEMATIC / ATMOSPHERIC": 126,
+        "PARTICLE / FIELD": 58,
+        "ORGANIC / FLUID / SMOKE": 47,
+        "TUNNEL / PORTAL": 45,
+        "NEON / RETRO / SYNTHWAVE": 43,
+        "NATURE / COSMIC": 36,
+        "GEOMETRIC": 32,
+        "KALEIDOSCOPIC / SYMMETRIC": 27,
+        "OTHER": 27,
+        "FRACTAL / ABSTRACT": 9,
+        "TEXT / TYPOGRAPHY": 7,
+        "MINIMAL / MONOCHROME": 6
+      },
+      "agsl_feasibility": {
+        "HIGH": [
+          "NEON / RETRO / SYNTHWAVE",
+          "GEOMETRIC",
+          "KALEIDOSCOPIC / SYMMETRIC",
+          "FRACTAL / ABSTRACT",
+          "MINIMAL / MONOCHROME"
+        ],
+        "MEDIUM": [
+          "CINEMATIC / ATMOSPHERIC",
+          "ORGANIC / FLUID / SMOKE",
+          "TUNNEL / PORTAL",
+          "NATURE / COSMIC"
+        ],
+        "LOW": [
+          "PARTICLE / FIELD",
+          "TEXT / TYPOGRAPHY",
+          "OTHER"
+        ]
+      },
+      "output": "files/research/vvavy_cluster_analysis.json"
+    },
+    "phase_3_audio_mapping": {
+      "keyword_coverage": {
+        "bass": "124/232 (53.4%)",
+        "mids": "119/232 (51.3%)",
+        "treble": "215/232 (92.7%)",
+        "beat": "99/232 (42.7%)",
+        "energy": "164/232 (70.7%)"
+      },
+      "recommended_uniforms": {
+        "iAudioBass": "Low-frequency (31-125 Hz). Drives large-scale motion, scale, dilation. Range 0-2.",
+        "iAudioMids": "Mid-frequency (125-2000 Hz). Drives turbulence, complexity, texture. Range 0-2.",
+        "iAudioTreble": "High-frequency (2000+ Hz). Drives sparkle, shimmer, edge highlights. Range 0-2.",
+        "iAudioEnergy": "Overall RMS-like level. Drives global brightness, glow. Range 0-1.",
+        "iBeatPulse": "Onset/transient detection. Sharp pulse on kick/snare. Range 0-1."
+      },
+      "smoothing": {
+        "attack_tau": 0.016,
+        "release_tau": 0.05,
+        "beat_release_tau": 0.12,
+        "max_dt": 0.1,
+        "nan_guard": true
+      },
+      "output": "files/research/vvavy_audio_analysis.json"
+    },
+    "phase_4_gap_analysis": {
+      "underserved_high_feasibility": [
+        "MINIMAL / MONOCHROME (6 scenes, HIGH)",
+        "FRACTAL / ABSTRACT (9 scenes, HIGH)",
+        "GEOMETRIC (32 scenes, HIGH)",
+        "KALEIDOSCOPIC / SYMMETRIC (27 scenes, HIGH)",
+        "NEON / RETRO / SYNTHWAVE (43 scenes, HIGH)"
+      ],
+      "audio_gaps": {
+        "bass": "53%",
+        "mids": "51%",
+        "treble": "93%",
+        "beat": "43%",
+        "energy": "71%"
+      },
+      "opportunities_ranked": 12,
+      "output": "files/research/vvavy_opportunities.json"
+    },
+    "phase_5_agsl_design": {
+      "scenes_designed": 12,
+      "scenes": [
+        {
+          "id": 1,
+          "name": "AURORA FLUX",
+          "feasibility": "HIGH",
+          "performance": "LOW risk (2D FBM)"
+        },
+        {
+          "id": 2,
+          "name": "LIQUID CHROME",
+          "feasibility": "HIGH",
+          "performance": "LOW risk (2D curl noise)"
+        },
+        {
+          "id": 3,
+          "name": "NEBULA BLOOM",
+          "feasibility": "HIGH",
+          "performance": "LOW risk (radial SDF)"
+        },
+        {
+          "id": 4,
+          "name": "PRISM TUNNEL",
+          "feasibility": "HIGH",
+          "performance": "LOW risk (perspective grid)"
+        },
+        {
+          "id": 5,
+          "name": "KINETIC MANDALA",
+          "feasibility": "HIGH",
+          "performance": "LOW risk (SDF triangles)"
+        },
+        {
+          "id": 6,
+          "name": "PULSE GEOMETRY",
+          "feasibility": "MEDIUM",
+          "performance": "MEDIUM risk (raymarch)"
+        },
+        {
+          "id": 7,
+          "name": "LIQUID STARFIELD",
+          "feasibility": "HIGH",
+          "performance": "LOW risk (2D flow + points)"
+        },
+        {
+          "id": 8,
+          "name": "PRISMATIC SMOKE",
+          "feasibility": "MEDIUM",
+          "performance": "MEDIUM risk (volumetric approx)"
+        },
+        {
+          "id": 9,
+          "name": "NEON WAVEFORM TUNNEL",
+          "feasibility": "HIGH",
+          "performance": "LOW risk (waveform + tunnel)"
+        },
+        {
+          "id": 10,
+          "name": "ORGANIC CELL BLOOM",
+          "feasibility": "HIGH",
+          "performance": "LOW risk (Voronoi + bloom)"
+        },
+        {
+          "id": 11,
+          "name": "FRACTAL PULSE MANDALA",
+          "feasibility": "MEDIUM",
+          "performance": "MEDIUM risk (raymarch fractal)"
+        },
+        {
+          "id": 12,
+          "name": "MINIMAL BASS ORBIT",
+          "feasibility": "HIGH",
+          "performance": "LOW risk (minimal geometry)"
+        }
+      ],
+      "outputs": [
+        "files/research/agsl_scene_outlines_1-5.json",
+        "files/research/agsl_scene_outlines_7-12.json"
+      ]
+    }
+  },
+  "files_generated": [
+    "files/research/vvavy_metadata_analysis.json",
+    "files/research/vvavy_metadata_analysis.csv",
+    "files/research/vvavy_cluster_analysis.json",
+    "files/research/vvavy_audio_analysis.json",
+    "files/research/vvavy_opportunities.json",
+    "files/research/agsl_scene_outlines_1-5.json",
+    "files/research/agsl_scene_outlines_7-12.json"
+  ],
+  "next_steps": "Ready for Tasks 3-5: Transition/Post-processing, Performance Tiers, Device Certification on Realme RMX3945 (LZN7EERSZPS4VSUG)"
+}

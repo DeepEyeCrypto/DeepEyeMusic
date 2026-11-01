@@ -1,9 +1,9 @@
 package com.deepeye.musicpro.ui.auth
 
-import com.deepeye.musicpro.ui.navigation.Routes
+import com.deepeye.musicpro.account.AccountSession
 import com.deepeye.musicpro.ui.navigation.AccountRouteDecider
 import com.deepeye.musicpro.ui.navigation.AppRoute
-import com.deepeye.musicpro.account.AccountSession
+import com.deepeye.musicpro.ui.navigation.Routes
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,7 +16,6 @@ import org.junit.Test
  * - no Firebase identity decides app sign-in state.
  */
 class AccountRemovalRegressionTest {
-
     @Test
     fun `duplicate Google login route no longer exists`() {
         val routeStrings = Routes::class.nestedClasses.map { it.simpleName }
@@ -44,9 +43,10 @@ class AccountRemovalRegressionTest {
 
     @Test
     fun `route decider never emits a Firebase auth destination`() {
-        val loggedIn = AccountRouteDecider.routeFor(
-            AccountSession.Connected(accountKey = "opaque-youtube-key")
-        )
+        val loggedIn =
+            AccountRouteDecider.routeFor(
+                AccountSession.Connected(accountKey = "opaque-youtube-key")
+            )
         assertEquals(AppRoute.HOME, loggedIn)
 
         val loggedOut = AccountRouteDecider.routeFor(AccountSession.LoggedOut)

@@ -18,83 +18,87 @@ import javax.inject.Inject
 
 @HiltViewModel
 class VideoRailViewModel
-@Inject
-constructor(
-    private val repository: VideoRailRepository,
-    private val playerController: PlayerController,
-) : ViewModel() {
-    private val _state = MutableStateFlow(VideoRailState())
-    val state = _state.asStateFlow()
+    @Inject
+    constructor(
+        private val repository: VideoRailRepository,
+        private val playerController: PlayerController,
+    ) : ViewModel() {
+        private val _state = MutableStateFlow(VideoRailState())
+        val state = _state.asStateFlow()
 
-    // Which card is currently expanded for inline playback
-    private val _expandedCardId = MutableStateFlow<String?>(null)
-    val expandedCardId = _expandedCardId.asStateFlow()
+        // Which card is currently expanded for inline playback
+        private val _expandedCardId = MutableStateFlow<String?>(null)
+        val expandedCardId = _expandedCardId.asStateFlow()
 
-    init {
-        loadRail()
-    }
+        init {
+            loadRail()
+        }
 
-    fun loadRail() {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
-            try {
-                val sections = repository.loadAllSections()
-                _state.update { it.copy(sections = sections, isLoading = false) }
-            } catch (e: Exception) {
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        error = "Couldn't load videos",
-                    )
+        fun loadRail() {
+            viewModelScope.launch {
+                _state.update { it.copy(isLoading = true, error = null) }
+                try {
+                    val sections = repository.loadAllSections()
+                    _state.update { it.copy(sections = sections, isLoading = false) }
+                } catch (e: Exception) {
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Couldn't load videos",
+                        )
+                    }
                 }
             }
         }
-    }
 
-    // Tap on card thumbnail -> expand inline player
-    fun onCardTap(videoId: String) {
-        if (_expandedCardId.value == videoId) {
-            // Already expanded -> open full NowPlaying
+        // Tap on card thumbnail -> expand inline player
+        fun onCardTap(videoId: String) {
+            if (_expandedCardId.value == videoId) {
+                // Already expanded -> open full NowPlaying
+                playSelectedVideo(videoId)
+            } else {
+                // First tap -> expand inline preview
+                _expandedCardId.value = videoId
+            }
+        }
+
+        // Tap expanded card again -> open full player
+        fun onExpandedCardTap(videoId: String) {
+            _expandedCardId.value = null
             playSelectedVideo(videoId)
-        } else {
-            // First tap -> expand inline preview
-            _expandedCardId.value = videoId
         }
-    }
 
-    // Tap expanded card again -> open full player
-    fun onExpandedCardTap(videoId: String) {
-        _expandedCardId.value = null
-        playSelectedVideo(videoId)
-    }
+        private fun playSelectedVideo(videoId: String) {
+            val section = state.value.sections.find { it.items.any { item -> item.videoId == videoId } } ?: return
 
-    private fun playSelectedVideo(videoId: String) {
-        val section = state.value.sections.find { it.items.any { item -> item.videoId == videoId } } ?: return
+            val mediaItems =
+                section.items.map { item ->
+                    com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                        id = item.videoId,
+                        title = item.title,
+                        artist = item.channelName,
+                        artworkUri = android.net.Uri.parse(item.thumbnailUrl),
+                        duration = 180000L, // Mock
+                        isVideo = true,
+                    )
+                }
 
-        val mediaItems = section.items.map { item ->
-            com.deepeye.musicpro.domain.model.MediaItem.Remote(
-                id = item.videoId,
-                title = item.title,
-                artist = item.channelName,
-                artworkUri = android.net.Uri.parse(item.thumbnailUrl),
-                duration = 180000L, // Mock
-                isVideo = true,
+            val index = section.items.indexOfFirst { it.videoId == videoId }
+            android.util.Log.d(
+                "VideoRailViewModel",
+                "playSelectedVideo: videoId=$videoId, section category=${section.category}, section items size=${section.items.size}"
             )
+            if (index >= 0) {
+                playerController.setQueue(mediaItems, index)
+            }
         }
-        
-        val index = section.items.indexOfFirst { it.videoId == videoId }
-        android.util.Log.d("VideoRailViewModel", "playSelectedVideo: videoId=$videoId, section category=${section.category}, section items size=${section.items.size}")
-        if (index >= 0) {
-            playerController.setQueue(mediaItems, index)
+
+        // Scroll away -> collapse
+        fun onCardScrolledAway() {
+            _expandedCardId.value = null
+        }
+
+        fun switchSection(category: VideoRailCategory) {
+            _state.update { it.copy(activeSection = category) }
         }
     }
-
-    // Scroll away -> collapse
-    fun onCardScrolledAway() {
-        _expandedCardId.value = null
-    }
-
-    fun switchSection(category: VideoRailCategory) {
-        _state.update { it.copy(activeSection = category) }
-    }
-}

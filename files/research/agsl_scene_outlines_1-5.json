@@ -1,0 +1,122 @@
+{
+  "AURORA_FLUX": {
+    "uniform_contract": "iResolution, iTime, iTimeDelta, iMouse, iAudioBass, iAudioMids, iAudioTreble, iAudioEnergy, iBeatPulse, iSceneTransition, iIntensity, iAspect",
+    "core_technique": "4-octave FBM noise with audio-driven domain warping",
+    "glsl_outline": "\n// Original 2D hash\nfloat h21(vec2 p) {\n    p = fract(p * vec2(123.34, 456.21));\n    p += dot(p, p + 45.32);\n    return fract(p.x * p.y);\n}\n\nfloat noise2(vec2 p) {\n    vec2 i = floor(p);\n    vec2 f = fract(p);\n    vec2 u = f * f * (3.0 - 2.0 * f);\n    float a = h21(i);\n    float b = h21(i + vec2(1.0, 0.0));\n    float c = h21(i + vec2(0.0, 1.0));\n    float d = h21(i + vec2(1.0, 1.0));\n    return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);\n}\n\nfloat fbm(vec2 p) {\n    float v = 0.0, a = 0.5;\n    for (int i = 0; i < 4; ++i) {\n        v += a * noise2(p);\n        p = p * 2.1 + 19.7;\n        a *= 0.5;\n    }\n    return v;\n}\n\nvoid main() {\n    vec2 uv = (fragCoord - 0.5 * iResolution) / iResolution.y;\n    uv.x /= iAspect;\n    \n    float bassScale = 1.5 + iAudioBass * 1.2;\n    float midWarp = 0.6 + iAudioMids * 1.0;\n    float trebleShimmer = 0.08 * iAudioTreble;\n    \n    vec2 coord = uv * bassScale + vec2(sin(iTime * 0.15), cos(iTime * 0.11)) * 0.4;\n    \n    // Domain warp\n    vec2 w = vec2(fbm(coord + iTime * 0.2), fbm(coord - iTime * 0.2 + 7.3));\n    coord = coord + midWarp * (w - 0.5) * 2.0;\n    \n    // Sample warped field\n    float f = fbm(coord + w * midWarp);\n    f += trebleShimmer * noise2(coord * 8.0 + iTime * 0.5);\n    \n    // Color: navy to teal\n    vec3 base = mix(vec3(0.02, 0.04, 0.10), vec3(0.05, 0.45, 0.55), f * f);\n    base = mix(base, vec3(0.55, 0.15, 0.55), clamp(iAudioBass * 0.4, 0.0, 1.0) * f);\n    base += vec3(0.9, 0.95, 1.0) * iBeatPulse * 0.45;\n    base *= (0.6 + iAudioEnergy * 0.8) * iIntensity;\n    \n    // Vignette\n    float vig = 1.0 - smoothstep(0.7, 1.4, length(uv));\n    base *= vig;\n    \n    return half4(half3(clamp(base, 0.0, 1.0)), 1.0);\n}\n",
+    "uniforms_used": [
+      "iAudioBass",
+      "iAudioMids",
+      "iAudioTreble",
+      "iAudioEnergy",
+      "iBeatPulse",
+      "iSceneTransition",
+      "iIntensity",
+      "iAspect",
+      "iTime",
+      "iTimeDelta",
+      "iResolution",
+      "iMouse"
+    ],
+    "fallback": "Disable 2 FBM octaves on battery tier"
+  },
+  "LIQUID_CHROME": {
+    "uniform_contract": "iResolution, iTime, iTimeDelta, iMouse, iAudioBass, iAudioMids, iAudioTreble, iAudioEnergy, iBeatPulse, iSceneTransition, iIntensity, iAspect",
+    "core_technique": "Curl noise with dynamic palette blending",
+    "glsl_outline": "\nfloat hash(vec2 p) { return fract(sin(p.x * 12.9898 + p.y * 78.233) * 43758.5453); }\nfloat noise(vec2 p) {\n    vec2 i = floor(p), f = fract(p);\n    f = f * f * (3.0 - 2.0 * f);\n    return mix(mix(hash(i + vec2(0.,0.)), hash(i + vec2(1.,0.)), f.x),\n               mix(hash(i + vec2(0.,1.)), hash(i + vec2(1.,1.)), f.x), f.y);\n}\nvec2 curl(vec2 p) { return vec2(-dFdy(p.y), dFdx(p.x)); }\n\nvoid main() {\n    vec2 uv = (fragCoord - 0.5 * iResolution) / iResolution.y;\n    uv.x /= iAspect;\n    \n    float t = iTime * (1.5 + iAudioBass * 2.5 + iBeatPulse * 1.5);\n    vec3 col = vec3(0.03, 0.03, 0.08);\n    \n    vec3 glowCol = mix(vec3(0.55, 0.10, 0.55), vec3(0.10, 0.55, 0.85), iAudioMids * 0.5);\n    float horizonGlow = exp(-abs(uv.y - 0.15) * 8.0);\n    col += glowCol * horizonGlow * (0.5 + iAudioEnergy * 0.5);\n    \n    if (uv.y < 0.15) {\n        float depth = 0.4 / (0.15 - uv.y + 0.05);\n        float hill = sin(uv.x * 5.0 + t * 0.3) * cos(uv.y * 3.0 + t * 0.2) * (0.08 + iAudioBass * 0.15);\n        depth = 0.4 / (0.15 - uv.y + hill * 0.05);\n        \n        float gridX = abs(fract(uv.x * depth) - 0.5);\n        float gridZ = abs(fract(t * 0.5) - 0.5);\n        float line = smoothstep(0.42, 0.48, max(gridX, gridZ));\n        \n        vec3 gridColor = mix(vec3(0.10, 0.85, 0.95), vec3(0.85, 0.15, 0.85), fract(t * 0.05));\n        col += gridColor * line * (0.6 + iAudioBass * 0.8)\n               + vec3(0.9, 0.95, 1.0) * gridX * gridZ * iAudioTreble * 1.4;\n    }\n    \n    if (uv.y >= 0.15) {\n        float skyPulse = 0.04 * iAudioBass * sin(iTime * 0.5);\n        col += glowCol * (0.05 + skyPulse);\n    }\n    \n    col *= iIntensity;\n    float vig = 1.0 - smoothstep(0.6, 1.4, length(uv));\n    col *= vig;\n    \n    return half4(half3(clamp(col, 0.0, 1.0)), 1.0);\n}\n",
+    "uniforms_used": [
+      "iAudioBass",
+      "iAudioMids",
+      "iAudioTreble",
+      "iAudioEnergy",
+      "iBeatPulse",
+      "iSceneTransition",
+      "iIntensity",
+      "iAspect",
+      "iTime",
+      "iTimeDelta",
+      "iResolution",
+      "iMouse"
+    ],
+    "fallback": "Disable specular pass on battery tier"
+  },
+  "NEBULA_BLOOM": {
+    "uniform_contract": "iResolution, iTime, iTimeDelta, iMouse, iAudioBass, iAudioMids, iAudioTreble, iAudioEnergy, iBeatPulse, iSceneTransition, iIntensity, iAspect",
+    "core_technique": "Radial SDF with concentric rings + harmonic rays",
+    "glsl_outline": "\nvoid main() {\n    vec2 uv = (2.0 * fragCoord - iResolution) / min(iResolution.x, iResolution.y);\n    float dist = length(uv);\n    float angle = atan(uv.y, uv.x);\n    \n    float coreRadius = 0.35 + iAudioBass * 0.25;\n    float coreGlow = 0.04 / abs(dist - coreRadius);\n    \n    float ringPhase = fract(dist * 2.5 - iTime * (0.6 + iAudioBass * 0.5));\n    float ring = smoothstep(0.85, 0.98, ringPhase) * (1.0 - ringPhase);\n    \n    float rays = abs(sin(angle * 8.0 + iTime * 0.8 + sin(dist * 10.0))) * (0.3 + iAudioTreble * 0.7);\n    \n    vec3 primary = vec3(0.05, 0.45, 0.55);  // teal\n    vec3 secondary = vec3(0.55, 0.15, 0.55); // magenta\n    vec3 baseTint = primary;\n    vec3 glowColor = primary * coreGlow;\n    vec3 ringColor = secondary * ring * (1.5 + iAudioBass);\n    vec3 rayColor = mix(primary, secondary, 0.5) * rays * (0.5 / (dist + 0.1));\n    \n    vec3 col = glowColor + ringColor + rayColor;\n    col += baseTint * (0.02 / (dist * dist + 0.01));\n    col = pow(col, vec3(0.9));\n    col *= (1.0 - smoothstep(0.5, 1.5, length(uv)));\n    \n    return half4(half3(clamp(col, 0.0, 1.0)), 1.0);\n}\n",
+    "uniforms_used": [
+      "iAudioBass",
+      "iAudioMids",
+      "iAudioTreble",
+      "iAudioEnergy",
+      "iBeatPulse",
+      "iSceneTransition",
+      "iIntensity",
+      "iAspect",
+      "iTime",
+      "iTimeDelta",
+      "iResolution",
+      "iMouse"
+    ],
+    "fallback": "Disable ray pass on battery tier"
+  },
+  "PRISM_TUNNEL": {
+    "uniform_contract": "iResolution, iTime, iTimeDelta, iMouse, iAudioBass, iAudioMids, iAudioTreble, iAudioEnergy, iBeatPulse, iSceneTransition, iIntensity, iAspect",
+    "core_technique": "Perspective grid SDF with undulating terrain",
+    "glsl_outline": "\nvoid main() {\n    vec2 uv = (fragCoord - 0.5 * iResolution) / iResolution.y;\n    uv.x /= iAspect;\n    \n    float t = iTime;\n    float camZ = t * (1.5 + iAudioBass * 2.5 + iBeatPulse * 1.5);\n    vec3 col = vec3(0.02, 0.02, 0.05);\n    \n    vec3 primary = vec3(0.10, 0.85, 0.95);\n    vec3 secondary = vec3(0.85, 0.15, 0.85);\n    vec3 glowCol = mix(vec3(0.55, 0.10, 0.55), vec3(0.10, 0.55, 0.85), iAudioMids * 0.5);\n    \n    // Horizon glow\n    float2 sunPos = vec2(0.0, 0.08);\n    float sunDist = length(uv - sunPos);\n    if (sunDist < 0.22) {\n        float sunStripes = step(0.015, fract(uv.y * 35.0 - t * 0.2));\n        vec3 sunCol = mix(secondary, primary, (uv.y - sunPos.y + 0.22) / 0.44);\n        col = mix(col, sunCol, sunStripes * (1.0 + iAudioBass * 0.3));\n    }\n    \n    if (uv.y < 0.05) {\n        float depth = 0.4 / (0.06 - uv.y);\n        float xCoord = uv.x * depth;\n        float zCoord = depth + t * (4.0 + iAudioBass * 3.0);\n        \n        // Undulating hills\n        float hill = sin(xCoord * 0.8) * cos(zCoord * 0.2) * (0.08 + iAudioBass * 0.15);\n        depth = 0.4 / (0.06 - uv.y + hill * 0.05);\n        xCoord = uv.x * depth;\n        zCoord = depth + t * (4.0 + iAudioBass * 3.0);\n        \n        float gridX = abs(fract(xCoord) - 0.5);\n        float gridZ = abs(fract(zCoord * 0.5) - 0.5);\n        float line = smoothstep(0.42, 0.48, max(gridX, gridZ));\n        \n        vec3 gridColor = mix(primary, secondary, sin(zCoord * 0.1) * 0.5 + 0.5);\n        float fog = clamp(1.0 / (depth * 0.12), 0.0, 1.0);\n        col += gridColor * line * fog * (1.2 + iAudioMids * 0.8);\n    }\n    \n    return half4(half3(clamp(col, 0.0, 1.0)), 1.0);\n}\n",
+    "uniforms_used": [
+      "iAudioBass",
+      "iAudioMids",
+      "iAudioTreble",
+      "iAudioEnergy",
+      "iBeatPulse",
+      "iSceneTransition",
+      "iIntensity",
+      "iAspect",
+      "iTime",
+      "iTimeDelta",
+      "iResolution",
+      "iMouse"
+    ],
+    "fallback": "Disable terrain undulation on battery tier"
+  },
+  "KINETIC_MANDALA": {
+    "uniform_contract": "iResolution, iTime, iTimeDelta, iMouse, iAudioBass, iAudioMids, iAudioTreble, iAudioEnergy, iBeatPulse, iSceneTransition, iIntensity, iAspect",
+    "core_technique": "SDF equilateral triangle array with spatial hash + rotation",
+    "glsl_outline": "\nfloat hash12(vec2 p) {\n    vec3 p3 = fract(vec3(p.xyx) * 0.13);\n    p3 += dot(p3, p3.yzx + 3.33);\n    return fract((p3.x + p3.y) * p3.z);\n}\nmat2 rot2(float a) { float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }\nfloat sdEqTri(vec2 p, float r) {\n    const float k = 1.73205081;\n    p.x = abs(p.x) - r;\n    p.y = p.y + r/k;\n    if (p.x + k*p.y > 0.0) p = vec2(p.x - k*p.y, -k*p.x - p.y) / 2.0;\n    p.x -= clamp(p.x, -2.0*r, 0.0);\n    return -length(p) * sign(p.y);\n}\n\nvoid main() {\n    vec2 uv = (fragCoord * 2.0 - iResolution) / min(iResolution.x, iResolution.y);\n    float scale = 6.0 + iAudioMids * 5.0;\n    vec2 gUv = uv * scale;\n    vec2 cellId = floor(gUv);\n    vec2 localUv = (fract(gUv) - 0.5);\n    \n    float cellHash = hash12(cellId);\n    float fft = mix(iAudioBass, iAudioTreble, cellHash) * (0.5 + iAudioMids);\n    float cellBeat = mix(iBeatPulse, iAudioTreble, cellHash * 0.5 + iAudioBass * 0.5);\n    \n    float beat = smoothstep(0.4, 0.8, fft * (1.0 + iAudioBass));\n    float size = (fft * 0.4 + 0.15) * (1.0 + beat * 0.6);\n    float angle = iTime * (0.2 + fft * 2.0) + cellHash * 6.28;\n    \n    vec2 triUv = rot2(angle) * localUv;\n    float d = sdEqTri(triUv, size);\n    \n    vec3 primary = vec3(0.10, 0.85, 0.95);\n    vec3 secondary = vec3(0.85, 0.15, 0.85);\n    vec3 col = mix(primary, secondary, fft);\n    float edge = smoothstep(0.015, 0.0, abs(d) - 0.003);\n    float glow = exp(-max(d, 0.0) * 20.0);\n    vec3 finalCol = col * edge * (1.0 + fft * 3.0) + col * glow * (0.5 + fft * 2.0 + iBeatPulse);\n    finalCol *= 1.0 - smoothstep(0.5, 1.2, length(uv * 0.8));\n    \n    return half4(half3(clamp(finalCol, 0.0, 1.0)), 1.0);\n}\n",
+    "uniforms_used": [
+      "iAudioBass",
+      "iAudioMids",
+      "iAudioTreble",
+      "iAudioEnergy",
+      "iBeatPulse",
+      "iSceneTransition",
+      "iIntensity",
+      "iAspect",
+      "iTime",
+      "iTimeDelta",
+      "iResolution",
+      "iMouse"
+    ],
+    "fallback": "Reduce triangle count on battery tier"
+  },
+  "PULSE_GEOMETRY": {
+    "uniform_contract": "iResolution, iTime, iTimeDelta, iMouse, iAudioBass, iAudioMids, iAudioTreble, iAudioEnergy, iBeatPulse, iSceneTransition, iIntensity, iAspect",
+    "core_technique": "Raymarch-style geometry with beat-synced parameters",
+    "glsl_outline": "\nfloat hash12(vec2 p) {\n    vec3 p3 = fract(vec3(p.xyx) * 0.13);\n    p3 += dot(p3, p3.yzx + 3.33);\n    return fract((p3.x + p3.y) * p3.z);\n}\n\nvoid main() {\n    vec2 uv = (fragCoord * 2.0 - iResolution) / min(iResolution.x, iResolution.y);\n    float cellHash = hash12(uv * 4.0);\n    \n    float fftBass = mix(0.0, iAudioBass, cellHash);\n    float fftMids = mix(0.0, iAudioMids, cellHash);\n    float fftTreble = mix(0.0, iAudioTreble, cellHash);\n    float fftEnergy = mix(0.0, iAudioEnergy, cellHash);\n    float beat = smoothstep(0.3, 0.7, iBeatPulse);\n    \n    float baseSize = 0.3 + fftEnergy * 0.4;\n    float zoom = 1.5 + fftBass * 2.0 + iBeatPulse * 1.5;\n    float angle = iTime * (0.5 + fftMids * 1.5) + cellHash * 3.14;\n    \n    vec2 centered = uv / zoom;\n    vec2 rotated = vec2(cos(angle) * centered.x - sin(angle) * centered.y,\n                        sin(angle) * centered.x + cos(angle) * centered.y);\n    \n    float d = length(rotated) - baseSize;\n    \n    vec3 primary = vec3(0.10, 0.85, 0.95);\n    vec3 secondary = vec3(0.85, 0.15, 0.85);\n    vec3 col = mix(primary, secondary, iBeatPulse);\n    \n    float edge = smoothstep(0.02, 0.0, abs(d));\n    float glow = exp(-abs(d) * 15.0);\n    \n    vec3 finalCol = col * edge * (1.0 + iBeatPulse * 2.0) + col * glow * (0.5 + iBeatPulse);\n    finalCol *= 1.0 - smoothstep(0.5, 1.0, length(uv));\n    \n    return half4(half3(clamp(finalCol, 0.0, 1.0)), 1.0);\n}\n",
+    "uniforms_used": [
+      "iAudioBass",
+      "iAudioMids",
+      "iAudioTreble",
+      "iAudioEnergy",
+      "iBeatPulse",
+      "iSceneTransition",
+      "iIntensity",
+      "iAspect",
+      "iTime",
+      "iTimeDelta",
+      "iResolution",
+      "iMouse"
+    ],
+    "fallback": "Reduce max iterations on battery tier"
+  }
+}

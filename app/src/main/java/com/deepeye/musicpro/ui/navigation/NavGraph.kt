@@ -3,21 +3,12 @@
 
 package com.deepeye.musicpro.ui.navigation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -25,6 +16,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.deepeye.musicpro.account.YouTubeAccountViewModel
+import com.deepeye.musicpro.ui.components.FeatureUnavailableScreen
 import com.deepeye.musicpro.ui.downloads.DownloadsScreen
 import com.deepeye.musicpro.ui.dsp.DSPScreen
 import com.deepeye.musicpro.ui.history.HistoryScreen
@@ -32,20 +25,16 @@ import com.deepeye.musicpro.ui.homehub.HomeHubScreen
 import com.deepeye.musicpro.ui.library.AlbumDetailScreen
 import com.deepeye.musicpro.ui.library.ArtistDetailScreen
 import com.deepeye.musicpro.ui.library.LibraryScreen
-import com.deepeye.musicpro.ui.screens.NetMirrorScreen
-import com.deepeye.musicpro.ui.player.NowPlayingScreen
-import com.deepeye.musicpro.ui.music.MusicScreen
-import com.deepeye.musicpro.ui.playlist.PlaylistDetailScreen
-import com.deepeye.musicpro.ui.search.SearchScreen
-import com.deepeye.musicpro.ui.settings.SettingsScreen
-import com.deepeye.musicpro.ui.youtube.YouTubeScreen
 import com.deepeye.musicpro.ui.library.LikedSongsScreen
 import com.deepeye.musicpro.ui.library.PlaylistsScreen
 import com.deepeye.musicpro.ui.library.SavedItemsScreen
-import com.deepeye.musicpro.account.YouTubeAccountViewModel
-import com.deepeye.musicpro.ui.components.FeatureUnavailableScreen
-import com.deepeye.musicpro.ui.navigation.AccountSessionViewModel
+import com.deepeye.musicpro.ui.music.MusicScreen
+import com.deepeye.musicpro.ui.playlist.PlaylistDetailScreen
+import com.deepeye.musicpro.ui.screens.NetMirrorScreen
 import com.deepeye.musicpro.ui.screens.YouTubeLoginScreen
+import com.deepeye.musicpro.ui.search.SearchScreen
+import com.deepeye.musicpro.ui.settings.SettingsScreen
+import com.deepeye.musicpro.ui.youtube.YouTubeScreen
 
 @Composable
 fun NavGraph(
@@ -69,14 +58,16 @@ fun NavGraph(
 
     val transitionEasing = androidx.compose.animation.core.CubicBezierEasing(0.16f, 1f, 0.3f, 1f)
 
-    val tweenSpec = androidx.compose.animation.core.tween<androidx.compose.ui.unit.IntOffset>(
-        durationMillis = 420,
-        easing = transitionEasing
-    )
-    val fadeSpec = androidx.compose.animation.core.tween<Float>(
-        durationMillis = 420,
-        easing = transitionEasing
-    )
+    val tweenSpec =
+        androidx.compose.animation.core.tween<androidx.compose.ui.unit.IntOffset>(
+            durationMillis = 420,
+            easing = transitionEasing
+        )
+    val fadeSpec =
+        androidx.compose.animation.core.tween<Float>(
+            durationMillis = 420,
+            easing = transitionEasing
+        )
 
     // Sign-out routing.
     //
@@ -141,7 +132,6 @@ fun NavGraph(
                 onCancel = { navController.popBackStack() }
             )
         }
-
 
         // ── Bottom Nav Destinations ──
         composable(Routes.Home.route) {
@@ -222,11 +212,12 @@ fun NavGraph(
         }
         composable(Routes.TvDashboard.route) {
             val context = androidx.compose.ui.platform.LocalContext.current
-            val tvRepo = remember(context) {
-                com.deepeye.musicpro.hometheater.scanner.MediaLibraryRepository(
-                    com.deepeye.musicpro.hometheater.scanner.LibraryScanner(context)
-                )
-            }
+            val tvRepo =
+                remember(context) {
+                    com.deepeye.musicpro.hometheater.scanner.MediaLibraryRepository(
+                        com.deepeye.musicpro.hometheater.scanner.LibraryScanner(context)
+                    )
+                }
             val playerViewModel: com.deepeye.musicpro.ui.player.PlayerViewModel = hiltViewModel()
             val movies by tvRepo.movies.collectAsStateWithLifecycle(emptyList())
 
@@ -237,23 +228,24 @@ fun NavGraph(
             com.deepeye.musicpro.hometheater.ui.TvDashboardScreen(
                 movies = movies,
                 onMediaSelected = { media ->
-                    val item = com.deepeye.musicpro.domain.model.MediaItem.Remote(
-                        id = media.id,
-                        title = media.title,
-                        artist = "",
-                        artworkUri = media.posterUrl?.let(android.net.Uri::parse),
-                        duration = media.durationMs,
-                        streamUri = android.net.Uri.parse(media.uri),
-                        isVideo = media.mediaType == com.deepeye.musicpro.hometheater.model.MediaType.MOVIE ||
-                            media.mediaType == com.deepeye.musicpro.hometheater.model.MediaType.EPISODE
-                    )
+                    val item =
+                        com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                            id = media.id,
+                            title = media.title,
+                            artist = "",
+                            artworkUri = media.posterUrl?.let(android.net.Uri::parse),
+                            duration = media.durationMs,
+                            streamUri = android.net.Uri.parse(media.uri),
+                            isVideo =
+                                media.mediaType == com.deepeye.musicpro.hometheater.model.MediaType.MOVIE ||
+                                    media.mediaType == com.deepeye.musicpro.hometheater.model.MediaType.EPISODE
+                        )
                     playerViewModel.playMedia(item)
                     onExpandPlayer()
                 },
                 onBack = { navController.popBackStack() }
             )
         }
-
 
         composable(Routes.Settings.route) {
             SettingsScreen(
@@ -267,7 +259,15 @@ fun NavGraph(
                 signedInEmail = (accountSession as? com.deepeye.musicpro.account.AccountSession.Connected)?.channelKey,
             )
         }
-        
+
+        composable(Routes.Profile.route) {
+            com.deepeye.musicpro.ui.profile.ProfileScreen(
+                windowSizeClass = windowSizeClass,
+                onNavigateBack = { navController.popBackStack() },
+                onConnectAccount = { navController.navigate(Routes.YouTubeLogin.route) },
+            )
+        }
+
         composable(Routes.AEOS.route) {
             com.deepeye.musicpro.aeos.ui.dashboard.MusicDashboard()
         }
@@ -373,8 +373,9 @@ fun NavGraph(
         composable(Routes.ChatAuth.route) {
             FeatureUnavailableScreen(
                 title = "Chat Unavailable",
-                detail = "Chat required a Firebase account service that has been " +
-                    "removed. This feature is disabled in this build.",
+                detail =
+                    "Chat required a Firebase account service that has been " +
+                        "removed. This feature is disabled in this build.",
                 onBack = { navController.popBackStack() }
             )
         }
