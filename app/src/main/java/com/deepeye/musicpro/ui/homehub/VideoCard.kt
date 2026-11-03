@@ -86,72 +86,60 @@ fun VideoCard(
                             )
                 )
 
-                // Quality Badge Pill (Top-Left)
-                val quality =
-                    remember(item.id) {
-                        val hash = item.id.hashCode().absoluteValue
-                        when {
-                            item.isLive -> "LIVE"
-                            hash % 3 == 0 -> "4K"
-                            hash % 3 == 1 -> "HDR"
-                            else -> "1080P"
-                        }
+                // Quality badge pill — always visible, deterministic per video
+                val quality = when {
+                    item.isLive -> "LIVE"
+                    else -> when (item.id.hashCode().absoluteValue % 3) {
+                        0 -> "4K"
+                        1 -> "HDR"
+                        else -> "1080P"
                     }
-                Box(
-                    modifier =
-                        Modifier
-                            .align(Alignment.TopStart)
-                            .padding(10.dp)
-                            .background(
-                                if (quality == "LIVE") Color(0xFFFF0033) else Color.Black.copy(alpha = 0.85f),
-                                RoundedCornerShape(8.dp)
-                            )
-                            .padding(horizontal = 8.dp, vertical = 3.dp)
-                ) {
-                    Text(
-                        text = quality,
-                        color =
-                            if (quality == "4K") {
-                                Color(
-                                    0xFFFF3D00
-                                )
-                            } else if (quality == "HDR") {
-                                Color(0xFF00E676)
-                            } else {
-                                Color(0xFF00E5FF)
-                            },
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
-                    )
                 }
-
-                // Duration Badge Pill (Bottom-Right)
-                if (!item.isLive && item.duration > 0) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .align(Alignment.BottomEnd)
-                                .padding(10.dp)
-                                .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(10.dp)
+                        .background(when (quality) {
+                            "LIVE" -> Color(0xFFFF0033)
+                            "HDR" -> Color(0xFF00E676)
+                            else -> Color(0xFF00E5FF)
+                        }, RoundedCornerShape(8.dp))
                     ) {
                         Text(
-                            text = item.duration.formatDuration(),
-                            color = Color.White,
-                            fontSize = 11.sp,
+                            text = quality,
+                            color = when (quality) {
+                                "LIVE" -> Color(0xFFFFFFFF)
+                                "HDR" -> Color(0xFF000000)
+                                else -> Color(0xFFFFFFFF)
+                            },
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                         )
                     }
+
+                // Duration Badge Pill (Bottom-Right) — always visible; shows "0:00" when duration is unknown
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(10.dp)
+                        .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = item.duration.coerceAtLeast(0L).formatDuration(),
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                    )
                 }
             }
 
             // Metadata with premium typography
             Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
                 verticalAlignment = Alignment.Top,
             ) {
                 // Channel Avatar (Coil AsyncImage, clipped to a circle) — left of the
@@ -161,20 +149,24 @@ fun VideoCard(
                     item.channelAvatarUrl.ifBlank {
                         "https://i.ytimg.com/vi/${item.id}/default.jpg"
                     }
-                AsyncImage(
-                    model =
-                        coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
-                            .data(avatarModel)
-                            .crossfade(true)
-                            .build(),
-                    contentDescription = item.channelName,
-                    modifier =
-                        Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x22FFFFFF)),
-                    contentScale = ContentScale.Crop,
-                )
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color(0x22FFFFFF)),
+                ) {
+                    AsyncImage(
+                        model =
+                            coil3.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                                .data(avatarModel)
+                                .crossfade(true)
+                                .build(),
+                        contentDescription = item.channelName ?: "Channel avatar",
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
 
                 Spacer(Modifier.width(10.dp))
 
@@ -196,9 +188,9 @@ fun VideoCard(
                     // bodySmall line with a muted color, matching YouTube parity.
                     val metaParts =
                         buildList {
-                            if (item.channelName.isNotBlank()) add(item.channelName)
-                            if (item.viewCount > 0) add(item.viewCount.formatCountShort())
-                            if (item.uploadDate.isNotBlank()) add(item.uploadDate)
+                            add(item.channelName ?: "Unknown channel")
+                            add(item.viewCount?.formatCountShort() ?: "0 views")
+                            add(item.uploadDate ?: "—")
                         }
                     if (metaParts.isNotEmpty()) {
                         Text(

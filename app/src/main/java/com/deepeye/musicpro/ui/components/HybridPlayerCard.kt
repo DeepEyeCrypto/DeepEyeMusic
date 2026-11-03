@@ -115,6 +115,16 @@ fun VideoPlayerView(
                 playerView.player = null
                 playerView.player = currentPlayer
             }
+        } else {
+            // When entering PiP mode the texture surface is recreated while the window
+            // resizes to the small floating size; without an explicit rebind ExoPlayer's
+            // video renderer keeps drawing to the now-detached surface, leaving PiP black.
+            kotlinx.coroutines.delay(200)
+            val currentPlayer = playerView.player
+            if (currentPlayer != null) {
+                playerView.player = null
+                playerView.player = currentPlayer
+            }
         }
     }
 

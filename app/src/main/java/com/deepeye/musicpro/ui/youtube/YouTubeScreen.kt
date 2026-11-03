@@ -1273,37 +1273,35 @@ fun SmartTubeVideoCard(
                 }
             }
 
-            // Duration Badge (Bottom-Right) — only show if duration is known
-            if (video.duration > 0) {
-                Box(
-                    modifier =
-                        Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(8.dp)
-                            .background(
-                                androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.65f),
-                                RoundedCornerShape(6.dp)
-                            )
-                            .padding(horizontal = 6.dp, vertical = 3.dp),
+            // Duration Badge (Bottom-Right) — always visible; shows "0:00" when duration is unknown
+            Box(
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                        .background(
+                            androidx.compose.material3.MaterialTheme.colorScheme.surface.copy(alpha = 0.65f),
+                            RoundedCornerShape(6.dp)
+                        )
+                        .padding(horizontal = 6.dp, vertical = 3.dp),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PlayCircle,
-                            contentDescription = null,
-                            tint = neonCyan,
-                            modifier = Modifier.size(11.dp),
-                        )
-                        Text(
-                            text = formatDuration(video.duration),
-                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace,
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.PlayCircle,
+                        contentDescription = null,
+                        tint = neonCyan,
+                        modifier = Modifier.size(11.dp),
+                    )
+                    Text(
+                        text = formatDuration(video.duration.coerceAtLeast(0L)),
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                    )
                 }
             }
 
@@ -1386,7 +1384,7 @@ fun SmartTubeVideoCard(
                 ) {
                     if (video.channelAvatarUrl.isNotBlank()) {
                         AsyncImage(
-                            model = video.channelAvatarUrl,
+                            model = video.channelAvatarUrl.ifBlank { "https://i.ytimg.com/vi/${video.id}/default.jpg" },
                             contentDescription = cleanChannel,
                             modifier = Modifier.fillMaxSize().clip(CircleShape),
                             contentScale = ContentScale.Crop,
@@ -1418,8 +1416,8 @@ fun SmartTubeVideoCard(
 
                 val metaParts =
                     buildList {
-                        if (video.viewCount > 0) add(formatViews(video.viewCount))
-                        if (video.uploadDate.isNotBlank()) add(video.uploadDate)
+                        add(formatViews(video.viewCount))
+                        add(video.uploadDate ?: "—")
                     }
                 if (metaParts.isNotEmpty()) {
                     Text(" · ", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), fontSize = 11.sp)
