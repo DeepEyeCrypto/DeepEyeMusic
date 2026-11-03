@@ -78,6 +78,11 @@ class InnerTubeAuthManager
             deviceAuthManager.pollForToken(deviceCode, intervalSeconds) { tokenResponse ->
                 kotlinx.coroutines.runBlocking {
                     authCacheManager.purgeAllCaches()
+                    // Fetch and persist user profile on initial OAuth completion
+                    deviceAuthManager.fetchUserProfile(tokenResponse.accessToken)?.let { profile ->
+                        settingsDataStore.setYouTubeProfile(profile.name, profile.pictureUrl, profile.email)
+                        Log.i(TAG, "event=user_profile_persisted_on_initial_login hasName=${profile.name != null} hasAvatar=${profile.pictureUrl != null} hasEmail=${profile.email != null}")
+                    }
                     onTokenReceived(tokenResponse)
                 }
             }
@@ -188,6 +193,13 @@ class InnerTubeAuthManager
                         )
                     settingsDataStore.setYouTubeTokens(tokenResponse.accessToken, newRefreshToken, expiresAt)
                     authCacheManager.purgeAllCaches()
+                    
+                    // Fetch and persist user profile so ProfileScreen and feed show real names
+                    deviceAuthManager.fetchUserProfile(tokenResponse.accessToken)?.let { profile ->
+                        settingsDataStore.setYouTubeProfile(profile.name, profile.pictureUrl, profile.email)
+                        Log.i(TAG, "event=user_profile_persisted hasName=${profile.name != null} hasAvatar=${profile.pictureUrl != null} hasEmail=${profile.email != null}")
+                    }
+                    
                     Log.i(TAG, "event=token_refresh outcome=success")
                     TokenRefreshOutcome.Success(tokenResponse.accessToken)
                 }
