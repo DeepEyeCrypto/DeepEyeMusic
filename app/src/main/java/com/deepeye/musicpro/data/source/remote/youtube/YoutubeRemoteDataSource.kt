@@ -781,6 +781,7 @@ class YoutubeRemoteDataSource
                 thumbnailUrl = thumbnailUrl.upgradeResolution(),
                 duration = duration,
                 viewCount = viewCount,
+                uploadDate = uploadDate,
                 isShort = isShort,
                 channelAvatarUrl = channelAvatarUrl
             )

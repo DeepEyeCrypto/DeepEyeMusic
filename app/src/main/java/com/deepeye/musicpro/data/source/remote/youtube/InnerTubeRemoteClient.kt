@@ -1058,7 +1058,10 @@ class InnerTubeRemoteClient
                 channelName = artist,
                 thumbnailUrl = thumb,
                 duration = duration,
-                viewCount = 0L
+                viewCount = parseVideoViewCount(target),
+                uploadDate = parseVideoPublishDate(target),
+                isShort = false,
+                channelAvatarUrl = parseChannelAvatarUrl(target)
             )
         }
 
@@ -1101,12 +1104,82 @@ class InnerTubeRemoteClient
         }
 
         private fun parseDuration(text: String): Long {
-            if (text.isBlank()) return 0L
-            val parts = text.split(":")
-            return when (parts.size) {
-                2 -> (parts[0].toLongOrNull() ?: 0L) * 60 + (parts[1].toLongOrNull() ?: 0L)
-                3 -> (parts[0].toLongOrNull() ?: 0L) * 3600 + (parts[1].toLongOrNull() ?: 0L) * 60 + (parts[2].toLongOrNull() ?: 0L)
-                else -> parts[0].toLongOrNull() ?: 0L
+                if (text.isBlank()) return 0L
+                val parts = text.split(":")
+                return when (parts.size) {
+                    2 -> parts[0].toLong() * 60 + parts[1].toLong()
+                    3 -> parts[0].toLong() * 3600 + parts[1].toLong() * 60 + parts[2].toLong()
+                    else -> 0L
+                }
             }
-        }
+
+            /** Parse the view count from the video renderer JSON. */
+            private fun parseVideoViewCount(videoRenderer: JSONObject): Long {
+                // Try viewCountText simpleText first
+                val viewCountObj = videoRenderer.optJSONObject("viewCountText")
+                if (viewCountObj != null) {
+                    val simple = viewCountObj.optString("simpleText", "")
+                    if (simple.isNotBlank()) {
+                        return when (simple.endsWith(" views")) {
+                            true -> simple.dropLast(6).trim().toLongOrNull() ?: 0L
+                            false -> simple.trim().toLongOrNull() ?: 0L
+                        }
+                    }
+                }
+                // Fallback: try compactViewCountText
+                val compactViewObj = videoRenderer.optJSONObject("compactViewCountText")
+                if (compactViewObj != null) {
+                    val simple = compactViewObj.optString("simpleText", "")
+                    if (simple.isNotBlank()) {
+                        return when (simple.endsWith(" views")) {
+                            true -> simple.dropLast(6).trim().toLongOrNull() ?: 0L
+                            false -> simple.trim().toLongOrNull() ?: 0L
+                        }
+                    }
+                }
+                return 0L
+            }
+
+            /** Parse the upload/publish date from the video renderer JSON. */
+            private fun parseVideoPublishDate(videoRenderer: JSONObject): String {
+                // Try metadataMetadataMetadataMetadataMetadata (YouTube's nested key)
+                val metadata = videoRenderer.optJSONObject("metadata")
+                if (metadata != null) {
+                    val pubDate = metadata.optString("uploadDate", "")
+                    if (pubDate.isNotBlank()) return pubDate
+                }
+                // Try shortBylineOrPostedOnDateText
+                val dateObj = videoRenderer.optJSONObject("shortBylineOrPostedOnDateText")
+                if (dateObj != null) {
+                    val simple = dateObj.optString("simpleText", "")
+                    if (simple.isNotBlank()) return simple
+                }
+                // Fallback: try publishedTimeText
+                val pubTime = videoRenderer.optJSONObject("publishedTimeText")
+                if (pubTime != null) {
+                    val simple = pubTime.optString("simpleText", "")
+                    if (simple.isNotBlank()) return simple
+                }
+                return ""
+            }
+
+            /** Parse the channel avatar URL from the video renderer JSON. */
+            private fun parseChannelAvatarUrl(videoRenderer: JSONObject): String {
+                // Try the direct channelAvatarUrl field first
+                val avatar = videoRenderer.optString("channelAvatarUrl", "")
+                if (avatar.isNotBlank()) return avatar
+                // Try channelThumbnailSupportedRenderers array (YouTube's avatar holder)
+                val thumbRenderers = videoRenderer.optJSONObject("channelThumbnailSupportedRenderers")
+                if (thumbRenderers != null) {
+                    val defaultRenderer = thumbRenderers.optJSONObject("defaultChannelThumbnailRenderer")
+                    val thumbs = defaultRenderer?.optJSONObject("avatar")?.optJSONObject("defaultImageRenderer")?.optJSONObject("icon")
+                        ?: defaultRenderer?.optJSONArray("iconOverlays")?.optJSONObject(0)
+                    val iconThumbs = thumbs?.optJSONObject("circularImageViewMaterialRenderer")?.optJSONObject("avatarIcon")?.optJSONObject("thumbnailRenderer")?.optJSONArray("thumbnails")
+                    if (iconThumbs != null && iconThumbs.length() > 0) {
+                        val url = iconThumbs.optJSONObject(0)?.optString("url") ?: ""
+                        if (url.isNotBlank()) return url
+                    }
+                }
+                return ""
+            }
     }

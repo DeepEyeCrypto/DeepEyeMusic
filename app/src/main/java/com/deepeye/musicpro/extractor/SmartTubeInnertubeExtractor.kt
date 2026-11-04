@@ -90,6 +90,32 @@ class SmartTubeInnertubeExtractor(
             }
         }
 
+        /** Extract the upload/publish date from a video renderer JSON. */
+        fun parseUploadDate(v: JSONObject): String {
+            // Try metadata.uploadDate first (most reliable in browse responses)
+            val metadata = v.optJSONObject("metadata")
+            if (metadata != null) {
+                val date = metadata.optJSONObject("uploadDate")
+                if (date != null) {
+                    val simple = date.optJSONObject("simpleText")?.optString("simpleText") ?: date.getString("simpleText")
+                    if (simple.isNotBlank()) return simple
+                }
+            }
+            // Try publishedTimeText
+            val pubTime = v.optJSONObject("publishedTimeText")
+            if (pubTime != null) {
+                val simple = pubTime.optJSONObject("simpleText")?.optString("simpleText") ?: pubTime.getString("simpleText")
+                if (simple.isNotBlank()) return simple
+            }
+            // Try shortBylineOrPostedOnDateText
+            val dateObj = v.optJSONObject("shortBylineOrPostedOnDateText")
+            if (dateObj != null) {
+                val simple = dateObj.optJSONObject("simpleText")?.optString("simpleText") ?: dateObj.getString("simpleText")
+                if (simple.isNotBlank()) return simple
+            }
+            return ""
+        }
+
         // First run of a title/text object, e.g. `{"runs":[{"text":"..."}]}`.
         fun runsText(obj: JSONObject?): String {
             if (obj == null) return ""
@@ -424,7 +450,7 @@ class SmartTubeInnertubeExtractor(
                 duration in 1..59
             )
         return ExtractorVideoItem(
-            id = v.optString("videoId", ""),
+            id = v.getString("videoId"),
             title = titleText,
             artist = channelName,
             duration = duration,
@@ -435,6 +461,7 @@ class SmartTubeInnertubeExtractor(
                         runsText(v.optJSONObject("shortViewCountText"))
                     }
                 ),
+            uploadDate = parseUploadDate(v),
             isShort = shortFlag,
             channelAvatarUrl = channelAvatar,
             channelId = browseId,
