@@ -1,0 +1,172 @@
+{
+  "pbtResults": {
+    "1. Write bug condition exploration test": {
+      "status": "passed",
+      "failingExample": "VideoCard with viewCount=0, channelName=\"\", uploadDate=\"\" renders metadata row text \" • 0 views • \" (Node #53 at bounds l=60.0,t=223.0,r=74.0,b=259.0 px). The \"0 views\" placeholder text appears for every seeded HomeVideoItem with zero viewCount — confirmed across 5 seeded iterations with Random(42L). The bug: formatCountShort(0) returns \"0 views\" unconditionally, and the metadata row adds it via `add(item.viewCount?.formatCountShort() ?: \"0 views\")`.",
+      "lastRunTimestamp": 1793795097819
+    }
+  },
+  "executionHistory": {
+    "1. Write bug condition exploration test": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793124679
+      },
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793159277
+      },
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793795138264
+      }
+    ],
+    "2. Write preservation property tests (BEFORE implementing fix)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793125508
+      },
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793795145883
+      },
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793797610991
+      }
+    ],
+    "3.1.1 Create `ui/components/UnifiedCardData.kt` (NEW)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793126114
+      },
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793795484869
+      },
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793797612259
+      }
+    ],
+    "3.1.2 Create `ui/components/UnifiedCardMappers.kt` (NEW) (depends on 3.1.1)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793130251
+      },
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793797623236
+      }
+    ],
+    "3.1.3 Create `ui/components/UnifiedMediaCard.kt` (NEW) (depends on 3.1.1, 3.1.2)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793131340
+      }
+    ],
+    "3.1.4 Refactor `ui/homehub/VideoCard.kt` (depends on 3.1.2, 3.1.3)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793131649
+      }
+    ],
+    "3.1.5 Migrate `ui/youtube/YouTubeScreen.kt` (depends on 3.1.2, 3.1.3)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793132084
+      }
+    ],
+    "3.1.6 Migrate `ui/music/MusicScreen.kt` (depends on 3.1.2, 3.1.3)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793132391
+      }
+    ],
+    "3.1.7 Migrate `ui/home/HomeScreen.kt` (depends on 3.1.2, 3.1.3)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793132832
+      }
+    ],
+    "3.1.8 Migrate `ui/homehub/HomeHubScreen.kt` (depends on 3.1.2, 3.1.3)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793133306
+      }
+    ],
+    "3.1.9 Migrate `ui/homehub/ContinueWatchingRow.kt` and `ui/homehub/ContinueListeningRow.kt` (depends on 3.1.2, 3.1.3)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793133934
+      }
+    ],
+    "3.1.10 Migrate `ui/library/LibraryListScreens.kt` (depends on 3.1.2, 3.1.3)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793134610
+      }
+    ],
+    "3.1.11 Migrate `ui/history/HistoryScreen.kt` (depends on 3.1.2, 3.1.3)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793135069
+      }
+    ],
+    "3.1.12 Migrate `ui/search/SearchScreen.kt` (depends on 3.1.2, 3.1.3, 3.1.5)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793135386
+      }
+    ],
+    "3.1.13 Build and compile verification (depends on 3.1.4–3.1.12)": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793135709
+      }
+    ],
+    "3.2 Verify bug condition exploration test now passes": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793136038
+      }
+    ],
+    "3.3 Verify preservation tests still pass": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793136342
+      }
+    ],
+    "4. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "2ee607cf-d83c-4abd-ac21-b5ceb68dd556",
+        "chatSessionId": "sess_9cb1b659-9cd2-4ae3-bb20-8e0c29dd933e",
+        "timestamp": 1793793136749
+      }
+    ]
+  }
+}
