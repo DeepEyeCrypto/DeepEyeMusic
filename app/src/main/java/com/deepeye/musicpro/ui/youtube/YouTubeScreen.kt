@@ -1382,21 +1382,14 @@ fun SmartTubeVideoCard(
                             ),
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (video.channelAvatarUrl.isNotBlank()) {
-                        AsyncImage(
-                            model = video.channelAvatarUrl.ifBlank { "https://i.ytimg.com/vi/${video.id}/default.jpg" },
-                            contentDescription = cleanChannel,
-                            modifier = Modifier.fillMaxSize().clip(CircleShape),
-                            contentScale = ContentScale.Crop,
-                        )
-                    } else {
-                        Text(
-                            text = firstChar.uppercase(),
-                            color = neonCyan,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 10.sp,
-                        )
-                    }
+                    val avatarModel =
+                        video.channelAvatarUrl.ifBlank { "https://i.ytimg.com/vi/${video.id}/default.jpg" }
+                    AsyncImage(
+                        model = avatarModel,
+                        contentDescription = cleanChannel,
+                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                    )
                 }
 
                 Spacer(Modifier.width(6.dp))
