@@ -122,8 +122,10 @@ class PlayerController
         private var prefetchedTrackId: String? = null
         private var isPrefetchingNextTrack: Boolean = false
 
-        // AUTOPLAY-DEBUG-OMEGA: atomic prefetch guard (100ms poller fibrillation fix).
-        private val prefetchGuard = java.util.concurrent.atomic.AtomicBoolean(false)
+        // AUTOPLAY-OMEGA: single shared flight guard across ALL autoplay trigger sites
+        // (15s poller, infinite-radio tail, queue-exhaustion). Atomic compareAndSet
+        // guarantees exactly one generation in flight at any time.
+        private val autoplayGenerationGuard = java.util.concurrent.atomic.AtomicBoolean(false)
 
         var isBackgroundPlaybackEnabled = false
 
@@ -646,7 +648,7 @@ class PlayerController
 
                         if (q.isNotEmpty() && idx >= q.size - 2 && playerState.value.autoplayEnabled) {
                             val current = q.getOrNull(idx)
-                            if (current != null && !_autoplayState.value.isGenerating) {
+                            if (current != null && autoplayGenerationGuard.compareAndSet(false, true)) {
                                 _autoplayState.update { it.copy(isGenerating = true) }
                                 android.util.Log.d(
                                     "AutoplayEngine",
@@ -677,7 +679,11 @@ class PlayerController
                                                     duration = 0L,
                                                 )
                                             }
-                                        queueManager.addItems(mediaItems)
+                                        val existingIds = queueManager.queue.value.map { it.id }.toSet()
+                                        val newItems = mediaItems.filter { it.id !in existingIds }
+                                        if (newItems.isNotEmpty()) {
+                                            queueManager.addItems(newItems)
+                                        }
                                         // ISOLATION-OMEGA: InnerTube dictates repeats; keep
                                         // only the display history (takeLast 50), no sessionHistory/blacklist shaping.
                                         _autoplayState.update { state ->
@@ -696,6 +702,7 @@ class PlayerController
                                     android.util.Log.e("AutoplayEngine", "Failed to generate next tracks", e)
                                 } finally {
                                     _autoplayState.update { it.copy(isGenerating = false) }
+                                    autoplayGenerationGuard.set(false)
                                 }
                             }
                         }
@@ -1100,6 +1107,14 @@ class PlayerController
                     "AutoplayEngine",
                     "Queue empty on next(). Triggering personalized autoplay emergency fallback. Last played: ${current?.title}"
                 )
+                if (!autoplayGenerationGuard.compareAndSet(false, true)) {
+                    android.util.Log.d(
+                        "AutoplayEngine",
+                        "generation already in flight; skipping emergency fallback",
+                    )
+                    return
+                }
+                _autoplayState.update { it.copy(isGenerating = true) }
                 scope.launch {
                     try {
                         val activeArtists = queueManager.queue.value.map { it.artist }
@@ -1139,7 +1154,11 @@ class PlayerController
                                     )
                                 }
 
-                            queueManager.addItems(mediaItems)
+                            val existingIds = queueManager.queue.value.map { it.id }.toSet()
+                            val newItems = mediaItems.filter { it.id !in existingIds }
+                            if (newItems.isNotEmpty()) {
+                                queueManager.addItems(newItems)
+                            }
 
                             val firstCandidate = validCandidates.first()
 
@@ -1162,6 +1181,9 @@ class PlayerController
                         }
                     } catch (e: Exception) {
                         android.util.Log.e("AutoplayEngine", "Error during autoplay resolution", e)
+                    } finally {
+                        _autoplayState.update { it.copy(isGenerating = false) }
+                        autoplayGenerationGuard.set(false)
                     }
                 }
             }
@@ -1270,10 +1292,11 @@ class PlayerController
             // /next fetches. compareAndSet makes exactly one prefetch in flight.
             // Audited: network on Dispatchers.IO, player.addMediaItem on
             // Dispatchers.Main — no cross-thread ExoPlayer violation.
-            if (!prefetchGuard.compareAndSet(false, true)) {
+            if (!autoplayGenerationGuard.compareAndSet(false, true)) {
                 return
             }
             isPrefetchingNextTrack = true
+            _autoplayState.update { it.copy(isGenerating = true) }
             if (!playerState.value.autoplayEnabled) {
                 android.util.Log.d(
                     "AUTOPLAY_DEBUG",
@@ -1281,7 +1304,8 @@ class PlayerController
                         "autoplayEnabled=${playerState.value.autoplayEnabled}",
                 )
                 isPrefetchingNextTrack = false
-                prefetchGuard.set(false)
+                _autoplayState.update { it.copy(isGenerating = false) }
+                autoplayGenerationGuard.set(false)
                 return
             }
             val currentItem = playerState.value.currentItem
@@ -1291,7 +1315,8 @@ class PlayerController
             val currentTrack: MediaItem =
                 currentItem ?: run {
                     isPrefetchingNextTrack = false
-                    prefetchGuard.set(false)
+                    _autoplayState.update { it.copy(isGenerating = false) }
+                    autoplayGenerationGuard.set(false)
                     return
                 }
 
@@ -1306,7 +1331,8 @@ class PlayerController
                         "peekNext=${queueManager.peekNext()?.id} videoId=${currentTrack.id}"
                 )
                 isPrefetchingNextTrack = false
-                prefetchGuard.set(false)
+                _autoplayState.update { it.copy(isGenerating = false) }
+                autoplayGenerationGuard.set(false)
                 return
             }
 
@@ -1353,8 +1379,12 @@ class PlayerController
                                             duration = 0L,
                                         )
                                     }
-                                queueManager.addItems(mediaItems)
-                                mediaItems.firstOrNull()
+                                val existingIds = queueManager.queue.value.map { it.id }.toSet()
+                                val newItems = mediaItems.filter { it.id !in existingIds }
+                                if (newItems.isNotEmpty()) {
+                                    queueManager.addItems(newItems)
+                                }
+                                newItems.firstOrNull() ?: mediaItems.firstOrNull()
                             } else {
                                 null
                             }
@@ -1424,7 +1454,8 @@ class PlayerController
                     android.util.Log.w("PlayerController", "Gapless Radio prefetch failed: ${e.message}")
                 } finally {
                     isPrefetchingNextTrack = false
-                    prefetchGuard.set(false)
+                    _autoplayState.update { it.copy(isGenerating = false) }
+                    autoplayGenerationGuard.set(false)
                 }
             }
         }

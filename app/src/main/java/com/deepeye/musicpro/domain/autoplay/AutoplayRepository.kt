@@ -81,9 +81,11 @@ class AutoplayRepository
                     if (!cachedQueue.isNullOrEmpty()) {
                         val recentIds = autoplayState.history.takeLast(RECENT_HISTORY_GUARD_WINDOW).toSet()
                         val scrubbed =
-                            cachedQueue.filter {
-                                it.videoId != currentTrack.id && it.videoId !in recentIds
-                            }
+                            cachedQueue
+                                .filter {
+                                    it.videoId != currentTrack.id && it.videoId !in recentIds
+                                }
+                                .distinctBy { it.videoId }
                         if (scrubbed.isNotEmpty()) {
                             android.util.Log.i(
                                 "AutoplayRepository",
