@@ -304,8 +304,13 @@ class UnifiedCardBugConditionTest {
     @Test
     fun `1g_pbt_placeholderText_VideoCard_neverShowsBlankDataPlaceholders_acrossSeededInputs`() {
         val random = java.util.Random(42L)
-        repeat(5) { i ->
-            val item = HomeVideoItem(
+        // Build all seeded items up front (deterministic), then render every card
+        // in a single setContent. The Compose test rule only allows one setContent
+        // per test; rendering the whole seeded set together lets us assert the
+        // property — "0 views" is never shown — across every blank-data
+        // combination in one tree.
+        val items = (0 until 5).map { i ->
+            HomeVideoItem(
                 id = "seed_$i",
                 title = "Seeded Track $i",
                 channelName = if (random.nextBoolean()) "" else "Channel $i",
@@ -315,14 +320,18 @@ class UnifiedCardBugConditionTest {
                 viewCount = 0,
                 uploadDate = if (random.nextBoolean()) "" else "2024-0${i + 1}-01",
             )
-            composeTestRule.setContent {
-                MaterialTheme {
-                    VideoCard(item = item, onClick = {})
+        }
+        composeTestRule.setContent {
+            MaterialTheme {
+                androidx.compose.foundation.layout.Column {
+                    items.forEach { item ->
+                        VideoCard(item = item, onClick = {})
+                    }
                 }
             }
-            composeTestRule.onNodeWithText("0 views", substring = true, useUnmergedTree = true)
-                .assertDoesNotExist()
         }
+        composeTestRule.onNodeWithText("0 views", substring = true, useUnmergedTree = true)
+            .assertDoesNotExist()
     }
 
     // ─── 1h. YouTube Tab Adaptive Grid ───────────────────────────────────────

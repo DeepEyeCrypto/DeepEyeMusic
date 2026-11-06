@@ -53,8 +53,8 @@ fun VisualizerStudioScreen(
             VisualizerSceneId.CRYSTAL_TUNNEL -> AgslScene.CRYSTAL_TUNNEL
             VisualizerSceneId.CYBER_GRID -> AgslScene.CYBER_GRID
             VisualizerSceneId.AURA_ORB -> AgslScene.AURA_ORB
-            VisualizerSceneId.FLUID_PULSE,
-            VisualizerSceneId.AUDIO_FRACTAL,
+            VisualizerSceneId.FLUID_PULSE -> AgslScene.FLUID_PULSE
+            VisualizerSceneId.AUDIO_FRACTAL -> AgslScene.AUDIO_FRACTAL
             VisualizerSceneId.NEON_GRID -> AgslScene.NEON_GRID
             else -> AgslScene.NEON_TRIANGLE_GRID
         }

@@ -838,6 +838,21 @@ fun PersonalizedMusicCard(
             )
             Spacer(Modifier.height(3.dp))
 
+            // View count metadata (bug 1b: missing metadata → blank placeholder)
+            if (item.playCount > 0) {
+                Text(
+                    text = when {
+                        item.playCount >= 1_000_000 -> "${"%.1f".format(item.playCount / 1_000_000.0)}M views"
+                        item.playCount >= 1_000 -> "${"%.1f".format(item.playCount / 1_000.0)}K views"
+                        else -> "${item.playCount} views"
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextTertiary,
+                    maxLines = 1,
+                )
+                Spacer(Modifier.height(2.dp))
+            }
+
             // Artist + overflow menu
             Row(
                 modifier = Modifier.fillMaxWidth(),

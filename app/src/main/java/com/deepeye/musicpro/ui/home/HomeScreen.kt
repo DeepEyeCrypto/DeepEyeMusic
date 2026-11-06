@@ -34,6 +34,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -860,19 +862,45 @@ fun ModernVideoCard(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Title (2 lines max)
-        Text(
-            text = video.title,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = Color.White,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
+        // Channel avatar + title row (unified card design): the avatar carries the
+        // channel/artist name as its accessibility label so screen readers and the
+        // semantics tree expose it (bug 1c).
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (video.artist.isNotBlank()) {
+                Box(
+                    modifier =
+                        Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1E2532))
+                            .semantics { contentDescription = video.artist },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = video.artist.take(1).uppercase(),
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+            Text(
+                text = video.title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
 
-        // Artist (1 line)
+        // Artist / channel name (1 line)
         if (video.artist.isNotBlank()) {
-            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = video.artist,
                 style = MaterialTheme.typography.bodySmall,

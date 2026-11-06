@@ -189,7 +189,9 @@ fun VideoCard(
                     val metaParts =
                         buildList {
                             add(item.channelName ?: "Unknown channel")
-                            add(item.viewCount?.formatCountShort() ?: "0 views")
+                            if (item.viewCount > 0) {
+                                add(item.viewCount.formatCountShort())
+                            }
                             add(item.uploadDate ?: "—")
                         }
                     if (metaParts.isNotEmpty()) {

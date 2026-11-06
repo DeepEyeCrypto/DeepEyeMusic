@@ -362,16 +362,19 @@ private fun AgslRuntimeShaderRenderer(
         }
 
         // ── Studio catalog uniform dispatch (Task 3) ─────────────────────
-        // The three ShaderCatalog scenes use the full uniform contract
+        // The ShaderCatalog scenes use the full uniform contract
         // (iAudioBass/iAudioMids/iAudioTreble/iAudioEnergy/iBeatPulse/
         //  iSceneTransition/iIntensity/iAspect, plus iMouse where declared)
         // instead of the legacy iBass/iMid/iTreble/iPeak set.
+        //
+        // PULSE_GEOMETRY maps to fluidPulseShader (a catalog shader), so it
+        // must also use the catalog contract — binding legacy iBass/iMid/
+        // iTreble/iPeak to it would SIGABRT on MT6835 (undeclared uniform).
         val isCatalogScene =
-            currentTheme == null && (
-                scene == AgslScene.FLUID_PULSE ||
-                    scene == AgslScene.AUDIO_FRACTAL ||
-                    scene == AgslScene.NEON_GRID
-            )
+            scene == AgslScene.FLUID_PULSE ||
+                scene == AgslScene.AUDIO_FRACTAL ||
+                scene == AgslScene.NEON_GRID ||
+                scene == AgslScene.PULSE_GEOMETRY
 
         if (isCatalogScene && currentTheme == null) {
             runCatching { activeShader.setFloatUniform("iResolution", size.width, size.height) }

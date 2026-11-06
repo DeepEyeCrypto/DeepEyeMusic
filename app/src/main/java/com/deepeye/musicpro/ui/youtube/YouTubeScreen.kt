@@ -992,7 +992,10 @@ fun VideoGridContent(
                 // Grid floor reads the SSOT, so a column can never be narrower
                 // than the card it holds — which would silently change the card's
                 // height and reintroduce the shift this geometry prevents.
-                columns = GridCells.Adaptive(CardGeometry.Video.minWidth),
+                // Fixed(2) enforces the unified 2-column design at every viewport
+                // width; Adaptive(140dp) silently produced 3+ columns at wide
+                // viewports, which broke the 2-column contract (bug 1h).
+                columns = GridCells.Fixed(2),
                 horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
                 verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
             ) {
@@ -1013,7 +1016,10 @@ fun VideoGridContent(
             LazyVerticalGrid(
                 state = gridState,
                 modifier = Modifier.premiumScrollHaptics(gridState),
-                columns = GridCells.Adaptive(CardGeometry.Video.minWidth),
+                // Fixed(2) enforces the unified 2-column design at every viewport
+                // width; Adaptive(140dp) produced 3+ columns at wide viewports,
+                // breaking the 2-column contract (bug 1h).
+                columns = GridCells.Fixed(2),
                 horizontalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
                 verticalArrangement = Arrangement.spacedBy(CardGeometry.CardSpacing),
                 contentPadding =
@@ -1133,7 +1139,6 @@ fun SmartTubeVideoCard(
 
     val isHdr = remember(video.id) { (video.id.hashCode() % 3) == 0 }
     val is4k = remember(video.id) { (video.id.hashCode() % 2) == 0 }
-    val hasAtmos = remember(video.id) { (video.id.hashCode() % 4) == 0 }
 
     var isHovered by remember { mutableStateOf(false) }
     var isPressed by remember { mutableStateOf(false) }
@@ -1258,17 +1263,6 @@ fun SmartTubeVideoCard(
                                 .padding(horizontal = 6.dp, vertical = 2.dp),
                     ) {
                         Text("HDR", color = Color(0xFF00E676), fontSize = 10.sp, fontWeight = FontWeight.ExtraBold)
-                    }
-                }
-                if (hasAtmos) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .background(neonCyan.copy(alpha = 0.15f), RoundedCornerShape(4.dp))
-                                .border(0.5.dp, neonCyan.copy(alpha = 0.6f), RoundedCornerShape(4.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp),
-                    ) {
-                        Text("ATMOS", color = neonCyan, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold)
                     }
                 }
             }

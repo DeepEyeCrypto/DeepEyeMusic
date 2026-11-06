@@ -29,6 +29,12 @@ class AutoplayPrefetchWorker
                         System.currentTimeMillis() - 7 * 86400_000L,
                         3,
                     )
+                // W1 — feed the top-song ids as session history so the loop-guard in
+                // AutoplayRepository (RECENT_HISTORY_GUARD_WINDOW + same-track filter)
+                // excludes them from the prefetched cache. Previously the worker passed
+                // an empty AutoplayState(), so the cached queue could re-extend the very
+                // top songs it was seeding, causing same-track repeats on playback.
+                val historySeed = topSongs.map { it.videoId }
                 for (song in topSongs) {
                     val trackInfo =
                         com.deepeye.musicpro.domain.model.MediaItem.Remote(
@@ -42,7 +48,7 @@ class AutoplayPrefetchWorker
                     val queue =
                         autoplayRepo.generateNextQueue(
                             currentTrack = trackInfo,
-                            autoplayState = AutoplayState(),
+                            autoplayState = AutoplayState(history = historySeed),
                         )
                     cacheManager.saveAutoplayQueue(song.videoId, queue)
                 }

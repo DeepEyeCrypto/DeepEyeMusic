@@ -28,6 +28,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import coil3.compose.AsyncImage
+import com.deepeye.musicpro.core.utils.TimeFormatter
 import com.deepeye.musicpro.data.db.PlaybackHistoryEntity
 import com.deepeye.musicpro.data.db.SearchHistoryEntity
 import com.deepeye.musicpro.data.db.VideoHistoryEntity
@@ -274,6 +275,14 @@ fun PlaybackHistoryRow(
                     overflow = TextOverflow.Ellipsis
                 )
             }
+            // Duration badge (unified card design): totalDurationMs/1000 → "3:30"
+            Text(
+                text = TimeFormatter.formatDuration(playback.totalDurationMs),
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(end = 4.dp),
+            )
             IconButton(
                 onClick = onClick,
                 modifier = Modifier.size(52.dp)

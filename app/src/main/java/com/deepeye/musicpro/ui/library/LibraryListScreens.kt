@@ -199,6 +199,19 @@ fun LibraryListItem(
                     overflow = TextOverflow.Ellipsis
                 )
             }
+            // View count metadata row (unified card design): hides when playCount is 0.
+            if (item.playCount > 0) {
+                Text(
+                    text = when {
+                        item.playCount >= 1_000_000 -> "${"%.1f".format(item.playCount / 1_000_000.0)}M views"
+                        item.playCount >= 1_000 -> "${"%.1f".format(item.playCount / 1_000.0)}K views"
+                        else -> "${item.playCount} views"
+                    },
+                    color = Color.Gray.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1,
+                )
+            }
         }
     }
 }
