@@ -1403,7 +1403,9 @@ fun SmartTubeVideoCard(
 
                 val metaParts =
                     buildList {
-                        add(formatViews(video.viewCount))
+                        // 0/unknown views must be hidden (unified design rule 2.7);
+                        // only show the count when real data exists.
+                        if (video.viewCount > 0) add(formatViews(video.viewCount))
                         add(video.uploadDate ?: "—")
                     }
                 if (metaParts.isNotEmpty()) {
@@ -1445,7 +1447,6 @@ private fun formatViews(views: Long): String {
     return when {
         views >= 1_000_000 -> String.format("%.1fM views", views / 1_000_000f)
         views >= 1_000 -> String.format("%.0fK views", views / 1_000f)
-        views > 0 -> "$views views"
-        else -> "No views"
+        else -> "$views views"
     }
 }
