@@ -50,7 +50,7 @@ fun PlaylistScreen(
                 // Adaptive, not Fixed(2). A hardcoded 2 columns forced exactly two
                 // huge cards on a landscape phone; Adaptive fits as many tiles as
                 // the width allows and keeps a partial final row tidy.
-                columns = GridCells.Adaptive(CardGeometry.Compact.minWidth),
+                columns = GridCells.Fixed(2),
                 contentPadding =
                     PaddingValues(
                         start = CardGeometry.ScreenGutter,

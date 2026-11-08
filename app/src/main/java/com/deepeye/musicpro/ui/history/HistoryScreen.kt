@@ -137,29 +137,38 @@ fun HistoryScreen(
                         color = Color.White,
                         modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                     )
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp)
-                    ) {
-                        items(videos, key = { it.videoId }) { video ->
-                            VideoHistoryCard(
-                                video = video,
-                                onClick = {
-                                    playerViewModel.playMedia(
-                                        com.deepeye.musicpro.domain.model.MediaItem.Remote(
-                                            id = video.videoId,
-                                            title = video.title,
-                                            artist = "",
-                                            artworkUri = video.thumbnailUri?.let { android.net.Uri.parse(it) },
-                                            duration = video.durationMs,
-                                            isVideo = true
-                                        )
+                    // Exactly 2 cards per row (portrait + landscape)
+                        videos.chunked(2).forEach { rowItems ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            ) {
+                                rowItems.forEach { video ->
+                                    VideoHistoryCard(
+                                        video = video,
+                                        onClick = {
+                                            playerViewModel.playMedia(
+                                                com.deepeye.musicpro.domain.model.MediaItem.Remote(
+                                                    id = video.videoId,
+                                                    title = video.title,
+                                                    artist = "",
+                                                    artworkUri = video.thumbnailUri?.let { android.net.Uri.parse(it) },
+                                                    duration = video.durationMs,
+                                                    isVideo = true
+                                                )
+                                            )
+                                            onNavigateToNowPlaying()
+                                        }
                                     )
-                                    onNavigateToNowPlaying()
+                                    Spacer(Modifier.width(16.dp))
                                 }
-                            )
+                                repeat(2 - rowItems.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
                         }
-                    }
                 }
             }
 

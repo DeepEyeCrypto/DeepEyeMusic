@@ -437,7 +437,7 @@ private fun SongsTab(
     LazyVerticalGrid(
         state = gridState,
         modifier = Modifier.premiumScrollHaptics(gridState),
-        columns = GridCells.Fixed(if (isLandscape) 2 else 1),
+        columns = GridCells.Fixed(2),
         contentPadding = PaddingValues(horizontal = 20.sdp, vertical = 12.sdp),
         horizontalArrangement = Arrangement.spacedBy(10.sdp),
         verticalArrangement = Arrangement.spacedBy(10.sdp)
@@ -515,11 +515,9 @@ private fun AlbumsTab(
     LazyVerticalGrid(
         state = gridState,
         modifier = Modifier.premiumScrollHaptics(gridState),
-        // Adaptive, not Fixed(columns). The old `GridCells.Fixed(columns)` derived
-        // 2/3/4 from WindowWidthSizeClass, which left a partly-filled final row
-        // and a fixed column count that could not exploit extra landscape width.
-        // Adaptive fits as many 1:1 album tiles as naturally fit.
-        columns = GridCells.Adaptive(CardGeometry.Music.minWidth),
+        // Unified 2-column contract: Fixed(2) in every orientation so the grid
+        // matches the YouTube reference card spec exactly.
+        columns = GridCells.Fixed(2),
         contentPadding =
             PaddingValues(
                 horizontal = CardGeometry.ScreenGutter,
@@ -587,7 +585,7 @@ private fun ArtistsTab(
     LazyVerticalGrid(
         state = gridState,
         modifier = Modifier.premiumScrollHaptics(gridState),
-        columns = GridCells.Adaptive(CardGeometry.Music.minWidth),
+        columns = GridCells.Fixed(2),
         contentPadding =
             PaddingValues(
                 horizontal = CardGeometry.ScreenGutter,

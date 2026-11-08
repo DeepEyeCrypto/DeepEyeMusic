@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.WifiOff
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.deepeye.musicpro.ui.theme.CardGeometry
 
 @Composable
 fun VideoRail(
@@ -148,7 +150,9 @@ fun VideoRail(
                                     viewModel.onExpandedCardTap(item.videoId)
                                     onNavigateToVideo(item.videoId)
                                 },
-                                modifier = Modifier.weight(1f),
+                                modifier =
+                                    Modifier
+                                        .width(CardGeometry.Video.minWidth),
                             )
                         }
                         repeat(2 - chunk.size) {

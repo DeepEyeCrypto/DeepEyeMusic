@@ -43,6 +43,8 @@ import com.deepeye.musicpro.ui.theme.AppSpacing
 import com.deepeye.musicpro.ui.theme.CardGeometry
 import com.deepeye.musicpro.ui.theme.GlassBorder
 import com.deepeye.musicpro.ui.theme.sdp
+import com.deepeye.musicpro.ui.components.NeonMediaCard
+import com.deepeye.musicpro.ui.components.toNeonCardData
 import com.deepeye.musicpro.ui.youtube.SmartTubeVideoCard
 
 @Composable
@@ -547,8 +549,8 @@ private fun HomeVideoRail(
     if (items.isEmpty()) return
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-    val columns = if (isLandscape) 4 else 2
-    val maxItems = if (isLandscape) 8 else 4
+    val columns = 2
+    val maxItems = 4
 
     Column(
         modifier =
@@ -573,7 +575,9 @@ private fun HomeVideoRail(
                     SmartTubeVideoCard(
                         video = video,
                         onClick = { onClick(video) },
-                        modifier = Modifier.weight(1f),
+                        modifier =
+                            Modifier
+                                .width(CardGeometry.Video.minWidth),
                     )
                 }
                 repeat(columns - chunk.size) {
@@ -593,15 +597,15 @@ private fun HomeMusicRail(
     if (items.isEmpty()) return
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-    val columns = if (isLandscape) 4 else 2
-    val maxItems = if (isLandscape) 8 else 4
+    val columns = 2
+    val maxItems = 4
 
     Column(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = CardGeometry.ScreenGutter),
-        verticalArrangement = Arrangement.spacedBy(12.sdp)
+        verticalArrangement = Arrangement.spacedBy(12.sdp),
     ) {
         Text(
             title,
@@ -613,62 +617,16 @@ private fun HomeMusicRail(
         displayedItems.chunked(columns).forEach { chunk ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.sdp)
+                horizontalArrangement = Arrangement.spacedBy(12.sdp),
             ) {
                 chunk.forEach { music ->
-                    Box(
+                    NeonMediaCard(
+                        data = music.toNeonCardData(),
+                        onClick = { onClick(music) },
                         modifier =
                             Modifier
-                                .weight(1f)
-                                .clip(CardGeometry.ContinueListening.shape)
-                                .background(Color.White.copy(alpha = 0.05f)) // Smoother glass effect
-                                .border(1.dp, GlassBorder, CardGeometry.ContinueListening.shape)
-                                .bouncyClickable(
-                                    downScale = 0.95f,
-                                    onClick = { onClick(music) }
-                                )
-                                .padding(CardGeometry.ContinueListening.contentPadding),
-                    ) {
-                        Column {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .aspectRatio(CardGeometry.Music.aspectRatio)
-                                        .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f)),
-                            ) {
-                                AsyncImage(
-                                    model =
-                                        coil3.request.ImageRequest.Builder(
-                                            androidx.compose.ui.platform.LocalContext.current
-                                        )
-                                            .data(music.thumbnailUrl)
-                                            .crossfade(true)
-                                            .build(),
-                                    contentDescription = music.title,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop,
-                                )
-                            }
-                            Spacer(Modifier.height(10.sdp))
-                            Text(
-                                text = music.title,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.White,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                            )
-                            Spacer(Modifier.height(2.sdp))
-                            Text(
-                                text = music.artist,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.LightGray.copy(alpha = 0.7f),
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
+                                .width(CardGeometry.Video.minWidth),
+                    )
                 }
                 repeat(columns - chunk.size) {
                     Spacer(modifier = Modifier.weight(1f))

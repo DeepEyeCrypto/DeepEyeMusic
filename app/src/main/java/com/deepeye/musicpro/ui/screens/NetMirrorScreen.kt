@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,7 +28,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
-import com.deepeye.musicpro.ui.components.bouncyClickable
+import com.deepeye.musicpro.ui.components.NeonMediaCard
+import com.deepeye.musicpro.ui.components.toNeonCardData
 import com.deepeye.musicpro.ui.theme.CardGeometry
 import kotlinx.coroutines.launch
 
@@ -417,24 +417,32 @@ private fun CategoryRow(
         }
 
         // Horizontal Movies Row (260dp width cards)
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(items.size) { index ->
-                VideoHubMovieCard(
-                    movie = items[index],
-                    isPlaylist = isPlaylist,
-                    onClick = {
-                        if (isPlaylist && onCardClick != null) {
-                            onCardClick(items[index])
-                        } else {
-                            onPlayFromIndex(index)
+        // Exactly 2 cards per row (portrait + landscape)
+                items.chunked(2).forEach { rowItems ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        rowItems.forEach { movie ->
+                            VideoHubMovieCard(
+                                movie = movie,
+                                isPlaylist = isPlaylist,
+                                onClick = {
+                                    val originalIndex = items.indexOf(movie)
+                                    if (isPlaylist && onCardClick != null) {
+                                        onCardClick(movie)
+                                    } else {
+                                        onPlayFromIndex(originalIndex)
+                                    }
+                                }
+                            )
+                            Spacer(Modifier.width(8.dp))
+                        }
+                        repeat(2 - rowItems.size) {
+                            Spacer(modifier = Modifier.weight(1f))
                         }
                     }
-                )
-            }
-        }
+                }
     }
 }
 
@@ -447,98 +455,15 @@ private fun VideoHubMovieCard(
     isPlaylist: Boolean,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier =
-            Modifier
-                .width(VideoHubMovieCardWidth)
-                .clip(CardGeometry.Video.shape)
-                .bouncyClickable(downScale = 0.95f, onClick = onClick),
-        shape = CardGeometry.Video.shape,
-        colors = CardDefaults.cardColors(containerColor = darkSurface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, glassBorder)
-    ) {
-        Column {
-            // 16:9 Thumbnail Poster — ratio and radius from CardGeometry (SSOT),
-            // so VideoCardSkeleton reserves exactly this box.
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(CardGeometry.Video.aspectRatio)
-                        .clip(
-                            RoundedCornerShape(
-                                topStart = CardGeometry.Video.cornerRadius,
-                                topEnd = CardGeometry.Video.cornerRadius,
-                            )
-                        )
-            ) {
-                AsyncImage(
-                    model = movie.thumbnailUrl,
-                    contentDescription = movie.title,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors =
-                                        listOf(
-                                            Color.Transparent,
-                                            Color.Black.copy(alpha = 0.8f)
-                                        )
-                                )
-                            )
-                )
-
-                // Play icon pill overlay
-                Box(
-                    modifier =
-                        Modifier
-                            .align(Alignment.Center)
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(22.dp))
-                            .background(Color.Black.copy(alpha = 0.6f))
-                            .border(1.dp, neonCyan.copy(alpha = 0.6f), RoundedCornerShape(22.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isPlaylist) Icons.Filled.Movie else Icons.Filled.PlayArrow,
-                        contentDescription = "Play",
-                        tint = neonCyan,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-
-            // Title & Channel
-            Column(
-                modifier = Modifier.padding(CardGeometry.Video.contentPadding),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = movie.title,
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = CardGeometry.Video.titleMaxLines,
-                    lineHeight = 18.sp,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = movie.channelName,
-                    color = Color.White.copy(alpha = 0.6f),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
+    NeonMediaCard(
+        data =
+            movie.toNeonCardData(
+                progressFraction = movie.progressPercent.takeIf { it > 0f }?.let { it / 100f },
+                contentType = if (isPlaylist) "playlist" else "video",
+            ),
+        onClick = onClick,
+        modifier = Modifier.width(VideoHubMovieCardWidth),
+    )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

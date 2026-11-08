@@ -59,7 +59,9 @@ import com.deepeye.musicpro.domain.model.personalization.PersonalizedItemType
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedSection
 import com.deepeye.musicpro.domain.model.personalization.PersonalizedSectionType
 import com.deepeye.musicpro.ui.components.MusicCardSkeleton
+import com.deepeye.musicpro.ui.components.NeonMediaCard
 import com.deepeye.musicpro.ui.components.SectionHeaderSkeleton
+import com.deepeye.musicpro.ui.components.toNeonCardData
 import com.deepeye.musicpro.ui.motion.premiumScrollHaptics
 import com.deepeye.musicpro.ui.theme.*
 import com.deepeye.musicpro.ui.util.evenCarouselCardWidth
@@ -457,6 +459,9 @@ private fun PersonalizedSectionRow(
     onRetry: () -> Unit,
     onConnectAccount: () -> Unit,
 ) {
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isLandscape =
+        configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     // Loading state for this section (only when no items cached yet)
     if (section.isLoading && section.items.isEmpty()) {
         // Wrapped so the skeleton rail can be sized by exactly the same
@@ -524,8 +529,14 @@ private fun PersonalizedSectionRow(
         // 1:1 cover art survives a narrower column than a 16:9 video poster, hence
         // CardGeometry.Music.minWidth (120.dp) over VideoCardMinWidth.
         BoxWithConstraints(Modifier.fillMaxWidth()) {
+            // Card width locked to the YouTube reference spec: 210px @320dpi =
+            // exactly 105dp. A fixed width (not an even-split) makes Music
+            // cards pixel-identical to every other section; the even-split
+            // computed width is only a fallback for any layout that still
+            // needs it.
             val musicCardWidth =
-                evenCarouselCardWidth(
+                if (isLandscape) 105.dp
+                else evenCarouselCardWidth(
                     availableWidth = maxWidth,
                     minItemWidth = CardGeometry.Music.minWidth,
                 )
@@ -658,279 +669,111 @@ fun PersonalizedMusicCard(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec =
-            spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            ),
-        label = "pressScale"
-    )
-
     Box(
-        modifier =
-            Modifier
-                .width(cardWidth)
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                }
-                // Geometry from CardGeometry (SSOT). MusicCardSkeleton reads the same
-                // fields, so the loading box matches the loaded box exactly.
-                .clip(CardGeometry.Music.shape)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            CardSurface.copy(alpha = 0.7f),
-                            CardSurfaceElevated.copy(alpha = 0.5f)
-                        )
-                    )
-                )
-                .border(
-                    width = 1.dp,
-                    brush =
-                        Brush.linearGradient(
-                            colors =
-                                listOf(
-                                    ElectricViolet.copy(alpha = 0.3f),
-                                    NeonCyan.copy(alpha = 0.2f),
-                                    ElectricViolet.copy(alpha = 0.1f)
-                                )
-                        ),
-                    shape = CardGeometry.Music.shape
-                )
-                .clickable(interactionSource = interactionSource, indication = null) { onClick() }
+        modifier = Modifier.width(cardWidth),
     ) {
-        Column(modifier = Modifier.padding(CardGeometry.Music.contentPadding)) {
-            // Artwork
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(CardGeometry.Music.aspectRatio)
-                        .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f))
-                        .background(Color.White.copy(alpha = 0.03f))
-            ) {
-                if (item.artworkUrl != null) {
-                    AsyncImage(
-                        model = item.artworkUrl,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                    )
-                }
+        // Unified neon visuals (thumbnail, badges, avatar, metadata) come from
+        // NeonMediaCard. The wrapper layers the action controls on top.
+        NeonMediaCard(
+            data = item.toNeonCardData(),
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth(),
+        )
 
-                // Bottom gradient fade
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .align(Alignment.BottomCenter)
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
-                                )
+        // Play button (Bottom-End of the artwork)
+        Box(
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp)
+                    .size(30.dp)
+                    .background(
+                        Brush.radialGradient(
+                            listOf(
+                                ElectricViolet.copy(alpha = 0.9f),
+                                ElectricViolet.copy(alpha = 0.6f)
                             )
-                )
-
-                // Item-type badge (playlist vs song/video)
-                if (item.itemType == PersonalizedItemType.PLAYLIST) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .align(Alignment.TopStart)
-                                .padding(8.dp)
-                                .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(5.dp))
-                                .padding(horizontal = 6.dp, vertical = 3.dp)
-                    ) {
-                        Text(
-                            "PLAYLIST",
-                            color = Color.White.copy(alpha = 0.9f),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.5.sp,
-                        )
-                    }
-                }
-
-                // Source badge (truthful provenance)
-                if (item.sourceBadge != null) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
-                                .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(5.dp))
-                                .padding(horizontal = 6.dp, vertical = 3.dp)
-                    ) {
-                        Text(
-                            item.sourceBadge,
-                            color = NeonCyan,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.4.sp,
-                        )
-                    }
-                }
-
-                // Duration
-                if (item.durationMs > 0) {
-                    Text(
-                        text = formatDuration(item.durationMs),
-                        modifier =
-                            Modifier
-                                .align(Alignment.BottomStart)
-                                .padding(8.dp)
-                                .background(Color.Black.copy(alpha = 0.65f), RoundedCornerShape(5.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp),
-                        color = Color.White.copy(alpha = 0.9f),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace,
+                        ),
+                        CircleShape
                     )
-                }
-
-                // Play button
-                Box(
-                    modifier =
-                        Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(8.dp)
-                            .size(30.dp)
-                            .background(
-                                Brush.radialGradient(
-                                    listOf(
-                                        ElectricViolet.copy(alpha = 0.9f),
-                                        ElectricViolet.copy(alpha = 0.6f)
-                                    )
-                                ),
-                                CircleShape
-                            )
-                            .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Rounded.PlayArrow,
-                        contentDescription = "Play",
-                        tint = Color.White,
-                        modifier = Modifier.size(17.dp)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            // Title
-            Text(
-                text = item.title,
-                style =
-                    MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.3).sp
-                    ),
-                color = TextPrimary,
-                maxLines = CardGeometry.Music.titleMaxLines,
-                overflow = TextOverflow.Ellipsis,
+                    .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Rounded.PlayArrow,
+                contentDescription = "Play",
+                tint = Color.White,
+                modifier = Modifier.size(17.dp)
             )
-            Spacer(Modifier.height(3.dp))
+        }
 
-            // View count metadata (bug 1b: missing metadata → blank placeholder)
-            if (item.playCount > 0) {
-                Text(
-                    text = when {
-                        item.playCount >= 1_000_000 -> "${"%.1f".format(item.playCount / 1_000_000.0)}M views"
-                        item.playCount >= 1_000 -> "${"%.1f".format(item.playCount / 1_000.0)}K views"
-                        else -> "${item.playCount} views"
-                    },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextTertiary,
-                    maxLines = 1,
-                )
-                Spacer(Modifier.height(2.dp))
-            }
-
-            // Artist + overflow menu
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+        // Overflow menu trigger (top-right)
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(4.dp)
+        ) {
+            IconButton(
+                onClick = { menuExpanded = true },
+                modifier = Modifier.size(28.dp)
             ) {
-                Text(
-                    text = item.artist,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
+                Icon(
+                    Icons.Rounded.MoreVert,
+                    contentDescription = "More options",
+                    tint = TextTertiary,
+                    modifier = Modifier.size(16.dp)
                 )
-                Box {
-                    IconButton(
-                        onClick = { menuExpanded = true },
-                        modifier = Modifier.size(24.dp)
-                    ) {
+            }
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false },
+                containerColor = CardSurfaceElevated,
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Play next", color = TextPrimary, fontSize = 13.sp) },
+                    onClick = {
+                        menuExpanded = false
+                        onPlayNext()
+                    },
+                    leadingIcon = {
                         Icon(
-                            Icons.Rounded.MoreVert,
-                            contentDescription = "More options",
-                            tint = TextTertiary,
-                            modifier = Modifier.size(16.dp)
+                            Icons.Rounded.SkipNext,
+                            contentDescription = null,
+                            tint = NeonCyan,
+                            modifier = Modifier.size(18.dp)
                         )
-                    }
-                    DropdownMenu(
-                        expanded = menuExpanded,
-                        onDismissRequest = { menuExpanded = false },
-                        containerColor = CardSurfaceElevated,
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Play next", color = TextPrimary, fontSize = 13.sp) },
-                            onClick = {
-                                menuExpanded = false
-                                onPlayNext()
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Rounded.SkipNext,
-                                    contentDescription = null,
-                                    tint = NeonCyan,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            },
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text("Add to queue", color = TextPrimary, fontSize = 13.sp) },
+                    onClick = {
+                        menuExpanded = false
+                        onAddToQueue()
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.PlaylistAdd,
+                            contentDescription = null,
+                            tint = NeonCyan,
+                            modifier = Modifier.size(18.dp)
                         )
-                        DropdownMenuItem(
-                            text = { Text("Add to queue", color = TextPrimary, fontSize = 13.sp) },
-                            onClick = {
-                                menuExpanded = false
-                                onAddToQueue()
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.AutoMirrored.Rounded.PlaylistAdd,
-                                    contentDescription = null,
-                                    tint = NeonCyan,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            },
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text("Why this recommendation?", color = TextPrimary, fontSize = 13.sp) },
+                    onClick = {
+                        menuExpanded = false
+                        onWhyThis()
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Rounded.Info,
+                            contentDescription = null,
+                            tint = NeonCyan,
+                            modifier = Modifier.size(18.dp)
                         )
-                        DropdownMenuItem(
-                            text = { Text("Why this recommendation?", color = TextPrimary, fontSize = 13.sp) },
-                            onClick = {
-                                menuExpanded = false
-                                onWhyThis()
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Rounded.Info,
-                                    contentDescription = null,
-                                    tint = NeonCyan,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            },
-                        )
-                    }
-                }
+                    },
+                )
             }
         }
     }

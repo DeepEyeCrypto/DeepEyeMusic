@@ -7,8 +7,6 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -27,7 +25,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,7 +40,9 @@ import com.deepeye.musicpro.domain.model.MediaItem
 import com.deepeye.musicpro.domain.recommendation.RecommendationRow
 import com.deepeye.musicpro.domain.recommendation.VideoItem
 import com.deepeye.musicpro.ui.components.GlassCard
+import com.deepeye.musicpro.ui.components.NeonMediaCard
 import com.deepeye.musicpro.ui.components.SectionHeaderSkeleton
+import com.deepeye.musicpro.ui.components.toNeonCardData
 import com.deepeye.musicpro.ui.components.VideoCardSkeleton
 import com.deepeye.musicpro.ui.motion.premiumScrollHaptics
 import com.deepeye.musicpro.ui.theme.*
@@ -195,7 +194,8 @@ fun HomeScreen(
                 availableWidth = maxWidth,
                 minItemWidth = CardGeometry.Compact.minWidth,
             )
-        val quickColumns =
+        val quickColumns = 2
+    // Force exactly 2 columns per row portrait+landscape
             adaptiveColumnCount(
                 availableWidth = maxWidth,
                 minItemWidth = 200.dp,
@@ -294,7 +294,7 @@ fun HomeScreen(
                                     .fillMaxWidth()
                                     .padding(horizontal = CardGeometry.ScreenGutter)
                         ) {
-                            quickItems.chunked(quickColumns).forEach { rowItems ->
+                            quickItems.chunked(2).forEach { rowItems ->
                                 Row(
                                     modifier =
                                         Modifier
@@ -735,7 +735,7 @@ fun ModernRecommendationRow(
         Spacer(modifier = Modifier.height(10.dp))
 
         // Adaptive Grid (No side scroll)
-        val columns = if (cardWidth > 200.dp) 3 else 2
+        val columns = 2
         val displayedItems = row.items.take(4)
         Column(
             modifier =
@@ -751,8 +751,10 @@ fun ModernRecommendationRow(
                 ) {
                     chunk.forEach { video ->
                         ModernVideoCard(
-                            video = video,
-                            modifier = Modifier.weight(1f),
+                                                video = video,
+                                                modifier =
+                                                    Modifier
+                                                        .width(CardGeometry.Video.minWidth),
                             onClick = { onVideoClick(video) },
                         )
                     }
@@ -772,144 +774,18 @@ fun ModernVideoCard(
     cardWidth: Dp = Dp.Unspecified,
     onClick: () -> Unit = {},
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by androidx.compose.animation.core.animateFloatAsState(
-        targetValue = if (isPressed) 0.94f else 1f,
-        animationSpec =
-            androidx.compose.animation.core.spring(
-                dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
-                stiffness = androidx.compose.animation.core.Spring.StiffnessLow
-            ),
-        label = "cardPressScale"
-    )
-
+    val neonData = video.toNeonCardData(contentType = "video")
     val finalModifier =
         if (cardWidth != Dp.Unspecified && cardWidth > 0.dp) {
             modifier.width(cardWidth)
         } else {
             modifier
         }
-
-    Column(
-        modifier =
-            finalModifier
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                }
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onClick
-                )
-    ) {
-        // Thumbnail Card
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    // Geometry from CardGeometry (SSOT). 16:9 rather than 1:1: these
-                    // are YouTube video frames, and a square crop both crops the
-                    // subject and costs ~44% more vertical space per card.
-                    .aspectRatio(CardGeometry.Video.aspectRatio)
-                    .clip(CardGeometry.Video.shape)
-                    .background(Color(0xFF131722).copy(alpha = 0.85f))
-                    .border(1.dp, Color.White.copy(alpha = 0.15f), CardGeometry.Video.shape)
-        ) {
-            AsyncImage(
-                model = "https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg",
-                contentDescription = video.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-
-            // Bottom Gradient Overlay for readability
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f)),
-                                startY = 100f
-                            )
-                        )
-            )
-
-            // Duration Pill Badge
-            if (video.duration.isNotBlank()) {
-                Box(
-                    modifier =
-                        Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(6.dp)
-                            .background(Color.Black.copy(alpha = 0.85f), RoundedCornerShape(5.dp))
-                            .padding(horizontal = 5.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = video.duration,
-                        // Thumbnail metadata overlay: 10-11sp by the documented
-                        // UiScale.MinReadableFontSize carve-out for scrim-backed
-                        // labels, which must not blow out the pill at this width.
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        // Channel avatar + title row (unified card design): the avatar carries the
-        // channel/artist name as its accessibility label so screen readers and the
-        // semantics tree expose it (bug 1c).
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            if (video.artist.isNotBlank()) {
-                Box(
-                    modifier =
-                        Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF1E2532))
-                            .semantics { contentDescription = video.artist },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = video.artist.take(1).uppercase(),
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
-            Text(
-                text = video.title,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.White,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Artist / channel name (1 line)
-        if (video.artist.isNotBlank()) {
-            Text(
-                text = video.artist,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.65f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
+    NeonMediaCard(
+        data = neonData,
+        onClick = onClick,
+        modifier = finalModifier,
+    )
 }
 
 @Composable
@@ -931,7 +807,7 @@ fun ShimmerRecommendationRow(cardWidth: Dp = CardGeometry.Video.minWidth) {
             SectionHeaderSkeleton()
         }
         Spacer(Modifier.height(10.dp))
-        val columns = if (cardWidth > 200.dp) 3 else 2
+        val columns = 2
         Column(
             modifier =
                 Modifier

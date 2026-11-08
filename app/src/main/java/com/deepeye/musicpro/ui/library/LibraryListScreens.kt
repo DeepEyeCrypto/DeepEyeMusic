@@ -27,6 +27,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.library.LibraryItem
 import com.deepeye.musicpro.ui.components.GlassEmptyState
+import com.deepeye.musicpro.ui.components.NeonMediaCard
+import com.deepeye.musicpro.ui.components.toNeonCardData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -163,55 +165,11 @@ fun LibraryListItem(
     item: LibraryItem,
     onClick: () -> Unit
 ) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AsyncImage(
-            model = item.artworkUrl,
-            contentDescription = null,
-            modifier =
-                Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentScale = ContentScale.Crop
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = item.title,
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            if (item.subtitle.isNotEmpty() || item.artist != null) {
-                Text(
-                    text = item.subtitle.ifEmpty { item.artist ?: "" },
-                    color = Color.Gray,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            // View count metadata row (unified card design): hides when playCount is 0.
-            if (item.playCount > 0) {
-                Text(
-                    text = when {
-                        item.playCount >= 1_000_000 -> "${"%.1f".format(item.playCount / 1_000_000.0)}M views"
-                        item.playCount >= 1_000 -> "${"%.1f".format(item.playCount / 1_000.0)}K views"
-                        else -> "${item.playCount} views"
-                    },
-                    color = Color.Gray.copy(alpha = 0.7f),
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 1,
-                )
-            }
-        }
-    }
+    NeonMediaCard(
+        data = item.toNeonCardData(),
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+    )
 }

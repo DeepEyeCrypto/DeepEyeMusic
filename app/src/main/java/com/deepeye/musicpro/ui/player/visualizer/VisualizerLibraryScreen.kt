@@ -240,7 +240,7 @@ fun VisualizerLibraryScreen(
         // ── Adaptive Responsive Scene Grid (Touch Optimized) ────────────────
         val gridMinSize = if (isLandscape) 150.dp else 140.dp
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = gridMinSize),
+            columns = GridCells.Fixed(2),
             modifier =
                 Modifier
                     .fillMaxWidth()

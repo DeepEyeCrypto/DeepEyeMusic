@@ -3,27 +3,16 @@
 
 package com.deepeye.musicpro.ui.homehub
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.PlayCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.deepeye.musicpro.domain.model.home.HomeVideoItem
-import com.deepeye.musicpro.ui.theme.GlassBorder
+import com.deepeye.musicpro.ui.components.NeonMediaCard
+import com.deepeye.musicpro.ui.components.toNeonCardData
+import com.deepeye.musicpro.ui.theme.CardGeometry
 
 /**
  * Continue Watching horizontal rail — shows partially watched videos with progress indicators.
@@ -66,7 +55,9 @@ fun ContinueWatchingRow(
                         ContinueWatchingCard(
                             video = video,
                             onClick = { onItemClick(video) },
-                            modifier = Modifier.weight(1f)
+                            modifier =
+                                Modifier
+                                    .width(CardGeometry.Video.minWidth)
                         )
                     }
                     repeat(2 - chunk.size) {
@@ -84,93 +75,13 @@ private fun ContinueWatchingCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier =
-            modifier
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.White.copy(alpha = 0.08f))
-                .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
-                .clickable(onClick = onClick),
-    ) {
-        Column {
-            // Thumbnail with progress overlay
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(16f / 9f)
-                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-            ) {
-                AsyncImage(
-                    model = video.thumbnailUrl,
-                    contentDescription = video.title,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-
-                // Gradient overlay at bottom
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)
-                            .align(Alignment.BottomCenter)
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)),
-                                )
-                            ),
-                )
-
-                // Play icon overlay
-                Surface(
-                    modifier =
-                        Modifier
-                            .size(36.dp)
-                            .align(Alignment.Center),
-                    shape = RoundedCornerShape(18.dp),
-                    color = Color(0xFF7B3FE4).copy(alpha = 0.9f),
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.PlayCircle,
-                        contentDescription = "Resume",
-                        tint = Color.White,
-                        modifier = Modifier.padding(6.dp),
-                    )
-                }
-
-                // Progress bar at very bottom
-                LinearProgressIndicator(
-                    progress = { video.progressPercent.coerceIn(0f, 1f) },
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(3.dp)
-                            .align(Alignment.BottomCenter),
-                    color = Color(0xFF7B3FE4),
-                    trackColor = Color.White.copy(alpha = 0.2f),
-                )
-            }
-
-            // Text content
-            Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
-                Text(
-                    text = video.title,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = video.channelName,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-    }
+    NeonMediaCard(
+        data =
+            video.toNeonCardData(
+                progressFraction = video.progressPercent.takeIf { it > 0f }?.let { it / 100f },
+                contentType = "video",
+            ),
+        onClick = onClick,
+        modifier = modifier,
+    )
 }
