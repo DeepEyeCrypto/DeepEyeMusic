@@ -1,5 +1,6 @@
 package com.deepeye.musicpro.ui.components
 
+import com.deepeye.musicpro.ui.music.musicLandscapeCardWidth
 import com.deepeye.musicpro.ui.theme.CardGeometry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -44,7 +45,7 @@ class MusicCardGeometryContractTest {
     @Test
     fun `music card thumbnail is NOT square`() {
         val ratio = NeonMediaCardGeometry(NeonCardType.MUSIC).aspectRatio
-        assertTrue(ratio > 1.2f, "expected 16:9 (1.777), got square ratio $ratio")
+        assertTrue("expected 16:9 (1.777), got square ratio $ratio", ratio > 1.2f)
     }
 
     // ── Geometry selection ───────────────────────────────────────────────
