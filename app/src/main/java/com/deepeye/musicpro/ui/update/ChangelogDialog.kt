@@ -194,7 +194,8 @@ fun ChangelogDialog(
                             // own `heightIn(max = dialogMaxHeight)`. A LazyColumn already
                             // clamps to the constraint it is measured with, so no explicit
                             // cap is needed here.
-                            modifier = Modifier.weight(1f, fill = false),
+                            modifier = Modifier.weight(1f, fill = false)
+                            .heightIn(max = 360.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             items(entries) { entry ->
