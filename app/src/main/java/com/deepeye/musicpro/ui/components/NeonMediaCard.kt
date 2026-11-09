@@ -127,6 +127,7 @@ fun NeonMediaCard(
         modifier =
             modifier
                 .fillMaxWidth()
+                .aspectRatio(210f / 219f)
                 .graphicsLayer {
                     scaleX = scale
                     scaleY = scale
@@ -277,7 +278,7 @@ fun NeonMediaCard(
                 Modifier
                     .fillMaxWidth()
                     .padding(geometry.contentPadding),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
                 text = data.title,
