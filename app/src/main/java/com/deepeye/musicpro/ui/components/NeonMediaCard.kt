@@ -77,20 +77,17 @@ fun NeonMediaCard(
     var isHovered by remember { mutableStateOf(false) }
     var isPressed by remember { mutableStateOf(false) }
 
-    // Geometry follows CardGeometry (SSOT) per card type. MUSIC and COMPACT use
-    // a 1:1 square aspect (CardGeometry.Music) with a single-line title so
-    // library/history rows stay scannable; VIDEO uses the 16:9 film shape.
-    val geometry: VideoCard =
-        when (data.cardType) {
-            NeonCardType.VIDEO -> CardGeometry.Video
-            NeonCardType.MUSIC, NeonCardType.COMPACT ->
-                CardGeometry.Video.copy(
-                    aspectRatio = CardGeometry.Music.aspectRatio,
-                    cornerRadius = CardGeometry.Music.cornerRadius,
-                    contentPadding = CardGeometry.Music.contentPadding,
-                    titleMaxLines = 1,
-                )
-        }
+    // Geometry follows CardGeometry (SSOT) per card type. ALL content sections
+        // (Home, YouTube, Video Hub, Music, Library) render the SAME 16:9 video
+        // card — 210px × 219px, thumbnail 16:9, title 2 lines. The Music square
+        // album-art design is abandoned; square source artwork is cropped into
+        // the 16:9 box by ContentScale.Crop. COMPACT keeps the same 16:9 geometry
+        // so library/history rows match the section grid.
+        val geometry: VideoCard =
+            when (data.cardType) {
+                NeonCardType.VIDEO, NeonCardType.MUSIC, NeonCardType.COMPACT ->
+                    CardGeometry.Video
+            }
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.94f else if (isHovered) 1.02f else 1f,
@@ -383,3 +380,13 @@ private fun formatViewsShort(views: Long): String {
         else -> "$views views"
     }
 }
+
+/**
+ * Geometry selection mirror of [NeonMediaCard]'s internal `when`. Exposed so the
+ * TDD contract test can assert on the 16:9-for-all-sections rule without
+ * rendering a Composable.
+ */
+internal fun NeonMediaCardGeometry(cardType: NeonCardType): VideoCard =
+    when (cardType) {
+        NeonCardType.VIDEO, NeonCardType.MUSIC, NeonCardType.COMPACT -> CardGeometry.Video
+    }

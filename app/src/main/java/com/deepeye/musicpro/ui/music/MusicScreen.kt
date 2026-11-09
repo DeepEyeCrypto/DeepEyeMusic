@@ -534,12 +534,7 @@ private fun PersonalizedSectionRow(
             // cards pixel-identical to every other section; the even-split
             // computed width is only a fallback for any layout that still
             // needs it.
-            val musicCardWidth =
-                if (isLandscape) 105.dp
-                else evenCarouselCardWidth(
-                    availableWidth = maxWidth,
-                    minItemWidth = CardGeometry.Music.minWidth,
-                )
+            val musicCardWidth = musicLandscapeCardWidth(isLandscape)
             Column(Modifier.fillMaxWidth()) {
                 // Section header: title + truthful source label
                 Row(
@@ -1097,3 +1092,15 @@ fun PremiumSearchBar(onClick: () -> Unit) {
         }
     }
 }
+
+/**
+ * Landscape card width for the Music rail. Locked to the YouTube reference:
+ * 140dp = 210px @240dpi effective, so Music cards are pixel-identical to
+ * every other section in landscape. Portrait keeps the even-split floor
+ * (CardGeometry.Music.minWidth) so the rail fills its row on narrow screens.
+ *
+ * Exposed as a top-level function so the TDD contract test can assert on it
+ * without rendering a Composable.
+ */
+internal fun musicLandscapeCardWidth(isLandscape: Boolean): Dp =
+    if (isLandscape) CardGeometry.Video.minWidth else CardGeometry.Music.minWidth

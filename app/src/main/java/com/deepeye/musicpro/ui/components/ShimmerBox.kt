@@ -203,10 +203,10 @@ fun MusicCardSkeleton(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .aspectRatio(CardGeometry.Music.aspectRatio),
-            cornerRadius = CardGeometry.Music.cornerRadius / 1.5f,
+                    .aspectRatio(CardGeometry.Video.aspectRatio),
+            cornerRadius = CardGeometry.Video.cornerRadius / 1.5f,
         )
-        Column(modifier = Modifier.padding(CardGeometry.Music.contentPadding)) {
+        Column(modifier = Modifier.padding(CardGeometry.Video.contentPadding)) {
             SkeletonBlock(
                 modifier =
                     Modifier

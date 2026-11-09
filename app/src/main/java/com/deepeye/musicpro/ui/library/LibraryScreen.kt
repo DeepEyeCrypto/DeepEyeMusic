@@ -544,8 +544,8 @@ private fun AlbumsTab(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .aspectRatio(CardGeometry.Music.aspectRatio)
-                                .clip(RoundedCornerShape(CardGeometry.Music.cornerRadius / 1.5f)),
+                                .aspectRatio(CardGeometry.Video.aspectRatio)
+                                .clip(RoundedCornerShape(CardGeometry.Video.cornerRadius / 1.5f)),
                         contentScale = ContentScale.Crop,
                     )
                     Spacer(Modifier.height(8.sdp))
